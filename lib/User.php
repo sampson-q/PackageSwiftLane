@@ -117,8 +117,9 @@ class User
     /**
      * Users::cdp_login()
      */
-    public function cdp_login($username, $pass)
-    {
+    public function cdp_login($username, $pass, $options = array()) {
+        $status = 0;
+
         if ($username == "" && $pass == "") {
             $this->errors[] = "Enter a valid username and password.";
         } else {
@@ -133,30 +134,65 @@ class User
         if ($status == 1) {
             $user = $this->cdp_getUserInfo($username);
 
-            $_SESSION['userid'] = $user->id;
-            $_SESSION['username'] = $user->username;
-            $_SESSION['email'] = $user->email;
-            $_SESSION['name_off'] = $user->name_off;
-            $_SESSION['name'] = $user->fname . ' ' . $user->lname;
-            $_SESSION['userlevel'] = $user->userlevel;
-            $_SESSION['last'] = $user->lastlogin;
+            if (!empty($options['otp_service'])) {
+                $otpService = $options['otp_service'];
+                $rememberMe = !empty($options['remember_me']);
 
-            $this->uid = $user->id;
-            $this->username = $user->username;
-            $this->email = $user->email;
-            $this->name_off = $user->name_off;
-            $this->name = $user->fname . ' ' . $user->lname;
-            $this->userlevel = $user->userlevel;
-            $this->last = $user->lastlogin;
+                if ($rememberMe && $otpService->isTrustedDevice($user->id)) {
+                    return $this->cdp_finalizeLogin($user);
+                }
 
-            $this->db->cdp_query('UPDATE cdb_users SET lastlogin=:lastlogin, lastip=:lastip WHERE username=:user');
-            $this->db->bind(':lastlogin', date("Y-m-d H:i:s"));
-            $this->db->bind(':lastip', trim($_SERVER['REMOTE_ADDR']));
-            $this->db->bind(':user', $username);
-            $this->db->cdp_execute();
-            return true;
+                $challenge = $otpService->createChallenge($user->id, 'login', array(
+                    'remember_me' => $rememberMe,
+                    'email' => $user->email
+                ));
+                $otpService->sendOtpEmail($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], 'login');
+                $_SESSION['otp_login_challenge'] = $challenge['id'];
+                $_SESSION['otp_login_user_id'] = $user->id;
+                $_SESSION['otp_login_remember'] = $rememberMe ? 1 : 0;
+                return 'otp_required';
+            }
+
+            return $this->cdp_finalizeLogin($user);
         }
     }
+
+    public function cdp_finalizeLoginById($userId) {
+        $this->db->cdp_query('SELECT * FROM cdb_users WHERE id=:id LIMIT 1');
+        $this->db->bind(':id', (int)$userId);
+        $user = $this->db->cdp_registro();
+        if (!$user) {
+            return false;
+        }
+        return $this->cdp_finalizeLogin($user);
+    }
+
+    private function cdp_finalizeLogin($user) {
+        $_SESSION['userid'] = $user->id;
+        $_SESSION['username'] = $user->username;
+        $_SESSION['email'] = $user->email;
+        $_SESSION['name_off'] = $user->name_off;
+        $_SESSION['name'] = $user->fname . ' ' . $user->lname;
+        $_SESSION['userlevel'] = $user->userlevel;
+        $_SESSION['last'] = $user->lastlogin;
+
+        $this->uid = $user->id;
+        $this->username = $user->username;
+        $this->email = $user->email;
+        $this->name_off = $user->name_off;
+        $this->name = $user->fname . ' ' . $user->lname;
+        $this->userlevel = $user->userlevel;
+        $this->last = $user->lastlogin;
+
+        $this->db->cdp_query('UPDATE cdb_users SET lastlogin=:lastlogin, lastip=:lastip WHERE username=:user');
+        $this->db->bind(':lastlogin', date("Y-m-d H:i:s"));
+        $this->db->bind(':lastip', trim($_SERVER['REMOTE_ADDR']));
+        $this->db->bind(':user', $user->username);
+        $this->db->cdp_execute();
+
+        return true;
+    }
+
 
     /**
      * Users::cdp_checkStatus()
