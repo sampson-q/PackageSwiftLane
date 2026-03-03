@@ -125,7 +125,11 @@ function cdp_showSuccess(messages) {
     type: "success",
   }).then((okay) => {
     if (okay) {
-      window.location.href = "index.php";
+      if (window.signupRedirect) {
+        window.location.href = window.signupRedirect;
+      } else {
+        window.location.href = "index.php";
+      }
     }
   });
 }
@@ -284,6 +288,7 @@ $("#new_register").on("submit", function (event) {
       },
       success: function (data) {
         if (data.success) {
+            window.signupRedirect = data.redirect || null;
           cdp_showSuccess(data.messages);
         } else {
           cdp_showError(data.errors);

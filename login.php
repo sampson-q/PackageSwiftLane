@@ -21,6 +21,7 @@
 
 
 require_once("loader.php");
+require_once("lib/OtpService.php");
 
 $login = new User;
 $core = new Core;
@@ -31,10 +32,19 @@ if ($login->cdp_loginCheck() == true) {
 }
 
 if (isset($_POST['login'])) {
-
-    $result = $login->cdp_login($_POST['username'], $_POST['password']);
+    $otpService = new OtpService();
+    $result = $login->cdp_login($_POST['username'], $_POST['password'], [
+        'otp_service' => $otpService,
+        'remember_me' => isset($_POST['remember_me'])
+    ]);
+    
     if ($result) {
-        header("location: index.php");
+        if ($result === 'otp_required') {
+            header("location: auth-otp.php?flow=login");
+        } else {
+            header("location: index.php");
+        }
+        exit;
     }
 }
 ?>
