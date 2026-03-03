@@ -1,0 +1,203 @@
+/**
+ * Dashboard EXACTO estilo NEW.JPG - Vuexy / demos.pixinvent.com
+ * Misma configuración y datos; diseño idéntico a la imagen de referencia.
+ */
+body.dashboard-new-variant {
+  background: #f5f5f9;
+  font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ========== TOPBAR exacto NEW: blanco, logo V + Search, iconos derecha ========== */
+body.dashboard-new-variant .topbar.topbar-new-variant,
+body.dashboard-new-variant .topbar.topbar-new-variant .navbar { background: #fff !important; box-shadow: 0 1px 0 rgba(0,0,0,.06); }
+body.dashboard-new-variant .topbar.topbar-new-variant .navbar-header { display: flex; align-items: center; flex-wrap: wrap; }
+body.dashboard-new-variant .topbar.topbar-new-variant .navbar-brand { padding: 0.6rem 1rem; }
+body.dashboard-new-variant .topbar.topbar-new-variant .logo-v-new {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; background: linear-gradient(135deg, #7367f0 0%, #9e95f5 100%);
+  color: #fff; font-weight: 700; font-size: 1.1rem; border-radius: 8px;
+}
+body.dashboard-new-variant .topbar.topbar-new-variant .logo-text img { max-height: 28px; }
+body.dashboard-new-variant .topbar.topbar-new-variant .topbar-search-new {
+  margin-left: 1rem; padding: 0.5rem 1rem; background: #f5f5f9; border-radius: 8px;
+  min-width: 220px; max-width: 320px;
+}
+body.dashboard-new-variant .topbar.topbar-new-variant .topbar-search-new input { font-size: 0.9rem; }
+body.dashboard-new-variant .topbar.topbar-new-variant .topbar-search-new .form-control::placeholder { color: #a3a3ad; }
+body.dashboard-new-variant .topbar.topbar-new-variant .nav-link { color: #6d6d7a !important; }
+body.dashboard-new-variant .topbar.topbar-new-variant .nav-link:hover { color: #7367f0 !important; }
+body.dashboard-new-variant .topbar.topbar-new-variant .pro-pic img { border: 2px solid #e7e7e9; }
+
+/* ========== SIDEBAR exacto NEW: estrecho, blanco, logo V arriba, solo iconos ========== */
+body.dashboard-new-variant .left-sidebar {
+  width: 72px !important; min-width: 72px !important;
+  background: #fff !important;
+  box-shadow: 2px 0 12px rgba(0,0,0,.04);
+}
+body.dashboard-new-variant .scroll-sidebar { width: 72px !important; }
+body.dashboard-new-variant .left-sidebar .hide-menu,
+body.dashboard-new-variant .left-sidebar .user-content h5,
+body.dashboard-new-variant .left-sidebar .user-content .user-email,
+body.dashboard-new-variant .left-sidebar .nav-small-cap span { display: none !important; }
+body.dashboard-new-variant .left-sidebar .user-profile { justify-content: center; padding: 0.75rem 0; }
+body.dashboard-new-variant .left-sidebar .user-pic { margin: 0; }
+body.dashboard-new-variant .left-sidebar .user-pic img { width: 38px; height: 38px; }
+body.dashboard-new-variant .left-sidebar .sidebar-link { justify-content: center; padding: 12px 0 !important; color: #6d6d7a; }
+body.dashboard-new-variant .left-sidebar .sidebar-link i { margin: 0 !important; font-size: 1.4rem; }
+body.dashboard-new-variant .left-sidebar .sidebar-item.active .sidebar-link,
+body.dashboard-new-variant .left-sidebar .sidebar-link:hover {
+  color: #7367f0; background: rgba(115,103,240,.08); border-radius: 8px;
+}
+body.dashboard-new-variant .left-sidebar .sidebar-link.has-arrow::after { display: none; }
+body.dashboard-new-variant .left-sidebar .create-btn {
+  padding: 10px !important; justify-content: center; min-width: auto;
+  border-radius: 10px; background: linear-gradient(135deg, #7367f0 0%, #9e95f5 100%) !important;
+  border: none; box-shadow: 0 4px 14px rgba(115,103,240,.35);
+body.dashboard-new-variant .left-sidebar .sidebar-link { color: #6d6d7a; }
+body.dashboard-new-variant .left-sidebar .sidebar-link:hover,
+body.dashboard-new-variant .left-sidebar .sidebar-item.active .sidebar-link { color: #7367f0; background: rgba(115,103,240,.08); }
+body.dashboard-new-variant .left-sidebar .sidebar-link.has-arrow::after { display: none; }
+/* Submenús: se muestran a la derecha del sidebar (el template ya los posiciona) */
+}
+body.dashboard-new-variant .left-sidebar .create-btn .hide-menu { display: none !important; }
+body.dashboard-new-variant .left-sidebar .create-btn i { margin: 0 !important; font-size: 1.25rem; }
+body.dashboard-new-variant .left-sidebar .sidebar-item { position: relative; }
+body.dashboard-new-variant .left-sidebar .first-level {
+  position: absolute; left: 100%; top: 0; min-width: 220px;
+  background: #fff; border-radius: 0 12px 12px 0;
+  box-shadow: 4px 4px 20px rgba(0,0,0,.08); padding: 8px 0; z-index: 1050;
+}
+body.dashboard-new-variant .left-sidebar .first-level .sidebar-link { justify-content: flex-start !important; padding-left: 1rem !important; }
+body.dashboard-new-variant .left-sidebar .first-level .sidebar-link i { margin-right: 10px !important; }
+body.dashboard-new-variant .left-sidebar .first-level .hide-menu { display: inline !important; }
+
+/* Logo V arriba del sidebar */
+body.dashboard-new-variant .left-sidebar .scroll-sidebar::before {
+  content: 'V'; display: block; text-align: center; padding: 0.75rem 0;
+  font-weight: 700; font-size: 1.2rem; color: #fff; background: linear-gradient(135deg, #7367f0 0%, #9e95f5 100%);
+  margin: 0 0 4px 0; border-radius: 8px; width: 42px; margin-left: 15px;
+body.dashboard-new-variant .left-sidebar #sidebarnav > li:first-child .user-profile { padding-top: 0.5rem; }
+}
+
+/* ========== PAGE WRAPPER ========== */
+body.dashboard-new-variant .page-wrapper { background: #f5f5f9; margin-left: 72px !important; }
+body.dashboard-new-variant .page-breadcrumb { background: transparent; padding: 1.25rem 0 0.5rem; border: none; }
+body.dashboard-new-variant .page-title { color: #2d2d33; font-weight: 600; font-size: 1.5rem; }
+
+/* ========== CARDS contenedor: fondo gris, cards flotantes ========== */
+body.dashboard-new-variant .container-fluid { padding: 0 1.5rem 1.5rem; }
+body.dashboard-new-variant .container-fluid .card {
+  border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  background: #fff; overflow: hidden; margin-bottom: 1.5rem;
+}
+body.dashboard-new-variant .container-fluid .card-body { padding: 1.5rem; }
+
+/* ========== ROW 1 - Congratulations card (izquierda) EXACTO NEW ========== */
+body.dashboard-new-variant .card-new-congrats {
+  background: linear-gradient(135deg, #fff 0%, #fafaff 50%, #f5f3ff 100%) !important;
+  border: none; position: relative;
+}
+body.dashboard-new-variant .card-new-congrats .card-title { font-size: 1.15rem; font-weight: 600; color: #2d2d33; }
+body.dashboard-new-variant .card-new-congrats .card-subtitle { font-size: 0.875rem; color: #a3a3ad; margin-bottom: 0.5rem; }
+body.dashboard-new-variant .card-new-congrats .card-value { font-size: 2rem; font-weight: 700; color: #7367f0; line-height: 1.2; }
+body.dashboard-new-variant .card-new-congrats .btn-view-sales {
+  background: #7367f0 !important; border: none; border-radius: 8px;
+  padding: 0.5rem 1rem; font-weight: 500; box-shadow: 0 4px 12px rgba(115,103,240,.3);
+}
+body.dashboard-new-variant .card-new-congrats .card-illus {
+  position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+  width: 120px; height: 120px; background: linear-gradient(135deg, rgba(115,103,240,.15) 0%, rgba(158,149,245,.2) 100%);
+  border-radius: 16px; display: flex; align-items: center; justify-content: center;
+  font-size: 3rem; opacity: .9;
+}
+
+/* ========== ROW 1 - Statistics card (derecha) EXACTO NEW: 4 KPIs en fila ========== */
+body.dashboard-new-variant .card-new-statistics .card-title { font-size: 1.1rem; font-weight: 600; }
+body.dashboard-new-variant .card-new-statistics .stat-updated { font-size: 0.75rem; color: #a3a3ad; }
+body.dashboard-new-variant .card-new-statistics .stat-item {
+  text-align: center; padding: 0.75rem; border-radius: 10px; background: #fafafa;
+}
+body.dashboard-new-variant .card-new-statistics .stat-icon-wrap {
+  width: 42px; height: 42px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 0.5rem; font-size: 1.25rem;
+}
+body.dashboard-new-variant .card-new-statistics .stat-icon-wrap.bg-light-blue { background: rgba(0,207,232,.12); color: #00cfe8; }
+body.dashboard-new-variant .card-new-statistics .stat-icon-wrap.bg-light-teal { background: rgba(40,199,111,.12); color: #28c76f; }
+body.dashboard-new-variant .card-new-statistics .stat-icon-wrap.bg-light-red { background: rgba(234,84,85,.12); color: #ea5455; }
+body.dashboard-new-variant .card-new-statistics .stat-icon-wrap.bg-light-green { background: rgba(40,199,111,.15); color: #28c76f; }
+body.dashboard-new-variant .card-new-statistics .stat-num { font-size: 1.25rem; font-weight: 700; color: #2d2d33; }
+body.dashboard-new-variant .card-new-statistics .stat-label { font-size: 0.75rem; color: #6d6d7a; }
+
+/* ========== ROW 2 - Profit card ========== */
+body.dashboard-new-variant .card-new-profit .card-title { font-size: 1rem; font-weight: 600; }
+body.dashboard-new-variant .card-new-profit .card-value { font-size: 1.75rem; font-weight: 700; color: #2d2d33; }
+body.dashboard-new-variant .card-new-profit .text-success { color: #28c76f !important; }
+body.dashboard-new-variant .card-new-profit .chart-line-wrap { height: 60px; margin-top: 0.5rem; }
+
+/* ========== ROW 2 - Expenses card (donut) ========== */
+body.dashboard-new-variant .card-new-expenses .card-value { font-size: 1.5rem; font-weight: 700; }
+body.dashboard-new-variant .card-new-expenses .donut-wrap { width: 80px; height: 80px; margin: 0 auto; }
+
+/* ========== ROW 2 - Revenue Report card (grande) ========== */
+body.dashboard-new-variant .card-new-revenue .card-title { font-size: 1rem; font-weight: 600; }
+body.dashboard-new-variant .card-new-revenue .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+body.dashboard-new-variant .card-new-revenue .legend-dot.earning { background: #7367f0; }
+body.dashboard-new-variant .card-new-revenue .legend-dot.expense { background: #ff9f43; }
+body.dashboard-new-variant .card-new-revenue .btn-increase { background: #7367f0 !important; border: none; border-radius: 8px; font-size: 0.8rem; }
+
+/* ========== ROW 3 - Generated Leads card ========== */
+body.dashboard-new-variant .card-new-leads .card-title { font-size: 1rem; font-weight: 600; }
+body.dashboard-new-variant .card-new-leads .card-value { font-size: 1.75rem; font-weight: 700; }
+body.dashboard-new-variant .card-new-leads .donut-center { font-size: 0.9rem; font-weight: 600; color: #2d2d33; }
+
+body.dashboard-new-variant .progress-bar.bg-label-blue { background: linear-gradient(90deg, #00cfe8, #00d4ed) !important; }
+/* ========== Resto: reporte mensual, historial, usuarios (mismo estilo card) ========== */
+
+/* Iconos de historial (envíos, pickups, etc.) */
+body.dashboard-new-variant .card .badge.bg-label-info { background: rgba(0,207,232,.12); color: #00cfe8; }
+body.dashboard-new-variant .card .badge.bg-label-primary { background: rgba(115,103,240,.12); color: #7367f0; }
+body.dashboard-new-variant .card .badge.bg-label-success { background: rgba(40,199,111,.12); color: #28c76f; }
+body.dashboard-new-variant .card .text-primary { color: #7367f0 !important; }
+body.dashboard-new-variant .progress { height: 8px; border-radius: 10px; background: #e7e7e9; }
+body.dashboard-new-variant .progress-bar.bg-info { background: linear-gradient(90deg, #00cfe8, #00d4ed) !important; }
+body.dashboard-new-variant .progress-bar.bg-danger { background: linear-gradient(90deg, #ea5455, #f08182) !important; }
+/* Avatar / User registrations */
+body.dashboard-new-variant .avatar-initial.rounded.bg-label-secondary { background: rgba(115,103,240,.12); color: #7367f0; }
+
+/* Tabs inferiores (Lista de envíos, etc.) */
+body.dashboard-new-variant .nav-pills.custom-pills .nav-link {
+  border-radius: 10px;
+  color: #6d6d7a;
+  font-weight: 500;
+}
+body.dashboard-new-variant .nav-pills.custom-pills .nav-link.active {
+  background: rgba(115,103,240,.12);
+  color: #7367f0;
+}
+body.dashboard-new-variant .nav-pills.custom-pills .nav-link:hover { color: #7367f0; }
+
+/* Botón búsqueda en tabs */
+body.dashboard-new-variant .btn-info {
+  background: linear-gradient(135deg, #00cfe8 0%, #00d4ed 100%) !important;
+  border: none;
+  border-radius: 10px;
+}
+
+/* Ajuste margen del contenido al sidebar estrecho */
+body.dashboard-new-variant .page-wrapper { margin-left: 72px !important; }
+
+body.dashboard-new-variant .text-orange { color: #ff9f43 !important; }
+body.dashboard-new-variant .text-cyan { color: #00cfe8 !important; }
+body.dashboard-new-variant .text-danger { color: #ea5455 !important; }
+body.dashboard-new-variant .text-warning { color: #ff9f43 !important; }
+body.dashboard-new-variant .text-success { color: #28c76f !important; }
+body.dashboard-new-variant .nav-pills.custom-pills .nav-link { border-radius: 8px; color: #6d6d7a; font-weight: 500; }
+body.dashboard-new-variant .nav-pills.custom-pills .nav-link.active { background: rgba(115,103,240,.12); color: #7367f0; }
+body.dashboard-new-variant .btn-info { background: linear-gradient(135deg, #00cfe8, #00d4ed) !important; border: none; border-radius: 8px; }
+
+@media (max-width: 767px) {
+  body.dashboard-new-variant .left-sidebar { width: 0 !important; min-width: 0 !important; }
+  body.dashboard-new-variant .left-sidebar .hide-menu { display: inline !important; }
+  body.dashboard-new-variant .left-sidebar #sidebarnav > li:first-child::before { display: none; }
+  body.dashboard-new-variant .page-wrapper { margin-left: 0 !important; }
+}

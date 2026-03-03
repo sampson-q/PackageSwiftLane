@@ -1,0 +1,690 @@
+/*
+Template Name: bforum - Multistep Form & Login, Registration Form Template
+Description: bforum - Multistep Form & Login, Registration Form, Commin Soon HTML5 Template
+Author: CodexUnicTheme
+Version: 1.0
+*/
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,700&family=Roboto+Slab:wght@300;400;500;600;700;800;900&display=swap');
+:root {
+  --body-color: #444;
+  --main-color: #1e1b39;
+  --primary-color: #ff2626;
+  --headding-color: #0B2B3C;
+  --section-bg: #EAEFF3;
+  --btn-color2: #ED2C41;
+}
+body{
+    margin: 0;
+    padding: 0;
+    font-size: 15px;
+    color: var(--body-color);
+    font-family: 'Poppins', sans-serif;
+    font-weight: normal;
+    font-style: normal;
+}
+a,
+button {
+    -webkit-transition: all 0.3s ease-out 0s;
+    -moz-transition: all 0.3s ease-out 0s;
+    -ms-transition: all 0.3s ease-out 0s;
+    -o-transition: all 0.3s ease-out 0s;
+    transition: all 0.3s ease-out 0s;
+}
+*::-moz-selection {
+    background: var(--primary-color);
+    color: #fff;
+    text-shadow: none;
+}
+::-moz-selection {
+    background: var(--primary-color);
+    color: #fff;
+    text-shadow: none;
+}
+::selection {
+    background: var(--primary-color);
+    color: #fff;
+    text-shadow: none;
+}
+h1,h2,h3,h4,h5,h6,p{
+    margin:0;
+    padding: 0;
+}
+h1,h1,h2,h3,h4,h5,h6{
+    color: var(--headding-color);
+    font-weight: 700;
+    font-family: 'Roboto Slab', serif;
+}
+ul{
+    margin:0;
+    padding: 0;
+    list-style: none;
+}
+a{
+    text-decoration: none;
+    transition: .4s;
+    -webkit-transition: all .4s ease-in-out;
+}
+a:hover{
+    text-decoration: none;
+    color: var(--primary-color);
+}
+button:focus{
+    outline: none;
+}
+input:focus{
+    outline: none;
+}
+textarea:focus{
+    outline: none;
+}
+p{
+    color: var(--main-color);
+    line-height: 26px;
+}
+img{
+    max-width:100%;
+}
+.section-bg{
+    background-color: var(--section-bg);
+}
+.section-padding{
+    padding: 100px 0px;
+}
+.section-padding-2{
+    padding-top: 100px;
+    padding-bottom: 70px;
+}
+.section-padding-80{
+    padding: 80px 0px;
+}
+.section-padding-70{
+    padding: 70px 0px;
+}
+.section-padding-50{
+    padding: 50px 0px;
+}
+.text-right{
+    text-align: right;
+}
+/*
+ * Left
+*/
+.left-sidebar-area {
+    width: 450px;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    z-index: 9;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    box-sizing: border-box;
+    padding: 40px 50px;
+}
+.left-sidebar-area::after {
+    content: "";
+    clear: both;
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: #0a0537d4;
+    z-index: -1;
+}
+.logo {
+    margin-bottom: 30px;
+     max-width: 600px;
+    text-align: center;
+    height: 10vh; /* O ajusta la altura según tus necesidades */
+}
+.left-sidebar-area-full .content h2 {
+    font-size: 24px;
+    text-transform: capitalize;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 10px;
+}
+
+.left-sidebar-area-full .content p {
+    color: #fff;
+    font-size: 14px;
+    margin-top: 10px;
+    display: inline-block;
+    font-weight: 500;
+    line-height: 26px;
+}
+.right-wrapper-area {
+    float: right;
+    width: calc( 100% - 450px );
+    height: 100vh;
+    background: var(--section-bg);
+    overflow-y: auto;
+}
+.right-wrapper-area {
+    float: right;
+    width: calc( 100% - 450px );
+    height: 100vh;
+    background: var(--section-bg);
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 50px;
+}
+ul.tablist.bforum-form__progress {
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+ul.tablist.bforum-form__progress li.bforum-form__progress-btn {
+    width: 100%;
+    position: relative;
+    text-align: center;
+    z-index: 99;
+}
+
+ul.tablist.bforum-form__progress li.bforum-form__progress-btn:after {
+    content: "";
+    clear: both;
+    width: 100%;
+    height: 2px;
+    position: absolute;
+    top: 14px;
+    left: 0;
+    background: #728cff3d;
+    z-index: 1;
+    bottom: 0;
+}
+
+ul.tablist.bforum-form__progress li.bforum-form__progress-btn span {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    color: #728cff3d;
+    border-radius: 50%;
+    align-items: center;
+    font-weight: 500;
+    font-size: 14px;
+    border: 1px solid #728cff3d;
+    background: var(--section-bg);
+    z-index: 9;
+    transition: all .4s ease;
+}
+ul.tablist.bforum-form__progress li.bforum-form__progress-btn.last {
+    width: 30px;
+}
+ul.tablist.bforum-form__progress li.bforum-form__progress-btn:before {
+    content: "";
+    clear: both;
+    width: 0%;
+    height: 2px;
+    position: absolute;
+    top: 14px;
+    left: 0;
+    background: var(--primary-color);
+    z-index: 1;
+    bottom: 0;
+    transition: all .4s ease;
+}
+ul.tablist.bforum-form__progress li.bforum-form__progress-btn.js-active:before{
+    width: 100%;
+}
+ul.tablist.bforum-form__progress li.bforum-form__progress-btn.js-active span {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+ul.tablist.bforum-form__progress li.bforum-form__progress-btn.js-active.current:before {
+    width: 50%;
+    transition: all 1s cubic-bezier(0,0,1,0); 
+}
+.form-area-full .multisteps-form__panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    visibility: hidden;
+    -webkit-transition: 0.3s ease;
+    -o-transition: 0.3s ease;
+    transition: 0.4s ease;
+    overflow: hidden;
+    height: 0;
+}
+.form-area-full .multisteps-form__panel.js-active {
+    opacity: 1;
+    visibility: visible;
+    overflow: visible;
+    height: auto;
+}
+.form-area-full .multisteps-form__panel[data-animation=slideHorz] {
+    top: 50px;
+}
+.form-area-full .multisteps-form__panel[data-animation=slideHorz].js-active {
+    -webkit-transition-property: all;
+    -o-transition-property: all;
+    transition-property: all;
+    -webkit-transition-duration: 0.25s;
+    -o-transition-duration: 0.25s;
+    transition-duration: .85s;
+    -webkit-transition-timing-function: cubic-bezier(0.2, 1, 0.38, 1.43);
+    -o-transition-timing-function: cubic-bezier(0.2, 1, 0.38, 1.43);
+    transition-timing-function: cubic-bezier(0.2, 1, 0.38, 1.43);
+    -webkit-transition-delay: 0s;
+    -o-transition-delay: 0s;
+    transition-delay: 0s;
+    top: 0;
+}
+.right-wrapper-area-full {
+    width: 100%;
+    max-width: 1000px;
+    margin-bottom: 20px;
+}
+.multisteps-form__panel .single-input {
+    margin-bottom: 20px;
+}
+.multisteps-form__panel .single-input input {
+    width: 100%;
+    border-radius: 5px;
+    border: 2px solid #d9dde1;
+    box-sizing: border-box;
+    box-shadow: none;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 15px 20px;
+    transition: all .3s ease;
+    color: var(--main-color);
+}
+.multisteps-form__panel .single-input input:focus {
+    border-color: var(--primary-color);
+}
+.multisteps-form__panel .single-input input.error {
+    border-color: #ff2c2c5e;
+}
+.multisteps-form__panel .single-input label.error {
+    font-size: 14px;
+    color: #ff2626;
+    text-transform: capitalize;
+    font-weight: 400;
+}
+.multisteps-form__panel .single-input label#email-error{
+    font-size: 14px;
+    color: #ff2626;
+    text-transform: capitalize;
+    font-weight: 400;
+}
+.single-input-radio span, .single-input-checkbox span {
+    font-size: 16px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 10px;
+}
+.single-radio, .single-checkbox{
+    margin-bottom: 16px;
+}
+.multisteps-form__panel .actions ul li.disable {
+    display: none;
+}
+.single-radio input[type="radio"] {
+    position: absolute;
+    left: 0;
+    z-index: -1;
+    opacity: 0;
+}
+.single-radio label {
+    position: relative;
+    background: #f9f9f9;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 5px;
+    border: 2px solid #d9dde1;
+    box-sizing: border-box;
+    box-shadow: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 15px 20px;
+    transition: all .3s ease;
+    color: var(--main-color);
+    letter-spacing: 1px;
+    padding-left: 40px;
+}
+.single-radio label:after {
+    content: "";
+    clear: both;
+    display: block;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 16px;
+    left: 15px;
+    border-radius: 50%;
+    border: 1px solid #c6c6c6;
+    transition: all .3s ease;
+    padding-left: 2px;
+}
+.single-radio input[type="radio"]:checked + label{
+    border-color: var(--primary-color);
+}
+.single-radio input[type="radio"]:checked + label:after {
+    content: "\F633";
+    font-family: "bootstrap-icons";
+    font-size: 14px;
+    color: var(--main-color);
+    border-color: var(--primary-color);
+}
+.multisteps-form__panel h4.title-4 {
+    margin-top: 30px;
+    margin-bottom: 20px;
+    font-size: 18px;
+    text-transform: capitalize;
+    font-weight: 600;
+}
+.multisteps-form__panel .actions {
+    text-align: right;
+    margin-top: 30px;
+}
+.file-upload-type h4 {
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+.file-upload-type span {
+    display: block;
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+.file-upload-type-full {
+    position: relative;
+}
+.file-upload-type-full label {
+    position: absolute;
+    top: 10.5px;
+    left: 17.5px;
+    background: var(--primary-color);
+    color: #fff;
+    border-radius: 5px;
+    font-size: 13px;
+    text-align: center;
+    padding: 7px 21.5px;
+    cursor: pointer;
+}
+.file-upload-type-full input {
+    position: relative;
+    background: #f9f9f9;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 5px;
+    border: 2px solid #d9dde1;
+    box-sizing: border-box;
+    box-shadow: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 15px 20px;
+    transition: all .3s ease;
+    color: var(--main-color);
+    letter-spacing: 1px;
+    padding-left: 40px;
+}
+.from-header-info {
+    margin-bottom: 20px;
+}
+.multisteps-form__panel .actions span.js-btn-next {
+    margin-bottom: 30px;
+    display: inline-block;
+    padding: 14px 40px;
+    background: var(--primary-color);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    border: 2px solid var(--primary-color);
+    border-radius: 3px;
+    letter-spacing: 1px;
+    transition: all .4s ease;
+    cursor: pointer;
+}
+.multisteps-form__panel .actions span.js-btn-next:hover{
+    background: #fff;
+    color: var(--primary-color);
+}
+.multisteps-form__panel .actions ul li {
+    display: inline-block;
+}
+.multisteps-form__panel .actions ul li:first-child{
+    margin-right: 20px;
+}
+.multisteps-form__panel .actions span.js-btn-prev{
+    margin-bottom: 30px;
+    display: inline-block;
+    padding: 14px 40px;
+    background: var(--headding-color);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    border: 2px solid var(--headding-color);
+    border-radius: 3px;
+    letter-spacing: 1px;
+    transition: all .4s ease;
+    cursor: pointer;
+}
+.multisteps-form__panel .actions span.js-btn-prev:hover{
+    background: #fff;
+    color: var(--headding-color);
+}
+.single-select select {
+    position: relative;
+    background: #f9f9f9;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 5px;
+    border: 2px solid #d9dde1;
+    box-sizing: border-box;
+    box-shadow: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 15px 20px;
+    transition: all .3s ease;
+    color: var(--main-color);
+    letter-spacing: 1px;
+}
+.single-select select:focus{
+    border-color: var(--primary-color);
+}
+.single-input label {
+    margin-bottom: 10px;
+    display: inline-block;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--headding-color);
+}
+.single-select label{
+    margin-bottom: 10px;
+    display: inline-block;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--headding-color);
+}
+.single-input-checkbox span {
+    font-weight: 700;
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+.single-checkbox {
+    width: 100%;
+    position: relative;
+}
+.single-checkbox  input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    opacity: 0;
+}
+.single-checkbox label {
+    position: relative;
+    background: #f9f9f9;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 5px;
+    border: 2px solid #d9dde1;
+    box-sizing: border-box;
+    box-shadow: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 15px 20px;
+    transition: all .3s ease;
+    color: var(--main-color);
+    letter-spacing: 1px;
+    padding-left: 40px;
+}
+.single-checkbox label:before {
+    content: "";
+    clear: both;
+    display: block;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 16px;
+    left: 15px;
+    border-radius: 50%;
+    border: 1px solid #c6c6c6;
+    transition: all .3s ease;
+    padding-left: 2px;
+}
+
+.single-checkbox input:checked + label:before {
+    content: "\F633";
+    font-family: "bootstrap-icons";
+    font-size: 14px;
+    color: var(--main-color);
+    border-color: var(--primary-color);
+}
+.single-checkbox input:checked + label {
+    border-color: var(--primary-color);
+}
+.single-textarea-field label {
+    margin-bottom: 10px;
+    display: inline-block;
+    font-weight: 700;
+    line-height: 1;
+    font-size: 15px;
+    color: var(--headding-color);
+}
+.single-textarea-field textarea {
+    width: 100%;
+    border-radius: 5px;
+    border: 2px solid #d9dde1;
+    box-sizing: border-box;
+    box-shadow: none;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 15px 20px;
+    transition: all .3s ease;
+    color: var(--main-color);
+    height: 140px;
+}
+.single-textarea-field textarea:focus{
+    border-color: var(--primary-color);
+}
+.multisteps-form__panel .actions button {
+    margin-bottom: 30px;
+    display: inline-block;
+    padding: 17px 40px;
+    background: var(--primary-color);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    border: 2px solid var(--primary-color);
+    border-radius: 3px;
+    letter-spacing: 1px;
+    transition: all .4s ease;
+    cursor: pointer;
+}
+.multisteps-form__panel .actions button:hover{
+    background: #fff;
+    color: var(--primary-color);
+}
+.single-select .nice-select {
+    width: 100%;
+    border-radius: 5px;
+    border: 2px solid #d9dde1;
+    box-sizing: border-box;
+    box-shadow: none;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 17px 20px;
+    transition: all .3s ease;
+    color: var(--main-color);
+    line-height: 1;
+    height: 55px;
+}
+.single-select .nice-select ul.list {
+    width: 100%;
+    border-radius: 0px;
+}
+.single-select .nice-select:focus{
+    border-color: var(--primary-color);
+}
+.single-select .nice-select:after {
+    height: 10px;
+    top: 46%;
+    width: 10px;
+}
+/*
+ * Responsive
+*/
+@media (max-width: 1200px){
+    .left-sidebar-area {
+        width: 400px;
+    }
+    .right-wrapper-area {
+        width: calc( 100% - 400px );
+    }
+}
+@media (max-width: 991px){
+    .left-sidebar-area {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding-bottom: 90px;
+    }
+    .left-sidebar-area-full {
+        max-width: 600px;
+        text-align: center;
+    }
+    .right-wrapper-area {
+        width: 100%;
+        margin-top: -50px;
+        padding-top: 0px;
+        height: auto;
+    }
+    .right-wrapper-area-full .steps.clearfix {
+        padding-bottom: 20px;
+    }
+    ul.tablist.bforum-form__progress li.bforum-form__progress-btn span {
+        color: var(--headding-color);
+    }
+}
+@media (max-width: 576px){
+    .left-sidebar-area-full .content h2 {
+        font-size: 18px;
+    }
+    .left-sidebar-area-full .content p {
+        font-size: 13px;
+    }
+    .left-sidebar-area {
+        padding: 40px 20px;
+        padding-bottom: 90px;
+    }
+    .right-wrapper-area {
+        padding: 50px 20px;
+        padding-top: 0px;
+    }
+}

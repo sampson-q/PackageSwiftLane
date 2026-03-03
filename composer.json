@@ -1,0 +1,8 @@
+{
+    "name": "deprixa-pro/app",
+    "description": "Courier & Logistics Management System",
+    "license": "proprietary",
+    "require": {
+        "spipu/html2pdf": "^5.2"
+    }
+}
