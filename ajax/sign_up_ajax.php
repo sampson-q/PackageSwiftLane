@@ -72,12 +72,12 @@ if (empty($error)) {
         ));
 
         $challenge = $otp->createChallenge((int)$user_created_id, 'signup', array('email' => $datos['email']));
-        $otp->sendOtpEmail($datos['email'], $datos['fname'] . ' ' . $datos['lname'], $challenge['code'], 'signup');
+        $otp->sendOtpEmail($datos['email'], $datos['fname'] . ' ' . $datos['lname'], $challenge['code'], $challenge['expires_at'], 'signup');
         $_SESSION['otp_signup_challenge'] = $challenge['id'];
 
         echo json_encode([
             'success' => true,
-            'messages' => 'Signup successful. Verify OTP to activate your account.',
+            'messages' => 'Success! Verify your email to complete your registration.',
             'redirect' => 'auth-otp.php?flow=signup'
         ]);
 
