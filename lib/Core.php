@@ -545,7 +545,7 @@ class Core
     $sig = $cod + 1;
 
     $Strsig = (string)$sig;
-    $formato = str_pad($Strsig, "" . $digits . "", "0", STR_PAD_LEFT);
+    $formato = str_pad($Strsig, (int)$digits, "0", STR_PAD_LEFT);
 
 
 
@@ -576,7 +576,7 @@ class Core
     $sig = $cod + 1;
 
     $Strsig = (string)$sig;
-    $formato = str_pad($Strsig, "" . $digits . "", "0", STR_PAD_LEFT);
+    $formato = str_pad($Strsig, (int)$digits, "0", STR_PAD_LEFT);
 
 
 
@@ -609,7 +609,7 @@ class Core
     $sig = $cod + 1;
 
     $Strsig = (string)$sig;
-    $formato = str_pad($Strsig, "" . $digits . "", "0", STR_PAD_LEFT);
+    $formato = str_pad($Strsig, (int)$digits, "0", STR_PAD_LEFT);
 
 
 
