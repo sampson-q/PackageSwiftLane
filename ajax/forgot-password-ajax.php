@@ -1,4 +1,4 @@
-    <?php
+<?php
     ini_set('display_errors', 0);
 
     require_once("../loader.php");
@@ -30,6 +30,7 @@
     $challenge = $otp->createChallenge((int)$u->id, 'forgot', ['email' => $u->email]);
     $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $challenge['expires_at'], 'password reset');
     $_SESSION['otp_forgot_challenge'] = $challenge['id'];
+    $_SESSION['otp_forgot_user_id']   = (int)$u->id;
 
     echo json_encode([
         'success' => true,
