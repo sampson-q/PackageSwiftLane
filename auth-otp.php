@@ -18,6 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $uid = 0;
         if ($flow === 'login' && !empty($_SESSION['otp_login_user_id'])) {
             $uid = (int)$_SESSION['otp_login_user_id'];
+        } elseif ($flow === 'forgot' && !empty($_SESSION['otp_forgot_user_id'])) {
+            $uid = (int)$_SESSION['otp_forgot_user_id'];
         } elseif ($challengeId > 0) {
             $db->cdp_query("SELECT user_id FROM cdb_auth_otp_challenges WHERE id=:id LIMIT 1");
             $db->bind(':id', $challengeId);
@@ -35,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $challenge = $otp->createChallenge($u->id, $flow, ['remember_me' => !empty($_SESSION['otp_login_remember'])]);
                 $_SESSION[$sessionKey] = $challenge['id'];
                 $challengeId = $challenge['id'];
-                $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $challenge['expires_at'], $flow);
+                $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $challenge['expires_at'], $flow === 'forgot' ? 'password reset' : $flow);
                 $message = 'A new OTP has been sent.';
             }
         }
