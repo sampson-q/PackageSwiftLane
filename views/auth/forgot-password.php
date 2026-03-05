@@ -105,7 +105,7 @@
                     </div> <!-- end about detail -->
                 </div> <!-- end col -->
 
-                <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/css_main_deprixa/images/user/03.jpg')" data-jarallax='{"speed": 0.5}'></div><!-- end col -->
+                <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets\\images\\ForgotPassword.svg')" data-jarallax='{"speed": 0.5}'></div><!-- end col -->
             </div>
             <!--end row-->
         </div>
