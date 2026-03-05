@@ -106,7 +106,6 @@ if (isset($_POST['login'])) {
                                         <a class="logo" href="index.php">
                                             <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
 
-
                                         </a>
                                     </div>
                                     <div><br></div>
@@ -230,7 +229,7 @@ if (isset($_POST['login'])) {
                     </div> <!-- end about detail -->
                 </div> <!-- end col -->
 
-                <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/css_main_deprixa/images/user/01.jpg')" data-jarallax='{"speed": 0.5}'></div><!-- end col -->
+                <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/images/FLIGHT.svg')" data-jarallax='{"speed": 0.5}'></div><!-- end col -->
             </div>
             <!--end row-->
         </div>
