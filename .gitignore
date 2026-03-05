@@ -25,3 +25,7 @@
 /vendors/*
 
 /config
+
+order_files/*
+pre_alert_files/*
+assets/uploads/
