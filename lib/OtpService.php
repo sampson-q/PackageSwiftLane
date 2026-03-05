@@ -1,4 +1,10 @@
 <?php
+$projectRoot = dirname(__DIR__);
+    require_once $projectRoot . '/helpers/querys.php';
+    require_once $projectRoot . '/lib/Core.php';
+    require_once $projectRoot . '/helpers/functions.php';
+    require_once $projectRoot . '/helpers/phpmailer/class.phpmailer.php';
+    require_once $projectRoot . '/helpers/phpmailer/class.smtp.php';
     class OtpService {
         private $db;
         private $core;
@@ -119,7 +125,77 @@
             $this->db->cdp_execute();
         }
 
-        public function sendOtpEmail($email, $name, $code, $purpose) {
+        public function sendOtpEmail($email, $name, $code, $expiresat, $purpose) {
+            $emailTplId = ($purpose === 'password reset') ? 27 : (($purpose === 'login') ? 28 : 30);
+            $emailTpl   = cdp_getEmailTemplatesdg1i4($emailTplId);
+
+            if ($emailTpl) {
+                $emailBody = str_replace(
+                    ['[USERNAME]', '[SITE_NAME]', '[PASSWORD]', '[IP]', '[URL]', '[TTL]'],
+                    [
+                        ucfirst($name),
+                        $this->core->site_name,
+                        $code,
+                        new User()->cdp_getUserIP(),
+                        $this->core->site_url,
+                        date('H:i', strtotime($expiresat))
+                    ],
+                    $emailTpl->body
+                );
+
+                $emailBody = cdp_cleanOutx($emailBody);
+                $subject   = mb_convert_encoding($emailTpl->subject, 'UTF-8', 'UTF-8');
+
+                if ($this->core->mailer === 'PHP') {
+                    $headers  = "MIME-Version: 1.0\r\n";
+                    $headers .= "Content-type: text/html; charset=UTF-8\r\n";
+                    $headers .= "From: {$this->core->site_name} <{$this->core->email_address}>\r\n";
+
+                    if (mail($email, $subject, $emailBody, $headers)) {
+                        $messages[] = 'Email OTP sent.';
+                    } else {
+                        return ['ok' => false, 'error' => 'PHP Mail() failed.'];
+                    }
+                } elseif ($this->core->mailer === 'SMTP') {
+                    $mail = new PHPMailer(true);
+                    try {
+                        $mail->isSMTP();
+                        $mail->Host       = $this->core->smtp_host;
+                        $mail->SMTPAuth   = true;
+                        $mail->Username   = $this->core->smtp_user;
+                        $mail->Password   = $this->core->smtp_password;
+                        $mail->SMTPSecure = $this->core->smtp_secure ?: 'tls';
+                        $mail->Port       = $this->core->smtp_port;
+
+                        $mail->setFrom($this->core->email_address, $this->core->smtp_names);
+                        $mail->addAddress($email);
+
+                        $mail->isHTML(true);
+                        $mail->CharSet = 'UTF-8';
+                        $mail->Subject = $subject;
+                        $mail->Body    = "<html><body>{$emailBody}</body></html>";
+
+                        $mail->SMTPOptions = [
+                            'ssl' => [
+                                'verify_peer'       => false,
+                                'verify_peer_name'  => false,
+                                'allow_self_signed' => true,
+                            ],
+                        ];
+
+                        $mail->send();
+                        $messages[] = 'Email OTP sent via SMTP.';
+                    } catch (\Exception $e) {
+                        $errors[] = 'SMTP send error: ' . $mail->ErrorInfo;
+                    }
+                } else {
+                    $errors[] = 'Unknown mailer configured.';
+                }
+            } else {
+                $errors[] = "Email template #{$emailTplId} not found.";
+            }
+        }
+        public function sendOtpWhatsApp($email, $name, $code, $purpose) {
             $subject = 'Your verification code';
             $message = "Hello {$name},<br>Your one-time password for {$purpose} is <b>{$code}</b>.<br>This code expires in 10 minutes.";
             $header = "MIME-Version: 1.0\r\n";
