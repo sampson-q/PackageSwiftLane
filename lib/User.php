@@ -146,7 +146,7 @@ class User
                     'remember_me' => $rememberMe,
                     'email' => $user->email
                 ));
-                $otpService->sendOtpEmail($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], 'login');
+                $otpService->sendOtpEmail($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], $challenge['expires_at'], 'login');
                 $_SESSION['otp_login_challenge'] = $challenge['id'];
                 $_SESSION['otp_login_user_id'] = $user->id;
                 $_SESSION['otp_login_remember'] = $rememberMe ? 1 : 0;
@@ -518,5 +518,16 @@ class User
         $row = $this->db->cdp_registros();
 
         return $row;
+    }
+
+    public function cdp_getUserIP() {
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+            return $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            // In case of multiple IPs, take the first one
+            return explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0];
+        } else {
+            return $_SERVER['REMOTE_ADDR'];
+        }
     }
 }
