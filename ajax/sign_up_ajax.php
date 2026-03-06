@@ -13,6 +13,9 @@ $otp = new OtpService;
 
 $error = "";
 
+// Max file size: 5MB (adjust to taste)
+define('MAX_UPLOAD_BYTES', 5 * 1024 * 1024);
+
 $requiredFields = array('terms', 'country', 'state', 'city', 'address', 'postal', 'username', 'email', 'phone', 'fname', 'lname', 'document_number', 'document_type');
 foreach ($requiredFields as $field) {
     if (empty($_POST[$field])) {
@@ -34,95 +37,89 @@ if (empty($error)) {
     $settings = cdp_getSettingsCourier();
     $prefixlk = $settings->prefix_locker;
 
-    // --- Handle optional image uploads ---
-    $uploadDir = '../assets/uploads/users/';
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
-    }
+    $allowedMimeTypes  = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
-    $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    // Temp folder — files live here until OTP is verified, then get moved to the real folder.
+    // A cron job can periodically purge sub-folders older than e.g. 1 hour.
+    $tempToken = bin2hex(random_bytes(16)); // unique folder name per registration attempt
+    $tempDir   = '../assets/uploads/tmp/' . $tempToken . '/';
+    mkdir($tempDir, 0755, true);
 
-    $avatarPath = '';
+    $avatarTempName = '';
     if (!empty($_FILES['avatar']['name']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+        if ($_FILES['avatar']['size'] > MAX_UPLOAD_BYTES) {
+            echo json_encode(['success' => false, 'errors' => 'Avatar image must be under 5MB.']);
+            exit;
+        }
         $mime = mime_content_type($_FILES['avatar']['tmp_name']);
-        if (!in_array($mime, $allowedMimeTypes)) {
+        $ext  = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
+        if (!in_array($mime, $allowedMimeTypes) || !in_array($ext, $allowedExtensions)) {
             echo json_encode(['success' => false, 'errors' => 'Invalid avatar file type.']);
             exit;
         }
-        $avatarExt  = pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION);
-        $avatarFile = 'avatar_' . uniqid() . '.' . $avatarExt;
-        if (move_uploaded_file($_FILES['avatar']['tmp_name'], $uploadDir . $avatarFile)) {
-            $avatarPath = 'assets/uploads/users/' . $avatarFile;
-        }
+        $avatarTempName = 'avatar.' . $ext;
+        move_uploaded_file($_FILES['avatar']['tmp_name'], $tempDir . $avatarTempName);
     }
 
-    $documentPhotoPath = '';
+    $docPhotoTempName = '';
     if (!empty($_FILES['document_photo']['name']) && $_FILES['document_photo']['error'] === UPLOAD_ERR_OK) {
+        if ($_FILES['document_photo']['size'] > MAX_UPLOAD_BYTES) {
+            echo json_encode(['success' => false, 'errors' => 'Document photo must be under 5MB.']);
+            exit;
+        }
         $mime = mime_content_type($_FILES['document_photo']['tmp_name']);
-        if (!in_array($mime, $allowedMimeTypes)) {
+        $ext  = strtolower(pathinfo($_FILES['document_photo']['name'], PATHINFO_EXTENSION));
+        if (!in_array($mime, $allowedMimeTypes) || !in_array($ext, $allowedExtensions)) {
             echo json_encode(['success' => false, 'errors' => 'Invalid document photo file type.']);
             exit;
         }
-        $docExt   = pathinfo($_FILES['document_photo']['name'], PATHINFO_EXTENSION);
-        $docFile  = 'docphoto_' . uniqid() . '.' . $docExt;
-        if (move_uploaded_file($_FILES['document_photo']['tmp_name'], $uploadDir . $docFile)) {
-            $documentPhotoPath = 'assets/uploads/users/' . $docFile;
-        }
+        $docPhotoTempName = 'document_photo.' . $ext;
+        move_uploaded_file($_FILES['document_photo']['tmp_name'], $tempDir . $docPhotoTempName);
     }
-    // --- End image uploads ---
 
-    $datos = array(
-        'username'       => cdp_sanitize($_POST['username']),
-        'email'          => cdp_sanitize($_POST['email']),
-        'lname'          => cdp_sanitize($_POST['lname']),
-        'fname'          => cdp_sanitize($_POST['fname']),
-        'document_number'=> cdp_sanitize($_POST['document_number']),
-        'document_type'  => cdp_sanitize($_POST['document_type']),
-        'locker'         => cdp_sanitize($prefixlk . ' ' . $_POST['locker']),
-        'phone'          => cdp_sanitize($_POST['phone']),
-        'userlevel'      => 1,
-        'active'         => 0,
-        'password'       => password_hash($_POST['pass'], PASSWORD_DEFAULT),
-        'terms'          => isset($_POST['terms']) ? $_POST['terms'] : '',
-        'created'        => date("Y-m-d H:i:s"),
-        'avatar'         => $avatarPath,
-        'document_photo' => $documentPhotoPath,
+    // Only the token goes into the session — no file data, no base64 bloat.
+    $_SESSION['pending_signup'] = [
+        'username'        => cdp_sanitize($_POST['username']),
+        'email'           => cdp_sanitize($_POST['email']),
+        'lname'           => cdp_sanitize($_POST['lname']),
+        'fname'           => cdp_sanitize($_POST['fname']),
+        'document_number' => cdp_sanitize($_POST['document_number']),
+        'document_type'   => cdp_sanitize($_POST['document_type']),
+        'locker'          => cdp_sanitize($prefixlk . ' ' . $_POST['locker']),
+        'phone'           => cdp_sanitize($_POST['phone']),
+        'password'        => password_hash($_POST['pass'], PASSWORD_DEFAULT),
+        'terms'           => isset($_POST['terms']) ? $_POST['terms'] : '',
+        'created'         => date("Y-m-d H:i:s"),
+        'temp_token'      => $tempToken,       // used to locate temp files
+        'avatar_tmp'      => $avatarTempName,  // filename inside temp folder, empty if not uploaded
+        'document_photo_tmp' => $docPhotoTempName,
+        // address fields
+        'address'         => cdp_sanitize($_POST['address']),
+        'country'         => cdp_sanitize($_POST['country']),
+        'city'            => cdp_sanitize($_POST['city']),
+        'state'           => cdp_sanitize($_POST['state']),
+        'postal'          => cdp_sanitize($_POST['postal']),
+    ];
+
+    // user_id=0 placeholder — real row doesn't exist yet.
+    $challenge = $otp->createChallenge(0, 'signup', ['email' => $_SESSION['pending_signup']['email']]);
+    $otp->sendOtpEmail(
+        $_SESSION['pending_signup']['email'],
+        $_SESSION['pending_signup']['fname'] . ' ' . $_SESSION['pending_signup']['lname'],
+        $challenge['code'],
+        $challenge['expires_at'],
+        'signup'
     );
+    $_SESSION['otp_signup_challenge'] = $challenge['id'];
 
-    $db->cdp_query('INSERT INTO cdb_users (username,password,locker,userlevel,email,fname,lname,document_number,document_type,created,phone,active,terms,avatar,document_photo)
-        VALUES (:username,:password,:locker,:userlevel,:email,:fname,:lname,:document_number,:document_type,:created,:phone,:active,:terms,:avatar,:document_photo)');
+    echo json_encode([
+        'success'  => true,
+        'messages' => 'Success! Verify your email to complete your registration.',
+        'redirect' => 'auth-otp.php?flow=signup'
+    ]);
 
-    foreach ($datos as $k => $v) {
-        $db->bind(':' . $k, $v);
-    }
-
-    $insert = $db->cdp_execute();
-    $user_created_id = $db->dbh->lastInsertId();
-
-    if ($user_created_id) {
-        cdp_insertAddressCustomer(array(
-            'user_id' => $user_created_id,
-            'address' => cdp_sanitize($_POST["address"]),
-            'country' => cdp_sanitize($_POST["country"]),
-            'city'    => cdp_sanitize($_POST["city"]),
-            'state'   => cdp_sanitize($_POST["state"]),
-            'postal'  => cdp_sanitize($_POST["postal"])
-        ));
-
-        $challenge = $otp->createChallenge((int)$user_created_id, 'signup', array('email' => $datos['email']));
-        $otp->sendOtpEmail($datos['email'], $datos['fname'] . ' ' . $datos['lname'], $challenge['code'], $challenge['expires_at'], 'signup');
-        $_SESSION['otp_signup_challenge'] = $challenge['id'];
-
-        echo json_encode([
-            'success'  => true,
-            'messages' => 'Success! Verify your email to complete your registration.',
-            'redirect' => 'auth-otp.php?flow=signup'
-        ]);
-
-        exit;
-    }
-
-    $error = "An error occurred during the registration process. Contact the administrator ...";
+    exit;
 }
 
 echo json_encode([
