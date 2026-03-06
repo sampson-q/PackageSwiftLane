@@ -251,7 +251,7 @@ input.addEventListener("keyup", reset);
   
 
 $("#new_register").on("submit", function (event) {
-
+  event.preventDefault();
 
   // Validación de la contraseña
   var password = $("#pass").val();
@@ -265,18 +265,21 @@ $("#new_register").on("submit", function (event) {
       confirmButtonColor: "#f27474",
       confirmButtonText: "Ok",
     });
-    event.preventDefault(); // Detener el envío del formulario si la contraseña es débil
     return;
   }
 
-  // Resto del código para enviar el formulario mediante AJAX
+  // Use FormData to support file uploads (avatar, document_photo)
   if (iti.isValidNumber()) {
-    var parametros = $(this).serialize();
+    var formData = new FormData(this);
+
     $.ajax({
       type: "POST",
       url: "./ajax/sign_up_ajax.php",
-      data: parametros,
+      data: formData,
       dataType: "json",
+      // Required for FormData — let the browser set the correct multipart boundary
+      processData: false,
+      contentType: false,
       beforeSend: function (objeto) {
         Swal.fire({
           title: message_loading,
@@ -288,7 +291,7 @@ $("#new_register").on("submit", function (event) {
       },
       success: function (data) {
         if (data.success) {
-            window.signupRedirect = data.redirect || null;
+          window.signupRedirect = data.redirect || null;
           cdp_showSuccess(data.messages);
         } else {
           cdp_showError(data.errors);
@@ -302,6 +305,4 @@ $("#new_register").on("submit", function (event) {
     errorMsg.classList.remove("hide");
     $("#phone_custom").focus();
   }
-  event.preventDefault();
 });
-
