@@ -1,5 +1,6 @@
 <?php
 require_once("loader.php");
+require_once("helpers/querys.php");
 require_once("lib/OtpService.php");
 
 $user = new User();
@@ -10,8 +11,33 @@ $flow = isset($_GET['flow']) ? $_GET['flow'] : 'login';
 $message = '';
 $error = '';
 
-$sessionKey = 'otp_' . $flow . '_challenge';
+$sessionKey  = 'otp_' . $flow . '_challenge';
 $challengeId = isset($_SESSION[$sessionKey]) ? (int)$_SESSION[$sessionKey] : 0;
+
+/**
+ * Move a file from the temp folder to the real uploads folder.
+ * Returns the final relative path, or '' if no temp file was set.
+ */
+function cdp_commitUpload($tempDir, $tempName, $uploadDir, $prefix) {
+    if (empty($tempName) || !file_exists($tempDir . $tempName)) {
+        return '';
+    }
+    $ext      = pathinfo($tempName, PATHINFO_EXTENSION);
+    $finalName = $prefix . '_' . uniqid() . '.' . $ext;
+    rename($tempDir . $tempName, $uploadDir . $finalName);
+    return $uploadDir . $finalName;
+}
+
+/**
+ * Delete the temp folder and everything in it (called on failure or expiry).
+ */
+function cdp_cleanupTempDir($tempDir) {
+    if (!is_dir($tempDir)) return;
+    foreach (glob($tempDir . '*') as $f) {
+        unlink($f);
+    }
+    rmdir($tempDir);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['resend'])) {
@@ -20,6 +46,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $uid = (int)$_SESSION['otp_login_user_id'];
         } elseif ($flow === 'forgot' && !empty($_SESSION['otp_forgot_user_id'])) {
             $uid = (int)$_SESSION['otp_forgot_user_id'];
+        } elseif ($flow === 'signup' && !empty($_SESSION['pending_signup'])) {
+            // User doesn't exist in DB yet — resend directly from session data.
+            $pending   = $_SESSION['pending_signup'];
+            $challenge = $otp->createChallenge(0, 'signup', ['email' => $pending['email']]);
+            $_SESSION[$sessionKey] = $challenge['id'];
+            $challengeId = $challenge['id'];
+            $otp->sendOtpEmail(
+                $pending['email'],
+                $pending['fname'] . ' ' . $pending['lname'],
+                $challenge['code'],
+                $challenge['expires_at'],
+                'signup'
+            );
+            $message = 'A new OTP has been sent.';
         } elseif ($challengeId > 0) {
             $db->cdp_query("SELECT user_id FROM cdb_auth_otp_challenges WHERE id=:id LIMIT 1");
             $db->bind(':id', $challengeId);
@@ -55,12 +95,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($flow === 'signup') {
-                $db->cdp_query("UPDATE cdb_users SET active=1 WHERE id=:id");
-                $db->bind(':id', (int)$verify['user_id']);
-                $db->cdp_execute();
-                unset($_SESSION['otp_signup_challenge']);
-                header('Location: index.php');
-                exit;
+                $pending = isset($_SESSION['pending_signup']) ? $_SESSION['pending_signup'] : null;
+
+                if (!$pending) {
+                    $error = 'Session expired. Please register again.';
+                } else {
+                    $tempDir   = 'assets/uploads/tmp/' . $pending['temp_token'] . '/';
+                    $uploadDir = 'assets/uploads/users/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+
+                    // Move files from temp to real folder now that OTP is confirmed.
+                    $avatarPath       = cdp_commitUpload($tempDir, $pending['avatar_tmp'],       $uploadDir, 'avatar');
+                    $documentPhotoPath = cdp_commitUpload($tempDir, $pending['document_photo_tmp'], $uploadDir, 'docphoto');
+
+                    // Clean up the temp folder regardless of outcome.
+                    cdp_cleanupTempDir($tempDir);
+
+                    $db->cdp_query('INSERT INTO cdb_users (username,password,locker,userlevel,email,fname,lname,document_number,document_type,created,phone,active,terms,avatar,document_photo)
+                        VALUES (:username,:password,:locker,:userlevel,:email,:fname,:lname,:document_number,:document_type,:created,:phone,:active,:terms,:avatar,:document_photo)');
+
+                    $db->bind(':username',        $pending['username']);
+                    $db->bind(':password',        $pending['password']);
+                    $db->bind(':locker',          $pending['locker']);
+                    $db->bind(':userlevel',       1);
+                    $db->bind(':email',           $pending['email']);
+                    $db->bind(':fname',           $pending['fname']);
+                    $db->bind(':lname',           $pending['lname']);
+                    $db->bind(':document_number', $pending['document_number']);
+                    $db->bind(':document_type',   $pending['document_type']);
+                    $db->bind(':created',         $pending['created']);
+                    $db->bind(':phone',           $pending['phone']);
+                    $db->bind(':active',          0);
+                    $db->bind(':terms',           $pending['terms']);
+                    $db->bind(':avatar',          '../' . $avatarPath);
+                    $db->bind(':document_photo',  '../' . $documentPhotoPath);
+
+                    $db->cdp_execute();
+                    $user_created_id = $db->dbh->lastInsertId();
+
+                    if ($user_created_id) {
+                        cdp_insertAddressCustomer([
+                            'user_id' => $user_created_id,
+                            'address' => $pending['address'],
+                            'country' => $pending['country'],
+                            'city'    => $pending['city'],
+                            'state'   => $pending['state'],
+                            'postal'  => $pending['postal'],
+                        ]);
+
+                        unset($_SESSION['otp_signup_challenge'], $_SESSION['pending_signup']);
+                        header('Location: index.php');
+                        exit;
+                    }
+
+                    $error = 'An error occurred while creating your account. Please contact the administrator.';
+                }
             }
 
             if ($flow === 'forgot') {
