@@ -92,12 +92,12 @@
 
                                         <?php else : ?>
 
-                                            <form class="login-form mt-4" id="new_register" name="new_register" method="post">
+                                            <form class="login-form mt-4" id="new_register" name="new_register" method="post" enctype="multipart/form-data">
                                                 <div class="row">
 
                                                     <div class="col-md-6">
                                                         <div class="mb-3">
-                                                            <label class="form-label"><?php echo $lang['left138'] ?> <span class="text-danger">*</span></label>
+                                                            <label class="form-label"><?php echo $lang['left139'] ?> <span class="text-danger">*</span></label>
                                                             <div class="form-icon position-relative">
                                                                 <i data-feather="user" class="fea icon-sm icons"></i>
                                                                 <input type="text" class="form-control ps-5" placeholder="<?php echo $lang['left139'] ?>" name="fname" id="fname">
@@ -117,7 +117,7 @@
                                                     </div>
                                                 </div>
                                                     <!--end col-->
-                                                 <div class="row">
+                                                <div class="row">
                                                     <div class="col-md-6">
                                                         <div class="mb-3">
                                                            <label class="form-label"><?php echo $lang['leftorder164'] ?></label>
@@ -151,9 +151,32 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div class="row">
                                                     <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><?php echo $lang['leftorder332'] ?></label>
+                                                            <div class="form-icon position-relative">
+                                                                <i data-feather="image" class="fea icon-sm icons"></i>
+                                                                <input type="file" class="form-control ps-5" name="avatar" id="avatar" accept="image/*">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!--end col-->
+
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label"><?php echo $lang['leftorder333'] ?></label>
+                                                            <div class="form-icon position-relative">
+                                                                <i data-feather="image" class="fea icon-sm icons"></i>
+                                                                <input type="file" class="form-control ps-5" name="document_photo" id="document_photo" accept="image/*">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="row">
+                                                    <div class="col-md-8">
                                                         <div class="mb-3">
                                                             <label class="form-label"><?php echo $lang['left142'] ?> <span class="text-danger">*</span></label>
                                                             <div class="form-icon position-relative">
@@ -163,10 +186,12 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <div class="mb-3">
                                                             <label for="phone_custom" class="form-label"><?php echo $lang['user_manage9'] ?> <span class="text-danger">*</span></label>
-                                                            <input type="tel" class="form-control iti__tel-input ps-5" name="phone_custom" id="phone_custom" autocomplete="off" data-intl-tel-input-id="0" placeholder="<?php echo $lang['user_manage9'] ?>">
+                                                            <div class="position-relative">
+                                                                <input type="tel" class="form-control iti__tel-input ps-5" name="phone_custom" id="phone_custom" autocomplete="off" data-intl-tel-input-id="0" placeholder="<?php echo $lang['user_manage9'] ?>">
+                                                            </div>
                                                         </div>
                                                         <span id="valid-msg" class="hide"></span>
                                                         <div id="error-msg" class="hide text-danger"></div>
@@ -333,7 +358,7 @@
                     </div> <!-- end about detail -->
                 </div> <!-- end col -->
 
-                <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/css_main_deprixa/images/user/02.jpg')" data-jarallax='{"speed": 0.5}'>
+                <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/images/registed.svg')" data-jarallax='{"speed": 0.5}'>
 
       
                 </div><!-- end col -->
