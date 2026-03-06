@@ -10,6 +10,8 @@ $otp = new OtpService();
 $flow = isset($_GET['flow']) ? $_GET['flow'] : 'login';
 $message = '';
 $error = '';
+$otpSuccess  = false;  // triggers the Swal on the page
+$otpRedirect = 'index.php';
 
 $sessionKey  = 'otp_' . $flow . '_challenge';
 $challengeId = isset($_SESSION[$sessionKey]) ? (int)$_SESSION[$sessionKey] : 0;
@@ -22,14 +24,14 @@ function cdp_commitUpload($tempDir, $tempName, $uploadDir, $prefix) {
     if (empty($tempName) || !file_exists($tempDir . $tempName)) {
         return '';
     }
-    $ext      = pathinfo($tempName, PATHINFO_EXTENSION);
+    $ext       = pathinfo($tempName, PATHINFO_EXTENSION);
     $finalName = $prefix . '_' . uniqid() . '.' . $ext;
     rename($tempDir . $tempName, $uploadDir . $finalName);
     return $uploadDir . $finalName;
 }
 
 /**
- * Delete the temp folder and everything in it (called on failure or expiry).
+ * Delete the temp folder and everything in it.
  */
 function cdp_cleanupTempDir($tempDir) {
     if (!is_dir($tempDir)) return;
@@ -47,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($flow === 'forgot' && !empty($_SESSION['otp_forgot_user_id'])) {
             $uid = (int)$_SESSION['otp_forgot_user_id'];
         } elseif ($flow === 'signup' && !empty($_SESSION['pending_signup'])) {
-            // User doesn't exist in DB yet — resend directly from session data.
             $pending   = $_SESSION['pending_signup'];
             $challenge = $otp->createChallenge(0, 'signup', ['email' => $pending['email']]);
             $_SESSION[$sessionKey] = $challenge['id'];
@@ -84,17 +85,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['otp_code'])) {
         $verify = $otp->verifyChallenge($challengeId, $_POST['otp_code'], $flow);
         if ($verify['ok']) {
+
             if ($flow === 'login') {
                 $user->cdp_finalizeLoginById($verify['user_id']);
                 if (!empty($_SESSION['otp_login_remember'])) {
                     $otp->rememberTrustedDevice($verify['user_id']);
                 }
                 unset($_SESSION['otp_login_challenge'], $_SESSION['otp_login_remember'], $_SESSION['otp_login_user_id']);
-                header('Location: index.php');
-                exit;
+                $otpSuccess  = true;
+                $otpRedirect = 'index.php';
             }
 
-            if ($flow === 'signup') {
+            elseif ($flow === 'signup') {
                 $pending = isset($_SESSION['pending_signup']) ? $_SESSION['pending_signup'] : null;
 
                 if (!$pending) {
@@ -106,11 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         mkdir($uploadDir, 0755, true);
                     }
 
-                    // Move files from temp to real folder now that OTP is confirmed.
-                    $avatarPath       = cdp_commitUpload($tempDir, $pending['avatar_tmp'],       $uploadDir, 'avatar');
-                    $documentPhotoPath = cdp_commitUpload($tempDir, $pending['document_photo_tmp'], $uploadDir, 'docphoto');
-
-                    // Clean up the temp folder regardless of outcome.
+                    $avatarPath        = cdp_commitUpload($tempDir, $pending['avatar_tmp'],          $uploadDir, 'avatar');
+                    $documentPhotoPath = cdp_commitUpload($tempDir, $pending['document_photo_tmp'],  $uploadDir, 'docphoto');
                     cdp_cleanupTempDir($tempDir);
 
                     $db->cdp_query('INSERT INTO cdb_users (username,password,locker,userlevel,email,fname,lname,document_number,document_type,created,phone,active,terms,avatar,document_photo)
@@ -127,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->bind(':document_type',   $pending['document_type']);
                     $db->bind(':created',         $pending['created']);
                     $db->bind(':phone',           $pending['phone']);
-                    $db->bind(':active',          0);
+                    $db->bind(':active',          1);
                     $db->bind(':terms',           $pending['terms']);
                     $db->bind(':avatar',          '../' . $avatarPath);
                     $db->bind(':document_photo',  '../' . $documentPhotoPath);
@@ -146,21 +145,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ]);
 
                         unset($_SESSION['otp_signup_challenge'], $_SESSION['pending_signup']);
-                        header('Location: index.php');
-                        exit;
+                        $otpSuccess  = true;
+                        $otpRedirect = 'index.php';
+                    } else {
+                        $error = 'An error occurred while creating your account. Please contact the administrator.';
                     }
-
-                    $error = 'An error occurred while creating your account. Please contact the administrator.';
                 }
             }
 
-            if ($flow === 'forgot') {
+            elseif ($flow === 'forgot') {
                 $token = $otp->createResetSession($verify['user_id'], 900);
                 $_SESSION['forgot_reset_token'] = $token;
                 unset($_SESSION['otp_forgot_challenge']);
-                header('Location: forgot-reset.php');
-                exit;
+                $otpSuccess  = true;
+                $otpRedirect = 'forgot-reset.php';
             }
+
         } else {
             $error = $verify['error'];
         }
@@ -188,11 +188,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Main Css -->
     <link href="assets/css_main_deprixa/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
     <link href="assets/css_main_deprixa/css/colors/default.css" rel="stylesheet" id="color-opt">
+    <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
 </head>
 
 <body>
 
-    <!-- Loader -->
     <div id="preloader">
         <div id="status">
             <div class="spinner">
@@ -201,7 +201,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </div>
-    <!-- Loader -->
 
     <div class="back-to-home">
         <a href="login.php" class="back-button btn btn-icon btn-primary"><i data-feather="arrow-left" class="icons"></i></a>
@@ -228,12 +227,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                         <div id="msgholder2">
                                             <?php if ($message): ?>
-                                                <div class="alert alert-success" id="success-alert">
+                                                <div class="alert alert-success">
                                                     <p><?php echo $message; ?></p>
                                                 </div>
                                             <?php endif; ?>
                                             <?php if ($error): ?>
-                                                <div class="alert alert-danger" id="success-alert">
+                                                <div class="alert alert-danger">
                                                     <p><span class="icon-minus-sign"></span>
                                                         <i class="close icon-remove-circle"></i>
                                                         <span>Error!</span> <?php echo $error; ?>
@@ -255,14 +254,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <!--end col-->
 
                                                 <div class="col-lg-12 mb-0">
                                                     <div class="d-grid">
                                                         <button type="submit" class="btn btn-grad">Verify</button>
                                                     </div>
                                                 </div>
-                                                <!--end col-->
 
                                                 <div class="col-12 text-center">
                                                     <p class="mb-0 mt-3">
@@ -270,37 +267,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                         <button type="submit" name="resend" value="1" class="btn btn-link p-0 text-dark fw-bold" style="vertical-align: baseline;">Resend code</button>
                                                     </p>
                                                 </div>
-                                                <!--end col-->
                                             </div>
-                                            <!--end row-->
                                         </form>
                                     </div>
                                 </div>
                             </div>
-                            <!--end col-->
                         </div>
-                        <!--end row-->
-                    </div> <!-- end about detail -->
-                </div> <!-- end col -->
+                    </div>
+                </div>
 
                 <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/images/OneTimePassword.svg')" data-jarallax='{"speed": 0.5}'></div>
-                <!-- end col -->
             </div>
-            <!--end row-->
         </div>
-        <!--end container fluid-->
     </section>
-    <!--end section-->
-    <!-- Hero End -->
 
-    <!-- javascript -->
     <script src="assets/custom_dependencies/jquery-3.6.0.min.js"></script>
     <script src="assets/css_main_deprixa/js/bootstrap.bundle.min.js"></script>
-    <!-- Icons -->
     <script src="assets/css_main_deprixa/js/feather.min.js"></script>
-    <!-- Main Js -->
     <script src="assets/css_main_deprixa/js/plugins.init.js"></script>
     <script src="assets/css_main_deprixa/js/app.js"></script>
+    <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+    <?php if ($otpSuccess): ?>
+    <script>
+        Swal.fire({
+            title: 'Verified!',
+            text: 'Your identity has been confirmed successfully.',
+            icon: 'success',
+            allowOutsideClick: false,
+            confirmButtonText: 'Continue',
+            confirmButtonColor: '#336aea',
+        }).then(function () {
+            window.location.href = '<?php echo $otpRedirect; ?>';
+        });
+    </script>
+    <?php endif; ?>
 
 </body>
 </html>
