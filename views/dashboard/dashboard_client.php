@@ -21,19 +21,13 @@
 
 
 $userData = $user->cdp_getUserData();
+$virtualMailboxes = $core->cdp_getVirtualMailboxes(' WHERE id = 1');
 
 $db = new Conexion;
 
-
 $sql = "SELECT * FROM cdb_add_order where status_courier!=21 and order_payment_method >1  and sender_id='" . $_SESSION['userid'] . "' ";
-
-
-
 $db->cdp_query($sql);
 $data = $db->cdp_registros();
-
-
-
 
 $count = 0;
 $sumador_pendiente = 0;
@@ -134,110 +128,132 @@ foreach ($data as $row) {
             <!-- Container fluid  -->
             <!-- ============================================================== -->
             <div class="container-fluid">
-
                 <div class="row">
-                    <!-- Earning Reports -->
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-4 col-xl-4 mb-2">
-                      <div class="card">
-                        <div class="card-body pb-4">
-                            <div class="row">
-                                <div class="col-8">
-                                    <div class="card-body border-bottom">
-                                        <h4 class="card-title"><?php echo $lang['dash-general-34'] ?></h4>
-                                    </div>
-                                </div>
+                    <div class="col-12 col-sm-12 col-md-8 col-lg-8 col-xl-12 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-12 col-sm-8 col-md-8 col-lg-8 col-xl-8">
+                                        <div class="card-header-title d-flex justify-content-between">
+                                            <div class="card-title mb-0">
+                                                <h5 class="m-0 me-2"><?php echo $lang['virtual_mailbox-4'] ?></h5>
+                                            </div>
+                                        </div>
+                                        <div><br></div>
+                                        <div class="pb-0">
+                                            <div class="row">
+                                                <!-- Virtual Address -->
+                                                <?php foreach ($virtualMailboxes as $virtualMailbox) {
+                                                    $db->cdp_query("SELECT * FROM cdb_countries WHERE id='" . $virtualMailbox-> cdb_countries_id . "'");
+                                                    $db->cdp_execute();
+                                                    $flag = strtolower(substr($db->cdp_registro()->iso3, 0, 2));
 
-                                <div class="col-4 text-center text-sm-left">
-                                    <div class="card-body pb-0 px-0 px-md-4">
-                                      <div class="m-r-10"><span class="text-info display-6"><iconify-icon icon="solar:box-minimalistic-linear"></iconify-icon></span></div>
+                                                    $pattern = '/\(?locker\s*ID\)?/i';
+                                                    $updatedAddress = preg_replace($pattern, ' (' . $userData->locker . ') ', $virtualMailbox->address);
+                                                    ?>
+                                                    
+                                                    <div class="col-5">
+                                                        <div class="card">
+                                                            <div class="card-body">
+                                                                <h4 class="col-12">
+                                                                    <?= $virtualMailbox->country; ?>
+                                                                    <span class="display-20 flag-circle">
+                                                                        <i class="fi fi-<?php echo $flag; ?>"></i>
+                                                                        <hr>
+                                                                    </span>
+                                                                </h4>
+                                                                <ul class="list-style-none">
+                                                                    <li class="mb-2">
+                                                                        <div class="row">
+                                                                            <div class="col-3">
+                                                                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                                                                    <div class="me-2">
+                                                                                        <h5 class="mb-0"><?php echo $lang['virtual_mailbox-1']; ?></h5>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-9">
+                                                                                <div class="user-progress align-items-center gap-3">
+                                                                                    <div class="align-items-center gap-1">
+                                                                                        <h6 class="text-muted"><?php echo $updatedAddress; ?></h6>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </li>
+
+                                                                    <li class="mb-2">
+                                                                        <div class="row">
+                                                                            <div class="col-3">
+                                                                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                                                                    <div class="me-2">
+                                                                                        <h5 class="mb-0"><?php echo $lang['dash-general-39'] ?></h5>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-9">
+                                                                                <div class="user-progress align-items-center gap-3">
+                                                                                    <div class="align-items-center gap-1">
+                                                                                        <h6 class="text-muted"><?php echo $userData->locker; ?></h6>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </li>
+
+                                                                    <li class="mb-2">
+                                                                        <div class="row">
+                                                                            <div class="col-3">
+                                                                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                                                                    <div class="me-2">
+                                                                                        <h5 class="mb-0"><?php echo $lang['left92'] ?></h5>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-9">
+                                                                                <div class="user-progress align-items-center gap-3">
+                                                                                    <div class="align-items-center gap-1">
+                                                                                        <h6 class="text-muted"><?php echo $virtualMailbox->city; ?></h6>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </li>
+
+                                                                    <li class="mb-3">
+                                                                        <div class="row">
+                                                                            <div class="col-3">
+                                                                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                                                                    <div class="me-2">
+                                                                                        <h5 class="mb-0"><?php echo $lang['left94'] ?></h5>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-9">
+                                                                                <div class="user-progress align-items-center gap-3">
+                                                                                    <div class="align-items-center gap-1">
+                                                                                        <h6 class="text-muted"><?php echo $virtualMailbox->postcode; ?></h6>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <?php } ?>
+                                                <!--/ Virtual Address -->
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div><br><br></div>
-                            <ul class="list-style-none">
-                                <li class="mb-2">
-                                    <div class="row">
-                                        <div class="col-xl-6 col-md-6 mb-2">
-                                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                <div class="me-2">
-                                                    <h6 class="mb-0"><?php echo $lang['dash-general-38'] ?></h6>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-6 col-md-6 mb-0">
-                                            <div class="user-progress align-items-center gap-3">
-                                                <div class="align-items-center gap-1">
-                                                    <small class="text-muted"><?php echo $core->locker_address; ?></small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-
-                                <li class="mb-0">
-                                    <div class="row">
-                                        <div class="col-xl-6 col-md-6 mb-2">
-                                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                <div class="me-2">
-                                                    <h6 class="mb-0"><?php echo $lang['dash-general-39'] ?></h6>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-6 col-md-6 mb-0">
-                                            <div class="user-progress align-items-center gap-3">
-                                                <div class="align-items-center gap-1">
-                                                    <small class="text-muted"><?php echo $userData->locker; ?></small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-
-                                <li class="mb-0">
-                                    <div class="row">
-                                        <div class="col-xl-6 col-md-6 mb-2">
-                                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                <div class="me-2">
-                                                    <h6 class="mb-0"><?php echo $lang['left92'] ?></h6>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-6 col-md-6 mb-0">
-                                            <div class="user-progress align-items-center gap-3">
-                                                <div class="align-items-center gap-1">
-                                                    <small class="text-muted"><?php echo $core->c_city; ?></small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-
-
-                                <li class="mb-0">
-                                    <div class="row">
-                                        <div class="col-xl-6 col-md-6 mb-2">
-                                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                <div class="me-2">
-                                                    <h6 class="mb-0"><?php echo $lang['left94'] ?></h6>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-6 col-md-6 mb-0">
-                                            <div class="user-progress align-items-center gap-3">
-                                                <div class="align-items-center gap-1">
-                                                    <small class="text-muted"><?php echo $core->c_postal; ?></small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
                         </div>
-                      </div>
                     </div>
-                    <!--/ Earning Reports -->
+                </div>    
 
+                <div class="row">
                     <div class="col-12 col-sm-12 col-md-8 col-lg-8 col-xl-12 mb-4">
 
                         <div class="card">
@@ -500,8 +516,6 @@ foreach ($data as $row) {
                         </div>
                     </div>
                 </div>
-
-
 
                 <div class="row">
                     <div class="col-sm-12 col-md-12 col-lg-12">
