@@ -790,7 +790,7 @@ $lang = array(
 	"dash-general-36" => "Pickup Summary",
 	"dash-general-37" => "Total pending packets logged",
 	"dash-general-38" => "Line 1 Address",
-	"dash-general-39" => "Line 2 Address",
+	"dash-general-39" => "Locker ID",
 
 	"customer-packages-text1" => "Pending",
 	"customer-packages-text2" => "Approved",
@@ -3645,4 +3645,23 @@ $lang = array(
 	"role_employee_desc" => "Operational access, no configuration or roles",
 	"role_driver_desc" => "Driver access only",
 	"role_agency_desc" => "Agency; independent data (Super Admin and Administrator can view)",
+
+    // virtual mailboxes
+    'virtual_mailbox-1' => "Address",
+    'virtual_mailbox-2' => "Add Virtual Mailbox Address",
+    'virtual_mailbox-3' => "Address Name",
+    'virtual_mailbox-4' => "Virtual Mailbox Address",
+    'virtual_mailbox-5' => "Update Mailbox",
+    'virtual_mailbox-6' => "Delete Mailbox",
+    'virtual_mailbox-7' => "Virtual Mailbox Addresses",
+    'virtual_mailbox_validate-1' => "Provide a name for the address",
+    'virtual_mailbox_validate-2' => "Provide a valid address",
+    'virtual_mailbox_validate-3' => "Provide a valid country",
+    'virtual_mailbox_validate-4' => "Provide a valid city",
+    'virtual_mailbox_validate-5' => "Provide a valid postal code",
+    'virtual_mailbox_validate-6' => "Provide a valid virtual locker address",
+    'virtual_mailbox_message-1' => "Virtual Mailbox Address Added Successfully",
+    'virtual_mailbox_message-2' => "Error Adding Virtual Mailbox Address",
+    'virtual_mailbox_message-3' => "Virtual Mailbox Address Updated Successfully",
+    'virtual_mailbox_message-4' => "Error Updating Virtual Mailbox Address",
 );
