@@ -671,4 +671,16 @@ class Core
 
     return $row;
   }
+
+      /**
+     * Core::cdp_getVirtualMailBoxes()
+     */
+    public function cdp_getVirtualMailBoxes($where) {
+        $sql = "SELECT * FROM cdb_virtual_mailbox_addresses $where";
+        $this->db->cdp_query($sql);
+        $this->db->cdp_execute();
+        $row = $this->db->cdp_registros();
+
+        return $row;
+    }
 }
