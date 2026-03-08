@@ -146,7 +146,7 @@ foreach ($data as $row) {
                                                 <?php foreach ($virtualMailboxes as $virtualMailbox) {
                                                     $db->cdp_query("SELECT * FROM cdb_countries WHERE id='" . $virtualMailbox-> cdb_countries_id . "'");
                                                     $db->cdp_execute();
-                                                    $flag = strtolower(substr($db->cdp_registro()->iso3, 0, 2));
+                                                    $flag = strtolower($db->cdp_registro()->iso2);
 
                                                     $pattern = '/\(?locker\s*ID\)?/i';
                                                     $updatedAddress = preg_replace($pattern, ' (' . $userData->locker . ') ', $virtualMailbox->address);
