@@ -1913,6 +1913,14 @@
 						</a>
 					</li>
 					<?php } ?>
+					
+                    <?php if ($user->cdp_hasPermission('client_virtual_mail_box_addresses')) { ?>
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="client_virtual_mail_box_addresses.php" aria-expanded="false"><i class="fa fa-address-card" aria-hidden="true"></i>
+							<span class="hide-menu"> <?php echo $lang['virtual_mailbox-7'] ?> </span>
+						</a>
+					</li>
+					<?php } ?>
 				</ul>
 
 
