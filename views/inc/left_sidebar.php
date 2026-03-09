@@ -292,7 +292,7 @@
 					<!-- CONSOLIDATE -->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="solar:document-text-linear" class="fs-5"></iconify-icon>
+							<iconify-icon icon="mdi:consolidate" class="fs-5"></iconify-icon>
 							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-22'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
@@ -557,6 +557,16 @@
 							</li>
 							<?php } ?>
 						</ul>
+					</li>
+					<?php } ?>
+
+                    <?php if ($user->cdp_hasPermission('view_general_reports')) { ?>
+					<!-- Module general report-->	
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="warehouse.php" aria-expanded="false">
+							<iconify-icon icon="mdi:warehouse" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo 'Warehouse View' ?></span>
+						</a>
 					</li>
 					<?php } ?>
 
@@ -1126,7 +1136,7 @@
 					<!-- CONSOLIDATE -->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="solar:document-text-linear" class="fs-5"></iconify-icon>
+							<iconify-icon icon="mdi:consolidate" class="fs-5"></iconify-icon>
 							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-22'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
@@ -2098,7 +2108,7 @@
 					<!-- CONSOLIDATE -->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="solar:document-text-linear" class="fs-5"></iconify-icon>
+							<iconify-icon icon="mdi:consolidate" class="fs-5"></iconify-icon>
 							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-22'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
