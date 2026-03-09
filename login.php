@@ -229,7 +229,7 @@ if (isset($_POST['login'])) {
                     </div> <!-- end about detail -->
                 </div> <!-- end col -->
 
-                <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/images/FLIGHT.svg')" data-jarallax='{"speed": 0.5}'></div><!-- end col -->
+                <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/images/Login.svg')" data-jarallax='{"speed": 0.5}'></div><!-- end col -->
             </div>
             <!--end row-->
         </div>
