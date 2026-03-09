@@ -358,7 +358,7 @@
                     </div> <!-- end about detail -->
                 </div> <!-- end col -->
 
-                <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/images/registed.svg')" data-jarallax='{"speed": 0.5}'>
+                <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/images/Registeration.svg')" data-jarallax='{"speed": 0.5}'>
 
       
                 </div><!-- end col -->
