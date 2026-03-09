@@ -7113,3 +7113,28 @@ function updateCustomerPackagesStatusDelivered($data)
 
     return $db->cdp_execute();
 }
+
+function cdp_insertPackageTracking($order_id, $user_id, $tracking_number, $estimated_eta) {
+    $db = new Conexion;
+
+    $db->cdp_query('INSERT INTO cdb_package_tracking_number
+        (
+            order_id,
+            user_id,
+            tracking_number,
+            estimated_eta
+        )
+        VALUES (
+            :order_id,
+            :user_id,
+            :tracking_number,
+            :estimated_eta
+        )');
+
+    $db->bind(':order_id', $order_id);
+    $db->bind(':user_id', $user_id);
+    $db->bind(':tracking_number', $tracking_number);
+    $db->bind(':estimated_eta', $estimated_eta);
+
+    return $db->cdp_execute();
+}
