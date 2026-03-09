@@ -51,6 +51,20 @@
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-2'] ?></span>
 						</a>
 					</li>
+					
+                    <li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="locker_search.php" aria-expanded="false">
+							<iconify-icon icon="ph:lockers-light" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-00'] . ' Search' ?></span>
+						</a>
+					</li>
+                    
+                    <li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="pickup_client.php" aria-expanded="false">
+							<iconify-icon icon="f7:tray-arrow-up-fill" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-65']?></span>
+						</a>
+					</li>
 
 					<?php 
 
@@ -69,11 +83,11 @@
                     <!-- Module online shopping-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="solar:cart-large-2-linear" class="fs-5"></iconify-icon>
-							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-5'] ?></span>
+							<iconify-icon icon="mdi:airplane-takeoff" class="fs-5"></iconify-icon>
+							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-64'] ?></span>
 						</a>
 
-						<ul aria-expanded="false" class="collapse  first-level">
+						<ul aria-expanded="false" class="collapse first-level">
 
 							<?php if ($user->cdp_hasPermission('view_dashboard_pack')) { ?>
 							<li class="sidebar-item">
@@ -152,8 +166,8 @@
 					<!-- Module shipment-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="solar:delivery-linear" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-13'] ?></span>
+							<iconify-icon icon="mingcute:ship-fill" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo 'Sea ' . $lang['left-menu-sidebar-13'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
 							<?php if ($user->cdp_hasPermission('view_dashboard_ship')) { ?>
