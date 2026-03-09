@@ -132,26 +132,26 @@ if ($numrows > 0) { ?>
 					}
 					?>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['ddate'] ?></b></th>
+					<th><b><?php echo $lang['ddate'] ?></b></th>
 					<?php
 					if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-						<th class="text-center"><b><?php echo $lang['left498'] ?></b></th>
+						<th><b><?php echo $lang['left498'] ?></b></th>
 
 					<?php } ?>
-					<th class="text-center"><b><?php echo $lang['left499'] ?></b></th>
+					<th><b><?php echo $lang['left499'] ?></b></th>
 
 					<?php
 					if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-						<th class="text-center"><b><?php echo $lang['lorigin'] ?></b></th>
+						<th><b><?php echo $lang['lorigin'] ?></b></th>
 					<?php } ?>
 
-					<th class="text-center"><b><?php echo $lang['ldestination'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lpayment'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lstatusshipment'] ?></b></th>
+					<th><b><?php echo $lang['ldestination'] ?></b></th>
+					<th><b><?php echo $lang['lpayment'] ?></b></th>
+					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
 					<th class=""><b><?php echo $lang['ship-all5'] ?></b></th>
-					<th class="text-center"></th>
-					<th class="text-center"><b><?php echo $lang['global-3'] ?></b></th>
-					<th class="text-center"><b></b></th>
+					<th></th>
+					<th><b><?php echo $lang['global-3'] ?></b></th>
+					<th><b></b></th>
 				</tr>
 			</thead>
 			<tbody id="projects-tbl">
@@ -213,6 +213,17 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row->order_prefix . $row->order_no . "'");
 						$address_order = $db->cdp_registro();
 
+                        $db->cdp_query("SELECT consolidate_id FROM cdb_consolidate_detail where order_no='" . $row->order_no . "'");
+						$consolidate_id = $db->cdp_registro() -> consolidate_id;
+						
+                        $db->cdp_query("SELECT status_courier FROM cdb_consolidate where consolidate_id='" . $consolidate_id . "'");
+						$consolidate_status_courier = $db->cdp_registro() -> status_courier;
+                        
+                        $db->cdp_query("SELECT * FROM cdb_styles where id='" . $consolidate_status_courier . "'");
+						$consolidate_style = $db->cdp_registro();
+                        
+                        $db->cdp_query("SELECT t_date FROM cdb_courier_track where order_track='" . $row->order_prefix . $row->order_no . "' AND (status_courier = 15 OR status_courier = 8)");
+						$package_tracking = $db->cdp_registro();
 
 
 					?>
@@ -235,33 +246,34 @@ if ($numrows > 0) { ?>
 								</td>
 							<?php } ?>
 							<td><b><a href="courier_view.php?id=<?php echo $row->order_id; ?>"><?php echo $row->order_prefix . $row->order_no; ?></a></b></td>
-							<td class="text-center">
+							<td>
 								<?php echo $row->order_date; ?>
 							</td>
 							<?php
 							if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-								<td class="text-center">
+								<td>
 									<?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?>
 								</td>
 							<?php } ?>
-							<td class="text-center">
+							<td>
 								<?php echo $receiver_data->fname; ?> <?php echo $receiver_data->lname; ?>
 							</td>
 
 							<?php
 							if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-								<td class="text-center"><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
+								<td><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
 							<?php } ?>
-							<td class="text-center"><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
+							<td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
 
-							<td class="text-center">
+							<td>
 							    <?php echo isset($met_payment->name_pay) ? $met_payment->name_pay : 'N/A'; ?>
 							</td>
 
 
 							<td class="">
 
-								<span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->mod_style; ?></span>
+								<!-- <span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->mod_style; ?></span> -->
+                                 <span style="background: <?php echo $row->is_consolidate ? $consolidate_style->color : $row->color; ?>;" class="label label-large"><?php echo $row->is_consolidate ? $consolidate_style->mod_style : $row->mod_style; ?></span>
 								<br>
 
 								<?php
@@ -305,11 +317,11 @@ if ($numrows > 0) { ?>
 								<?php } ?>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<?php if ($row->status_invoice == 2) { ?>
 									<?php if ($userData->userlevel == 1) { ?>
 
