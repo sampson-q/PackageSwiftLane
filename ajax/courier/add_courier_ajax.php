@@ -200,6 +200,8 @@ if (empty($errors)) {
         'status_invoice'       => $status_invoice,
         'volumetric_percentage'=> $meter,
         'manual_tariff'        => $tariff_mode,
+        'tracking_number' => cdp_sanitize(intval($_POST['tracking_number'])),
+        'estimated_eta' => cdp_sanitize($_POST['estimated_eta'])
     );
 
     $shipment_id = cdp_insertCourierShipment($dataShipment);
@@ -643,6 +645,8 @@ if (empty($errors)) {
         } catch (Exception $e) {
             error_log('Error generating or sending SMS for receiver: ' . $e->getMessage());
         }
+
+        cdp_insertPackageTracking($shipment_id, $_SESSION['userid'], $_POST['tracking_number'], $_POST['estimated_eta']);
 
         $messages[] = $lang['message_ajax_success_add_shipment'];
     } else {
