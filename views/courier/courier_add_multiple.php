@@ -611,7 +611,22 @@ $order_prefix = $settings->prefix;
                                         } ?>
 
                                     </div>
+                                    
+                                    <div class="row">
+                                        <div class="form-group col-md-3">
+                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo '# Tracking' ?></label>
+                                            <div class="input-group mb-3">
+                                                <input type='text' class="form-control" id="tracking_number" name="tracking_number" style="border: 1px solid red;" placeholder="# Tracking" />
+                                            </div>
+                                        </div>
 
+                                        <div class="form-group col-md-3">
+                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
+                                            <div class="input-group mb-3">
+                                                <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" style="border: 1px solid red;" />
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <div class="row">
                                         <div class="col-md-6">
