@@ -469,7 +469,7 @@ $categories   = $core->cdp_getCategories();
                                         <!-- Fila: Categoría item / Embalaje / Mensajería (Modo de envío está arriba en rate-box) -->
                                         <div class="row">
                                             <!-- Item category -->
-                                            <div class="form-group col-md-4">
+                                            <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
                                                 <select class="select2 form-control custom-select" id="order_item_category" name="order_item_category" style="width:100%">
                                                     <option value="<?php echo $s_logistics->id; ?>"><?php echo $s_logistics->name_item; ?></option>
@@ -480,7 +480,7 @@ $categories   = $core->cdp_getCategories();
                                             </div>
 
                                             <!-- Tipo de embalaje -->
-                                            <div class="form-group col-md-4">
+                                            <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label"><?php echo $lang['add-title17'] ?></label>
                                                 <select class="select2 form-control custom-select" id="order_package" name="order_package" required style="width:100%">
                                                     <option value="<?php echo $packaging_box->id; ?>"><?php echo $packaging_box->name_pack; ?></option>
@@ -491,7 +491,7 @@ $categories   = $core->cdp_getCategories();
                                             </div>
 
                                             <!-- Empresa de mensajería -->
-                                            <div class="form-group col-md-4">
+                                            <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label"><?php echo $lang['add-title18'] ?></label>
                                                 <select class="select2 form-control custom-select" id="order_courier" name="order_courier" required style="width:100%">
                                                     <option value="<?php echo $courier_comp->id; ?>"><?php echo $courier_comp->name_com; ?></option>
@@ -500,10 +500,7 @@ $categories   = $core->cdp_getCategories();
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
-                                        </div>
 
-                                        <!-- Fila: Asignar conductor -->
-                                        <div class="row">
                                             <?php if ($userData->userlevel == 3): ?>
                                                 <div class="col-md-3">
                                                     <label class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
@@ -533,29 +530,31 @@ $categories   = $core->cdp_getCategories();
                                                     </div>
                                                 </div>
                                             <?php endif; ?>
-
-                                            <div class="form-group col-md-3">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
-                                            <div class="input-group mb-3">
-                                                <select class="custom-select col-12" id="status_courier" name="status_courier" required>
-                                                    <option value="<?php echo $styles_status->id; ?>"><?php echo $styles_status->mod_style; ?></option>
-                                                    <?php foreach ($statusrow as $row) : ?>
-                                                        <?php if ($row->id == 8) { ?>
-                                                        <?php } elseif ($row->id == 11) { ?>
-                                                        <?php } elseif ($row->id == 12) { ?>
-                                                        <?php } elseif ($row->id == 14) { ?>
-                                                        <?php } elseif ($row->id == 15) { ?>
-                                                        <?php } elseif ($row->id == 16) { ?>
-                                                        <?php } elseif ($row->id == 13) { ?>
-                                                        <?php } else { ?>
-                                                            <option value="<?php echo $row->id; ?>"><?php echo $row->mod_style; ?></option>
-                                                        <?php } ?>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
                                         </div>
 
-                                            <!-- Fecha (oculta) -->
+                                        <!-- Fila: Asignar conductor -->
+                                        <div class="row">
+                                            <div class="form-group col-md-3">
+                                                <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
+                                                <div class="input-group mb-3">
+                                                    <select class="custom-select col-12" id="status_courier" name="status_courier" required>
+                                                        <option value="<?php echo $styles_status->id; ?>"><?php echo $styles_status->mod_style; ?></option>
+                                                        <?php foreach ($statusrow as $row) : ?>
+                                                            <?php if ($row->id == 8) { ?>
+                                                            <?php } elseif ($row->id == 11) { ?>
+                                                            <?php } elseif ($row->id == 12) { ?>
+                                                            <?php } elseif ($row->id == 14) { ?>
+                                                            <?php } elseif ($row->id == 15) { ?>
+                                                            <?php } elseif ($row->id == 16) { ?>
+                                                            <?php } elseif ($row->id == 13) { ?>
+                                                            <?php } else { ?>
+                                                                <option value="<?php echo $row->id; ?>"><?php echo $row->mod_style; ?></option>
+                                                            <?php } ?>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                            </div>
+
                                             <div class="col-md-3" style="display:none">
                                                 <label class="control-label col-form-label"><?php echo $lang['add-title15'] ?></label>
                                                 <div class="input-group">
@@ -566,6 +565,16 @@ $categories   = $core->cdp_getCategories();
                                                            placeholder="--<?php echo $lang['left206'] ?>--" readonly
                                                            value="<?php echo date('Y-m-d'); ?>" />
                                                 </div>
+                                            </div>
+
+                                            <div class="form-group col-md-3">
+                                                <label class="control-label col-form-label"><?php echo '# Tracking' ?></label>
+                                                <input type='text' class="form-control" id="tracking_number" name="tracking_number" style="border: 1px solid red;" placeholder="# Tracking" />
+                                            </div>
+                                            
+                                            <div class="form-group col-md-3">
+                                                <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
+                                                <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" style="border: 1px solid red;" />
                                             </div>
                                         </div>
 
