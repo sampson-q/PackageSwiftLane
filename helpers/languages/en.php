@@ -1046,7 +1046,7 @@ $lang = array(
 	"verify_payment" => "Payment verification",
 
 
-	"shiplist" => "shiplist",
+	"shiplist" => "Ship List",
     "pickup_delivered" => "Pickup/Delivered",
     "lockersearch" => "Locker Search",
     "postraltrackingsearch" => "Tracking Search",
