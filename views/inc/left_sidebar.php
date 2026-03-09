@@ -1710,8 +1710,8 @@
 					?>
 					<!-- Module pre-alerts-->
 					<li class="sidebar-item">
-						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="solar:programming-linear" class="fs-5"></iconify-icon>
-							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-5'] ?></span>
+						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="mdi:airplane-takeoff" class="fs-5"></iconify-icon>
+							<span class="hide-menu"><?php echo 'Air Shipping' ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
 							<?php if ($user->cdp_hasPermission('prealert_add')) { ?>
@@ -1760,8 +1760,8 @@
 					?>
 					<!-- Module pre-alerts-->
 					<li class="sidebar-item">
-						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-13'] ?></span>
+						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="mingcute:ship-fill" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo 'Sea ' . $lang['left-menu-sidebar-13'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
 							<?php if ($user->cdp_hasPermission('courier_add_client')) { ?>
@@ -1800,7 +1800,7 @@
 					?>
 					<!-- Module PICKUP CLIENT-->
 					<li class="sidebar-item">
-						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="solar:delivery-linear" class="fs-5"></iconify-icon>
+						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="mdi:courier-fast" class="fs-5"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-18'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
@@ -1833,7 +1833,7 @@
 					<!-- Module all consolidate-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="solar:document-text-linear" class="fs-5"></iconify-icon>
+							<iconify-icon icon="mdi:consolidate" class="fs-5"></iconify-icon>
 							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-22'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
@@ -1930,7 +1930,7 @@
 					
                     <?php if ($user->cdp_hasPermission('client_virtual_mail_box_addresses')) { ?>
 					<li class="sidebar-item">
-						<a class="sidebar-link waves-effect waves-dark" href="client_virtual_mail_box_addresses.php" aria-expanded="false"><i class="fa fa-address-card" aria-hidden="true"></i>
+						<a class="sidebar-link waves-effect waves-dark" href="client_virtual_mail_box_addresses.php" aria-expanded="false"><iconify-icon icon="ph:mailbox-light"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['virtual_mailbox-7'] ?> </span>
 						</a>
 					</li>
