@@ -731,6 +731,9 @@ $("#invoice_form").on("submit", function (event) {
     }
   }
 
+    var tracking_number = $("#tracking_number").val();
+    var estimated_eta = $("#estimated_eta").val();
+
   // ====== Campos de cabecera ======
   var prefix_check = $("#prefix_check").val();
   var code_prefix = $("#code_prefix").val();
@@ -809,6 +812,9 @@ $("#invoice_form").on("submit", function (event) {
   if (declared_value_tax)   data.append("declared_value_tax", declared_value_tax);
   if (tariffs_value)        data.append("tariffs_value", tariffs_value);
   if (insurance_value)      data.append("insurance_value", insurance_value);
+    if (tracking_number)    data.append("tracking_number", tracking_number);
+    if (estimated_eta)      data.append("estimated_eta", estimated_eta);
+  
 
   // motor tarifas (siempre enviar para que el backend calcule cuando manual_tariff=0)
   data.append("rate_provider", rate_provider || "internal");
