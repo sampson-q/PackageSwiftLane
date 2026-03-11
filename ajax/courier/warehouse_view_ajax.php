@@ -146,6 +146,15 @@ if ($numrows > 0) { ?>
                         $db->cdp_query("SELECT * FROM cdb_styles WHERE id = '13'");
                         $status_style_consolidate = $db->cdp_registro();
 
+                        $db->cdp_query("SELECT consolidate_id FROM cdb_consolidate_detail where order_no='" . $row->order_no . "'");
+						$consolidate_id = $db->cdp_registro() -> consolidate_id;
+						
+                        $db->cdp_query("SELECT status_courier FROM cdb_consolidate where consolidate_id='" . $consolidate_id . "'");
+						$consolidate_status_courier = $db->cdp_registro() -> status_courier;
+                        
+                        $db->cdp_query("SELECT * FROM cdb_styles where id='" . $consolidate_status_courier . "'");
+						$consolidate_style = $db->cdp_registro();
+
                         if ($row->status_invoice == 1) {
                             $text_status = $lang['invoice_paid'];
                             $label_class = "label-success";
@@ -192,7 +201,7 @@ if ($numrows > 0) { ?>
 
                             <td>
                                 <span style="background: <?php echo $row->is_consolidate ? $consolidate_style->color : $row->color; ?>;" class="label label-large">
-                                    <?php echo $row->is_consolidate ? $consolidate_style->mod_style : $row->mod_style; ?>
+                                    <?php echo $row->is_consolidate ? $consolidate_style->mod_style . 'd' : $row->mod_style; ?>
                                 </span>
                                 <br>
 
@@ -201,7 +210,7 @@ if ($numrows > 0) { ?>
                                 <?php } ?>
 
                                 <?php if ($row->is_consolidate == true) { ?>
-                                    <span style="background: <?php echo $status_style_consolidate->color; ?>;" class="label label-large"><?php echo $status_style_consolidate->mod_style; ?></span>
+                                    <span style="background: <?php echo $status_style_consolidate->color; ?>;" class="label label-large"><?php echo $status_style_consolidate->mod_style . 'd'; ?></span>
                                 <?php } ?>
 
                                 <br>
