@@ -91,13 +91,13 @@ if ($numrows > 0) { ?>
 			<thead>
 				<tr>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['ddate'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['left499'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['ldestination'] ?></b></th>
+					<th><b><?php echo $lang['ddate'] ?></b></th>
+					<th><b><?php echo $lang['left499'] ?></b></th>
+					<th><b><?php echo $lang['ldestination'] ?></b></th>
 					<th class=""><b><?php echo $lang['ship-all5'] ?></b></th>
-					<th class="text-center"></th>
-					<th class="text-center"><b><?php echo $lang['lstatusshipment'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['global-3'] ?></b></th>
+					<th></th>
+					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
+					<th><b><?php echo $lang['global-3'] ?></b></th>
 				</tr>
 			</thead>
 			<tbody id="projects-tbl">
@@ -145,6 +145,18 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_styles where id= '13'");
 						$status_style_consolidate = $db->cdp_registro();
 
+                        $db->cdp_query("SELECT * FROM cdb_styles where id= '13'");
+						$status_style_consolidate = $db->cdp_registro();
+
+                        $db->cdp_query("SELECT consolidate_id FROM cdb_consolidate_detail where order_no='" . $row->order_no . "'");
+						$consolidate_id = $db->cdp_registro() -> consolidate_id;
+						
+                        $db->cdp_query("SELECT status_courier FROM cdb_consolidate where consolidate_id='" . $consolidate_id . "'");
+						$consolidate_status_courier = $db->cdp_registro() -> status_courier;
+                        
+                        $db->cdp_query("SELECT * FROM cdb_styles where id='" . $consolidate_status_courier . "'");
+						$consolidate_style = $db->cdp_registro();
+
 
 						if ($row->status_invoice == 1) {
 							$text_status = $lang['invoice_paid'];
@@ -161,21 +173,21 @@ if ($numrows > 0) { ?>
 						<tr class="card-hovera">
 
 							<td><b><a href="courier_view.php?id=<?php echo $row->order_id; ?>"><?php echo $row->order_prefix . $row->order_no; ?></a></b></td>
-							<td class="text-center">
+							<td>
 								<?php echo $row->order_date; ?>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<?php echo $receiver_data->fname; ?> <?php echo $receiver_data->lname; ?>
 							</td>
 
-							<td class="text-center"><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
+							<td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
 
-							<td class="text-center">
+							<td>
 								<?php echo cdb_money_format($row->total_order); ?>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<?php if ($row->status_courier != 14) { ?>
 									<?php if ($row->status_invoice == 2) { ?>
 										<?php if ($userData->userlevel == 1) { ?>
@@ -190,13 +202,11 @@ if ($numrows > 0) { ?>
 							</td>
 
 							<td class="">
-
-								<span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->mod_style; ?></span>
+								<span style="background: <?php echo $row->is_consolidate ? $consolidate_style -> color : $row->color; ?>;" class="label label-large"><?php echo $row->is_consolidate ? $consolidate_style -> mod_style . 'd' : $row->mod_style; ?></span>
 								<br>
 
 								<?php
 								if ($row->is_pickup == true) { ?>
-
 									<span style="background: <?php echo $status_style_pickup->color; ?>;" class="label label-large"><?php echo $status_style_pickup->mod_style; ?></span>
 								<?php
 								}
@@ -204,8 +214,7 @@ if ($numrows > 0) { ?>
 
 								<?php
 								if ($row->is_consolidate == true) { ?>
-
-									<span style="background: <?php echo $status_style_consolidate->color; ?>;" class="label label-large"><?php echo $status_style_consolidate->mod_style; ?></span>
+									<span style="background: <?php echo $status_style_consolidate->color; ?>;" class="label label-large"><?php echo $status_style_consolidate->mod_style . 'd'; ?></span>
 								<?php
 								}
 								?>
