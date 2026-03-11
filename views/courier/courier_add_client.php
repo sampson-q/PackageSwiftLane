@@ -22,6 +22,9 @@
 
 
 require_once("helpers/querys.php");
+
+$userData = $user->cdp_getUserData();
+
 $ctx = cdp_getAgencyContext();
 $agency_default_id = ($ctx['is_restricted'] && $ctx['agency_id'] !== null) ? (int)$ctx['agency_id'] : 0;
 $db = new Conexion;
