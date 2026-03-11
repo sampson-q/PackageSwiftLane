@@ -145,9 +145,6 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_styles where id= '13'");
 						$status_style_consolidate = $db->cdp_registro();
 
-                        $db->cdp_query("SELECT * FROM cdb_styles where id= '13'");
-						$status_style_consolidate = $db->cdp_registro();
-
                         $db->cdp_query("SELECT consolidate_id FROM cdb_consolidate_detail where order_no='" . $row->order_no . "'");
 						$consolidate_id = $db->cdp_registro() -> consolidate_id;
 						
