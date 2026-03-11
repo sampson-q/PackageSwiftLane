@@ -26,7 +26,9 @@ if (!$user->cdp_is_Admin())
 
 require_once("helpers/querys.php");
 
-require_once("helpers/querys.php");
+// Datos de usuario para topbar/sidebar y lógica por rol
+$userData = $user->cdp_getUserData();
+
 $ctx = cdp_getAgencyContext();
 $agency_default_id = ($ctx['is_restricted'] && $ctx['agency_id'] !== null) ? (int)$ctx['agency_id'] : 0;
 
