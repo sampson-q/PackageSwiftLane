@@ -3677,4 +3677,6 @@ $lang = array(
     'virtual_mailbox_message-2' => "Error Adding Virtual Mailbox Address",
     'virtual_mailbox_message-3' => "Virtual Mailbox Address Updated Successfully",
     'virtual_mailbox_message-4' => "Error Updating Virtual Mailbox Address",
+
+    'translate_search_client' => 'Nothing yet',
 );
