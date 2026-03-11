@@ -852,14 +852,14 @@
 					<!-- (API Administration module removed) -->
 					<?php } ?>
 
-					<?php if ($user->cdp_hasPermission('verify_updates')) { ?>
+					<!-- <?php if ($user->cdp_hasPermission('verify_updates')) { ?>
 					<li class="sidebar-item">
 						<a class="sidebar-link waves-effect waves-dark" href="verify_update.php" aria-expanded="false">
 							<iconify-icon icon="solar:info-circle-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-61'] ?></span>
 						</a>
 					</li>
-					<?php } ?>
+					<?php } ?> -->
 				</ul>
 
 
@@ -1645,14 +1645,14 @@
 					<!-- (API Administration module removed) -->
 					<?php } ?>
 
-					<?php if ($user->cdp_hasPermission('verify_updates')) { ?>
+					<!-- <?php if ($user->cdp_hasPermission('verify_updates')) { ?>
 					<li class="sidebar-item">
 						<a class="sidebar-link waves-effect waves-dark" href="verify_update.php" aria-expanded="false">
 							<iconify-icon icon="solar:info-circle-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-61'] ?></span>
 						</a>
 					</li>
-					<?php } ?>
+					<?php } ?> -->
 
 				</ul>
 
