@@ -185,7 +185,7 @@ $categories   = $core->cdp_getCategories();
                                                 <div class="input-group-text">
                                                     <div class="form-check form-check-inline">
                                                         <input class="form-check-input" type="checkbox" name="prefix_check" id="prefix_check">
-                                                        <label class="form-check-label" for="prefix_check"><?php echo $lang['leftorder13'] ?></label>
+                                                        <?php echo $lang['leftorder13'] ?>
                                                     </div>
                                                 </div>
                                             </div>
