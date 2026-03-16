@@ -406,6 +406,16 @@
 					</li>
 					<?php } ?>
 
+                    <?php if ($user->cdp_hasPermission('push_notifications')) { ?>
+					<!-- push notifications-->
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="push_notifications.php" aria-expanded="false">
+							<iconify-icon icon="mdi:message-text-fast-outline" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-66'] ?></span>
+						</a>
+					</li>
+					<?php } ?>
+
 					<?php 
 
 						$perModule = [
@@ -1246,6 +1256,16 @@
 						<a class="sidebar-link waves-effect waves-dark" href="reports.php" aria-expanded="false">
 							<iconify-icon icon="solar:document-text-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-26'] ?></span>
+						</a>
+					</li>
+					<?php } ?>
+
+                    <?php if ($user->cdp_hasPermission('push_notifications')) { ?>
+					<!-- push notifications-->
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="push_notifications.php" aria-expanded="false">
+							<iconify-icon icon="mdi:message-text-fast-outline" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-66'] ?></span>
 						</a>
 					</li>
 					<?php } ?>
@@ -2216,6 +2236,16 @@
 						<a class="sidebar-link waves-effect waves-dark" href="reports.php" aria-expanded="false">
 							<iconify-icon icon="solar:document-text-linear" class="fs-5" style="color:#fb8c00"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-26'] ?></span>
+						</a>
+					</li>
+					<?php } ?>
+
+                    <?php if ($user->cdp_hasPermission('push_notifications')) { ?>
+					<!-- push notifications-->
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="push_notifications.php" aria-expanded="false">
+							<iconify-icon icon="mdi:message-text-fast-outline" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-66'] ?></span>
 						</a>
 					</li>
 					<?php } ?>
