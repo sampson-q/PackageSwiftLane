@@ -192,6 +192,7 @@ function fetchTariff() {
       sender_address: saddr_id,
       recipient_id: recip_id,
       recipient_address: raddr_id,
+      recipient_type: recip_type,
       order_service_options: serviceOpt,
       rate_provider: provider,
       distance_miles: miles
@@ -287,37 +288,40 @@ function cdp_load_cities(modal) {
    SELECT2 Remitente/Destinatario
    ========================== */
 function cdp_select2_init_sender() {
-  $("#sender_id")
-    .select2({
-      ajax: {
-        url: "ajax/select2_sender.php",
-        dataType: "json",
-        delay: 250,
-        data: function (params) { return { q: params.term }; },
-        processResults: function (data) { return { results: data }; },
-        cache: true
-      },
-      minimumInputLength: 2,
-      placeholder: typeof search_sender !== "undefined" ? search_sender : "Buscar remitente",
-      allowClear: true
-    })
-    .on("change", function () {
-      $("#sender_address_id").prop("disabled", true).val(null).trigger("change");
-      $("#recipient_id").prop("disabled", true).val(null).trigger("change");
-      $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
-      $("#add_address_sender, #add_recipient, #add_address_recipient").prop("disabled", true);
+    $("#sender_id")
+        .select2({
+            ajax: {
+                url: "ajax/select2_sender.php",
+                dataType: "json",
+                delay: 250,
+                data: function (params) { return { q: params.term }; },
+                processResults: function (data) { return { results: data }; },
+                cache: true
+            },
+            minimumInputLength: 2,
+            placeholder: typeof search_sender !== "undefined" ? search_sender : "Buscar remitente",
+            allowClear: true
+        })
+        .on("change", function () {
+            window.recipient_type = 'user';
+            
+            $("#sender_address_id").prop("disabled", true).val(null).trigger("change");
+            $("#recipient_id").prop("disabled", true).val(null).trigger("change");
+            $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
+            $("#add_address_sender, #add_recipient, #add_address_recipient").prop("disabled", true);
 
-      if ($(this).val()) {
-        $("#sender_address_id").prop("disabled", false);
-        $("#add_address_sender").prop("disabled", false);
-        $("#recipient_id").prop("disabled", false);
-        $("#add_recipient").prop("disabled", false);
-      }
-      cdp_select2_init_sender_address();
-      cdp_select2_init_recipient();
-      cdp_select2_init_recipient_address();
-      scheduleAutoFetch();
-    });
+            if ($(this).val()) {
+                $("#sender_address_id").prop("disabled", false);
+                $("#add_address_sender").prop("disabled", false);
+                $("#recipient_id").prop("disabled", false);
+                $("#add_recipient").prop("disabled", false);
+            }
+
+            cdp_select2_init_sender_address();
+            cdp_select2_init_recipient();
+            cdp_select2_init_recipient_address();
+            scheduleAutoFetch();
+        });
 }
 function cdp_select2_init_sender_address() {
   var sender_id = $("#sender_id").val();
@@ -340,51 +344,70 @@ function cdp_select2_init_sender_address() {
     .on("change", scheduleAutoFetch);
 }
 function cdp_select2_init_recipient() {
-  var sender_id = $("#sender_id").val();
-  $("#recipient_id")
-    .select2({
-      ajax: {
-        url: "ajax/select2_recipient.php?id=" + sender_id,
-        dataType: "json",
-        delay: 250,
-        data: function (params) { return { q: params.term }; },
-        processResults: function (data) { return { results: data }; },
-        cache: true
-      },
-      placeholder: typeof search_recipient !== "undefined" ? search_recipient : "Buscar destinatario",
-      allowClear: true
-    })
-    .on("change", function () {
-      $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
-      $("#add_address_recipient").prop("disabled", true);
-      if ($(this).val()) {
-        $("#recipient_address_id").prop("disabled", false);
-        $("#add_address_recipient").prop("disabled", false);
-      }
-      cdp_select2_init_recipient_address();
-      scheduleAutoFetch();
-    });
+    var sender_id = $("#sender_id").val();
+    $("#recipient_id")
+        .select2({
+            ajax: {
+                url: "ajax/select2_recipient.php?id=" + sender_id,
+                dataType: "json",
+                delay: 250,
+                data: function (params) { return { q: params.term }; },
+                processResults: function (data) { return { results: data }; },
+                cache: true
+            },
+            placeholder: typeof search_recipient !== "undefined" ? search_recipient : "Buscar destinatario",
+            allowClear: true
+        })
+        .on("select2:select", function (e) {
+            var data = e.params.data;
+
+            window.recipient_type = data.type || 'recipient';
+
+            $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
+            $("#add_address_recipient").prop("disabled", true);
+
+            if ($(this).val()) {
+                $("#recipient_address_id").prop("disabled", false);
+                $("#add_address_recipient").prop("disabled", false);
+            }
+
+            // re-init with correct type
+            cdp_select2_init_recipient_address();
+            scheduleAutoFetch();
+        })
 }
+
 function cdp_select2_init_recipient_address() {
-  var recipient_id = $("#recipient_id").val();
-  $("#recipient_address_id")
-    .select2({
-      ajax: {
-        url: "ajax/select2_recipient_addresses.php?id=" + recipient_id,
-        dataType: "json",
-        delay: 250,
-        data: function (params) { return { q: params.term }; },
-        processResults: function (data) { return { results: data }; },
-        cache: true
-      },
-      escapeMarkup: function (m) { return m; },
-      templateResult: cdp_formatAdress,
-      templateSelection: cdp_formatAdressSelection,
-      placeholder: typeof search_recipient_address !== "undefined" ? search_recipient_address : "Buscar dirección destinatario",
-      allowClear: true
-    })
-    .on("change", scheduleAutoFetch);
+    var recipient_id = $("#recipient_id").val();
+
+    // get type (default fallback = recipient)
+    var recipient_type = window.recipient_type || 'recipient';
+
+    $("#recipient_address_id")
+        .select2({
+            ajax: {
+                url: "ajax/select2_recipient_addresses.php",
+                dataType: "json",
+                delay: 250,
+                data: function (params) {
+                    return {
+                        id: recipient_id,
+                        type: recipient_type, // 🔥 CRITICAL
+                        q: params.term
+                    };
+                },
+                processResults: function (data) { return { results: data }; },
+                cache: true
+            },
+            escapeMarkup: function (m) { return m; },
+            templateResult: cdp_formatAdress,
+            templateSelection: cdp_formatAdressSelection,
+            placeholder: typeof search_recipient_address !== "undefined" ? search_recipient_address : "Buscar dirección destinatario",
+            allowClear: true
+        })
+        .on("change", scheduleAutoFetch);
 }
+
 function cdp_formatAdress(item) {
   if (item.loading) return item.text;
   var markup = "<div class='select2-result-repository clearfix'>";
