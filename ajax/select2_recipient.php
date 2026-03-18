@@ -26,48 +26,82 @@ require_once("../loader.php");
 require_once(__DIR__ . '/../helpers/querys.php');
 
 $db = new Conexion;
-$ctx = cdp_getAgencyContext();
 
-$sender_id = (int)(isset($_REQUEST['id']) ? $_REQUEST['id'] : 0);
+$sender_id = (int)($_REQUEST['id'] ?? 0);
 $search = isset($_REQUEST['q']) ? cdp_sanitize($_REQUEST['q']) : '';
 
-$list = array();
 $data = [];
+
+$ctx = cdp_getAgencyContext();
+$extraWhere = "";
 
 if ($ctx['is_restricted']) {
     if ($ctx['agency_id'] === null) {
         echo json_encode([]);
         exit;
     }
-    $db->cdp_query('SELECT agency_id FROM cdb_users WHERE id = :id AND userlevel = 1 LIMIT 1');
-    $db->bind(':id', $sender_id);
-    $db->cdp_execute();
-    $sender_row = $db->cdp_registro();
-    if (!$sender_row || (int)$sender_row->agency_id !== (int)$ctx['agency_id']) {
-        echo json_encode([]);
-        exit;
-    }
+    $extraWhere = " AND agency_id = " . (int)$ctx['agency_id'];
 }
 
-$sql = "SELECT * FROM cdb_recipients
- WHERE 
-  (fname LIKE '%" . $search . "%'
-  or lname LIKE '%" . $search . "%'
-  or email LIKE '%" . $search . "%'
-  or phone LIKE '%" . $search . "%'
-)
-  and sender_id = " . $sender_id;
-if ($ctx['is_restricted'] && $ctx['agency_id'] !== null) {
-    $sql .= " AND agency_id = " . (int)$ctx['agency_id'];
-}
+/*
+------------------------------------
+1. DEFAULT RECIPIENT (THE SENDER)
+------------------------------------
+*/
+
+$sql = "SELECT id,fname,lname FROM cdb_users
+        WHERE id = $sender_id
+        AND userlevel='1'
+        AND (
+            fname LIKE '%$search%' OR
+            lname LIKE '%$search%' OR
+            email LIKE '%$search%' OR
+            phone LIKE '%$search%'
+        )
+        $extraWhere";
+
 $db->cdp_query($sql);
 $db->cdp_execute();
+$users = $db->cdp_registros();
 
-$datas = $db->cdp_registros();
+foreach ($users as $row) {
+    $data[] = [
+        'id' => $row->id,
+        'text' => $row->fname . " " . $row->lname,
+        'type' => 'user'
+    ];
+}
 
-foreach ($datas as $key) {
 
-    $data[] = array('id' => $key->id, 'text' => $key->fname . " " . $key->lname);
+/*
+------------------------------------
+2. EXTRA RECIPIENTS
+------------------------------------
+*/
+
+$sql = "SELECT * FROM cdb_recipients
+        WHERE sender_id = $sender_id
+        AND (
+            fname LIKE '%$search%' OR
+            lname LIKE '%$search%' OR
+            email LIKE '%$search%' OR
+            phone LIKE '%$search%'
+        )";
+
+if ($ctx['is_restricted'] && $ctx['agency_id'] !== null) {
+    $sql .= " AND agency_id=" . (int)$ctx['agency_id'];
+}
+
+$db->cdp_query($sql);
+$db->cdp_execute();
+$recipients = $db->cdp_registros();
+
+foreach ($recipients as $row) {
+    $data[] = [
+        'id' => $row->id,
+        'text' => $row->fname . " " . $row->lname,
+        'type' => 'recipient'
+    ];
 }
 
 echo json_encode($data);
