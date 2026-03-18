@@ -209,7 +209,6 @@ $order_prefix = $settings->prefix;
                                 <?php echo $lang['message_ajax_error2']; ?>
                                 <br>
                                 Select the country code
-
                             </p>
                         </div>
                     <?php
@@ -232,9 +231,7 @@ $order_prefix = $settings->prefix;
 
                                                         <div class="form-check form-check-inline">
                                                             <input class="form-check-input" type="checkbox" name="prefix_check" id="prefix_check" value="1">
-                                                            <label class="form-check-label" for="prefix_check">
-                                                                <?php echo $lang['leftorder13'] ?>
-                                                            </label>
+                                                            <?php echo $lang['leftorder13'] ?>
                                                         </div>
                                                     </div>
                                                 </div>
