@@ -24,12 +24,12 @@ function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body) {
         'body'  => $template_whatsapp_body,
     ];
 
-    if (intval($settings->active_whatsapp) != 1) {
-        return [
-            'success' => false,
-            'message' => 'WhatsApp is not active in settings.',
-        ];
-    }
+    // if (intval($settings->active_whatsapp) != 1) {
+    //     return [
+    //         'success' => false,
+    //         'message' => 'WhatsApp is not active in settings.',
+    //     ];
+    // }
 
     // Fire off the cURL request
     $ch = curl_init($apiUrl);
