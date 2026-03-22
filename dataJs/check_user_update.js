@@ -27,6 +27,10 @@ function checkProfileCompletion() {
                 steps.push("phone");
             }
 
+            if (parseInt(data.update_document, 10) === 0) {
+                steps.push("document");
+            }
+
             if (steps.length === 0) {
                 return;
             }
@@ -60,6 +64,15 @@ function runForcedProfileSteps(steps, index) {
                         runForcedProfileSteps(steps, index + 1);
                     }
                 });
+            }
+        });
+        return;
+    }
+
+    if (step === "document") {
+        openDocumentModal().then(function (saved) {
+            if (saved) {
+                runForcedProfileSteps(steps, index + 1);
             }
         });
         return;
@@ -135,6 +148,26 @@ function openOtpModal() {
     });
 }
 
+function openDocumentModal() {
+    return new Promise(function (resolve) {
+        var $modal = $("#userUpdateDocument");
+
+        $("#force_profile_document_error").text("");
+
+        $modal.off("hidden.bs.modal.forceDocument");
+        $modal.on("hidden.bs.modal.forceDocument", function () {
+            resolve($(this).data("saved") === true);
+            $(this).removeData("saved");
+        });
+
+        $modal.modal({
+            backdrop: "static",
+            keyboard: false,
+            show: true
+        });
+    });
+}
+
 function bindForcedProfileEvents() {
     $(document).on("click", "#btn_force_save_address", function () {
         saveForcedAddress();
@@ -150,6 +183,10 @@ function bindForcedProfileEvents() {
 
     $(document).on("click", "#btn_force_resend_phone_otp", function () {
         resendForcedPhoneOtp();
+    });
+
+    $(document).on("click", "#btn_force_save_document", function () {
+        saveForcedDocument();
     });
 }
 
@@ -289,6 +326,47 @@ function saveForcedAddress() {
         },
         error: function () {
             $("#force_profile_address_error").text("An error occurred while saving the address.");
+        }
+    });
+}
+
+function saveForcedDocument() {
+    var documentType = $("#force_document_type").val();
+    var documentNumber = $.trim($("#force_document_number").val());
+    var documentPhoto = $("#force_document_photo")[0].files[0];
+
+    $("#force_profile_document_error").text("");
+
+    if (!documentType || documentNumber.length === 0) {
+        $("#force_profile_document_error").text("Document type and document number are required.");
+        return;
+    }
+
+    var formData = new FormData();
+    formData.append("document_type", documentType);
+    formData.append("document_number", documentNumber);
+
+    if (documentPhoto) {
+        formData.append("document_photo", documentPhoto);
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "ajax/save_profile_document_ajax.php",
+        data: formData,
+        dataType: "json",
+        contentType: false,
+        processData: false,
+        success: function (resp) {
+            if (resp.status === "success") {
+                $("#userUpdateDocument").data("saved", true);
+                $("#userUpdateDocument").modal("hide");
+            } else {
+                $("#force_profile_document_error").text(resp.message || "Could not save document.");
+            }
+        },
+        error: function () {
+            $("#force_profile_document_error").text("An error occurred while saving the document.");
         }
     });
 }
