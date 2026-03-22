@@ -43,6 +43,7 @@
 <?php include 'views/modals/modal_user_update_address.php'; ?>
 <?php include 'views/modals/modal_user_update_phone.php'; ?>
 <?php include 'views/modals/modal_phone_update_otp.php'; ?>
+<?php include 'views/modals/modal_user_update_document.php'; ?>
 
 <style>
     .swal2-container {
