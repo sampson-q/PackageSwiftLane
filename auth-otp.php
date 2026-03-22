@@ -144,6 +144,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'postal'  => $pending['postal'],
                         ]);
 
+                        $db->cdp_query("INSERT INTO cdb_user_details_update_check (user_id, update_address, update_document) VALUES (:user_id, 1, 1)");
+                        $db->bind(':user_id', $user_created_id);
+                        $db->cdp_execute();
+
                         unset($_SESSION['otp_signup_challenge'], $_SESSION['pending_signup']);
                         $otpSuccess  = true;
                         $otpRedirect = 'index.php';
