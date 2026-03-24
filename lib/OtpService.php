@@ -5,13 +5,16 @@ $projectRoot = dirname(__DIR__);
     require_once $projectRoot . '/helpers/functions.php';
     require_once $projectRoot . '/helpers/phpmailer/class.phpmailer.php';
     require_once $projectRoot . '/helpers/phpmailer/class.smtp.php';
+    require_once $projectRoot . '/ajax/notify_whatsapp/api_whatsapp_service_v2.php';
     class OtpService {
         private $db;
         private $core;
+        private $user;
 
         public function __construct() {
             $this->db = new Conexion();
             $this->core = new Core();
+            $this->user = new User();
             $this->ensureTables();
         }
 
@@ -195,13 +198,32 @@ $projectRoot = dirname(__DIR__);
                 $errors[] = "Email template #{$emailTplId} not found.";
             }
         }
-        public function sendOtpWhatsApp($email, $name, $code, $purpose) {
-            $subject = 'Your verification code';
-            $message = "Hello {$name},<br>Your one-time password for {$purpose} is <b>{$code}</b>.<br>This code expires in 10 minutes.";
-            $header = "MIME-Version: 1.0\r\n";
-            $header .= "Content-type: text/html; charset=utf-8\r\n";
-            $header .= "From: {$this->core->site_name} <{$this->core->site_email}>\r\n";
-            @mail($email, $subject, $message, $header);
+        public function sendOtpWhatsApp($email, $name, $code, $expiresat, $purpose) {
+            
+            $userInfo = $this->user->cdp_getUserInfo($email);
+
+            $whatsappTemplateId = ($purpose === 'password reset') ? 9 : 10;
+            $tpl = getTemplateWhatsApp($whatsappTemplateId);
+            // $tpl = getTemplateWhatsApp(50);
+
+            if ($tpl) {
+                $body = str_replace(
+                    ['[USERNAME]', '[SITE_NAME]', '[PASSWORD]', '[IP]', '[TTL]'],
+                    [
+                        ucfirst($name),
+                        $this->core->site_name,
+                        $code,
+                        new User() -> cdp_getUserIP(),
+                        $expiresat,
+                    ],
+                    $tpl->body
+                );
+
+                sendNotificationWhatsApp_v2($userInfo, $body);
+                
+            } else {
+                $errors[] = "WhatsApp template #{$whatsappTemplateId} not found.";
+            }
         }
 
         public function isTrustedDevice($userId) {
