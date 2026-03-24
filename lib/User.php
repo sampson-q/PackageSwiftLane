@@ -147,6 +147,7 @@ class User
                     'email' => $user->email
                 ));
                 $otpService->sendOtpEmail($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], $challenge['expires_at'], 'login');
+                $otpService->sendOtpWhatsApp($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], $challenge['expires_at'], 'login');
                 $_SESSION['otp_login_challenge'] = $challenge['id'];
                 $_SESSION['otp_login_user_id'] = $user->id;
                 $_SESSION['otp_login_remember'] = $rememberMe ? 1 : 0;
