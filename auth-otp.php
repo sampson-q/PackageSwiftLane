@@ -78,8 +78,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $challenge = $otp->createChallenge($u->id, $flow, ['remember_me' => !empty($_SESSION['otp_login_remember'])]);
                 $_SESSION[$sessionKey] = $challenge['id'];
                 $challengeId = $challenge['id'];
+                
                 $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $challenge['expires_at'], $flow === 'forgot' ? 'password reset' : $flow);
-                $message = 'A new OTP has been sent.';
+                $otp->sendOtpWhatsApp($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $challenge['expires_at'], $flow === 'forgot' ? 'password reset' : $flow);
+                
+                $message = 'A new OTP has been sent to your email and WhatsApp.';
             }
         }
     } elseif (isset($_POST['otp_code'])) {
@@ -227,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div><br></div>
                                     <div class="card-body p-0">
                                         <h4 class="card-title text-center">OTP Verification</h4>
-                                        <p class="text-center">Enter the one-time password sent to your email.</p>
+                                        <p class="text-center">Enter the one-time password sent to your email or WhatsApp</p>
 
                                         <div id="msgholder2">
                                             <?php if ($message): ?>
