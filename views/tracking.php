@@ -82,7 +82,7 @@
     <!-- Navbar End -->
 
     <!-- Hero Start -->
-    <section class="bg-half-170 d-table w-100 h-100" style="background: url('assets/css_main_deprixa/images/user/bg.jpg') center center;">
+    <section class="bg-half-170 d-table w-100 h-full" style="background: url('assets/images/PackageTracking.svg') center; background-repeat: no-repeat;">
         <div class="bg-overlay"></div>
         <div class="container">
             <div class="row align-items-center">
