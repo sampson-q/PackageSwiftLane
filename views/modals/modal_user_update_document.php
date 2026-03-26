@@ -21,17 +21,9 @@
                                 <div class="form-icon position-relative">
                                     <i data-feather="list" class="fea icon-sm icons"></i>
                                     <select class="custom-select form-control ps-5" id="force_document_type" name="document_type">
-                                        <option value=""><?php echo $lang['leftorder164']; ?></option>
-                                        <option value="DNI"><?php echo $lang['leftorder165']; ?></option>
-                                        <option value="RIC"><?php echo $lang['leftorder166']; ?></option>
-                                        <option value="CI"><?php echo $lang['leftorder167']; ?></option>
-                                        <option value="CIE"><?php echo $lang['leftorder168']; ?></option>
-                                        <option value="CIN"><?php echo $lang['leftorder169']; ?></option>
-                                        <option value="CC"><?php echo $lang['leftorder171']; ?></option>
-                                        <option value="TI"><?php echo $lang['leftorder172']; ?></option>
-                                        <option value="CE"><?php echo $lang['leftorder173']; ?></option>
-                                        <option value="PSP"><?php echo $lang['leftorder174']; ?></option>
-                                        <option value="NIT"><?php echo $lang['leftorder1745']; ?></option>
+                                        <option value="PSP"><?php echo $lang['leftorder174'] ?></option>
+                                        <option value="ECW"><?php echo $lang['leftorder1746'] ?></option>
+                                        <option value="DNI"><?php echo $lang['leftorder165'] ?></option>
                                     </select>
                                 </div>
                             </div>
