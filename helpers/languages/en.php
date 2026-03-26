@@ -403,8 +403,8 @@ $lang = array(
 
 	"message_title_register1" => "Hello In this demo choose the country that corresponds to the configured price list, so you can fill out the shipping and Pick up form.",
 	"message_title_forgot1" => "Please enter your email address. You will receive a link to create a new password by email.",
-	"message_title_tracking1" => "shipments",
-	"message_title_tracking2" => "Locker packages",
+	"message_title_tracking1" => "Sea Shipments",
+	"message_title_tracking2" => "Air Shipments",
 
 	"message_title_track1" => "Attachments",
 	"message_title_track2" => "No",
@@ -617,7 +617,7 @@ $lang = array(
 
 	"left-menu-sidebar-0" => "branch",
 	"left-menu-sidebar-00" => "Locker",
-	"left-menu-sidebar-1" => "Create new shipment",
+	"left-menu-sidebar-1" => "Create Air Shipments",
 	"left-menu-sidebar-2" => "Control Panel",
 	"left-menu-sidebar-3" => "Application Management",
 	"left-menu-sidebar-4" => "All submissions",
@@ -647,10 +647,10 @@ $lang = array(
 
 
 	"left-menu-sidebar-22" => "Consolidated",
-	"left-menu-sidebar-2233333310" => "Shipments",
-	"left-menu-sidebar-2233333312" => "Locker packages",
-	"left-menu-sidebar-87800333" => "Consolidated locker packages",
-	"left-menu-sidebar-87800334" => "Consolidated Shipping",
+	"left-menu-sidebar-2233333310" => "Sea Shipping",
+	"left-menu-sidebar-2233333312" => "Air Shipping",
+	"left-menu-sidebar-87800333" => "Consolidated Air Shipments",
+	"left-menu-sidebar-87800334" => "Consolidated Sea Shipments",
 	"left-menu-sidebar-23" => "Consolidated Control Panel",
 	"left-menu-sidebar-24" => "List of Consolidated",
 	"left-menu-sidebar-25" => "Packages to Consolidate",
@@ -1161,12 +1161,12 @@ $lang = array(
 	"left115" => "User",
 	"left116" => "Username",
 	"left117" => "Password",
-	"left118" => "Password",
-	"left119" => "Forgot your password ?",
-	"left120" => "Remember me",
-	"left121" => "Enter",
-	"left122" => "Don't have an account ?",
-	"left123" => "Sign up",
+	"left118" => "*************************",
+	"left119" => "Forgotten your password?",
+	"left120" => "Remember Me",
+	"left121" => "Login",
+	"left122" => "Are you new to Swift?",
+	"left123" => "Create an Account",
 
 	/** Tracking Version 3.2.7.4 **/
 
@@ -1473,6 +1473,7 @@ $lang = array(
 	"leftorder173" => "ce --> Immigration Certificate or Immigration Card",
 	"leftorder174" => "psp --> Passport",
 	"leftorder1745" => "nit --> Tax Identification Number",
+	"leftorder1746" => "ecw --> Ghana Card",
 	"leftorder175" => "Document Number",
 	"leftorder176" => "Directions",
 	"leftorder177" => "Choose option",
