@@ -283,7 +283,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
 
-                <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/images/OneTimePassword.svg')" data-jarallax='{"speed": 0.5}'></div>
+                <!-- <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/images/OT(1)P.svg')" data-jarallax='{"speed": 0.5}'></div> -->
+                <div class="col-lg-7 offset-lg-5 padding-less img order-1" data-jarallax='{"speed": 0.5}'>
+                        <img src="assets/images/OT(1)P.svg" width="1000px" class="img-fluid" alt="">
+                    </div>
             </div>
         </div>
     </section>
