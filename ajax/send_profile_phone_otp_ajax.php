@@ -35,12 +35,25 @@ if (!$u) {
 
 $challenge = $otp->createChallenge((int)$userData->id, 'profile_phone', [
     'phone' => $phone
-], 600);
+], 300);
 
 $sender = new stdClass();
 $sender->phone = $phone;
 
-$message = "Hello " . trim($u->fname . ' ' . $u->lname) . ", your verification code is: *" . $challenge['code'] . "*. This code expires in 10 minutes.";
+$name = trim($u->fname . ' ' . $u->lname);
+
+$message = implode("\n", [
+    "Dear " . ucfirst($name) . ",",
+    "",
+    "Your WhatsApp verification OTP is: *{$challenge['code']}*",
+    "",
+    "⚠️ *Note* that this One-Time Password will expire in *5 minutes*. Do *not* share this code with anyone — {$this->core->site_name} will never ask for it.",
+    "",
+    "If you did not request a phone number update, please report this to the administrator immediately.",
+    "",
+    "Thank you.",
+    "{$this->core->site_name} Team."
+]);
 
 $sendResult = sendNotificationWhatsApp_v2($sender, $message);
 
