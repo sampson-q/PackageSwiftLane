@@ -196,6 +196,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="assets/css_main_deprixa/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
     <link href="assets/css_main_deprixa/css/colors/default.css" rel="stylesheet" id="color-opt">
     <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
+    <style>
+        .otp-box {
+    width: 48px;
+    height: 56px;
+    padding: 0;
+    border-radius: 8px;
+    border: 2px solid #dee2e6;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.otp-box:focus {
+    border-color: #336aea;
+    box-shadow: 0 0 0 3px rgba(51, 106, 234, 0.15);
+    outline: none;
+}
+
+.otp-box.filled {
+    border-color: #336aea;
+}
+    </style>
 </head>
 
 <body>
@@ -254,20 +274,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <div class="row">
                                                 <div class="col-lg-12">
                                                     <div class="mb-3">
-                                                        <label class="form-label">OTP Code <span class="text-danger">*</span></label>
-                                                        <div class="form-icon position-relative">
-                                                            <i data-feather="shield" class="fea icon-sm icons"></i>
-                                                            <input type="text" name="otp_code" maxlength="6" class="form-control ps-5" placeholder="Enter 6-digit code">
+                                                        <!-- <label class="form-label">OTP Code <span class="text-danger">*</span></label> -->
+                                                        <div class="d-flex justify-content-center gap-2" id="otp_boxes">
+                                                            <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+                                                            <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+                                                            <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+                                                            <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+                                                            <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+                                                            <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
                                                         </div>
+                                                        <input type="hidden" name="otp_code">
                                                     </div>
                                                 </div>
 
-                                                <div class="col-lg-12 mb-0">
-                                                    <div class="d-grid">
-                                                        <button type="submit" class="btn btn-grad">Verify</button>
+                                                <div class="row justify-content-center">
+                                                    <div class="col-auto mb-0">
+                                                        <button type="submit" class="btn btn-grad px-5">Verify</button>
                                                     </div>
                                                 </div>
-
+                                                
                                                 <div class="col-12 text-center">
                                                     <p class="mb-0 mt-3">
                                                         <small class="text-dark me-2">Didn't receive a code?</small>
@@ -297,6 +322,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="assets/css_main_deprixa/js/plugins.init.js"></script>
     <script src="assets/css_main_deprixa/js/app.js"></script>
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+    <script>
+        (function () {
+    function initOtpBoxes(containerId, hiddenInput) {
+        var $boxes = $("#" + containerId + " .otp-box");
+        var $hidden = $(hiddenInput);
+
+        function syncHidden() {
+            var val = $boxes.map(function () { return $(this).val(); }).get().join("");
+            $hidden.val(val);
+        }
+
+        $boxes.on("keydown", function (e) {
+            var $this = $(this);
+            var idx = $boxes.index($this);
+
+            if (e.key === "Backspace") {
+                if ($this.val() !== "") {
+                    $this.val("").removeClass("filled");
+                } else if (idx > 0) {
+                    $boxes.eq(idx - 1).val("").removeClass("filled").focus();
+                }
+                syncHidden();
+                e.preventDefault();
+                return;
+            }
+
+            if (e.key === "ArrowLeft" && idx > 0) {
+                $boxes.eq(idx - 1).focus();
+                return;
+            }
+            if (e.key === "ArrowRight" && idx < $boxes.length - 1) {
+                $boxes.eq(idx + 1).focus();
+                return;
+            }
+        });
+
+        $boxes.on("input", function () {
+            var $this = $(this);
+            var val = $this.val().replace(/\D/g, "").slice(-1);
+            $this.val(val);
+            val ? $this.addClass("filled") : $this.removeClass("filled");
+            syncHidden();
+            if (val && $boxes.index($this) < $boxes.length - 1) {
+                $boxes.eq($boxes.index($this) + 1).focus();
+            }
+        });
+
+        $boxes.on("paste", function (e) {
+            var pasted = (e.originalEvent.clipboardData || window.clipboardData)
+                .getData("text").replace(/\D/g, "").slice(0, 6);
+            if (!pasted) return;
+            e.preventDefault();
+            $boxes.each(function (i) {
+                var ch = pasted[i] || "";
+                $(this).val(ch);
+                ch ? $(this).addClass("filled") : $(this).removeClass("filled");
+            });
+            syncHidden();
+            var nextEmpty = $boxes.filter(function () { return !$(this).val(); }).first();
+            (nextEmpty.length ? nextEmpty : $boxes.last()).focus();
+        });
+
+        // Clear boxes when modal opens
+        $("#userUpdatePhoneOtp").on("show.bs.modal", function () {
+            $boxes.val("").removeClass("filled");
+            $hidden.val("");
+            setTimeout(function () { $boxes.first().focus(); }, 300);
+        });
+    }
+
+    // Modal boxes
+    initOtpBoxes("force_otp_boxes", "#force_phone_otp_code");
+
+    // Standalone page boxes — collect into hidden before form submits
+    if ($("#otp_boxes").length) {
+        var $standalonBoxes = $("#otp_boxes .otp-box");
+        var $standaloneHidden = $("input[name='otp_code']");
+
+        $standalonBoxes.on("keydown input paste", function () {
+            // reuse same logic by triggering initOtpBoxes inline
+        });
+
+        initOtpBoxes("otp_boxes", "input[name='otp_code']");
+
+        $("form.login-form").on("submit", function () {
+            var val = $standalonBoxes.map(function () { return $(this).val(); }).get().join("");
+            $standaloneHidden.val(val);
+        });
+
+        // Focus first box on load
+        setTimeout(function () { $standalonBoxes.first().focus(); }, 100);
+    }
+})();
+    </script>
 
     <?php if ($otpSuccess): ?>
     <script>
