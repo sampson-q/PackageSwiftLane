@@ -467,7 +467,6 @@ function verifyForcedPhoneOtp() {
         url: "ajax/verify_profile_phone_otp_ajax.php",
         dataType: "json",
         data: {
-            challenge_id: forceProfileState.otpChallengeId,
             otp_code: code
         },
         success: function (resp) {
