@@ -124,17 +124,9 @@
                                                            <div class="form-icon position-relative">
                                                             <i data-feather="list" class="fea icon-sm icons"></i>
                                                                 <select class="custom-select form-control ps-5" id="document_type" name="document_type">
-                                                                    <option value="DNI"><?php echo $lang['leftorder165'] ?></option>
-                                                                    <option value="RIC"><?php echo $lang['leftorder166'] ?></option>
-                                                                    <option value="CI"><?php echo $lang['leftorder167'] ?></option>
-                                                                    <option value="CIE"><?php echo $lang['leftorder168'] ?></option>
-                                                                    <option value="CIN"><?php echo $lang['leftorder169'] ?></option>
-                                                                    <option value="CIE"><?php echo $lang['leftorder170'] ?></option>
-                                                                    <option value="CC"><?php echo $lang['leftorder171'] ?></option>
-                                                                    <option value="TI"><?php echo $lang['leftorder172'] ?></option>
-                                                                    <option value="CE"><?php echo $lang['leftorder173'] ?></option>
                                                                     <option value="PSP"><?php echo $lang['leftorder174'] ?></option>
-                                                                    <option value="NIT"><?php echo $lang['leftorder1745'] ?></option>
+                                                                    <option value="ECW"><?php echo $lang['leftorder1746'] ?></option>
+                                                                    <option value="DNI"><?php echo $lang['leftorder165'] ?></option>
                                                                 </select>
                                                             </div>
                                                         </div>
@@ -358,7 +350,10 @@
                     </div> <!-- end about detail -->
                 </div> <!-- end col -->
 
-                <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/images/Registeration.svg')" data-jarallax='{"speed": 0.5}'>
+                <!-- <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/images/Registration.svg')" data-jarallax='{"speed": 0.5}'> -->
+                <div class="col-lg-7 offset-lg-5 padding-less img order-1" data-jarallax='{"speed": 0.5}'>
+                    <img src="assets/images/Registration.svg" width="1000px" class="img-fluid" alt="">
+                </div>
 
       
                 </div><!-- end col -->
