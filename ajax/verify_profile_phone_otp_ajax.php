@@ -10,23 +10,13 @@ $userData = $user->cdp_getUserData();
 $otp = new OtpService();
 $db = new Conexion;
 
-$challengeId = isset($_POST['challenge_id']) ? (int)$_POST['challenge_id'] : 0;
+$challengeId = isset($_SESSION['profile_phone_otp_challenge']) ? (int)$_SESSION['profile_phone_otp_challenge'] : 0;
 $otpCode = trim($_POST['otp_code'] ?? '');
 
 if ($challengeId <= 0 || $otpCode === '') {
     echo json_encode([
         "status" => "error",
         "message" => "Invalid request."
-    ]);
-    exit;
-}
-
-$sessionChallengeId = isset($_SESSION['profile_phone_otp_challenge']) ? (int)$_SESSION['profile_phone_otp_challenge'] : 0;
-
-if ($sessionChallengeId !== $challengeId) {
-    echo json_encode([
-        "status" => "error",
-        "message" => "OTP session mismatch."
     ]);
     exit;
 }
