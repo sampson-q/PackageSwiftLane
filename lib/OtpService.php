@@ -63,7 +63,7 @@ $projectRoot = dirname(__DIR__);
             $this->db->cdp_execute();
         }
 
-        public function createChallenge($userId, $purpose, array $metadata = [], $ttlSeconds = 600) {
+        public function createChallenge($userId, $purpose, array $metadata = [], $ttlSeconds = 300) {
             $this->db->cdp_query("UPDATE cdb_auth_otp_challenges SET status='replaced', updated_at=:now WHERE user_id=:user_id AND purpose=:purpose AND status='pending'");
             $this->db->bind(':now', date('Y-m-d H:i:s'));
             $this->db->bind(':user_id', (int)$userId);
@@ -141,7 +141,7 @@ $projectRoot = dirname(__DIR__);
                         $code,
                         new User()->cdp_getUserIP(),
                         $this->core->site_url,
-                        date('H:i', strtotime($expiresat))
+                        '5 minutes',
                     ],
                     $emailTpl->body
                 );
@@ -214,7 +214,7 @@ $projectRoot = dirname(__DIR__);
                         $this->core->site_name,
                         $code,
                         new User() -> cdp_getUserIP(),
-                        $expiresat,
+                        '5 minutes',
                     ],
                     $tpl->body
                 );
