@@ -75,7 +75,7 @@ $sql = "SELECT   a.status_invoice, a.total_order, a.consolidate_id , a.c_prefix,
 			 ";
 
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -318,7 +318,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'consolidate_list_packages');	?>
 		</div>
 
 		<script src="dataJs/consolidate_package_ajax.js"></script>

@@ -90,7 +90,7 @@ $sql = "SELECT * FROM cdb_add_order where order_payment_method >1
 			 ";
 
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 

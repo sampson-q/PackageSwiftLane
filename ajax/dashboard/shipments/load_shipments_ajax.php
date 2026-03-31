@@ -74,7 +74,7 @@ $sql = "SELECT a.status_invoice,  a.order_incomplete,  a.is_consolidate, a.is_pi
 			 ";
 
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -255,7 +255,7 @@ if ($numrows > 0) { ?>
 
 		</table>
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'load_shipments');	?>
 		</div>
 
 	</div>

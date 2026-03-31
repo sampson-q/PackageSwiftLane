@@ -85,7 +85,7 @@ $sql = "SELECT a.status_invoice, a.total_weight, a.total_tax_discount, a.sub_tot
 			 ";
 
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 

@@ -65,7 +65,7 @@ $sql = "SELECT a.id, b.order_id, a.lname,a.fname, b.order_prefix, b.order_no FRO
      ";
 
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 

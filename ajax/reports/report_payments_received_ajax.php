@@ -81,7 +81,7 @@ $sql = "SELECT c.lname, c.fname, a.id_charge, b.order_prefix, b.order_no, a.paym
 			 ";
 
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 

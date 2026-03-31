@@ -64,7 +64,7 @@ $sql = "SELECT a.is_prealert, a.tracking_purchase, a.provider_purchase, a.price_
 			 ";
 
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -230,6 +230,6 @@ if ($numrows > 0) { ?>
 
 
 	<div class="pull-right">
-		<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
+		<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'load_packages_registered');	?>
 	</div>
 <?php } ?>

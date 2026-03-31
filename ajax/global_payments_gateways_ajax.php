@@ -65,7 +65,7 @@ $sql = "SELECT * FROM cdb_payments_gateway  where payment_transaction LIKE '%" .
 			 ";
 
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -213,7 +213,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'global_payments_gateways');	?>
 		</div>
 
 	</div>

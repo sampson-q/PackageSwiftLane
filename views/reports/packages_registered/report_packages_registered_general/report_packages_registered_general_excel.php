@@ -97,7 +97,7 @@ $sql = "SELECT a.total_declared_value, a.total_weight, a.sub_total, a.total_tax_
              ";
 
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 

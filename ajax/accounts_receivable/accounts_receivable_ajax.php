@@ -101,7 +101,7 @@ $sql = "SELECT * FROM cdb_add_order where order_payment_method >1
 			 ";
 
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -234,7 +234,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'accounts_receivable');	?>
 		</div>
 
 		<script src="dataJs/account_receivable_ajax.js"></script>

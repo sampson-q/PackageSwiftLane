@@ -128,7 +128,7 @@ if ($numrows > 0) { ?>
     </table>
 
     <div class="pull-right">
-        <?php echo cdp_paginate($page, $total_pages, $adjacents, $lang); ?>
+        <?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'ship_tariffs_list'); ?>
     </div>
 </div>
 <?php
