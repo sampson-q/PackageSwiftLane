@@ -84,7 +84,7 @@ $sql = "SELECT a.is_prealert, a.is_consolidate, a.tracking_purchase, a.provider_
 			 ";
 
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -407,7 +407,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'customers_package_list');	?>
 		</div>
 
 		<script src="dataJs/customers_packages_ajax.js"></script>

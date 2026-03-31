@@ -71,7 +71,7 @@ $sql = "SELECT a.status_invoice, a.origin_off, a.agency, a.total_weight, a.total
 			 ";
 
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 

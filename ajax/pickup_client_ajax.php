@@ -50,7 +50,7 @@ $sql = "SELECT
             a.order_id DESC";
 
 // Count results
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 

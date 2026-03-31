@@ -71,7 +71,7 @@ $sql = "SELECT  a.total_declared_value, a.agency, a.origin_off, a.total_weight, 
 			 order by order_id desc 
 			 ";
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 

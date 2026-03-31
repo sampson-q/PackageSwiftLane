@@ -250,7 +250,7 @@ if ($numrows > 0) { ?>
         </table>
 
         <div class="pull-right">
-            <?php echo cdp_paginate($page, $total_pages, $adjacents, $lang); ?>
+            <?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'warehouse_view'); ?>
         </div>
         <script src="dataJs/courier_ajax.js"></script>
     </div>

@@ -69,7 +69,7 @@ $sql = "SELECT a.total_weight, a.total_tax_discount, a.sub_total, a.total_tax_in
 			 order by consolidate_id desc 
 			 ";
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 

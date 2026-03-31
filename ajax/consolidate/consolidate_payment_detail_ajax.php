@@ -47,7 +47,7 @@ if ($order_id > 0) {
 $sql = "SELECT * FROM cdb_consolidate   where consolidate_id = '" . $order_id . "' ";
 
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 

@@ -73,7 +73,7 @@ $sql = "SELECT  a.status_invoice, a.is_pickup, a.total_order, a.order_id, a.orde
 			 order by order_id desc
 			 ";
 
-$query_count = $db->cdp_query($sql);
+$db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -192,7 +192,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'load_pickup');	?>
 		</div>
 	</div>
 <?php } ?>
