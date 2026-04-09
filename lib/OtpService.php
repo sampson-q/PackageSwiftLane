@@ -145,7 +145,7 @@ $projectRoot = dirname(__DIR__);
         }
 
         public function sendOtpEmail($email, $name, $code, $purpose) {
-            $emailTplId = ($purpose === 'password reset') ? 27 : (($purpose === 'login') ? 28 : 30);
+            $emailTplId = ($purpose === 'password reset') ? 27 : (($purpose === 'login') ? 30 : 28);
             $emailTpl   = cdp_getEmailTemplatesdg1i4($emailTplId);
 
             if ($emailTpl) {
