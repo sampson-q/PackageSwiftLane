@@ -36,7 +36,8 @@
 					</li>
 					<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
 					<li class="p-15 m-t-10">
-						<a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
+						<!-- <a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center"> -->
+						<a href="customer_packages_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
 							<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu m-l-5"> <?php echo $lang['left-menu-sidebar-1'] ?> </span>
 						</a>
@@ -911,7 +912,8 @@
 
 					<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
 					<li class="p-15 m-t-10">
-						<a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
+						<!-- <a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center"> -->
+						<a href="customer_packages_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
 							<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu m-l-5"> <?php echo $lang['left-menu-sidebar-1'] ?> </span>
 						</a>
@@ -2005,7 +2007,8 @@
 
 					<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
 					<li class="p-15 m-t-10">
-						<a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
+						<!-- <a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center"> -->
+						<a href="customer_packages_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
 							<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon> <span class="hide-menu m-l-5"> <?php echo $lang['left-menu-sidebar-1'] ?> </span> </a>
 					</li>
 					<?php } ?>
