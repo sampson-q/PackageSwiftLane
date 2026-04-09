@@ -64,71 +64,87 @@ $projectRoot = dirname(__DIR__);
         }
 
         public function createChallenge($userId, $purpose, array $metadata = [], $ttlSeconds = 300) {
-            $this->db->cdp_query("UPDATE cdb_auth_otp_challenges SET status='replaced', updated_at=:now WHERE user_id=:user_id AND purpose=:purpose AND status='pending'");
+            // Invalidate any existing pending challenge for this user + purpose
+            $this->db->cdp_query("UPDATE cdb_auth_otp_challenges
+                SET status='replaced', updated_at=:now
+                WHERE user_id=:user_id AND purpose=:purpose AND status='pending'");
             $this->db->bind(':now', date('Y-m-d H:i:s'));
-            $this->db->bind(':user_id', (int)$userId);
+            $this->db->bind(':user_id', (int) $userId);
             $this->db->bind(':purpose', $purpose);
             $this->db->cdp_execute();
 
             $code = (string) random_int(100000, 999999);
             $salt = bin2hex(random_bytes(16));
             $hash = hash('sha256', $code . '|' . $salt . '|' . $this->secret());
-            $now = date('Y-m-d H:i:s');
-            $exp = date('Y-m-d H:i:s', time() + $ttlSeconds);
+            $now  = date('Y-m-d H:i:s');
+            $exp  = date('Y-m-d H:i:s', time() + $ttlSeconds);
 
-            $this->db->cdp_query("INSERT INTO cdb_auth_otp_challenges (user_id,purpose,channel,code_hash,code_salt,expires_at,metadata,created_at,updated_at)
-                VALUES (:user_id,:purpose,'email',:code_hash,:code_salt,:expires_at,:metadata,:created_at,:updated_at)");
-            $this->db->bind(':user_id', (int)$userId);
-            $this->db->bind(':purpose', $purpose);
-            $this->db->bind(':code_hash', $hash);
-            $this->db->bind(':code_salt', $salt);
+            $this->db->cdp_query("INSERT INTO cdb_auth_otp_challenges
+                (user_id, purpose, channel, code_hash, code_salt, expires_at, metadata, created_at, updated_at)
+                VALUES (:user_id, :purpose, 'email', :code_hash, :code_salt, :expires_at, :metadata, :created_at, :updated_at)");
+            $this->db->bind(':user_id',    (int) $userId);
+            $this->db->bind(':purpose',    $purpose);
+            $this->db->bind(':code_hash',  $hash);
+            $this->db->bind(':code_salt',  $salt);
             $this->db->bind(':expires_at', $exp);
-            $this->db->bind(':metadata', json_encode($metadata));
+            $this->db->bind(':metadata',   json_encode($metadata));
             $this->db->bind(':created_at', $now);
             $this->db->bind(':updated_at', $now);
             $this->db->cdp_execute();
 
-            return ['id' => (int) $this->db->dbh->lastInsertId(), 'code' => $code, 'expires_at' => $exp];
+            return [
+                'id'         => (int) $this->db->dbh->lastInsertId(),
+                'code'       => $code,
+                'expires_at' => $exp,
+            ];
         }
 
         public function verifyChallenge($challengeId, $code, $purpose) {
             $this->db->cdp_query("SELECT * FROM cdb_auth_otp_challenges WHERE id=:id AND purpose=:purpose");
-            $this->db->bind(':id', (int)$challengeId);
+            $this->db->bind(':id', (int) $challengeId);
             $this->db->bind(':purpose', $purpose);
             $row = $this->db->cdp_registro();
 
-            if (!$row || $row->status !== 'pending') return ['ok' => false, 'error' => 'Invalid or used OTP request.'];
+            if (!$row || $row->status !== 'pending') {
+                return ['ok' => false, 'error' => 'Invalid or used OTP request.'];
+            }
             if (strtotime($row->expires_at) < time()) {
                 $this->setChallengeStatus($row->id, 'expired');
                 return ['ok' => false, 'error' => 'OTP expired. Request a new code.'];
             }
-            if ((int)$row->attempts >= (int)$row->max_attempts) {
+            if ((int) $row->attempts >= (int) $row->max_attempts) {
                 $this->setChallengeStatus($row->id, 'locked');
                 return ['ok' => false, 'error' => 'Too many attempts. Request a new code.'];
             }
 
             $expected = hash('sha256', trim($code) . '|' . $row->code_salt . '|' . $this->secret());
             if (!hash_equals($row->code_hash, $expected)) {
-                $this->db->cdp_query("UPDATE cdb_auth_otp_challenges SET attempts=attempts+1, updated_at=:updated_at WHERE id=:id");
+                $this->db->cdp_query("UPDATE cdb_auth_otp_challenges
+                    SET attempts=attempts+1, updated_at=:updated_at WHERE id=:id");
                 $this->db->bind(':updated_at', date('Y-m-d H:i:s'));
-                $this->db->bind(':id', (int)$row->id);
+                $this->db->bind(':id', (int) $row->id);
                 $this->db->cdp_execute();
                 return ['ok' => false, 'error' => 'Incorrect OTP.'];
             }
 
             $this->setChallengeStatus($row->id, 'verified');
-            return ['ok' => true, 'user_id' => (int)$row->user_id, 'metadata' => json_decode($row->metadata, true) ?: []];
+            return [
+                'ok'       => true,
+                'user_id'  => (int) $row->user_id,
+                'metadata' => json_decode($row->metadata, true) ?: [],
+            ];
         }
 
         private function setChallengeStatus($id, $status) {
-            $this->db->cdp_query("UPDATE cdb_auth_otp_challenges SET status=:status, updated_at=:updated_at WHERE id=:id");
-            $this->db->bind(':status', $status);
+            $this->db->cdp_query("UPDATE cdb_auth_otp_challenges
+                SET status=:status, updated_at=:updated_at WHERE id=:id");
+            $this->db->bind(':status',     $status);
             $this->db->bind(':updated_at', date('Y-m-d H:i:s'));
-            $this->db->bind(':id', (int)$id);
+            $this->db->bind(':id',         (int) $id);
             $this->db->cdp_execute();
         }
 
-        public function sendOtpEmail($email, $name, $code, $expiresat, $purpose) {
+        public function sendOtpEmail($email, $name, $code, $purpose) {
             $emailTplId = ($purpose === 'password reset') ? 27 : (($purpose === 'login') ? 28 : 30);
             $emailTpl   = cdp_getEmailTemplatesdg1i4($emailTplId);
 
@@ -139,7 +155,7 @@ $projectRoot = dirname(__DIR__);
                         ucfirst($name),
                         $this->core->site_name,
                         $code,
-                        new User()->cdp_getUserIP(),
+                        (new User())->cdp_getUserIP(),
                         $this->core->site_url,
                         '5 minutes',
                     ],
@@ -154,11 +170,10 @@ $projectRoot = dirname(__DIR__);
                     $headers .= "Content-type: text/html; charset=UTF-8\r\n";
                     $headers .= "From: {$this->core->site_name} <{$this->core->email_address}>\r\n";
 
-                    if (mail($email, $subject, $emailBody, $headers)) {
-                        $messages[] = 'Email OTP sent.';
-                    } else {
+                    if (!mail($email, $subject, $emailBody, $headers)) {
                         return ['ok' => false, 'error' => 'PHP Mail() failed.'];
                     }
+
                 } elseif ($this->core->mailer === 'SMTP') {
                     $mail = new PHPMailer(true);
                     try {
@@ -187,24 +202,24 @@ $projectRoot = dirname(__DIR__);
                         ];
 
                         $mail->send();
-                        $messages[] = 'Email OTP sent via SMTP.';
                     } catch (\Exception $e) {
-                        $errors[] = 'SMTP send error: ' . $mail->ErrorInfo;
+                        return ['ok' => false, 'error' => 'SMTP send error: ' . $mail->ErrorInfo];
                     }
                 } else {
-                    $errors[] = 'Unknown mailer configured.';
+                    return ['ok' => false, 'error' => 'Unknown mailer configured.'];
                 }
             } else {
-                $errors[] = "Email template #{$emailTplId} not found.";
+                return ['ok' => false, 'error' => "Email template #{$emailTplId} not found."];
             }
+
+            return ['ok' => true];
         }
-        public function sendOtpWhatsApp($email, $name, $code, $expiresat, $purpose) {
-            
+
+        public function sendOtpWhatsApp($email, $name, $code, $purpose) {
             $userInfo = $this->user->cdp_getUserInfo($email);
 
             $whatsappTemplateId = ($purpose === 'password reset') ? 9 : 10;
             $tpl = getTemplateWhatsApp($whatsappTemplateId);
-            // $tpl = getTemplateWhatsApp(50);
 
             if ($tpl) {
                 $body = str_replace(
@@ -213,90 +228,136 @@ $projectRoot = dirname(__DIR__);
                         ucfirst($name),
                         $this->core->site_name,
                         $code,
-                        new User() -> cdp_getUserIP(),
+                        (new User())->cdp_getUserIP(),
                         '5 minutes',
                     ],
                     $tpl->body
                 );
-
                 sendNotificationWhatsApp_v2($userInfo, $body);
-                
             } else {
-                $errors[] = "WhatsApp template #{$whatsappTemplateId} not found.";
+                return ['ok' => false, 'error' => "WhatsApp template #{$whatsappTemplateId} not found."];
             }
+
+            return ['ok' => true];
         }
 
         public function isTrustedDevice($userId) {
             if (empty($_COOKIE['trusted_device'])) return false;
+
             $parts = explode(':', $_COOKIE['trusted_device']);
             if (count($parts) !== 2) return false;
-            list($selector, $verifier) = $parts;
+            [$selector, $verifier] = $parts;
 
-            $this->db->cdp_query("SELECT * FROM cdb_auth_trusted_devices WHERE selector=:selector AND user_id=:user_id AND revoked_at IS NULL LIMIT 1");
+            $this->db->cdp_query("SELECT * FROM cdb_auth_trusted_devices
+                WHERE selector=:selector AND user_id=:user_id AND revoked_at IS NULL LIMIT 1");
             $this->db->bind(':selector', $selector);
-            $this->db->bind(':user_id', (int)$userId);
+            $this->db->bind(':user_id',  (int) $userId);
             $row = $this->db->cdp_registro();
+
             if (!$row || strtotime($row->expires_at) < time()) return false;
 
             $hash = hash('sha256', $verifier . '|' . $this->secret());
             if (!hash_equals($row->verifier_hash, $hash)) return false;
 
+            // Refresh last-used timestamp
             $this->db->cdp_query("UPDATE cdb_auth_trusted_devices SET last_used_at=:last_used_at WHERE id=:id");
             $this->db->bind(':last_used_at', date('Y-m-d H:i:s'));
-            $this->db->bind(':id', (int)$row->id);
+            $this->db->bind(':id',           (int) $row->id);
             $this->db->cdp_execute();
+
             return true;
         }
 
         public function rememberTrustedDevice($userId) {
-            $selector = bin2hex(random_bytes(12));
-            $verifier = bin2hex(random_bytes(32));
-            $hash = hash('sha256', $verifier . '|' . $this->secret());
-            $expires = date('Y-m-d H:i:s', time() + (90 * 86400));
+            $selector = bin2hex(random_bytes(12));   // 24 hex chars
+            $verifier = bin2hex(random_bytes(32));   // 64 hex chars
+            $hash     = hash('sha256', $verifier . '|' . $this->secret());
 
-            $this->db->cdp_query("INSERT INTO cdb_auth_trusted_devices (user_id,selector,verifier_hash,expires_at,created_at)
-                VALUES (:user_id,:selector,:verifier_hash,:expires_at,:created_at)");
-            $this->db->bind(':user_id', (int)$userId);
-            $this->db->bind(':selector', $selector);
+            // FIX: was 90 days — changed to 60 days in both the DB record and the cookie
+            $ttl     = 60 * 86400;
+            $expires = date('Y-m-d H:i:s', time() + $ttl);
+
+            $this->db->cdp_query("INSERT INTO cdb_auth_trusted_devices
+                (user_id, selector, verifier_hash, expires_at, created_at)
+                VALUES (:user_id, :selector, :verifier_hash, :expires_at, :created_at)");
+            $this->db->bind(':user_id',       (int) $userId);
+            $this->db->bind(':selector',      $selector);
             $this->db->bind(':verifier_hash', $hash);
-            $this->db->bind(':expires_at', $expires);
-            $this->db->bind(':created_at', date('Y-m-d H:i:s'));
+            $this->db->bind(':expires_at',    $expires);
+            $this->db->bind(':created_at',    date('Y-m-d H:i:s'));
             $this->db->cdp_execute();
 
             setcookie('trusted_device', $selector . ':' . $verifier, [
-                'expires' => time() + (90 * 86400),
-                'path' => '/',
+                'expires'  => time() + $ttl,
+                'path'     => '/',
                 'httponly' => true,
-                'samesite' => 'Lax'
+                'secure'   => true,   // FIX: was missing — cookie must only travel over HTTPS
+                'samesite' => 'Lax',
             ]);
         }
 
+        /**
+         * Revoke ALL trusted devices for a user and clear the browser cookie.
+         * Call this immediately after a successful password reset.
+         *
+         * @param int $userId
+         */
+        public function revokeAllTrustedDevices($userId) {
+            $this->db->cdp_query("UPDATE cdb_auth_trusted_devices
+                SET revoked_at=:now
+                WHERE user_id=:user_id AND revoked_at IS NULL");
+            $this->db->bind(':now',     date('Y-m-d H:i:s'));
+            $this->db->bind(':user_id', (int) $userId);
+            $this->db->cdp_execute();
+
+            // Expire the cookie immediately in the current browser
+            setcookie('trusted_device', '', [
+                'expires'  => time() - 3600,
+                'path'     => '/',
+                'httponly' => true,
+                'secure'   => true,
+                'samesite' => 'Lax',
+            ]);
+        }
+
+        // ─── Password-reset sessions ──────────────────────────────────────────
+
         public function createResetSession($userId, $ttl = 900) {
             $token = bin2hex(random_bytes(32));
-            $hash = hash('sha256', $token . '|' . $this->secret());
-            $this->db->cdp_query("INSERT INTO cdb_password_reset_sessions (user_id,token_hash,expires_at,created_at)
-                VALUES (:user_id,:token_hash,:expires_at,:created_at)");
-            $this->db->bind(':user_id', (int)$userId);
+            $hash  = hash('sha256', $token . '|' . $this->secret());
+
+            $this->db->cdp_query("INSERT INTO cdb_password_reset_sessions
+                (user_id, token_hash, expires_at, created_at)
+                VALUES (:user_id, :token_hash, :expires_at, :created_at)");
+            $this->db->bind(':user_id',    (int) $userId);
             $this->db->bind(':token_hash', $hash);
             $this->db->bind(':expires_at', date('Y-m-d H:i:s', time() + $ttl));
             $this->db->bind(':created_at', date('Y-m-d H:i:s'));
             $this->db->cdp_execute();
+
             return $token;
         }
 
         public function consumeResetSession($token) {
             $hash = hash('sha256', $token . '|' . $this->secret());
-            $this->db->cdp_query("SELECT * FROM cdb_password_reset_sessions WHERE token_hash=:token_hash AND consumed_at IS NULL ORDER BY id DESC LIMIT 1");
+
+            $this->db->cdp_query("SELECT * FROM cdb_password_reset_sessions
+                WHERE token_hash=:token_hash AND consumed_at IS NULL ORDER BY id DESC LIMIT 1");
             $this->db->bind(':token_hash', $hash);
             $row = $this->db->cdp_registro();
+
             if (!$row || strtotime($row->expires_at) < time()) return false;
 
-            $this->db->cdp_query("UPDATE cdb_password_reset_sessions SET consumed_at=:consumed_at WHERE id=:id");
+            $this->db->cdp_query("UPDATE cdb_password_reset_sessions
+                SET consumed_at=:consumed_at WHERE id=:id");
             $this->db->bind(':consumed_at', date('Y-m-d H:i:s'));
-            $this->db->bind(':id', (int)$row->id);
+            $this->db->bind(':id',          (int) $row->id);
             $this->db->cdp_execute();
-            return (int)$row->user_id;
+
+            return (int) $row->user_id;
         }
+
+        // ─── Internal helpers ─────────────────────────────────────────────────
 
         private function secret() {
             return hash('sha256', CDP_DB_NAME . '|' . CDP_DB_USER . '|otp');
