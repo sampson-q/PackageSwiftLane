@@ -32,6 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->cdp_execute();
 
             unset($_SESSION['forgot_reset_token']);
+            $otp->revokeAllTrustedDevices($userId);
+            
             $message = 'Password updated successfully. You can now log in.';
         }
     }
