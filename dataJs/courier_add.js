@@ -192,7 +192,7 @@ function fetchTariff() {
       sender_address: saddr_id,
       recipient_id: recip_id,
       recipient_address: raddr_id,
-      recipient_type: recip_type,
+      recipient_type: window.recipient_type || 'recipient',
       order_service_options: serviceOpt,
       rate_provider: provider,
       distance_miles: miles
@@ -303,7 +303,7 @@ function cdp_select2_init_sender() {
             allowClear: true
         })
         .on("change", function () {
-            window.recipient_type = 'user';
+            window.recipient_type = 'recipient';
             
             $("#sender_address_id").prop("disabled", true).val(null).trigger("change");
             $("#recipient_id").prop("disabled", true).val(null).trigger("change");
@@ -374,6 +374,15 @@ function cdp_select2_init_recipient() {
             // re-init with correct type
             cdp_select2_init_recipient_address();
             scheduleAutoFetch();
+        })
+        .on("change", function () {
+            if (!$(this).val()) {
+                window.recipient_type = 'recipient'; // reset on clear
+                $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
+                $("#add_address_recipient").prop("disabled", true);
+                cdp_select2_init_recipient_address();
+                scheduleAutoFetch();
+            }
         })
 }
 
