@@ -5,16 +5,18 @@ require_once("lib/OtpService.php");
 
 $user = new User();
 $core = new Core();
-$db = new Conexion();
-$otp = new OtpService();
+$db   = new Conexion();
+$otp  = new OtpService();
+
 $flow = isset($_GET['flow']) ? $_GET['flow'] : 'login';
-$message = '';
-$error = '';
-$otpSuccess  = false;  // triggers the Swal on the page
+
+$message     = '';
+$error       = '';
+$otpSuccess  = false;
 $otpRedirect = 'index.php';
 
 $sessionKey  = 'otp_' . $flow . '_challenge';
-$challengeId = isset($_SESSION[$sessionKey]) ? (int)$_SESSION[$sessionKey] : 0;
+$challengeId = isset($_SESSION[$sessionKey]) ? (int) $_SESSION[$sessionKey] : 0;
 
 /**
  * Move a file from the temp folder to the real uploads folder.
@@ -42,12 +44,17 @@ function cdp_cleanupTempDir($tempDir) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // ── Resend ────────────────────────────────────────────────────────────────
     if (isset($_POST['resend'])) {
         $uid = 0;
+
         if ($flow === 'login' && !empty($_SESSION['otp_login_user_id'])) {
-            $uid = (int)$_SESSION['otp_login_user_id'];
+            $uid = (int) $_SESSION['otp_login_user_id'];
+
         } elseif ($flow === 'forgot' && !empty($_SESSION['otp_forgot_user_id'])) {
-            $uid = (int)$_SESSION['otp_forgot_user_id'];
+            $uid = (int) $_SESSION['otp_forgot_user_id'];
+
         } elseif ($flow === 'signup' && !empty($_SESSION['pending_signup'])) {
             $pending   = $_SESSION['pending_signup'];
             $challenge = $otp->createChallenge(0, 'signup', ['email' => $pending['email']]);
@@ -57,16 +64,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pending['email'],
                 $pending['fname'] . ' ' . $pending['lname'],
                 $challenge['code'],
-                $challenge['expires_at'],
                 'signup'
             );
             $message = 'A new OTP has been sent.';
+
         } elseif ($challengeId > 0) {
             $db->cdp_query("SELECT user_id FROM cdb_auth_otp_challenges WHERE id=:id LIMIT 1");
             $db->bind(':id', $challengeId);
             $ch = $db->cdp_registro();
             if ($ch) {
-                $uid = (int)$ch->user_id;
+                $uid = (int) $ch->user_id;
             }
         }
 
@@ -75,31 +82,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->bind(':id', $uid);
             $u = $db->cdp_registro();
             if ($u) {
-                $challenge = $otp->createChallenge($u->id, $flow, ['remember_me' => !empty($_SESSION['otp_login_remember'])]);
+                $challenge = $otp->createChallenge($u->id, $flow, [
+                    'remember_me' => !empty($_SESSION['otp_login_remember']),
+                ]);
                 $_SESSION[$sessionKey] = $challenge['id'];
                 $challengeId = $challenge['id'];
-                
-                $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $challenge['expires_at'], $flow === 'forgot' ? 'password reset' : $flow);
-                $otp->sendOtpWhatsApp($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $challenge['expires_at'], $flow === 'forgot' ? 'password reset' : $flow);
-                
+
+                $purpose = ($flow === 'forgot') ? 'password reset' : $flow;
+                $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $purpose);
+                $otp->sendOtpWhatsApp($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $purpose);
+
                 $message = 'A new OTP has been sent to your email and WhatsApp.';
             }
         }
+
+    // ── Verify ────────────────────────────────────────────────────────────────
     } elseif (isset($_POST['otp_code'])) {
         $verify = $otp->verifyChallenge($challengeId, $_POST['otp_code'], $flow);
+
         if ($verify['ok']) {
 
+            // ── Login flow ────────────────────────────────────────────────────
             if ($flow === 'login') {
                 $user->cdp_finalizeLoginById($verify['user_id']);
+
                 if (!empty($_SESSION['otp_login_remember'])) {
                     $otp->rememberTrustedDevice($verify['user_id']);
                 }
-                unset($_SESSION['otp_login_challenge'], $_SESSION['otp_login_remember'], $_SESSION['otp_login_user_id']);
+
+                unset(
+                    $_SESSION['otp_login_challenge'],
+                    $_SESSION['otp_login_remember'],
+                    $_SESSION['otp_login_user_id']
+                );
+
                 $otpSuccess  = true;
                 $otpRedirect = 'index.php';
-            }
 
-            elseif ($flow === 'signup') {
+            // ── Sign-up flow ──────────────────────────────────────────────────
+            } elseif ($flow === 'signup') {
                 $pending = isset($_SESSION['pending_signup']) ? $_SESSION['pending_signup'] : null;
 
                 if (!$pending) {
@@ -111,12 +132,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         mkdir($uploadDir, 0755, true);
                     }
 
-                    $avatarPath        = cdp_commitUpload($tempDir, $pending['avatar_tmp'],          $uploadDir, 'avatar');
-                    $documentPhotoPath = cdp_commitUpload($tempDir, $pending['document_photo_tmp'],  $uploadDir, 'docphoto');
+                    $avatarPath        = cdp_commitUpload($tempDir, $pending['avatar_tmp'],         $uploadDir, 'avatar');
+                    $documentPhotoPath = cdp_commitUpload($tempDir, $pending['document_photo_tmp'], $uploadDir, 'docphoto');
                     cdp_cleanupTempDir($tempDir);
 
-                    $db->cdp_query('INSERT INTO cdb_users (username,password,locker,userlevel,email,fname,lname,document_number,document_type,created,phone,active,terms,avatar,document_photo)
-                        VALUES (:username,:password,:locker,:userlevel,:email,:fname,:lname,:document_number,:document_type,:created,:phone,:active,:terms,:avatar,:document_photo)');
+                    $db->cdp_query('INSERT INTO cdb_users
+                        (username, password, locker, userlevel, email, fname, lname,
+                         document_number, document_type, created, phone, active, terms, avatar, document_photo)
+                        VALUES
+                        (:username, :password, :locker, :userlevel, :email, :fname, :lname,
+                         :document_number, :document_type, :created, :phone, :active, :terms, :avatar, :document_photo)');
 
                     $db->bind(':username',        $pending['username']);
                     $db->bind(':password',        $pending['password']);
@@ -133,8 +158,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->bind(':terms',           $pending['terms']);
                     $db->bind(':avatar',          '../' . $avatarPath);
                     $db->bind(':document_photo',  '../' . $documentPhotoPath);
-
                     $db->cdp_execute();
+
                     $user_created_id = $db->dbh->lastInsertId();
 
                     if ($user_created_id) {
@@ -147,7 +172,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'postal'  => $pending['postal'],
                         ]);
 
-                        $db->cdp_query("INSERT INTO cdb_user_details_update_check (user_id, update_address, update_document) VALUES (:user_id, 1, 1)");
+                        $db->cdp_query("INSERT INTO cdb_user_details_update_check
+                            (user_id, update_address, update_document)
+                            VALUES (:user_id, 1, 1)");
                         $db->bind(':user_id', $user_created_id);
                         $db->cdp_execute();
 
@@ -158,9 +185,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $error = 'An error occurred while creating your account. Please contact the administrator.';
                     }
                 }
-            }
 
-            elseif ($flow === 'forgot') {
+            // ── Forgot-password flow ──────────────────────────────────────────
+            } elseif ($flow === 'forgot') {
                 $token = $otp->createResetSession($verify['user_id'], 900);
                 $_SESSION['forgot_reset_token'] = $token;
                 unset($_SESSION['otp_forgot_challenge']);
@@ -183,7 +210,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="keywords" content="Courier DEPRIXA-Integral Web System">
     <meta name="author" content="Jaomweb">
     <meta name="description" content="">
-    <!-- favicon -->
     <title>OTP Verification | <?php echo $core->site_name; ?></title>
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
 
@@ -198,23 +224,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <style>
         .otp-box {
-    width: 48px;
-    height: 56px;
-    padding: 0;
-    border-radius: 8px;
-    border: 2px solid #dee2e6;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.otp-box:focus {
-    border-color: #336aea;
-    box-shadow: 0 0 0 3px rgba(51, 106, 234, 0.15);
-    outline: none;
-}
-
-.otp-box.filled {
-    border-color: #336aea;
-}
+            width: 48px;
+            height: 56px;
+            padding: 0;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .otp-box:focus {
+            border-color: #336aea;
+            box-shadow: 0 0 0 3px rgba(51, 106, 234, 0.15);
+            outline: none;
+        }
+        .otp-box.filled {
+            border-color: #336aea;
+        }
     </style>
 </head>
 
@@ -233,7 +257,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <a href="login.php" class="back-button btn btn-icon btn-primary"><i data-feather="arrow-left" class="icons"></i></a>
     </div>
 
-    <!-- Hero Start -->
     <section class="cover-user bg-white">
         <div class="container-fluid px-0">
             <div class="row g-0 position-relative">
@@ -244,7 +267,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="card login-page border-0" style="z-index: 1">
                                     <div class="card-title text-center">
                                         <a class="logo" href="index.php">
-                                            <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
+                                            <?php echo ($core->logo_web)
+                                                ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>'
+                                                : $core->site_name; ?>
                                         </a>
                                     </div>
                                     <div><br></div>
@@ -260,7 +285,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <?php endif; ?>
                                             <?php if ($error): ?>
                                                 <div class="alert alert-danger">
-                                                    <p><span class="icon-minus-sign"></span>
+                                                    <p>
+                                                        <span class="icon-minus-sign"></span>
                                                         <i class="close icon-remove-circle"></i>
                                                         <span>Error!</span> <?php echo $error; ?>
                                                     </p>
@@ -270,11 +296,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                         <div id="loader" style="display:none"></div>
 
-                                        <form class="login-form mt-4" method="post">
+                                        <form class="login-form mt-4" method="post" id="otp-form">
                                             <div class="row">
                                                 <div class="col-lg-12">
                                                     <div class="mb-3">
-                                                        <!-- <label class="form-label">OTP Code <span class="text-danger">*</span></label> -->
+                                                        <!--
+                                                            Six individual digit boxes.
+                                                            JS assembles them into the hidden otp_code field
+                                                            both on every keystroke (syncHidden) and on submit.
+                                                        -->
                                                         <div class="d-flex justify-content-center gap-2" id="otp_boxes">
                                                             <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
                                                             <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
@@ -283,7 +313,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                             <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
                                                             <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
                                                         </div>
-                                                        <input type="hidden" name="otp_code">
+                                                        <!-- FIX: given id="otp_code_hidden" so initOtpBoxes can
+                                                             target it with a plain ID selector, matching how the
+                                                             modal version works. No more selector-string mismatch. -->
+                                                        <input type="hidden" name="otp_code" id="otp_code_hidden">
                                                     </div>
                                                 </div>
 
@@ -292,11 +325,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                         <button type="submit" class="btn btn-grad px-5">Verify</button>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div class="col-12 text-center">
                                                     <p class="mb-0 mt-3">
                                                         <small class="text-dark me-2">Didn't receive a code?</small>
-                                                        <button type="submit" name="resend" value="1" class="btn btn-link p-0 text-dark fw-bold" style="vertical-align: baseline;">Resend code</button>
+                                                        <button type="submit" name="resend" value="1"
+                                                            class="btn btn-link p-0 text-dark fw-bold"
+                                                            style="vertical-align: baseline;">
+                                                            Resend code
+                                                        </button>
                                                     </p>
                                                 </div>
                                             </div>
@@ -308,10 +345,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
 
-                <!-- <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets/images/OT(1)P.svg')" data-jarallax='{"speed": 0.5}'></div> -->
                 <div class="col-lg-7 offset-lg-5 padding-less img order-1" data-jarallax='{"speed": 0.5}'>
-                        <img src="assets/images/OT(1)P.svg" width="1000px" class="img-fluid" alt="">
-                    </div>
+                    <img src="assets/images/OT(1)P.svg" width="1000px" class="img-fluid" alt="">
+                </div>
             </div>
         </div>
     </section>
@@ -322,99 +358,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="assets/css_main_deprixa/js/plugins.init.js"></script>
     <script src="assets/css_main_deprixa/js/app.js"></script>
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
-    <script>
-        (function () {
-    function initOtpBoxes(containerId, hiddenInput) {
-        var $boxes = $("#" + containerId + " .otp-box");
-        var $hidden = $(hiddenInput);
 
-        function syncHidden() {
-            var val = $boxes.map(function () { return $(this).val(); }).get().join("");
-            $hidden.val(val);
+    <script>
+    (function () {
+        /**
+         * Wire up a group of single-digit boxes so they behave as one OTP input.
+         *
+         * @param {string} containerId  - id of the wrapper element (WITHOUT #)
+         * @param {string} hiddenId     - id of the hidden <input> to sync into (WITHOUT #)
+         */
+        function initOtpBoxes(containerId, hiddenId) {
+            var $boxes  = $('#' + containerId + ' .otp-box');
+            var $hidden = $('#' + hiddenId);
+
+            function syncHidden() {
+                $hidden.val(
+                    $boxes.map(function () { return $(this).val(); }).get().join('')
+                );
+            }
+
+            $boxes.on('keydown', function (e) {
+                var $this = $(this);
+                var idx   = $boxes.index($this);
+
+                if (e.key === 'Backspace') {
+                    if ($this.val() !== '') {
+                        $this.val('').removeClass('filled');
+                    } else if (idx > 0) {
+                        $boxes.eq(idx - 1).val('').removeClass('filled').focus();
+                    }
+                    syncHidden();
+                    e.preventDefault();
+                    return;
+                }
+                if (e.key === 'ArrowLeft'  && idx > 0)                { $boxes.eq(idx - 1).focus(); }
+                if (e.key === 'ArrowRight' && idx < $boxes.length - 1){ $boxes.eq(idx + 1).focus(); }
+            });
+
+            $boxes.on('input', function () {
+                var $this = $(this);
+                var val   = $this.val().replace(/\D/g, '').slice(-1);
+                $this.val(val);
+                val ? $this.addClass('filled') : $this.removeClass('filled');
+                syncHidden();
+                if (val && $boxes.index($this) < $boxes.length - 1) {
+                    $boxes.eq($boxes.index($this) + 1).focus();
+                }
+            });
+
+            $boxes.on('paste', function (e) {
+                var pasted = (e.originalEvent.clipboardData || window.clipboardData)
+                    .getData('text').replace(/\D/g, '').slice(0, 6);
+                if (!pasted) return;
+                e.preventDefault();
+                $boxes.each(function (i) {
+                    var ch = pasted[i] || '';
+                    $(this).val(ch);
+                    ch ? $(this).addClass('filled') : $(this).removeClass('filled');
+                });
+                syncHidden();
+                var $nextEmpty = $boxes.filter(function () { return !$(this).val(); }).first();
+                ($nextEmpty.length ? $nextEmpty : $boxes.last()).focus();
+            });
         }
 
-        $boxes.on("keydown", function (e) {
-            var $this = $(this);
-            var idx = $boxes.index($this);
-
-            if (e.key === "Backspace") {
-                if ($this.val() !== "") {
-                    $this.val("").removeClass("filled");
-                } else if (idx > 0) {
-                    $boxes.eq(idx - 1).val("").removeClass("filled").focus();
-                }
-                syncHidden();
-                e.preventDefault();
-                return;
-            }
-
-            if (e.key === "ArrowLeft" && idx > 0) {
-                $boxes.eq(idx - 1).focus();
-                return;
-            }
-            if (e.key === "ArrowRight" && idx < $boxes.length - 1) {
-                $boxes.eq(idx + 1).focus();
-                return;
-            }
-        });
-
-        $boxes.on("input", function () {
-            var $this = $(this);
-            var val = $this.val().replace(/\D/g, "").slice(-1);
-            $this.val(val);
-            val ? $this.addClass("filled") : $this.removeClass("filled");
-            syncHidden();
-            if (val && $boxes.index($this) < $boxes.length - 1) {
-                $boxes.eq($boxes.index($this) + 1).focus();
-            }
-        });
-
-        $boxes.on("paste", function (e) {
-            var pasted = (e.originalEvent.clipboardData || window.clipboardData)
-                .getData("text").replace(/\D/g, "").slice(0, 6);
-            if (!pasted) return;
-            e.preventDefault();
-            $boxes.each(function (i) {
-                var ch = pasted[i] || "";
-                $(this).val(ch);
-                ch ? $(this).addClass("filled") : $(this).removeClass("filled");
+        // ── Modal OTP boxes (used elsewhere in the app) ────────────────────────
+        if ($('#force_otp_boxes').length) {
+            initOtpBoxes('force_otp_boxes', 'force_phone_otp_code');
+            $('#userUpdatePhoneOtp').on('show.bs.modal', function () {
+                $('#force_otp_boxes .otp-box').val('').removeClass('filled');
+                $('#force_phone_otp_code').val('');
+                setTimeout(function () { $('#force_otp_boxes .otp-box').first().focus(); }, 300);
             });
-            syncHidden();
-            var nextEmpty = $boxes.filter(function () { return !$(this).val(); }).first();
-            (nextEmpty.length ? nextEmpty : $boxes.last()).focus();
-        });
+        }
 
-        // Clear boxes when modal opens
-        $("#userUpdatePhoneOtp").on("show.bs.modal", function () {
-            $boxes.val("").removeClass("filled");
-            $hidden.val("");
-            setTimeout(function () { $boxes.first().focus(); }, 300);
-        });
-    }
+        // ── Standalone OTP page ────────────────────────────────────────────────
+        if ($('#otp_boxes').length) {
+            /*
+             * FIX: the hidden input now has id="otp_code_hidden" so we pass a plain
+             * ID here instead of the attribute-selector string that was used before.
+             * The old code passed "input[name='otp_code']" as the second argument but
+             * initOtpBoxes prepends '#' to it — meaning jQuery looked for
+             * #input[name='otp_code'] which never matches anything, so syncHidden()
+             * silently wrote to nothing and the field was always empty on submit.
+             */
+            initOtpBoxes('otp_boxes', 'otp_code_hidden');
 
-    // Modal boxes
-    initOtpBoxes("force_otp_boxes", "#force_phone_otp_code");
+            // Belt-and-suspenders: also sync immediately before the form is submitted
+            $('#otp-form').on('submit', function () {
+                var val = $('#otp_boxes .otp-box').map(function () { return $(this).val(); }).get().join('');
+                $('#otp_code_hidden').val(val);
+            });
 
-    // Standalone page boxes — collect into hidden before form submits
-    if ($("#otp_boxes").length) {
-        var $standalonBoxes = $("#otp_boxes .otp-box");
-        var $standaloneHidden = $("input[name='otp_code']");
-
-        $standalonBoxes.on("keydown input paste", function () {
-            // reuse same logic by triggering initOtpBoxes inline
-        });
-
-        initOtpBoxes("otp_boxes", "input[name='otp_code']");
-
-        $("form.login-form").on("submit", function () {
-            var val = $standalonBoxes.map(function () { return $(this).val(); }).get().join("");
-            $standaloneHidden.val(val);
-        });
-
-        // Focus first box on load
-        setTimeout(function () { $standalonBoxes.first().focus(); }, 100);
-    }
-})();
+            // Focus first box on page load
+            setTimeout(function () { $('#otp_boxes .otp-box').first().focus(); }, 100);
+        }
+    })();
     </script>
 
     <?php if ($otpSuccess): ?>
