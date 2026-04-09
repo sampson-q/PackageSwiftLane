@@ -151,7 +151,8 @@ class User
                 $_SESSION['otp_login_challenge'] = $challenge['id'];
                 $_SESSION['otp_login_user_id'] = $user->id;
                 $_SESSION['otp_login_remember'] = $rememberMe ? 1 : 0;
-                return 'otp_required';
+                
+                return $otpService->isTrustedDevice($user->id) ? $this->cdp_finalizeLogin($user) : 'otp_required';
             }
 
             return $this->cdp_finalizeLogin($user);
