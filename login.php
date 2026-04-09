@@ -27,7 +27,6 @@ $login = new User;
 $core = new Core;
 
 if ($login->cdp_loginCheck() == true) {
-
     header("location: index.php");
 }
 
@@ -35,9 +34,9 @@ if (isset($_POST['login'])) {
     $otpService = new OtpService();
     $result = $login->cdp_login($_POST['username'], $_POST['password'], [
         'otp_service' => $otpService,
-        'remember_me' => isset($_POST['remember_me'])
+        'remember_me' => !empty($_POST['remember_me']),
     ]);
-    
+
     if ($result) {
         if ($result === 'otp_required') {
             header("location: auth-otp.php?flow=login");
@@ -120,8 +119,6 @@ if (isset($_POST['login'])) {
                                         </div>
                                         <div><br></div>
                                         <div class="card-body p-0">
-                                            <!-- <h4 class="card-title text-center"><?php echo $lang['message_title_login2'] ?> <?php echo $core->site_name ?></h4>
-                                            <p class="text-center"><?php echo $lang['message_title_login1'] ?></p> -->
 
                                             <div id="msgholder2">
                                                 <?php
@@ -172,7 +169,7 @@ if (isset($_POST['login'])) {
                                                         <div class="d-flex justify-content-between">
                                                             <div class="mb-3">
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                                                                    <input class="form-check-input" type="checkbox" name="remember_me" value="1" id="flexCheckDefault">
                                                                     <label class="form-check-label" for="flexCheckDefault"><?php echo $lang['left120'] ?></label>
                                                                 </div>
                                                             </div>
