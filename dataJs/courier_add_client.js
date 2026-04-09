@@ -1102,6 +1102,8 @@ function cdp_formatAdressSelection(repo) {
   return repo.text;
 }
 
+var selectedRecipientType = 'recipient';
+
 function cdp_select2_init_recipient() {
   var sender_id = $("#sender_id").val();
 
@@ -1135,6 +1137,11 @@ function cdp_select2_init_recipient() {
       $("#recipient_address_id").val(null);
       $("#table-totals").addClass("d-none");
 
+          // Capture the type from the selected option's data
+      var selectedData = $("#recipient_id").select2("data");
+      selectedRecipientType = selectedData && selectedData[0] && selectedData[0].type ? selectedData[0].type : "recipient";
+
+
       if (recipient_id != null) {
         $("#recipient_address_id").attr("disabled", false);
         $("#add_address_recipient").attr("disabled", false);
@@ -1146,10 +1153,12 @@ function cdp_select2_init_recipient() {
 function cdp_select2_init_recipient_address() {
   var recipient_id = $("#recipient_id").val();
 
+    var recipient_type = window.recipient_type || "recipient";
+
   $("#recipient_address_id")
     .select2({
       ajax: {
-        url: "ajax/select2_recipient_addresses.php?id=" + recipient_id,
+        url: "ajax/select2_recipient_addresses.php?id=" + recipient_id + "&type=" + selectedRecipientType,
         dataType: "json",
         delay: 250,
         data: function (params) {
