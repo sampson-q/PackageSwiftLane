@@ -5006,19 +5006,19 @@ function cdp_insertTariffsCustom($datos)
     )');
 
     // obligatorios del form
-    $db->cdp_bind(':country_origin',      $datos['country_origin']);
-    $db->cdp_bind(':country_destiny',     $datos['country_destiny']);
-    $db->cdp_bind(':state_destinystates', $datos['state_destinystates']);
-    $db->cdp_bind(':city_destinycities',  $datos['city_destinycities']);
-    $db->cdp_bind(':ship_mode',           $datos['ship_mode']);
-    $db->cdp_bind(':initial_range',       $datos['initial_range']);
-    $db->cdp_bind(':final_range',         $datos['final_range']);
-    $db->cdp_bind(':tariff_price',        $datos['tariff_price']);
+    $db->bind(':country_origin',      $datos['country_origin']);
+    $db->bind(':country_destiny',     $datos['country_destiny']);
+    $db->bind(':state_destinystates', $datos['state_destinystates']);
+    $db->bind(':city_destinycities',  $datos['city_destinycities']);
+    $db->bind(':ship_mode',           $datos['ship_mode']);
+    $db->bind(':initial_range',       $datos['initial_range']);
+    $db->bind(':final_range',         $datos['final_range']);
+    $db->bind(':tariff_price',        $datos['tariff_price']);
 
     // columnas presentes en la tabla pero no en el form -> por defecto 0
-    $db->cdp_bind(':order_item_category', isset($datos['order_item_category']) ? (int)$datos['order_item_category'] : 0);
-    $db->cdp_bind(':order_package',       isset($datos['order_package']) ? (int)$datos['order_package'] : 0);
-    $db->cdp_bind(':order_courier',       isset($datos['order_courier']) ? (int)$datos['order_courier'] : 0);
+    $db->bind(':order_item_category', isset($datos['order_item_category']) ? (int)$datos['order_item_category'] : 0);
+    $db->bind(':order_package',       isset($datos['order_package']) ? (int)$datos['order_package'] : 0);
+    $db->bind(':order_courier',       isset($datos['order_courier']) ? (int)$datos['order_courier'] : 0);
 
     return $db->cdp_execute();
 }
