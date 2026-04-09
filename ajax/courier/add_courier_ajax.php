@@ -646,7 +646,7 @@ if (empty($errors)) {
             error_log('Error generating or sending SMS for receiver: ' . $e->getMessage());
         }
 
-        cdp_insertPackageTracking($shipment_id, $_SESSION['userid'], $_POST['tracking_number'], $_POST['estimated_eta']);
+        cdp_insertPackageTracking($shipment_id, $_SESSION['userid'], cdp_sanitize($_POST['tracking_number']), cdp_sanitize($_POST['estimated_eta']));
 
         $messages[] = $lang['message_ajax_success_add_shipment'];
     } else {
