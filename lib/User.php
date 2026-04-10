@@ -120,43 +120,50 @@ class User
     public function cdp_login($username, $pass, $options = array()) {
         $status = 0;
 
-        if ($username == "" && $pass == "") {
-            $this->errors[] = "Enter a valid username and password.";
+        if ($username === '' && $pass === '') {
+            $this->errors[] = 'Enter a valid username and password.';
         } else {
             $status = $this->cdp_checkStatus($username, $pass);
             if ($status == 0) {
-                $this->errors[] = 'The login and / or password do not match the database.';
-            } else if ($status == 2) {
+                $this->errors[] = 'Incorrect username or password.';
+            } elseif ($status == 2) {
                 $this->errors[] = 'Your account is not activated.';
             }
         }
 
-        if ($status == 1) {
-            $user = $this->cdp_getUserInfo($username);
+        if ($status != 1) {
+            return false;
+        }
 
-            if (!empty($options['otp_service'])) {
-                $otpService = $options['otp_service'];
-                $rememberMe = !empty($options['remember_me']);
+        $user = $this->cdp_getUserInfo($username);
 
-                if ($rememberMe && $otpService->isTrustedDevice($user->id)) {
-                    return $this->cdp_finalizeLogin($user);
-                }
-
-                $challenge = $otpService->createChallenge($user->id, 'login', array(
-                    'remember_me' => $rememberMe,
-                    'email' => $user->email
-                ));
-                $otpService->sendOtpEmail($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], $challenge['expires_at'], 'login');
-                $otpService->sendOtpWhatsApp($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], $challenge['expires_at'], 'login');
-                $_SESSION['otp_login_challenge'] = $challenge['id'];
-                $_SESSION['otp_login_user_id'] = $user->id;
-                $_SESSION['otp_login_remember'] = $rememberMe ? 1 : 0;
-                
-                return $otpService->isTrustedDevice($user->id) ? $this->cdp_finalizeLogin($user) : 'otp_required';
-            }
-
+        if (empty($options['otp_service'])) {
+            // OTP not configured — finalize directly
             return $this->cdp_finalizeLogin($user);
         }
+
+        $otpService = $options['otp_service'];
+        $rememberMe = !empty($options['remember_me']);
+
+        if ($otpService->isTrustedDevice($user->id)) {
+            return $this->cdp_finalizeLogin($user);
+        }
+
+        // Device is not trusted — issue an OTP challenge
+        $challenge = $otpService->createChallenge($user->id, 'login', array(
+            'remember_me' => $rememberMe,
+            'email'       => $user->email,
+        ));
+
+        // FIX 2: send via both channels, matching what the resend path does
+        $otpService->sendOtpEmail($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], $challenge['expires_at'], 'login');
+        $otpService->sendOtpWhatsApp($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], $challenge['expires_at'], 'login');
+
+        $_SESSION['otp_login_challenge'] = $challenge['id'];
+        $_SESSION['otp_login_user_id']   = $user->id;
+        $_SESSION['otp_login_remember']  = $rememberMe ? 1 : 0;
+
+        return 'otp_required';
     }
 
     public function cdp_finalizeLoginById($userId) {
