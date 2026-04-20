@@ -35,42 +35,41 @@ class ShipmentsHandler
                      ? $_GET['sort'] : 'order_id';
         $sortDir   = strtoupper($_GET['direction'] ?? '') === 'ASC' ? 'ASC' : 'DESC';
 
-        $where = "WHERE a.status_courier != 14";   // exclude cancelled/deleted
+        $params = [];
+        $where  = 'WHERE a.status_courier != 14';   // exclude cancelled/deleted
 
-        // Role-based scoping
+        // Role-based scoping (integer IDs – safe to inline after (int) cast)
         $ulevel = (int)$authUser->userlevel;
         if ($ulevel === 1) {
-            // Customer: only own shipments
-            $where .= " AND a.sender_id = " . (int)$authUser->id;
+            $where .= ' AND a.sender_id = ' . (int)$authUser->id;
         } elseif ($ulevel === 3) {
-            // Driver: only assigned
-            $where .= " AND a.driver_id = " . (int)$authUser->id;
+            $where .= ' AND a.driver_id = ' . (int)$authUser->id;
         } elseif ($ulevel === 6) {
-            // Agency
-            $agBranch = cdp_getAgencyBranchIdForUser($authUser->name_off ?? '');
-            if ($agBranch) {
-                $where .= " AND a.agency = {$agBranch}";
+            $agBranch = (int)cdp_getAgencyBranchIdForUser($authUser->name_off ?? '');
+            if ($agBranch > 0) {
+                $where .= ' AND a.agency = ' . $agBranch;
             }
         } else {
-            // Admin/employee – optional agency filter
             if ($agencyId > 0) {
-                $where .= " AND a.agency = {$agencyId}";
+                $where .= ' AND a.agency = ' . $agencyId;
             }
         }
 
-        if ($status > 0)  $where .= " AND a.status_courier = {$status}";
-        if ($senderId > 0) $where .= " AND a.sender_id = {$senderId}";
+        if ($status > 0)   $where .= ' AND a.status_courier = ' . $status;
+        if ($senderId > 0) $where .= ' AND a.sender_id = '      . $senderId;
+
+        // String filters – parameterized to prevent SQL injection
         if ($search !== '') {
-            $search = str_replace("'", "''", $search);
-            $where .= " AND (CONCAT(a.order_prefix, a.order_no) LIKE '%{$search}%')";
+            $where .= ' AND (CONCAT(a.order_prefix, a.order_no) LIKE :search_like)';
+            $params[':search_like'] = '%' . $search . '%';
         }
         if ($dateFrom !== '') {
-            $df = date('Y-m-d', strtotime($dateFrom));
-            $where .= " AND a.order_date >= '{$df} 00:00:00'";
+            $where .= ' AND a.order_date >= :date_from';
+            $params[':date_from'] = date('Y-m-d', strtotime($dateFrom)) . ' 00:00:00';
         }
         if ($dateTo !== '') {
-            $dt = date('Y-m-d', strtotime($dateTo));
-            $where .= " AND a.order_date <= '{$dt} 23:59:59'";
+            $where .= ' AND a.order_date <= :date_to';
+            $params[':date_to'] = date('Y-m-d', strtotime($dateTo)) . ' 23:59:59';
         }
 
         $baseSql = "
@@ -95,12 +94,14 @@ class ShipmentsHandler
 
         // Count
         $db->cdp_query("SELECT COUNT(*) AS total FROM cdb_add_order a {$where}");
+        foreach ($params as $key => $val) { $db->bind($key, $val); }
         $db->cdp_execute();
         $countRow = $db->cdp_registro();
         $total    = (int)($countRow->total ?? 0);
 
-        // Page
+        // Page (LIMIT/OFFSET are integer-safe)
         $db->cdp_query("{$baseSql} ORDER BY a.{$sortCol} {$sortDir} LIMIT {$offset}, {$perPage}");
+        foreach ($params as $key => $val) { $db->bind($key, $val); }
         $rows = $db->cdp_registros();
 
         $items = array_map([self::class, 'formatRow'], $rows ?: []);

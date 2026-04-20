@@ -24,29 +24,35 @@ class CustomersHandler
         $active  = isset($_GET['active']) ? (int)$_GET['active'] : -1;
         $sortDir = strtoupper($_GET['direction'] ?? '') === 'ASC' ? 'ASC' : 'DESC';
 
+        $params = [];
         $where  = "WHERE userlevel = '1'";
 
-        // Agency scoping
+        // Agency scoping (integer ID – safe to inline after cast)
         if ((int)$authUser->userlevel === 6) {
             $ctx = cdp_getAgencyContext();
             if ($ctx['agency_id']) {
-                $where .= " AND agency_id = " . (int)$ctx['agency_id'];
+                $where .= ' AND agency_id = ' . (int)$ctx['agency_id'];
             }
         }
 
+        // String search – parameterized
         if ($search !== '') {
-            $s = str_replace("'", "''", $search);
-            $where .= " AND (fname LIKE '%{$s}%' OR lname LIKE '%{$s}%' OR email LIKE '%{$s}%' OR locker LIKE '%{$s}%' OR phone LIKE '%{$s}%')";
+            $where .= ' AND (fname LIKE :search OR lname LIKE :search OR email LIKE :search OR locker LIKE :search OR phone LIKE :search)';
+            $params[':search'] = '%' . $search . '%';
         }
+
+        // active filter – integer safe to inline
         if ($active !== -1) {
-            $where .= " AND active = {$active}";
+            $where .= ' AND active = ' . $active;
         }
 
         $db->cdp_query("SELECT COUNT(*) AS total FROM cdb_users {$where}");
+        foreach ($params as $key => $val) { $db->bind($key, $val); }
         $db->cdp_execute();
         $total = (int)($db->cdp_registro()->total ?? 0);
 
         $db->cdp_query("SELECT * FROM cdb_users {$where} ORDER BY id {$sortDir} LIMIT {$offset}, {$perPage}");
+        foreach ($params as $key => $val) { $db->bind($key, $val); }
         $rows = $db->cdp_registros();
 
         $items = array_map([self::class, 'formatRow'], $rows ?: []);

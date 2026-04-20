@@ -20,22 +20,25 @@ class PreAlertsHandler
         $perPage = min(100, max(1, (int)($_GET['per_page'] ?? 15)));
         $offset  = ($page - 1) * $perPage;
         $search  = cdp_sanitize($_GET['search'] ?? '');
-        $sortDir = strtoupper($_GET['direction'] ?? '') === 'DESC' ? 'DESC' : 'DESC';
+        $sortDir = strtoupper($_GET['direction'] ?? '') === 'ASC' ? 'ASC' : 'DESC';
 
-        $where = 'WHERE 1=1';
+        $params = [];
+        $where  = 'WHERE 1=1';
 
         $ulevel = (int)$authUser->userlevel;
         if ($ulevel === 1) {
-            // Customers only see their own pre-alerts
+            // Customers only see their own pre-alerts (integer ID – safe to inline)
             $where .= ' AND p.customer_id = ' . (int)$authUser->id;
         }
 
+        // String search – parameterized
         if ($search !== '') {
-            $s = str_replace("'", "''", $search);
-            $where .= " AND (p.tracking LIKE '%{$s}%' OR p.provider_shop LIKE '%{$s}%')";
+            $where .= ' AND (p.tracking LIKE :search OR p.provider_shop LIKE :search)';
+            $params[':search'] = '%' . $search . '%';
         }
 
         $db->cdp_query("SELECT COUNT(*) AS total FROM cdb_pre_alert p {$where}");
+        foreach ($params as $key => $val) { $db->bind($key, $val); }
         $db->cdp_execute();
         $total = (int)($db->cdp_registro()->total ?? 0);
 
@@ -46,9 +49,10 @@ class PreAlertsHandler
             LEFT JOIN cdb_courier_com cc ON p.courier_com = cc.id
             LEFT JOIN cdb_users       u  ON p.customer_id  = u.id
             {$where}
-            ORDER BY p.id DESC
+            ORDER BY p.id {$sortDir}
             LIMIT {$offset}, {$perPage}
         ");
+        foreach ($params as $key => $val) { $db->bind($key, $val); }
         $rows = $db->cdp_registros();
 
         $items = array_map([self::class, 'formatRow'], $rows ?: []);

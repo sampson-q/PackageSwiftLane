@@ -76,9 +76,7 @@ class AuthHandler
         $auth = new ApiAuth();
         $auth->revokeToken($rawToken);
 
-        ApiResponse::success(null, [], 200);
-        // Note: success() calls exit, but adding a message would be cleaner.
-        // The success is sent above; PHP exits.
+        ApiResponse::success(['revoked' => true]);
     }
 
     // ── GET /api/v1/auth/me ───────────────────────────────────────────────────

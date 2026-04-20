@@ -20,12 +20,14 @@ class RecipientsHandler
         $page    = max(1, (int)($_GET['page']     ?? 1));
         $perPage = min(100, max(1, (int)($_GET['per_page'] ?? 15)));
         $offset  = ($page - 1) * $perPage;
-        $search  = cdp_sanitize($_GET['search'] ?? '');
-        $sortDir = strtoupper($_GET['direction'] ?? '') === 'ASC' ? 'ASC' : 'DESC';
+        $search   = cdp_sanitize($_GET['search']    ?? '');
+        $senderId = (int)($_GET['sender_id']         ?? 0);
+        $sortDir  = strtoupper($_GET['direction'] ?? '') === 'ASC' ? 'ASC' : 'DESC';
 
-        $where = 'WHERE 1=1';
+        $params = [];
+        $where  = 'WHERE 1=1';
 
-        // Agency scoping
+        // Agency / role-based scoping (integer IDs – safe to inline)
         $ulevel = (int)$authUser->userlevel;
         if ($ulevel === 6) {
             $ctx = cdp_getAgencyContext();
@@ -37,20 +39,24 @@ class RecipientsHandler
             $where .= ' AND r.sender_id = ' . (int)$authUser->id;
         }
 
-        if (!empty($data['sender_id'] ?? $_GET['sender_id'] ?? '')) {
-            $where .= ' AND r.sender_id = ' . (int)($_GET['sender_id'] ?? 0);
+        // Optional sender_id filter (admin/staff only; customers are already scoped above)
+        if ($senderId > 0 && $ulevel !== 1) {
+            $where .= ' AND r.sender_id = ' . $senderId;
         }
 
+        // String search – parameterized
         if ($search !== '') {
-            $s = str_replace("'", "''", $search);
-            $where .= " AND (r.fname LIKE '%{$s}%' OR r.lname LIKE '%{$s}%' OR r.email LIKE '%{$s}%')";
+            $where .= ' AND (r.fname LIKE :search OR r.lname LIKE :search OR r.email LIKE :search)';
+            $params[':search'] = '%' . $search . '%';
         }
 
         $db->cdp_query("SELECT COUNT(*) AS total FROM cdb_recipients r {$where}");
+        foreach ($params as $key => $val) { $db->bind($key, $val); }
         $db->cdp_execute();
         $total = (int)($db->cdp_registro()->total ?? 0);
 
         $db->cdp_query("SELECT r.* FROM cdb_recipients r {$where} ORDER BY r.id {$sortDir} LIMIT {$offset}, {$perPage}");
+        foreach ($params as $key => $val) { $db->bind($key, $val); }
         $rows = $db->cdp_registros();
 
         $items = array_map([self::class, 'formatRow'], $rows ?: []);
