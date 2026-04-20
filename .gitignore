@@ -29,3 +29,6 @@
 order_files/*
 pre_alert_files/*
 assets/uploads/
+
+api/v1/storage/pending_logins/*
+api/v1/storage/pending_signups/*
