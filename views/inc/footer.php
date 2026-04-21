@@ -20,7 +20,7 @@
 
         $.ajaxSetup({
             beforeSend: function (xhr, settings) {
-                var method = ((settings && settings.type) || 'GET').toUpperCase();
+                var method = (((settings || {}).type) || 'GET').toUpperCase();
                 if (['POST', 'PUT', 'PATCH', 'DELETE'].indexOf(method) === -1) return;
 
                 var token = csrfToken();
