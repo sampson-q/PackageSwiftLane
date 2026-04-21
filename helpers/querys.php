@@ -3483,18 +3483,32 @@ function cdp_updateNotificationStatus($user, $notification_id)
 
 
 
-function cdp_updateNotificatonsRea($user)
+function cdp_updateNotificatonsRea($user, $isAdmin = false)
 {
     $db = new Conexion;
 
-    // Asegúrate de que la consulta sea correcta
     $db->cdp_query("UPDATE cdb_notifications_users SET notification_read = '1' WHERE user_id = :user_id");
+    $db->bind(':user_id', (int)$user);
+    $ok = $db->cdp_execute();
 
-    // Asegúrate de que el parámetro esté correctamente vinculado
-    $db->bind(':user_id', $user);
+    if (!$ok) {
+        return false;
+    }
 
-    // Ejecución de la consulta
-    return $db->cdp_execute();
+    if ($isAdmin) {
+        // Also mark admin-visible system notifications as read.
+        $db->cdp_query("
+            UPDATE cdb_notifications_users nu
+            INNER JOIN cdb_notifications n ON n.notification_id = nu.notification_id
+            SET nu.notification_read = '1'
+            WHERE nu.user_id = :user_id
+              AND (n.user_id IS NULL OR n.user_id = 0)
+        ");
+        $db->bind(':user_id', (int)$user);
+        $db->cdp_execute();
+    }
+
+    return true;
 }
 
 

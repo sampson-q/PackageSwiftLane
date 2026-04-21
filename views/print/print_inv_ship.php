@@ -24,7 +24,8 @@
 require_once('helpers/querys.php');
 
 if (isset($_GET['id'])) {
-    $data = cdp_getCourierPrint($_GET['id']);
+    $printOrderId = (int)$_GET['id'];
+    $data = cdp_getCourierPrint($printOrderId);
 }
 
 if (!isset($_GET['id']) or $data['rowCount'] != 1) {
@@ -35,35 +36,51 @@ if (!isset($_GET['id']) or $data['rowCount'] != 1) {
 
 $row = $data['data'];
 
-$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . $_GET['id'] . "'");
+$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id=:order_id");
+$db->bind(':order_id', $printOrderId);
+$db->cdp_execute();
 $order_items = $db->cdp_registros();
 
-$db->cdp_query("SELECT * FROM cdb_met_payment where id= '" . $row->order_pay_mode . "'");
+$db->cdp_query("SELECT * FROM cdb_met_payment where id=:order_pay_mode");
+$db->bind(':order_pay_mode', (int)$row->order_pay_mode);
+$db->cdp_execute();
 $met_payment = $db->cdp_registro();
 
 
-$db->cdp_query("SELECT * FROM cdb_courier_com where id= '" . $row->order_courier . "'");
+$db->cdp_query("SELECT * FROM cdb_courier_com where id=:order_courier");
+$db->bind(':order_courier', (int)$row->order_courier);
+$db->cdp_execute();
 $courier_com = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_category where id= '" . $row->order_item_category . "'");
+$db->cdp_query("SELECT * FROM cdb_category where id=:order_item_category");
+$db->bind(':order_item_category', (int)$row->order_item_category);
+$db->cdp_execute();
 $category = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_shipping_mode where id= '" . $row->order_service_options . "'");
+$db->cdp_query("SELECT * FROM cdb_shipping_mode where id=:order_service_options");
+$db->bind(':order_service_options', (int)$row->order_service_options);
+$db->cdp_execute();
 $shipping_mode = $db->cdp_registro();
 
 $fecha = date("Y-m-d :h:i A", strtotime($row->order_datetime));
 
-$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->receiver_id . "'");
+$db->cdp_query("SELECT * FROM cdb_users where id=:receiver_id");
+$db->bind(':receiver_id', (int)$row->receiver_id);
+$db->cdp_execute();
 $receiver_data = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
+$db->cdp_query("SELECT * FROM cdb_users where id=:sender_id");
+$db->bind(':sender_id', (int)$row->sender_id);
+$db->cdp_execute();
 $sender_data = $db->cdp_registro();
 
 
 
 
 
-$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row->order_prefix . $row->order_no . "'");
+$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track=:order_track");
+$db->bind(':order_track', (string)$row->order_prefix . (string)$row->order_no);
+$db->cdp_execute();
 $address_order = $db->cdp_registro();
 
 ?>
@@ -119,7 +136,7 @@ $address_order = $db->cdp_registro();
                     <?php echo $lang['inv-shipping4'] ?>: <?php echo $core->c_address; ?> - <?php echo $core->c_country; ?>-<?php echo $core->c_city; ?>
                 </td>
                 <td style="border: 0;  text-align: center" width="48%">
-                    </br><img src='https://barcode.tec-it.com/barcode.ashx?data=<?php echo $row->order_prefix . $row->order_no; ?>&code=Code128&multiplebarcodes=false&translate-esc=false&unit=Fit&dpi=92&imagetype=Gif&rotation=0&color=%23000000&bgcolor=%23ffffff&qunit=Mm&quiet=0&modulewidth=50' alt='' />
+                    </br><div style="font-weight:700; letter-spacing: 2px; padding-top: 6px;"><?php echo htmlspecialchars($row->order_prefix . $row->order_no, ENT_QUOTES, 'UTF-8'); ?></div>
                 </td>
             </tr>
         </table>
@@ -208,6 +225,7 @@ $address_order = $db->cdp_registro();
             $sumador_volumetric = 0;
             $sumador_valor_declarado = 0;
             $max_fixed_charge = 0;
+            $total_chargeable_weight = 0;
             $precio_total = 0;
             $total_impuesto = 0;
             $total_seguro = 0;
@@ -237,6 +255,7 @@ $address_order = $db->cdp_registro();
                     $calculate_weight = $total_metric;
                     $sumador_volumetric += $total_metric; //Sumador
                 }
+                $total_chargeable_weight += (float)$calculate_weight;
 
                 $sumador_librass += $weight_item; //Sumador
 
@@ -266,7 +285,7 @@ $address_order = $db->cdp_registro();
             
             
             if ($row->manual_tariff == 1) {
-                $sumador_total = $calculate_weight * (float)$row->value_weight; // Calculate total based on weight and price per lb
+                $sumador_total = (float)$total_chargeable_weight * (float)$row->value_weight; // Calculate total based on weight and price per lb
             } else {
                 $sumador_total = (float)$row->value_weight; // Calculate total based on weight and price per lb
             }
@@ -356,7 +375,9 @@ $address_order = $db->cdp_registro();
             </table>
             <?php
 
-            $db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . $_GET['id'] . "' ORDER BY date_file");
+            $db->cdp_query("SELECT * FROM cdb_order_files where order_id=:order_id ORDER BY date_file");
+            $db->bind(':order_id', $printOrderId);
+            $db->cdp_execute();
             $files_order = $db->cdp_registros();
             $numrows = $db->cdp_rowCount();
 

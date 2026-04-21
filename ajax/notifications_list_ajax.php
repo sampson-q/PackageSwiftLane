@@ -22,13 +22,13 @@
 
 
 require_once("../loader.php");
+require_once(__DIR__ . '/../helpers/ajax_guard.php');
+require_login();
 
 $user = new User;
 $db = new Conexion;
 $userData = $user->cdp_getUserData();
-$sWhere = "";
-
-$sWhere .= " and a.user_id ='" . $_SESSION['userid'] . "'";
+$userId = isset($_SESSION['userid']) ? (int)$_SESSION['userid'] : 0;
 
 
 // // pagination variables
@@ -37,21 +37,23 @@ $per_page = 10; //how much records you want to show
 $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
-$sql = "SELECT b.user_id,  b.shipping_type,  a.id_notifi_user, b.notification_description, b.notification_date , b.order_id , a.notification_status, a.notification_read, b.notification_id
+$sql = "SELECT b.user_id, b.shipping_type, a.id_notifi_user, b.notification_description, b.notification_date, b.order_id, a.notification_status, a.notification_read, b.notification_id
 
 		FROM cdb_notifications_users as a
 
 		INNER JOIN cdb_notifications as b ON a.notification_id = b.notification_id
 
-		$sWhere
+		WHERE a.user_id = :user_id
 		order by b.notification_id desc";
 
 $db->cdp_query($sql);
+$db->bind(':user_id', $userId);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+$db->bind(':user_id', $userId);
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);

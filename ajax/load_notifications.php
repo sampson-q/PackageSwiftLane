@@ -21,6 +21,8 @@
 
 require_once("../helpers/querys.php");
 require_once("../loader.php");
+require_once(__DIR__ . '/../helpers/ajax_guard.php');
+require_login();
 
 $user = new User;
 $db = new Conexion;
@@ -29,28 +31,20 @@ $userData = $user->cdp_getUserData();
 $dias_ = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
 $meses_ = array('01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr', '05' => 'May', '06' => 'Jun', '07' => 'Jul', '08' => 'Aug', '09' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dec');
 
-$sWhere = "";
-
-// Comprobamos el nivel del usuario (si no es admin, solo accederá a su propio usuario)
-if ($_SESSION['userlevel'] == 9) {
-    // Si es administrador, puede ver todos los paquetes y notificaciones
-} else {
-    // Si no es administrador, limitar acceso a su propio usuario
-    $sWhere .= " AND a.user_id = '" . $_SESSION['userid'] . "'";
-}
-
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
 $perPage = 10;
 $start = ($page - 1) * $perPage;
+$userId = isset($_SESSION['userid']) ? (int)$_SESSION['userid'] : 0;
 
 $sql = "SELECT a.user_id, b.shipping_type, a.id_notifi_user, b.notification_description, b.notification_date , b.order_id , a.notification_status, a.notification_read, b.notification_id
         FROM cdb_notifications_users AS a
         INNER JOIN cdb_notifications AS b ON a.notification_id = b.notification_id
-        WHERE a.notification_read ='0' $sWhere
+        WHERE a.notification_read ='0' AND a.user_id = :user_id
         ORDER BY b.notification_id DESC
         LIMIT $start, $perPage";
 
 $db->cdp_query($sql);
+$db->bind(':user_id', $userId);
 $db->cdp_execute();
 $data = $db->cdp_registros();
 $rowCount = $db->cdp_rowCount();
@@ -115,8 +109,16 @@ $bg = $rowCount > 0 ? 'bg-primary' : 'bg-danger';
                     }
                 }
                 if (!empty($notificationIds)) {
-                    $notificationIdsStr = implode(",", $notificationIds);
-                    $db->cdp_query("UPDATE cdb_notifications_users SET notification_status = 1 WHERE notification_id IN ($notificationIdsStr)");
+                    $ids = array_values(array_unique(array_map('intval', $notificationIds)));
+                    $placeholders = [];
+                    foreach ($ids as $idx => $nid) {
+                        $placeholders[] = ':nid_' . $idx;
+                    }
+                    $db->cdp_query("UPDATE cdb_notifications_users SET notification_status = 1 WHERE user_id = :scope_user_id AND notification_id IN (" . implode(',', $placeholders) . ")");
+                    $db->bind(':scope_user_id', $userId);
+                    foreach ($ids as $idx => $nid) {
+                        $db->bind(':nid_' . $idx, $nid);
+                    }
                     $db->cdp_execute();
                 }
             }

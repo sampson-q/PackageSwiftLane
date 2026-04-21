@@ -23,6 +23,8 @@
 
 require_once("../loader.php");
 require_once("../helpers/querys.php");
+require_once(__DIR__ . '/../helpers/ajax_guard.php');
+require_login();
 
 $user = new User;
 $userData = $user->cdp_getUserData();
@@ -31,7 +33,8 @@ $errors = array();
 $user = $_SESSION['userid'];
 
 // Llamar a la función para actualizar las notificaciones
-$insert = cdp_updateNotificatonsRea($user);
+$isAdmin = isset($_SESSION['userlevel']) && ((int)$_SESSION['userlevel'] === 9);
+$insert = cdp_updateNotificatonsRea($user, $isAdmin);
 
 if ($insert) {
     // Si se actualizó correctamente
