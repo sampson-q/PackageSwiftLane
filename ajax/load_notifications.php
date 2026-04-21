@@ -110,6 +110,7 @@ $bg = $rowCount > 0 ? 'bg-primary' : 'bg-danger';
                 }
                 if (!empty($notificationIds)) {
                     $ids = array_values(array_unique(array_map('intval', $notificationIds)));
+                    $ids = array_slice($ids, 0, 100);
                     $placeholders = [];
                     foreach ($ids as $idx => $nid) {
                         $placeholders[] = ':nid_' . $idx;
