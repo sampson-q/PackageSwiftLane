@@ -25,7 +25,7 @@ require_once('helpers/querys.php');
 
 if (isset($_GET['order_track'])) {
 	$rawOrderTrackInput = trim((string)$_GET['order_track']);
-	$sanitizedOrderTrack = preg_replace('/[^A-Za-z0-9\-]/', '', $rawOrderTrackInput);
+	$sanitizedOrderTrack = preg_replace('/[^A-Za-z0-9-]/', '', $rawOrderTrackInput);
 	$results = cdp_getCourierTrack($sanitizedOrderTrack);
 	$track = $results['data'];
 } else {
