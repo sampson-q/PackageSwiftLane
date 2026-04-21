@@ -25,6 +25,7 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_client_list');
+require_csrf();
 
 require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");

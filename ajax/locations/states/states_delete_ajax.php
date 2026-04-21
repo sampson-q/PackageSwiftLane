@@ -26,6 +26,7 @@ require_once("../../../helpers/querys.php");
 require_once(__DIR__ . '/../../../helpers/ajax_guard.php');
 require_login();
 require_permission('manage_states');
+require_csrf();
 
 $db = new Conexion;
 

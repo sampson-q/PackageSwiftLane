@@ -27,7 +27,7 @@ $db = new Conexion;
 $user = new User;
 $userData = $user->cdp_getUserData();
 
-$search = cdp_sanitize($_REQUEST['search']);
+$search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : '';
 
 $tables = "cdb_recipients";
 $fields = "*";
@@ -35,9 +35,9 @@ $fields = "*";
 $sWhere = "sender_id = '" . $_SESSION['userid'] . "'";
 
 
-if ($search != null) {
+if ($search != '') {
 
-	$sWhere .= " and (fname LIKE '%" . $search . "%' or lname LIKE '%" . $search . "%')";
+	$sWhere .= " and (fname LIKE :search or lname LIKE :search)";
 }
 
 // // pagination variables
@@ -48,12 +48,14 @@ $offset = ($page - 1) * $per_page;
 
 
 $sql = "SELECT $fields FROM  $tables where $sWhere";
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);
@@ -83,11 +85,11 @@ if ($numrows > 0) { ?>
 		<?php } else { ?>
 			<?php foreach ($data as $recipient) { ?>
 				<tr>
-					<td class="text-center"><?php echo $recipient->fname; ?> <?php echo $recipient->lname; ?></td>
-					<td class="text-center"><?php echo $recipient->email; ?></td>
-					<td class="text-center"><?php echo $recipient->phone; ?></td>
+					<td class="text-center"><?php echo h($recipient->fname); ?> <?php echo h($recipient->lname); ?></td>
+					<td class="text-center"><?php echo h($recipient->email); ?></td>
+					<td class="text-center"><?php echo h($recipient->phone); ?></td>
 					<td align='center'>
-						<a href="recipients_edit.php?recipient=<?php echo $recipient->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien46'] ?>"><i style="color:#343a40" class="ti-pencil"></i></a>
+						<a href="recipients_edit.php?recipient=<?php echo h($recipient->id); ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien46'] ?>"><i style="color:#343a40" class="ti-pencil"></i></a>
 
 					</td>
 				</tr>
@@ -99,7 +101,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'recipients_list');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 	</div>
 <?php } ?>

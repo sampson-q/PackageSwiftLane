@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/querys.php');
 require_login();
 require_permission('view_general_reports');
+require_csrf();
 
 
 $db = new Conexion;
@@ -71,9 +72,9 @@ if (!empty($range)) {
 	$fecha_fin = date('Y-m-d', strtotime($fecha[1]));
 
 
-	$sWhere .= " and  a.charge_date between '" . $fecha_inicio . "'  and '" . $fecha_fin . "'";
+	$sWhere .= " and  a.charge_date between :fecha_inicio  and :fecha_fin";
 }
-$sql = "SELECT c.lname, c.fname, a.id_charge, b.order_prefix, b.order_no, a.payment_type, a.charge_date, a.total FROM cdb_charges_order as a 
+$sql = "SELECT c.lname, c.fname, a.id_charge, b.order_prefix, b.order_no, a.payment_type, a.charge_date, a.total FROM cdb_charges_order as a
 				INNER JOIN cdb_add_order as b ON a.order_id = b.order_id
 				INNER JOIN cdb_users as c ON c.id = b.sender_id
 				$sWhere
@@ -81,12 +82,14 @@ $sql = "SELECT c.lname, c.fname, a.id_charge, b.order_prefix, b.order_no, a.paym
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+if (!empty($range)) { $db->bind(':fecha_inicio', $fecha_inicio); $db->bind(':fecha_fin', $fecha_fin); }
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql);
+if (!empty($range)) { $db->bind(':fecha_inicio', $fecha_inicio); $db->bind(':fecha_fin', $fecha_fin); }
 $data = $db->cdp_registros();
 
 

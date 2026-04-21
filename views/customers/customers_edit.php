@@ -140,7 +140,7 @@ $user_addreses = $db->cdp_registros();
 
                                 <center class="m-t-30">
                                     <label for="avatarInput">
-                                        <img src="assets/<?php echo ($row->avatar) ? $row->avatar : "/uploads/blank.png"; ?>" class="rounded-circle" width="150" />
+                                        <img src="assets/<?php echo ($row->avatar) ? h($row->avatar) : "/uploads/blank.png"; ?>" class="rounded-circle" width="150" />
                                     </label>
                                     <div><br><br></div>
 
@@ -154,15 +154,15 @@ $user_addreses = $db->cdp_registros();
                                         <div class="col-md-6 mb-3">
                                             <button type="submit" class="btn btn-outline-warning btn-confirmation"><?php echo $lang['messageerrorform13'] ?></button>
                                         </div>
-                                        <input name="id" id="id" type="hidden" value="<?php echo $row->id; ?>" />
+                                        <input name="id" id="id" type="hidden" value="<?php echo (int)$row->id; ?>" />
                                     </form>
 
-                                    <h4 class="card-title m-t-10"><?php echo $row->fname; ?> <?php echo $row->lname; ?></h4>
+                                    <h4 class="card-title m-t-10"><?php echo h($row->fname); ?> <?php echo h($row->lname); ?></h4>
                                     <h6 class="card-subtitle"><span><?php echo $lang['user_manage2'] ?> <i class="icon-double-angle-right"></i></span>
-                                        <div class="badge badge-pill badge-light font-16"><span class="ti-user text-warning"></span> <?php echo $row->username; ?></div>
+                                        <div class="badge badge-pill badge-light font-16"><span class="ti-user text-warning"></span> <?php echo h($row->username); ?></div>
                                     </h6>
                                     <h6 class="card-subtitle"><span><?php echo $lang['user-account21000'] ?> <i class="icon-double-angle-right"></i></span>
-                                        <div class="badge badge-pill badge-light font-16"> <?php echo $row->locker; ?></div>
+                                        <div class="badge badge-pill badge-light font-16"> <?php echo h($row->locker); ?></div>
                                     </h6>
                                 </center>
                             </div>
@@ -170,16 +170,16 @@ $user_addreses = $db->cdp_registros();
                                 <hr>
                             </div>
                             <div class="card-body"> <small class="text-muted"><?php echo $lang['user-account4'] ?> </small>
-                                <h6><?php echo $row->email; ?></h6> <small class="text-muted p-t-30 db"><?php echo $lang['user-account8'] ?></small>
-                                <h6> <?php echo $row->phone; ?></h6>
+                                <h6><?php echo h($row->email); ?></h6> <small class="text-muted p-t-30 db"><?php echo $lang['user-account8'] ?></small>
+                                <h6> <?php echo h($row->phone); ?></h6>
                             </div>
                             <div class="card-body row text-center">
                                 <div class="col-6 border-right">
-                                    <h6><?php echo $row->created; ?></h6>
+                                    <h6><?php echo h($row->created); ?></h6>
                                     <span><?php echo $lang['user-account18'] ?></span>
                                 </div>
                                 <div class="col-6">
-                                    <h6><?php echo $row->lastlogin; ?></h6>
+                                    <h6><?php echo h($row->lastlogin); ?></h6>
                                     <span><?php echo $lang['user-account19'] ?></span>
                                 </div>
                             </div>
@@ -191,7 +191,7 @@ $user_addreses = $db->cdp_registros();
                             <!-- Tabs -->
                             <ul class="nav nav-pills custom-pills" id="pills-tab" role="tablist">
                                 <li class="nav-item">
-                                    <a class="nav-link active" id="pills-setting-tab" data-toggle="pill" href="#previous-month" role="tab" aria-controls="pills-setting" aria-selected="false"><span><?php echo $lang['edit-clien2'] ?> <i class="icon-double-angle-right"></i> <?php echo $row->username; ?></span></a>
+                                    <a class="nav-link active" id="pills-setting-tab" data-toggle="pill" href="#previous-month" role="tab" aria-controls="pills-setting" aria-selected="false"><span><?php echo $lang['edit-clien2'] ?> <i class="icon-double-angle-right"></i> <?php echo h($row->username); ?></span></a>
                                 </li>
                             </ul>
                             <!-- Tabs -->
@@ -207,7 +207,7 @@ $user_addreses = $db->cdp_registros();
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label for="firstName1"><?php echo $lang['user_manage3'] ?></label>
-                                                            <input type="text" class="form-control"  name="username"  value="<?php echo $row->username; ?>" placeholder="<?php echo $lang['user_manage3'] ?>">
+                                                            <input type="text" class="form-control"  name="username"  value="<?php echo h($row->username); ?>" placeholder="<?php echo $lang['user_manage3'] ?>">
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
@@ -224,7 +224,7 @@ $user_addreses = $db->cdp_registros();
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label for="phoneNumber1"><?php echo $lang['leftorder164'] ?></label>
-                                                            <select class="custom-select form-control" id="document_type" name="document_type" value="<?php echo $row->document_type; ?>">
+                                                            <select class="custom-select form-control" id="document_type" name="document_type" value="<?php echo h($row->document_type); ?>">
 
 
                                                                 <option value="DNI" <?php if ($row->document_type == 'DNI') {
@@ -274,7 +274,7 @@ $user_addreses = $db->cdp_registros();
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label for="phoneNumber1"><?php echo $lang['leftorder175'] ?></label>
-                                                            <input type="text" class="form-control" id="document_number" name="document_number" value="<?php echo $row->document_number; ?>" placeholder="<?php echo $lang['leftorder175'] ?>">
+                                                            <input type="text" class="form-control" id="document_number" name="document_number" value="<?php echo h($row->document_number); ?>" placeholder="<?php echo $lang['leftorder175'] ?>">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -284,13 +284,13 @@ $user_addreses = $db->cdp_registros();
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label for="emailAddress1"><?php echo $lang['user_manage6'] ?></label>
-                                                            <input type="text" class="form-control" name="fname" id="fname" value="<?php echo $row->fname; ?>" placeholder="<?php echo $lang['user_manage6'] ?>">
+                                                            <input type="text" class="form-control" name="fname" id="fname" value="<?php echo h($row->fname); ?>" placeholder="<?php echo $lang['user_manage6'] ?>">
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label for="phoneNumber1"><?php echo $lang['user_manage7'] ?></label>
-                                                            <input type="text" class="form-control" name="lname" id="lname" value="<?php echo $row->lname; ?>" placeholder="<?php echo $lang['user_manage7'] ?>">
+                                                            <input type="text" class="form-control" name="lname" id="lname" value="<?php echo h($row->lname); ?>" placeholder="<?php echo $lang['user_manage7'] ?>">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -300,7 +300,7 @@ $user_addreses = $db->cdp_registros();
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label for="emailAddress1"><?php echo $lang['user_manage5'] ?></label>
-                                                            <input type="text" class="form-control" id="email" name="email" value="<?php echo $row->email; ?>" placeholder="<?php echo $lang['user_manage5'] ?>">
+                                                            <input type="text" class="form-control" id="email" name="email" value="<?php echo h($row->email); ?>" placeholder="<?php echo $lang['user_manage5'] ?>">
                                                         </div>
 
                                                     </div>
@@ -308,7 +308,7 @@ $user_addreses = $db->cdp_registros();
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label for="phoneNumber1"><?php echo $lang['user_manage9'] ?></label>
-                                                            <input type="text" class="form-control" id="phone_custom" name="phone_custom" value="<?php echo $row->phone; ?>" placeholder="<?php echo $lang['user_manage9'] ?>">
+                                                            <input type="text" class="form-control" id="phone_custom" name="phone_custom" value="<?php echo h($row->phone); ?>" placeholder="<?php echo $lang['user_manage9'] ?>">
                                                             <span id="valid-msg" class="hide"></span>
                                                             <div id="error-msg" class="hide text-danger"></div>
                                                         </div>
@@ -321,7 +321,7 @@ $user_addreses = $db->cdp_registros();
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label for="phoneNumber1"><?php echo $lang['user_manage11'] ?></label>
-                                                            <select class="custom-select form-control" id="gender" name="gender" value="<?php echo $row->gender; ?>" placeholder="<?php echo $lang['user_manage11'] ?>">
+                                                            <select class="custom-select form-control" id="gender" name="gender" value="<?php echo h($row->gender); ?>" placeholder="<?php echo $lang['user_manage11'] ?>">
                                                                 <option value="Male" <?php if ($row->gender == 'Male') {
                                                                                             echo 'selected';
                                                                                         } ?>><?php echo $lang['leftorder179'] ?></option>
@@ -422,7 +422,7 @@ $user_addreses = $db->cdp_registros();
                                                                 <div class="form-group">
                                                                     <label class="control-label col-form-label"><?php echo $lang['leftorder318'] ?></label>
                                                                     <select class="select2 form-control custom-select" name="country[]" id="country<?php echo $count; ?>">
-                                                                        <option value="<?php echo $country->id; ?>"><?php echo $country->name; ?></option>
+                                                                        <option value="<?php echo (int)$country->id; ?>"><?php echo h($country->name); ?></option>
                                                                     </select>
                                                                 </div>
                                                             </div>
@@ -431,7 +431,7 @@ $user_addreses = $db->cdp_registros();
                                                                 <div class="form-group">
                                                                     <label class="control-label col-form-label"><?php echo $lang['leftorder319'] ?></label>
                                                                     <select class="select2 form-control custom-select" id="state<?php echo $count; ?>" name="state[]">
-                                                                        <option value="<?php echo $state->id; ?>"><?php echo $state->name; ?></option>
+                                                                        <option value="<?php echo (int)$state->id; ?>"><?php echo h($state->name); ?></option>
                                                                     </select>
                                                                 </div>
                                                             </div>
@@ -440,7 +440,7 @@ $user_addreses = $db->cdp_registros();
                                                                 <div class="form-group">
                                                                     <label class="control-label col-form-label"><?php echo $lang['leftorder320'] ?></label>
                                                                     <select class="select2 form-control custom-select" id="city<?php echo $count; ?>" name="city[]">
-                                                                        <option value="<?php echo $city->id; ?>"><?php echo $city->name; ?></option>
+                                                                        <option value="<?php echo (int)$city->id; ?>"><?php echo h($city->name); ?></option>
 
                                                                     </select>
                                                                 </div>
@@ -449,18 +449,18 @@ $user_addreses = $db->cdp_registros();
                                                             <div class="col-md-4">
                                                                 <div class="form-group">
                                                                     <label for="phoneNumber1"><?php echo $lang['user_manage14'] ?></label>
-                                                                    <input type="text" class="form-control form-control-sm" value="<?php echo $rowAddress->zip_code; ?>" name="postal[]" id="postal<?php echo $count; ?>" placeholder="<?php echo $lang['user_manage14'] ?>">
+                                                                    <input type="text" class="form-control form-control-sm" value="<?php echo h($rowAddress->zip_code); ?>" name="postal[]" id="postal<?php echo $count; ?>" placeholder="<?php echo $lang['user_manage14'] ?>">
                                                                 </div>
                                                             </div>
 
                                                             <div class="col-md-4">
                                                                 <div class="form-group">
                                                                     <label for="phoneNumber1"><?php echo $lang['user_manage10'] ?></label>
-                                                                    <input type="text" class="form-control form-control-sm" value="<?php echo $rowAddress->address; ?>" name="address[]" id="address<?php echo $count; ?>" placeholder="<?php echo $lang['user_manage10'] ?>">
+                                                                    <input type="text" class="form-control form-control-sm" value="<?php echo h($rowAddress->address); ?>" name="address[]" id="address<?php echo $count; ?>" placeholder="<?php echo $lang['user_manage10'] ?>">
                                                                 </div>
                                                             </div>
 
-                                                            <input type="hidden" name="address_id[]" id="address_id<?php echo $count; ?>" value="<?php echo $rowAddress->id_addresses; ?>" />
+                                                            <input type="hidden" name="address_id[]" id="address_id<?php echo $count; ?>" value="<?php echo (int)$rowAddress->id_addresses; ?>" />
 
                                                             <?php
 
@@ -482,7 +482,7 @@ $user_addreses = $db->cdp_registros();
                                                 <?php }  ?>
 
                                                 <input type="hidden" name="total_address" id="total_address" value="<?php echo $count; ?>" />
-                                                <input type="hidden" name="phone" id="phone" value="<?php echo $row->phone; ?>" />
+                                                <input type="hidden" name="phone" id="phone" value="<?php echo h($row->phone); ?>" />
 
                                                 <div id="div_address_multiple"></div>
 
@@ -498,7 +498,7 @@ $user_addreses = $db->cdp_registros();
                                                         <div class="form-group">
                                                             <label for="emailAddress1"><?php echo $lang['user_manage28'] ?></label>
                                                             <textarea class="form-control" name="notes" id="notes" rows="6" name="notes" placeholder="<?php echo $lang['user_manage31'] ?>">
-                                                            <?php echo $row->notes; ?>
+                                                            <?php echo h($row->notes); ?>
                                                         </textarea>
                                                         </div>
                                                     </div>
@@ -511,7 +511,7 @@ $user_addreses = $db->cdp_registros();
                                                     <button class="btn btn-outline-danger btn-confirmation" name="dosubmit" type="submit"><?php echo $lang['user-account20'] ?><span><i class="icon-ok"></i></span></button>
                                                     <a href="customers_list.php" class="btn btn-outline-secondary btn-confirmation"><span><i class="ti-share-alt"></i></span> <?php echo $lang['user_manage30'] ?></a>
                                                 </div>
-                                                <input name="id" id="id" type="hidden" value="<?php echo $row->id; ?>" />
+                                                <input name="id" id="id" type="hidden" value="<?php echo (int)$row->id; ?>" />
 
                                                  <input type="hidden" name="count_address" id="count_address" value="<?php echo $count; ?>" />
                                             </div>

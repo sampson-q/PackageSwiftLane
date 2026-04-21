@@ -26,20 +26,16 @@ require_once("../loader.php");
 
 $db = new Conexion;
 
-$state = cdp_sanitize($_REQUEST['id']);
+$state = (int)($_REQUEST['id'] ?? 0);
 
-$search = '';
-if (isset($_REQUEST['q'])) {
-    $search = cdp_sanitize($_REQUEST['q']);
-}
+$search = isset($_REQUEST['q']) ? trim($_REQUEST['q']) : '';
 
 $list = array();
 $data = [];
 
-
-$sql = "SELECT * FROM cdb_cities WHERE  name LIKE '%" . $search . "%' and state_id='" . $state . "'";
-
-$db->cdp_query($sql);
+$db->cdp_query("SELECT * FROM cdb_cities WHERE name LIKE :q AND state_id = :state");
+$db->bind(':q', '%' . $search . '%');
+$db->bind(':state', $state);
 $db->cdp_execute();
 
 $datas = $db->cdp_registros();

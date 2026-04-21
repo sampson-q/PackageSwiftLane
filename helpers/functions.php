@@ -19,6 +19,15 @@
 // *                                                                       *
 // *************************************************************************
 
+/**
+ * h() — Safe HTML output escaping for all DB-sourced values.
+ * Replaces direct echo $row->field with echo h($row->field).
+ */
+if (!function_exists('h')) {
+    function h($value): string {
+        return htmlspecialchars((string)$value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+}
 
 function cdp_cleanOutx($text)
 {

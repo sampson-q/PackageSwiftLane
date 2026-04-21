@@ -50,7 +50,7 @@ $sql = "SELECT * FROM cdb_charges_order
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 

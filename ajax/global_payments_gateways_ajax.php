@@ -25,6 +25,7 @@ require_once("../loader.php");
 require_once(__DIR__ . '/../helpers/ajax_guard.php');
 require_login();
 require_permission('view_global_payments');
+require_csrf();
 
 
 $db = new Conexion;
@@ -65,7 +66,7 @@ $sql = "SELECT * FROM cdb_payments_gateway  where payment_transaction LIKE '%" .
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -213,7 +214,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'global_payments_gateways');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 
 	</div>

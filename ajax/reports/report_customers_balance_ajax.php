@@ -27,6 +27,7 @@ require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/querys.php');
 require_login();
 require_permission('view_general_reports');
+require_csrf();
 
 
 $db = new Conexion;
@@ -64,7 +65,7 @@ if (!empty($range)) {
 	$fecha_fin = date('Y-m-d', strtotime($fecha[1]));
 
 
-	$sWhere .= " and  b.order_date between '" . $fecha_inicio . "'  and '" . $fecha_fin . "'";
+	$sWhere .= " and  b.order_date between :fecha_inicio  and :fecha_fin";
 }
 
 $sql = "SELECT a.id, b.order_id, a.lname,a.fname, b.order_prefix, b.order_no FROM cdb_users as a
@@ -76,12 +77,14 @@ $sql = "SELECT a.id, b.order_id, a.lname,a.fname, b.order_prefix, b.order_no FRO
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+if (!empty($range)) { $db->bind(':fecha_inicio', $fecha_inicio); $db->bind(':fecha_fin', $fecha_fin); }
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql);
+if (!empty($range)) { $db->bind(':fecha_inicio', $fecha_inicio); $db->bind(':fecha_fin', $fecha_fin); }
 $data = $db->cdp_registros();
 
 

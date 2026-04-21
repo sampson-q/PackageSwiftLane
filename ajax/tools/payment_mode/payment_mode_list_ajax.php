@@ -50,7 +50,7 @@ $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
 $sql = "SELECT $fields FROM  $tables where $sWhere";
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -101,7 +101,7 @@ if ($numrows > 0) { ?>
 
 
 	<div class="pull-right">
-		<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'payment_mode_list');	?>
+		<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 	</div>
 </div>
 <?php } ?>

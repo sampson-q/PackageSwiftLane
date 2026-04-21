@@ -31,13 +31,9 @@ $meses_ = array('01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr', '05'
 
 $sWhere = "";
 
-// Comprobamos el nivel del usuario (si no es admin, solo accederá a su propio usuario)
-if ($_SESSION['userlevel'] == 9) {
-    // Si es administrador, puede ver todos los paquetes y notificaciones
-} else {
-    // Si no es administrador, limitar acceso a su propio usuario
-    $sWhere .= " AND a.user_id = '" . $_SESSION['userid'] . "'";
-}
+// Always filter by the current user — "mark all read" only marks this user's rows,
+// so the badge must be scoped to the same user to stay consistent.
+$sWhere .= " AND a.user_id = '" . (int)$_SESSION['userid'] . "'";
 
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
 $perPage = 10;

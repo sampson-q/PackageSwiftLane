@@ -65,7 +65,7 @@ $sql = "SELECT * FROM cdb_payments_gateway  where type_transaccition_courier= 'p
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -168,7 +168,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'payments_gateways_list_customers_packages');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 
 	</div>

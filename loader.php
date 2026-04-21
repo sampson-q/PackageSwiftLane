@@ -1,51 +1,44 @@
-<?php //00507
-// 15.0 83
-if(!extension_loaded('ionCube Loader')){$__oc=strtolower(substr(php_uname(),0,3));$__ln='ioncube_loader_'.$__oc.'_'.substr(phpversion(),0,3).(($__oc=='win')?'.dll':'.so');if(function_exists('dl')){@dl($__ln);}if(function_exists('_il_exec')){return _il_exec();}$__ln='/ioncube/'.$__ln;$__oid=$__id=realpath(ini_get('extension_dir'));$__here=dirname(__FILE__);if(strlen($__id)>1&&$__id[1]==':'){$__id=str_replace('\\','/',substr($__id,2));$__here=str_replace('\\','/',substr($__here,2));}$__rd=str_repeat('/..',substr_count($__id,'/')).$__here.'/';$__i=strlen($__rd);while($__i--){if($__rd[$__i]=='/'){$__lp=substr($__rd,0,$__i).$__ln;if(file_exists($__oid.$__lp)){$__ln=$__lp;break;}}}if(function_exists('dl')){@dl($__ln);}}else{die('The file '.__FILE__." is corrupted.\n");}if(function_exists('_il_exec')){return _il_exec();}echo("Site error: the ".(php_sapi_name()=='cli'?'ionCube':'<a href="http://www.ioncube.com">ionCube</a>')." PHP Loader needs to be installed. This is a widely used PHP extension for running ionCube protected PHP code, website security and malware blocking.\n\nPlease visit ".(php_sapi_name()=='cli'?'get-loader.ioncube.com':'<a href="http://get-loader.ioncube.com">get-loader.ioncube.com</a>')." for install assistance.\n\n");exit(199);
+<?php
+/**
+ * Loader principal: solo lo usan las páginas del panel (index.php, etc.).
+ * install/index.php y verify_purchase.php NO incluyen este loader, así el cliente
+ * puede activar la licencia una sola vez desde cualquier servidor.
+ */
+$installFile = "install/install.deprixaprov75";
 
-?>
-HR+cP+DplPbzqWNUVC0ekjH8U9bkyfhcmRkqc8syq7/0dHjZvRxdQOihdZMGvwH2/RWsjCn8jZZA
-6PeNi67tthM7BZkZI1zpNVlsEu98jFWuakyg0qrEi3HviLejY0Z6YwJN27K06aKcIisYcOGs38wb
-LUv7Afgm4waLENFxfdSq1U7b3C2pVC8gkdAqehv5LOOBjQMen9Iak4OEEL7D1qNmDh0DvKQs3qYx
-RDc/i3FVbshQB3z11HQNxE97qHqeOdDZOgPuji1qxoFxb62Om/mfNYrVOEslKBZBR44MwFD5jfE6
-eUNYlwIqH1AM3HVyYZ3sYmeLeNkVl0iOhcE4pXaBEWTfZyUHOLhW3LQP08W0d02P09C0c02K08a0
-a02S04C6FTik/u3eWm2000NFEJR/MdTG/N9k/hY7LxVoYdWSq4+K/X7GvnT/yW1u8iqHw+fUm650
-w0iqhF0Lfyk/HPU4d2un1Asu6LoYU5vI4PIRE2uasTHjYJJVuej/TA0YVmkVnH/4SDQ6C7IoXxA+
-YkxZwatBKVhYjCd6rxzdqWVXR7yD/QDjJ1jN1OkMvsEeQt3s3EMOBthgNcNho+ZhbBfOoNnG3N54
-cLgY6HeFclCtRUjHCVXbQaimwRWPNEX1pWOsXFj8RKGP9Pu7MV3UI4t10ywgGbiVcOFkGLeX2c17
-ewLN2pcd2Y8ShL6THeYS3FlnLAr0rCg4otW9aCQxkybRNh+iorlFfyxF+7gmV9I9dnY8l3G1aIyW
-ngfiDQndvUreWeAVA3WdOrWTkD+uwEuE6eid91wFsfHOIGcd4yUAjNzYicliromDH7pEbV4KX/GT
-B+ZQ0zTnwwNNv5hNM+2B04LUjXa+HUftaa2hgADcCB0KPwUGpW7OFrLrDWM4k0Aw1CvElt/lc6VH
-v63NR/WTakBlX4zKwpXMY2CUU1jK6gDzQ1+VJZyxYjmgBAYvamohUuNfCRVn3n8x0Md9fIZmxyTo
-bVd3ICJReIdtpKi9RkLfWRc/UTDSFOYPB2+8ltK3Nfq0//MWkmt+ANUGW1fLmduN6Nm+ZbOKxPDz
-d8GGsmc1bpuVY0TVIOQ/W7fA9b/2SuLfb7pqDP9YbEfCoUSp5Dv91R1e2wotcHks+aqgmOeQMfIC
-1138K8444Y29zrOw6k8b0J+cl83SaQ+6SQ5ua7NkQ6QE+KOASmqQ1NhcJxzI9rvK62+7uMh9Vfkg
-LDek7ltLpvfuL43qRP0KONvAq+pb57yS78FpI7GB85eHt54eEhGnKT2oMF9QycULPBGEAxZ3et1g
-aGp2i9fb40wasi8LRDLR9uQCAPlPWNVaeaYbPy7A7WkneZHaeBNxevi0yYQ9GeTpZ6fPJJyCcSf0
-MhH6yap/I5BtIi6yB80on0umgIezpGphT6OqmgnQTxySo4cQNmC5I9MSVeWStt+B7qFhbapaBVgG
-Eno/FdMygX0FYqax8GCvSBpJ4yPCdBmEG0awgfuPAykWoNMdnuZ4z6T0mbUj93FY3Q+B/rgmC2Tf
-UE+T15IYu93vIqsvefX/jFaZqjBra9DLjC7hndRBQBMHuG9o03KswJHngUAVkQ1HFJMqCXNW2XCI
-r0bzXhEjw43NseG55/XRyXhwESq4WiGFY4DC9T2u+4bF5ulyf+be4Yvq9LjgvSYJNzHM+uxuqpbo
-nfyhTiUaaaDx+4v18u6zfuqlVfBR6BmwzK9VWUQbnFCE1lzGI5lSblzxX8+KQw7/gjhSC9zGCzws
-f50gx70iq0x9slpwQ5Rt22RgKocfHcIH10fg8dIliAkF6gnHzMfoLgHzlIfcGH4s964kws9aPd1X
-Wi8MyYTuJPcReyvBd++j6o3vdJU9zX1OXK6MYKlCM9uiFy5gZoKHCN2nQ2li4YffA+nGXOl2dB8Z
-5fGdtw5hcRPBITPF/1kuB84gCeVskhIhh88THhqXsl8aBA9C5d0XVWXnozcPPO78kbM+8Za5l5bC
-wNTTFma6yVqAAZTsFu++W5bkZmuvalIx3nMqu642THUkVcBtXsmDgOgOxmRRYL0hrICbhajxEj5y
-SJZ4GXq7J55wOOUubWG1QvDDXLxkt8qmd3dbtGNybjB4LalFFPjBjIx4mYLDskJnv+ygG0x7w8ON
-sntmMMy79x56ekYiGkiTgMrkihkeDyvgH1o7baoo8xbSsD7ziSkErxesOWO+57kqRfLn1awajzii
-rdSM8Bl4IqhftQ2rRhVnCTLz0Js5dFij+T3fMBUqpWD+1pte1NTzwzUDP2532ty1cz2XPiybE5XX
-2Ef38cIRmQSW/sP2mPgSBG1MQ8L7ZxHtPcHhOnvhMmUsbu3ADLvYoY6IhyL5M5wOQ4zOzPdwHM6k
-s4eVMuqEmT+xGMpL+DKzGIVa8BRaxjf5Mv9Jwlr70iUhHKOv0cvb5IQOi5Art9o36E15ZmTWweJS
-5s64UZAYeq6cMZlNuh6cyvBE/U9cnhfm3FmSaU8QyvBC8sP84h31ZiOnbkGhadp/PvE9utGhYAxy
-TzOfmspxnUHG9/YM/j2meusQo4XsPcwpMu6E/0cPMyJNGdJpR797LravYs9Iz8rQ5Wd3rx+Ixqd/
-P9akw1xla0obsDhryt3FLk2ba+Zi9r5/pmXkKcprApIgwjsr6w6jn9g1FQMutWHyXnGrAxKoQvwd
-Ek/syXEwuYYtsHzLrIR6nQ5hbSFl9lEvv4x6QsKAQ76AjOlCgjSTftlN2Jxj/QO98vq9tJMrnqX4
-HLTjgGiEG8jdqun7PSXnjTFK7uNplFOM4kR/pd1ntf3TsvlFqyNGtBU/btY2cSxDLlaISR5+qjpt
-TNHLi3NmkLGO6ZKqluKK6LlfcPXQa4JkOZbNvQLuDFWTWSLsmfkiKPoQREgX+uaa84PcwDqYVk3v
-Hf/Y+1F5Q9OEbQAPBhfqQ0Ftqa/FKGnKu+/ZN9OCCS7gFTkAW3jbZdmfIkrMHRmBVf3LBCvAZOOk
-HMrvY5Lyo6BIHOXYbSUiKT/n365pBC7xcF1QTNMQ3cfFLJ/gz/HBp9kRweLYUpQQ6hf26pRe5JHz
-3KLMuhW9E9CJpifvrPVG90RpNS92Zbk/EIEBjuA+BMjzDWXL/DJx6kgswXu9+YKvKztaw/3jJqKa
-B3izwniCJVoHng7fdSXeKp8BtzjSU0CNwzIMgyPeaG88nWWTAO1zr74j+C+Aer67X0hC6HZ2x4TP
-DCZAcbTEx/qMIR/7wquBeoWvJEtxCqmrfldfIXQcyFb+xMj5VTSRY5aLkuCQ0prCIcS67stQjOqg
-3h+U6VriAtqR+PYsZ3Uau/CLYi4js7o3nj8bkSGALEZO4N98e8pXYuCZPsIVzcD3q5Spr1kKaF0M
-fZft3vR9LUWM2qKpdghroc4Fs35KIWMym53+OC+UtwFwabOji99zMm+2B1zb6zAL5N/8dLNihVfb
-xTjOveYCY7pAuB6iAOaKeW==
+if (is_file($installFile)) {
+    header('Location: install');
+    exit();
+}
+
+require_once('config/config.php');
+require_once('helpers/function_exist.php');
+require_once('helpers/autoload_lang.php');
+require_once('helpers/functions.php');
+require_once('helpers/pagination.php');
+require_once('helpers/backups_function.php');
+
+// Verificación de licencia: si no hay .lic permite uso (primera activación); si servidor no responde no bloquea
+if (function_exists('xs5wohkrfju1ffmcfvl238a5')) {
+    xs5wohkrfju1ffmcfvl238a5();
+}
+
+
+// Mark loader as loaded so api_whatsapp_service.php skips its permission check
+// when included as a dependency (not called directly).
+if (!defined('DEPRIXAPRO_LOADER_LOADED')) {
+    define('DEPRIXAPRO_LOADER_LOADED', true);
+}
+
+// Autoload PHP
+spl_autoload_register(function ($className) {
+    require_once('lib/' . $className . '.php');
+});
+
+// Incluye el archivo de configuración de idioma después de cargar las clases
+require_once('helpers/config.lang.php');
+
+// Carga ajax_guard para que csrf_token() esté disponible en todas las páginas del panel
+// (necesario para el meta CSRF tag en head_scripts.php que habilita $.ajaxSetup)
+require_once('helpers/ajax_guard.php');
+

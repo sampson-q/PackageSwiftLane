@@ -30,7 +30,20 @@ require_once("../notify_whatsapp/api_whatsapp_service.php");
 require_once("../notify_sms/api_sms_service.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
+
+// If the user only has client-level pickup_add permission (not full admin),
+// delegate entirely to add_pickup_client_ajax.php instead of returning 403.
+{
+    $__u = new User();
+    if (!$__u->cdp_hasPermission('add_full_pickup') && $__u->cdp_hasPermission('pickup_add')) {
+        require(__DIR__ . '/add_pickup_client_ajax.php');
+        exit;
+    }
+    unset($__u);
+}
+
 require_permission('add_full_pickup');
+require_csrf();
 
 $user = new User;
 $core = new Core;

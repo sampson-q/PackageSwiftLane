@@ -36,8 +36,7 @@
 					</li>
 					<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
 					<li class="p-15 m-t-10">
-						<!-- <a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center"> -->
-						<a href="customer_packages_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
+						<a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
 							<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu m-l-5"> <?php echo $lang['left-menu-sidebar-1'] ?> </span>
 						</a>
@@ -50,20 +49,6 @@
 						<a class="sidebar-link waves-effect waves-dark" href="index.php" aria-expanded="false">
 							<iconify-icon icon="solar:widget-4-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-2'] ?></span>
-						</a>
-					</li>
-					
-                    <li class="sidebar-item">
-						<a class="sidebar-link waves-effect waves-dark" href="locker_search.php" aria-expanded="false">
-							<iconify-icon icon="ph:lockers-light" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-00'] . ' Search' ?></span>
-						</a>
-					</li>
-                    
-                    <li class="sidebar-item">
-						<a class="sidebar-link waves-effect waves-dark" href="pickup_client.php" aria-expanded="false">
-							<iconify-icon icon="f7:tray-arrow-up-fill" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-65']?></span>
 						</a>
 					</li>
 
@@ -84,11 +69,11 @@
                     <!-- Module online shopping-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="mdi:airplane-takeoff" class="fs-5"></iconify-icon>
-							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-64'] ?></span>
+							<iconify-icon icon="solar:cart-large-2-linear" class="fs-5"></iconify-icon>
+							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-5'] ?></span>
 						</a>
 
-						<ul aria-expanded="false" class="collapse first-level">
+						<ul aria-expanded="false" class="collapse  first-level">
 
 							<?php if ($user->cdp_hasPermission('view_dashboard_pack')) { ?>
 							<li class="sidebar-item">
@@ -167,8 +152,8 @@
 					<!-- Module shipment-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="mingcute:ship-fill" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo 'Sea ' . $lang['left-menu-sidebar-13'] ?></span>
+							<iconify-icon icon="solar:delivery-linear" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-13'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
 							<?php if ($user->cdp_hasPermission('view_dashboard_ship')) { ?>
@@ -213,6 +198,13 @@
 								</a>
 							</li>
 							<?php } ?>
+
+							<li class="sidebar-item">
+								<a href="cotizar.php" class="sidebar-link" target="_blank">
+									<iconify-icon icon="solar:calculator-linear" class="fs-5"></iconify-icon>
+									<span class="hide-menu"> <?php echo isset($lang['cotizador_nav']) ? $lang['cotizador_nav'] : 'Public Quote / Cotizar'; ?> </span>
+								</a>
+							</li>
 
 							<?php if ($user->cdp_hasPermission('view_payment_list')) { ?>
 							<li class="sidebar-item">
@@ -293,7 +285,7 @@
 					<!-- CONSOLIDATE -->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="mdi:consolidate" class="fs-5"></iconify-icon>
+							<iconify-icon icon="solar:document-text-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-22'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
@@ -403,16 +395,6 @@
 						<a class="sidebar-link waves-effect waves-dark" href="reports.php" aria-expanded="false">
 							<iconify-icon icon="solar:document-text-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-26'] ?></span>
-						</a>
-					</li>
-					<?php } ?>
-
-                    <?php if ($user->cdp_hasPermission('push_notifications')) { ?>
-					<!-- push notifications-->
-					<li class="sidebar-item">
-						<a class="sidebar-link waves-effect waves-dark" href="push_notifications.php" aria-expanded="false">
-							<iconify-icon icon="mdi:message-text-fast-outline" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-66'] ?></span>
 						</a>
 					</li>
 					<?php } ?>
@@ -568,16 +550,6 @@
 							</li>
 							<?php } ?>
 						</ul>
-					</li>
-					<?php } ?>
-
-                    <?php if ($user->cdp_hasPermission('view_general_reports')) { ?>
-					<!-- Module general report-->	
-					<li class="sidebar-item">
-						<a class="sidebar-link waves-effect waves-dark" href="warehouse.php" aria-expanded="false">
-							<iconify-icon icon="mdi:warehouse" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo 'Warehouse View' ?></span>
-						</a>
 					</li>
 					<?php } ?>
 
@@ -863,14 +835,6 @@
 					<!-- (API Administration module removed) -->
 					<?php } ?>
 
-					<!-- <?php if ($user->cdp_hasPermission('verify_updates')) { ?>
-					<li class="sidebar-item">
-						<a class="sidebar-link waves-effect waves-dark" href="verify_update.php" aria-expanded="false">
-							<iconify-icon icon="solar:info-circle-linear" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-61'] ?></span>
-						</a>
-					</li>
-					<?php } ?> -->
 				</ul>
 
 
@@ -912,8 +876,7 @@
 
 					<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
 					<li class="p-15 m-t-10">
-						<!-- <a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center"> -->
-						<a href="customer_packages_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
+						<a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
 							<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu m-l-5"> <?php echo $lang['left-menu-sidebar-1'] ?> </span>
 						</a>
@@ -1148,7 +1111,7 @@
 					<!-- CONSOLIDATE -->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="mdi:consolidate" class="fs-5"></iconify-icon>
+							<iconify-icon icon="solar:document-text-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-22'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
@@ -1258,16 +1221,6 @@
 						<a class="sidebar-link waves-effect waves-dark" href="reports.php" aria-expanded="false">
 							<iconify-icon icon="solar:document-text-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-26'] ?></span>
-						</a>
-					</li>
-					<?php } ?>
-
-                    <?php if ($user->cdp_hasPermission('push_notifications')) { ?>
-					<!-- push notifications-->
-					<li class="sidebar-item">
-						<a class="sidebar-link waves-effect waves-dark" href="push_notifications.php" aria-expanded="false">
-							<iconify-icon icon="mdi:message-text-fast-outline" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-66'] ?></span>
 						</a>
 					</li>
 					<?php } ?>
@@ -1667,15 +1620,6 @@
 					<!-- (API Administration module removed) -->
 					<?php } ?>
 
-					<!-- <?php if ($user->cdp_hasPermission('verify_updates')) { ?>
-					<li class="sidebar-item">
-						<a class="sidebar-link waves-effect waves-dark" href="verify_update.php" aria-expanded="false">
-							<iconify-icon icon="solar:info-circle-linear" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-61'] ?></span>
-						</a>
-					</li>
-					<?php } ?> -->
-
 				</ul>
 
 
@@ -1742,8 +1686,8 @@
 					?>
 					<!-- Module pre-alerts-->
 					<li class="sidebar-item">
-						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="mdi:airplane-takeoff" class="fs-5"></iconify-icon>
-							<span class="hide-menu"><?php echo 'Air Shipping' ?></span>
+						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="solar:programming-linear" class="fs-5"></iconify-icon>
+							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-5'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
 							<?php if ($user->cdp_hasPermission('prealert_add')) { ?>
@@ -1792,8 +1736,8 @@
 					?>
 					<!-- Module pre-alerts-->
 					<li class="sidebar-item">
-						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="mingcute:ship-fill" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo 'Sea ' . $lang['left-menu-sidebar-13'] ?></span>
+						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-13'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
 							<?php if ($user->cdp_hasPermission('courier_add_client')) { ?>
@@ -1832,7 +1776,7 @@
 					?>
 					<!-- Module PICKUP CLIENT-->
 					<li class="sidebar-item">
-						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="mdi:courier-fast" class="fs-5"></iconify-icon>
+						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="solar:delivery-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-18'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
@@ -1865,7 +1809,7 @@
 					<!-- Module all consolidate-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="mdi:consolidate" class="fs-5"></iconify-icon>
+							<iconify-icon icon="solar:document-text-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-22'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
@@ -1959,14 +1903,6 @@
 						</a>
 					</li>
 					<?php } ?>
-					
-                    <?php if ($user->cdp_hasPermission('client_virtual_mail_box_addresses')) { ?>
-					<li class="sidebar-item">
-						<a class="sidebar-link waves-effect waves-dark" href="client_virtual_mail_box_addresses.php" aria-expanded="false"><iconify-icon icon="ph:mailbox-light"></iconify-icon>
-							<span class="hide-menu"> <?php echo $lang['virtual_mailbox-7'] ?> </span>
-						</a>
-					</li>
-					<?php } ?>
 				</ul>
 
 
@@ -2007,8 +1943,7 @@
 
 					<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
 					<li class="p-15 m-t-10">
-						<!-- <a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center"> -->
-						<a href="customer_packages_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
+						<a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
 							<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon> <span class="hide-menu m-l-5"> <?php echo $lang['left-menu-sidebar-1'] ?> </span> </a>
 					</li>
 					<?php } ?>
@@ -2131,7 +2066,7 @@
 					<!-- CONSOLIDATE -->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="mdi:consolidate" class="fs-5"></iconify-icon>
+							<iconify-icon icon="solar:document-text-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-22'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
@@ -2239,16 +2174,6 @@
 						<a class="sidebar-link waves-effect waves-dark" href="reports.php" aria-expanded="false">
 							<iconify-icon icon="solar:document-text-linear" class="fs-5" style="color:#fb8c00"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-26'] ?></span>
-						</a>
-					</li>
-					<?php } ?>
-
-                    <?php if ($user->cdp_hasPermission('push_notifications')) { ?>
-					<!-- push notifications-->
-					<li class="sidebar-item">
-						<a class="sidebar-link waves-effect waves-dark" href="push_notifications.php" aria-expanded="false">
-							<iconify-icon icon="mdi:message-text-fast-outline" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-66'] ?></span>
 						</a>
 					</li>
 					<?php } ?>

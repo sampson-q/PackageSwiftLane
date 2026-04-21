@@ -35,6 +35,7 @@ $user = new User();
 $core = new Core();
 
 $permissions = $user->cdp_getUserPermissions();
+        $userData = $user->cdp_getUserData();
 
 // Verifica si estamos autenticados
 if ($user->cdp_loginCheck() == true) {

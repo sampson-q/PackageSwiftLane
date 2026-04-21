@@ -30,6 +30,7 @@ require_once("../notify_sms/api_sms_service.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_pickup_list');
+require_csrf();
 
 $user = new User;
 $core = new Core;

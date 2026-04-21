@@ -26,6 +26,7 @@ require_once("../../../helpers/backups_function.php");
 require_once(__DIR__ . '/../../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_tools');
+require_csrf();
 
 /* == Delete SQL Backup == */
 if (isset($_POST['restoreBackup'])) :

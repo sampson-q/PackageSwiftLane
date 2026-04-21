@@ -30,6 +30,7 @@
     {
 
         $permissions = $user->cdp_getUserPermissions();
+        $userData = $user->cdp_getUserData();
 
         if (!$user->cdp_hasPermission('payment_methods_add')) {
             header("location: error403.php");

@@ -272,7 +272,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                 <h4 class="card-title"><?php echo $lang['messagesform100'] ?></h4>
                                 <div class="table-responsive">
                                     <div id="sales-packages-chart-container" class="morris-chart-container">
-                                        <div id="morris-sales-chart-packages"></div>
+                                        <div id="morris-sales-chart-packages" style="height: 300px;"></div>
                                     </div>
                                 </div>
                             </div>

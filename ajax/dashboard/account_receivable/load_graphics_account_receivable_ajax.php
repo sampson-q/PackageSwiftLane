@@ -22,7 +22,11 @@
 
 
 	require_once ("../../../loader.php");
+	require_once(__DIR__ . '/../../../helpers/ajax_guard.php');
 	require_once(__DIR__ . '/../../../helpers/querys.php');
+	require_login();
+	require_permission('view_dashboard');
+require_csrf();
 
 	$db = new Conexion;
 	$user = new User;

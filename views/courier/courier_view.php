@@ -159,7 +159,7 @@ if ($row_order->status_invoice == 1) {
     <meta property="og:image" content="<?php echo htmlspecialchars($core->og_image, ENT_QUOTES, 'UTF-8'); ?>">
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
-    <title> <?php echo $lang['left492'] ?> <?php echo $row_order->order_prefix . $row_order->order_no; ?> | <?php echo $core->site_name ?></title>
+    <title> <?php echo $lang['left492'] ?> <?php echo h($row_order->order_prefix) . h($row_order->order_no); ?> | <?php echo $core->site_name ?></title>
     <!-- This Page CSS -->
     <!-- Custom CSS -->
     <?php include 'views/inc/head_scripts.php'; ?>
@@ -214,7 +214,7 @@ if ($row_order->status_invoice == 1) {
 
                                 <div class="row"> 
                                     <div class=" col-sm-12 col-md-6 mb-2">
-                                        <h3><b class="text-danger"><?php echo $lang['left533020013'] ?></b> <span>#<?php echo $row_order->order_prefix . $row_order->order_no; ?></span></h3>
+                                        <h3><b class="text-danger"><?php echo $lang['left533020013'] ?></b> <span>#<?php echo h($row_order->order_prefix) . h($row_order->order_no); ?></span></h3>
                                     </div>
 
                                     <?php if ($row_order->status_courier != 14) { ?>
@@ -231,7 +231,7 @@ if ($row_order->status_invoice == 1) {
                                                         <!-- VERIFICAR PAGOS DE ENVÍOS PERMISO -->
                                                         <?php if ($row_order->status_invoice == 2 && $user->cdp_hasPermission('verify_payments')) { ?>
                                                             <?php if ($userData->userlevel == 1) { ?>
-                                                                <a class="dropdown-item" href="add_payment_gateways_courier.php?id_order=<?php echo $row_order->order_id; ?>">
+                                                                <a class="dropdown-item" href="add_payment_gateways_courier.php?id_order=<?php echo h($row_order->order_id); ?>">
                                                                     <i style="color:#343a40" class="fas fa-dollar-sign"></i>&nbsp;<?php echo $lang['leftorder32'] ?>
                                                                 </a>
                                                             <?php } ?>
@@ -240,7 +240,7 @@ if ($row_order->status_invoice == 1) {
                                                         <!-- VERIFICAR PAGOS DE ENVÍOS (Status = 3) PERMISO -->
                                                         <?php if ($row_order->status_invoice == 3 && $user->cdp_hasPermission('verify_payments')) { ?>
                                                             <?php if ($userData->userlevel != 1) { ?>
-                                                                <a class="dropdown-item" data-toggle="modal" data-target="#detail_payment_packages" data-id="<?php echo $row_order->order_id; ?>" data-customer="<?php echo $row_order->sender_id; ?>">
+                                                                <a class="dropdown-item" data-toggle="modal" data-target="#detail_payment_packages" data-id="<?php echo h($row_order->order_id); ?>" data-customer="<?php echo h($row_order->sender_id); ?>">
                                                                     <i style="color:#343a40" class="fas fa-dollar-sign"></i>&nbsp;<?php echo $lang['leftorder33'] ?>
                                                                 </a>
                                                             <?php } ?>
@@ -248,14 +248,14 @@ if ($row_order->status_invoice == 1) {
 
                                                         <!-- ACEPTAR ENVÍO PERMISO -->
                                                         <?php if ($row_order->order_incomplete == 0 && $row_order->is_pickup == 0 && $user->cdp_hasPermission('complete_client_shipment') && $userData->userlevel != 1) { ?>
-                                                            <a class="dropdown-item" href="courier_accept.php?id=<?php echo $row_order->order_id; ?>">
+                                                            <a class="dropdown-item" href="courier_accept.php?id=<?php echo h($row_order->order_id); ?>">
                                                                 <i style="color:#343a40" class="ti-pencil"></i>&nbsp;<?php echo $lang['left533020017'] ?>
                                                             </a>
                                                         <?php } ?>
 
                                                         <!-- IMPRIMIR ETIQUETA DE ENVÍO PERMISO -->
                                                         <?php if ($row_order->order_incomplete == 0 && $user->cdp_hasPermission('print_label')) { ?>
-                                                            <a class="dropdown-item" href="print_label_ship.php?id=<?php echo $row_order->order_id; ?>" target="_blank">
+                                                            <a class="dropdown-item" href="print_label_ship.php?id=<?php echo h($row_order->order_id); ?>" target="_blank">
                                                                 <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?>
                                                             </a>
                                                         <?php } ?>
@@ -274,7 +274,7 @@ if ($row_order->status_invoice == 1) {
                                                         <!-- ANULAR ENVÍO PERMISO -->
                                                         <?php if ($user->cdp_hasPermission('cancel_shipment')) { ?>
                                                             <?php if ($row_order->status_courier != 21 && $row_order->status_courier != 12) { ?>
-                                                                <a class="dropdown-item" data-id="<?php echo $row_order->order_id; ?>" href="#" data-toggle="modal" data-target="#myModalCancel">
+                                                                <a class="dropdown-item" data-id="<?php echo h($row_order->order_id); ?>" href="#" data-toggle="modal" data-target="#myModalCancel">
                                                                     <i style="color:#f62d51" class="fas fa-times-circle"></i>&nbsp;<?php echo $lang['leftorder34444']; ?>
                                                                 </a>
                                                             <?php } ?>
@@ -283,7 +283,7 @@ if ($row_order->status_invoice == 1) {
                                                         <!-- ASIGNAR CONDUCTOR A ENVÍO PERMISO -->
                                                         <?php if ($user->cdp_hasPermission('assign_drivers')) { ?>
                                                             <?php if ($row_order->status_courier != 21 && $row_order->status_courier != 12 && $row_order->status_courier != 8) { ?>
-                                                                <a class="dropdown-item" data-toggle="modal" data-target="#modalDriver" data-id_shipment="<?php echo $row_order->order_id; ?>">
+                                                                <a class="dropdown-item" data-toggle="modal" data-target="#modalDriver" data-id_shipment="<?php echo h($row_order->order_id); ?>">
                                                                     <i style="color:#ff0000" class="fas fa-car"></i>&nbsp;<?php echo $lang['left208']; ?>
                                                                 </a>
                                                             <?php } ?>
@@ -307,7 +307,7 @@ if ($row_order->status_invoice == 1) {
 
                                                         <!-- ENVIAR CORREO DE ENVÍO PERMISO -->
                                                         <?php if ($user->cdp_hasPermission('send_email_attachment')) { ?>
-                                                            <a class="dropdown-item" href="#" data-toggle="modal" data-id="<?php echo $row_order->order_id; ?>" data-email="<?php echo $sender_data->email; ?>" data-order="<?php echo $row_order->order_prefix . $row_order->order_no; ?>" data-target="#myModal">
+                                                            <a class="dropdown-item" href="#" data-toggle="modal" data-id="<?php echo h($row_order->order_id); ?>" data-email="<?php echo h($sender_data->email); ?>" data-order="<?php echo h($row_order->order_prefix) . h($row_order->order_no); ?>" data-target="#myModal">
                                                                 <i class="fas fa-envelope"></i>&nbsp;<?php echo $lang['left533020019'] ?>
                                                             </a>
                                                         <?php } ?>
@@ -329,7 +329,7 @@ if ($row_order->status_invoice == 1) {
                                                         <!-- ACEPTAR RECOGIDA (si el usuario tiene el permiso para hacerlo) -->
                                                         <?php if ($user->cdp_hasPermission('complete_client_shipment') && ($userData->userlevel == 9 || $userData->userlevel == 3 || $userData->userlevel == 2)) { ?>
                                                             <?php if ($row_order->status_courier == 14) { ?>
-                                                                <a class="dropdown-item" href="pickup_accept.php?id=<?php echo $row_order->order_id; ?>">
+                                                                <a class="dropdown-item" href="pickup_accept.php?id=<?php echo h($row_order->order_id); ?>">
                                                                     <i style="color:#20c997" class="fas fa-check-circle"></i>&nbsp;<?php echo $lang['left533020020'] ?>
                                                                 </a>
                                                             <?php } ?>
@@ -337,7 +337,7 @@ if ($row_order->status_invoice == 1) {
 
                                                         <!-- ANULAR RECOGIDA PERMISO (solo si tiene el permiso) -->
                                                         <?php if ($user->cdp_hasPermission('cancel_shipment')) { ?>
-                                                            <a class="dropdown-item" data-id="<?php echo $row_order->order_id; ?>" href="#" data-toggle="modal" data-target="#myModalCancel">
+                                                            <a class="dropdown-item" data-id="<?php echo h($row_order->order_id); ?>" href="#" data-toggle="modal" data-target="#myModalCancel">
                                                                 <i style="color:#f62d51" class="fas fa-times-circle"></i>&nbsp;<?php echo $lang['left533020021'] ?>
                                                             </a>
                                                         <?php } ?>
@@ -353,7 +353,7 @@ if ($row_order->status_invoice == 1) {
 
                                     <div class=" col-sm-12 col-md-6 mb-2">
                                         <b class=""><?php echo $lang['left506'] ?></b>
-                                        <span class="label" style="background-color: <?php echo $status_courier->color; ?>"><?php echo $status_courier->mod_style; ?>
+                                        <span class="label" style="background-color: <?php echo h($status_courier->color); ?>"><?php echo h($status_courier->mod_style); ?>
                                         </span>
                                     </div>
 
@@ -372,7 +372,7 @@ if ($row_order->status_invoice == 1) {
                                             <h5> &nbsp;<b><?php echo $lang['tools-branchOffice4'] ?></b></h5>
                                             <p class="text-muted  m-l-5">
                                                 <?php if ($branchoffices != null) {
-                                                    echo $branchoffices->name_branch;
+                                                    echo h($branchoffices->name_branch);
                                                 } ?></p>
                                         </div>
                                     </div>
@@ -382,7 +382,7 @@ if ($row_order->status_invoice == 1) {
                                             <h5> &nbsp;<b><?php echo $lang['tools-office1'] ?></b></h5>
                                             <p class="text-muted  m-l-5">
                                                 <?php if ($offices != null) {
-                                                    echo $offices->name_off;
+                                                    echo h($offices->name_off);
                                                 } ?></p>
                                         </div>
                                     </div>
@@ -391,7 +391,7 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['itemcategory'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $category->name_item; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo h($category->name_item); ?></p>
                                         </div>
                                     </div>
                                 </div>
@@ -403,11 +403,11 @@ if ($row_order->status_invoice == 1) {
                                             <h5> &nbsp;<b><?php echo $lang['track-shipment19'] ?></b></h5>
                                             <p class="text-muted  m-l-5">
 
-                                                <?php echo $row_order->order_datetime; ?></p>
+                                                <?php echo h($row_order->order_datetime); ?></p>
 
                                             <h5> &nbsp;<b><?php echo $lang['langs_034'] ?></b></h5>
                                             <p class="text-muted  m-l-5"><?php if ($delivery_time != null) {
-                                                                                echo $delivery_time->delitime;
+                                                                                echo h($delivery_time->delitime);
                                                                             } ?></p>
                                         </div>
 
@@ -418,11 +418,11 @@ if ($row_order->status_invoice == 1) {
                                             <h5> &nbsp;<b><?php echo $lang['tools-courier1'] ?></b></h5>
 
                                             <p class="text-muted  m-l-5"><?php if ($courier_com != null) {
-                                                                                echo $courier_com->name_com;
+                                                                                echo h($courier_com->name_com);
                                                                             } ?></p>
                                             <h5> &nbsp;<b><?php echo $lang['tools-shipmode1'] ?></b></h5>
                                             <p class="text-muted  m-l-5"><?php if ($order_service_options != null) {
-                                                                                echo $order_service_options->ship_mode;
+                                                                                echo h($order_service_options->ship_mode);
                                                                             } ?></p>
                                         </div>
                                     </div>
@@ -435,7 +435,7 @@ if ($row_order->status_invoice == 1) {
                                                     <h5> &nbsp;<b><?php echo $lang['left533020023'] ?></b></h5>
                                                     <b class="text-danger  m-l-5">
                                                         <?php if ($row_order->reason_cancel != null) {
-                                                            echo $row_order->reason_cancel;
+                                                            echo h($row_order->reason_cancel);
                                                         } ?></b>
                                                 </div>
                                             </div>
@@ -482,7 +482,7 @@ if ($row_order->status_invoice == 1) {
                                         <div class=" col-sm-12 col-md-4 mb-2">
                                             <div class="">
                                                 <h5> &nbsp;<b><?php echo $lang['leftorder157'] ?></b></h5>
-                                                <p class="text-muted  m-l-5"><?php echo date('Y-m-d h:i A', strtotime($order_p->date_payment)); ?></p>
+                                                <p class="text-muted  m-l-5"><?php echo h(date('Y-m-d h:i A', strtotime($order_p->date_payment))); ?></p>
                                             </div>
 
                                         </div>
@@ -490,7 +490,7 @@ if ($row_order->status_invoice == 1) {
                                         <div class=" col-sm-12 col-md-4 mb-2">
                                             <div class="">
                                                 <h5> &nbsp;<b><?php echo $lang['left533020025'] ?></b></h5>
-                                                <p class="text-muted  m-l-5"><?php echo $order_p->gateway; ?></p>
+                                                <p class="text-muted  m-l-5"><?php echo h($order_p->gateway); ?></p>
                                             </div>
                                         </div>
 
@@ -499,21 +499,21 @@ if ($row_order->status_invoice == 1) {
                                             <div class="">
                                                 <h5> &nbsp;<b><?php echo $lang['left533020026'] ?></b></h5>
 
-                                                <b class="text-muted  m-l-5"><?php echo $order_p->payment_transaction; ?></b>
+                                                <b class="text-muted  m-l-5"><?php echo h($order_p->payment_transaction); ?></b>
                                             </div>
                                         </div>
 
                                         <div class=" col-sm-12 col-md-4 mb-2">
                                             <div class="">
                                                 <h5> &nbsp;<b><?php echo $lang['payment5'] ?></b></h5>
-                                                <b class="text-muted  m-l-5"><?php echo $order_p->amount; ?></b>
+                                                <b class="text-muted  m-l-5"><?php echo h($order_p->amount); ?></b>
                                             </div>
                                         </div>
 
                                         <div class=" col-sm-12 col-md-4 mb-2">
                                             <div class="">
                                                 <h5> &nbsp;<b><?php echo $lang['tools-config52'] ?></b></h5>
-                                                <b class="text-muted  m-l-5"><?php echo $order_p->currency; ?></b>
+                                                <b class="text-muted  m-l-5"><?php echo h($order_p->currency); ?></b>
                                             </div>
                                         </div>
 
@@ -559,17 +559,17 @@ if ($row_order->status_invoice == 1) {
 
                                                         <!-- Columna 2: Método de pago -->
                                                         <td>
-                                                            <p class="text-muted m-l-5"><?php echo getTextOrDefault($met_payment->name_pay); ?></p>
+                                                            <p class="text-muted m-l-5"><?php echo h(getTextOrDefault($met_payment->name_pay)); ?></p>
                                                         </td>
 
                                                         <!-- Columna 3: Notas del cliente -->
                                                         <td>
-                                                            <b class="text-muted m-l-5"><?php echo getTextOrDefault($row_order->notes); ?></b>
+                                                            <b class="text-muted m-l-5"><?php echo h(getTextOrDefault($row_order->notes)); ?></b>
                                                         </td>
 
                                                         <!-- Columna 4: Enlace al archivo de pago -->
                                                         <td>
-                                                            <a href="assets/<?php echo getTextOrDefault($row_order->url_payment_attach); ?>" target="blank" class="btn btn-info text- btn-sm">
+                                                            <a href="assets/<?php echo h(getTextOrDefault($row_order->url_payment_attach)); ?>" target="blank" class="btn btn-info text- btn-sm">
                                                                 <?php echo $lang['left533020028'] ?>
                                                             </a>
                                                         </td>
@@ -624,13 +624,13 @@ if ($row_order->status_invoice == 1) {
                                         <div class=" col-sm-12 col-md-4 mb-2">
                                             <div class="">
                                                 <h5> &nbsp;<b> <?php echo $lang['leftorder52'] ?></b></h5>
-                                                <p class="text-muted  m-l-5"><?php echo $user_delivered->fname . ' ' . $user_delivered->lname; ?></p>
+                                                <p class="text-muted  m-l-5"><?php echo h($user_delivered->fname) . ' ' . h($user_delivered->lname); ?></p>
                                             </div>
                                         </div>
                                         <div class=" col-sm-12 col-md-4 mb-2">
                                             <div class="">
                                                 <h5> &nbsp;<b> <?php echo $lang['leftorder53'] ?></b></h5>
-                                                <p class="text-muted  m-l-5"><?php echo $row_order->person_receives; ?></p>
+                                                <p class="text-muted  m-l-5"><?php echo h($row_order->person_receives); ?></p>
                                             </div>
                                         </div>
                                     </div>
@@ -642,7 +642,7 @@ if ($row_order->status_invoice == 1) {
                                     <div class="row">
                                         <div class=" col-sm-12 col-md-6 mb-2">
                                             <h5> &nbsp;<b> <?php echo $lang['leftorder54'] ?></b></h5>
-                                            <img src="doc_signs/shipments_courier/<?php echo $row_order->order_id; ?>.png" style="max-width:100%;width:auto;height:auto;">
+                                            <img src="doc_signs/shipments_courier/<?php echo h($row_order->order_id); ?>.png" style="max-width:100%;width:auto;height:auto;">
                                         </div>
                                         <?php
 
@@ -650,7 +650,7 @@ if ($row_order->status_invoice == 1) {
 
                                             <div class=" col-sm-12 col-md-6 mb-2">
                                                 <h5> &nbsp;<b> <?php echo $lang['leftorder55'] ?></b></h5>
-                                                <img src="<?php echo $row_order->photo_delivered; ?>" width="400" height="250" style="max-width:100%;width:auto;height:auto;">
+                                                <img src="<?php echo h($row_order->photo_delivered); ?>" width="400" height="250" style="max-width:100%;width:auto;height:auto;">
                                             </div>
                                         <?php
                                         } ?>
@@ -705,7 +705,7 @@ if ($row_order->status_invoice == 1) {
 
                                                     <tr class="card-hover">
                                                         <td><?php echo $count; ?></td>
-                                                        <td> <a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></td>
+                                                        <td> <a style="color:#7460ee;" target="_blank" href="<?php echo h($file->url); ?>" class=""><?php echo h($file->name); ?> </a></td>
                                                         <td><?php echo $date_add; ?></td>
 
                                                     </tr>
@@ -767,11 +767,11 @@ if ($row_order->status_invoice == 1) {
 
                                             <div class=" col-sm-12 col-md-3 mb-2">
 
-                                                <img style="width: 180px; height: 180px;" class="img-thumbnail" src="<?php echo $src; ?>">
+                                                <img style="width: 180px; height: 180px;" class="img-thumbnail" src="<?php echo h($src); ?>">
 
                                                 <div class="row ">
                                                     <div class=" col-md-12 mb-2 mt-2">
-                                                        <p class="text-justify"><a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></p>
+                                                        <p class="text-justify"><a style="color:#7460ee;" target="_blank" href="<?php echo h($file->url); ?>" class=""><?php echo h($file->name); ?> </a></p>
 
                                                     </div>
 
@@ -835,13 +835,13 @@ if ($row_order->status_invoice == 1) {
                                                     <tr class="card-hover">
                                                         <td><?php echo $date_update; ?></td>
                                                         <td><?php echo $time_update; ?></td>
-                                                        <td><?php echo $track_item->t_dest; ?> /<br>
-                                                            <?php echo $track_item->t_city; ?></td>
+                                                        <td><?php echo h($track_item->t_dest); ?> /<br>
+                                                            <?php echo h($track_item->t_city); ?></td>
                                                         <td>
-                                                            <span class="label" style="background-color: <?php echo $status_courier_item->color; ?>"><?php echo $status_courier_item->mod_style; ?>
+                                                            <span class="label" style="background-color: <?php echo h($status_courier_item->color); ?>"><?php echo h($status_courier_item->mod_style); ?>
                                                             </span>
                                                         </td>
-                                                        <td><?php echo $track_item->comments; ?></td>
+                                                        <td><?php echo h($track_item->comments); ?></td>
                                                     </tr>
                                                 <?php
                                                 } ?>
@@ -939,9 +939,9 @@ if ($row_order->status_invoice == 1) {
                                                             <tr class="card-hover">
                                                                 <td><?php echo $date_update; ?></td>
                                                                 <td><?php echo $time_update; ?></td>
-                                                                <td><?php echo $sender_data2->fname . ' ' . $sender_data2->lname; ?></td>
+                                                                <td><?php echo h($sender_data2->fname) . ' ' . h($sender_data2->lname); ?></td>
                                                                 <td><?php echo $role; ?></td>
-                                                                <td><?php echo $track_item->action; ?></td>
+                                                                <td><?php echo h($track_item->action); ?></td>
 
                                                             </tr>
                                                         <?php
@@ -1049,16 +1049,16 @@ if ($row_order->status_invoice == 1) {
                                             ?>
 
                                                     <tr class="card-hover">
-                                                        <td><?php echo $row_order_item->order_item_quantity; ?></td>
-                                                        <td><?php echo $description_item; ?></td>
+                                                        <td><?php echo h($row_order_item->order_item_quantity); ?></td>
+                                                        <td><?php echo h($description_item); ?></td>
                                                         <td></td>
-                                                        <td><?php echo $weight_item; ?></td>
-                                                        <td><?php echo $row_order_item->order_item_length; ?></td>
-                                                        <td><?php echo $row_order_item->order_item_width; ?></td>
-                                                        <td><?php echo $row_order_item->order_item_height; ?></td>
-                                                        <td><?php echo $total_metric; ?></td>
-                                                        <td class="text-center"><?php echo $row_order_item->order_item_fixed_value; ?></td>
-                                                        <td class="text-center"><?php echo $row_order_item->order_item_declared_value; ?></td>
+                                                        <td><?php echo h($weight_item); ?></td>
+                                                        <td><?php echo h($row_order_item->order_item_length); ?></td>
+                                                        <td><?php echo h($row_order_item->order_item_width); ?></td>
+                                                        <td><?php echo h($row_order_item->order_item_height); ?></td>
+                                                        <td><?php echo h($total_metric); ?></td>
+                                                        <td class="text-center"><?php echo h($row_order_item->order_item_fixed_value); ?></td>
+                                                        <td class="text-center"><?php echo h($row_order_item->order_item_declared_value); ?></td>
                                                     </tr>
                                                 <?php
                                                 }
@@ -1132,7 +1132,7 @@ if ($row_order->status_invoice == 1) {
                                             <tr class="card-hover">
                                                 <td colspan="3">
                                                     <b><?php echo $lang['left905'] ?> &nbsp; <?php echo $core->weight_p; ?>:</b>
-                                                    <?php echo $row_order->value_weight; ?>
+                                                    <?php echo h($row_order->value_weight); ?>
                                                 </td>
                                                 <td></td>
                                                 <td></td>
@@ -1155,7 +1155,7 @@ if ($row_order->status_invoice == 1) {
                                                 <td></td>
                                                 <td></td>
                                                 <td colspan="2" class="text-right">
-                                                    <b><?php echo $lang['leftorder21'] ?> <?php echo $row_order->tax_discount; ?> <?php echo $lang['leftorder222221'] ?> </b>
+                                                    <b><?php echo $lang['leftorder21'] ?> <?php echo h($row_order->tax_discount); ?> <?php echo $lang['leftorder222221'] ?> </b>
                                                 </td>
                                                 <td class="text-center"><?php echo $total_descuento; ?></td>
                                             </tr>
@@ -1201,10 +1201,10 @@ if ($row_order->status_invoice == 1) {
                                         <thead class="bg-inverse text-white">
                                             <tr>
                                                 <th><b><?php echo $lang['leftorder22'] ?></b></th> <!-- Seguro -->
-                                                <th><b><?php echo $lang['leftorder25'] ?> <?php echo $row_order->tax_custom_tariffis_value; ?> <?php echo $lang['leftorder222221'] ?></b></th>
+                                                <th><b><?php echo $lang['leftorder25'] ?> <?php echo h($row_order->tax_custom_tariffis_value); ?> <?php echo $lang['leftorder222221'] ?></b></th>
                                                 <th><b><?php echo $lang['leftorder23'] ?></b></th> <!-- Valor declarado -->
-                                                <th><b><?php echo $lang['leftorder67'] ?> <?php echo $row_order->tax_value; ?> <?php echo $lang['leftorder222221'] ?></b></th>
-                                                <th><b><?php echo $lang['leftorder19'] ?> <?php echo $row_order->declared_value; ?> <?php echo $lang['leftorder222221'] ?></b></th>
+                                                <th><b><?php echo $lang['leftorder67'] ?> <?php echo h($row_order->tax_value); ?> <?php echo $lang['leftorder222221'] ?></b></th>
+                                                <th><b><?php echo $lang['leftorder19'] ?> <?php echo h($row_order->declared_value); ?> <?php echo $lang['leftorder222221'] ?></b></th>
                                                 <th><b><?php echo $lang['leftorder1878'] ?></b></th> <!-- Cargos fijos -->
                                                 <th><b><?php echo $lang['langs_048'] ?></b></th>    <!-- Reexpedición -->
                                                 <th><b><?php echo $lang['leftorder2020'] ?> &nbsp; <?php echo $core->currency; ?></b></th>
@@ -1256,7 +1256,7 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien6'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $sender_data->fname . ' ' . $sender_data->lname; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo h($sender_data->fname) . ' ' . h($sender_data->lname); ?></p>
 
                                         </div>
                                     </div>
@@ -1264,14 +1264,14 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien5'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $sender_data->email; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo h($sender_data->email); ?></p>
                                         </div>
                                     </div>
 
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien9'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $sender_data->phone; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo h($sender_data->phone); ?></p>
                                         </div>
                                     </div>
                                 </div>
@@ -1281,14 +1281,14 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien10'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $address_order->sender_address; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo h($address_order->sender_address); ?></p>
                                         </div>
                                     </div>
 
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien12'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $address_order->sender_country; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo h($address_order->sender_country); ?></p>
                                         </div>
                                     </div>
 
@@ -1296,7 +1296,7 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien13'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $address_order->sender_city; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo h($address_order->sender_city); ?></p>
                                         </div>
                                     </div>
                                 </div>
@@ -1321,21 +1321,21 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien6'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $receiver_data->fname . ' ' . $receiver_data->lname; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo h($receiver_data->fname) . ' ' . h($receiver_data->lname); ?></p>
                                         </div>
                                     </div>
 
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien5'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $receiver_data->email; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo h($receiver_data->email); ?></p>
                                         </div>
                                     </div>
 
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien9'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $receiver_data->phone; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo h($receiver_data->phone); ?></p>
                                         </div>
                                     </div>
                                 </div>
@@ -1344,14 +1344,14 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien10'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $address_order->recipient_address; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo h($address_order->recipient_address); ?></p>
                                         </div>
                                     </div>
 
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien12'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $address_order->recipient_country; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo h($address_order->recipient_country); ?></p>
 
                                         </div>
                                     </div>
@@ -1360,7 +1360,7 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien13'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $address_order->recipient_city; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo h($address_order->recipient_city); ?></p>
                                         </div>
                                     </div>
                                 </div>

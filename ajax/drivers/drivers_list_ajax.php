@@ -31,7 +31,7 @@ $db = new Conexion;
 $user = new User;
 $userData = $user->cdp_getUserData();
 
-$search = cdp_sanitize($_REQUEST['search']);
+$search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : '';
 
 $tables = "cdb_users";
 $fields = "*,CONCAT(fname,' ', lname) as name,
@@ -40,9 +40,9 @@ $fields = "*,CONCAT(fname,' ', lname) as name,
 
 $sWhere = "userlevel=3";
 
-if ($search != null) {
+if ($search != '') {
 
-	$sWhere .= " and (username LIKE '%" . $search . "%' or fname LIKE '%" . $search . "%' or lname LIKE '%" . $search . "%')";
+	$sWhere .= " and (username LIKE :search or fname LIKE :search or lname LIKE :search)";
 }
 
 // // pagination variables
@@ -53,12 +53,14 @@ $offset = ($page - 1) * $per_page;
 
 
 $sql = "SELECT $fields FROM  $tables where $sWhere";
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);
@@ -126,7 +128,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'drivers_list');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 	</div>
 <?php } ?>

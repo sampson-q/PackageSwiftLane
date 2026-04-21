@@ -28,6 +28,7 @@ require_once("../../helpers/phpmailer/class.smtp.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_client_list');
+require_csrf();
 
 $user = new User;
 $core = new Core;

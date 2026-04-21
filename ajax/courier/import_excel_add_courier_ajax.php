@@ -11,6 +11,7 @@ require_once("../../helpers/querys.php");
 require_once("../../vendor/autoload.php");
 require_login();
 require_permission('view_shipment_list');
+require_csrf();
 
 $user  = new User;
 $core  = new Core;

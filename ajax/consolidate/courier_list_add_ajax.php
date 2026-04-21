@@ -25,6 +25,7 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_consolidate_list');
+require_csrf();
 
 
 $db = new Conexion;
@@ -64,7 +65,7 @@ $sql = "SELECT a.volumetric_percentage, a.is_pickup,  a.total_order, a.order_id,
 			 order by a.order_id desc";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -184,7 +185,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'courier_list_add');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 
 		<script>

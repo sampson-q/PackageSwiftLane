@@ -33,11 +33,11 @@ $user = new User;
 $core = new Core;
 $userData = $user->cdp_getUserData();
 
-$search = cdp_sanitize($_REQUEST['search']);
+$search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : '';
 
 $sWhere = "";
 
-if ($search != null) {
+if ($search != '') {
 
 	$sWhere .= " ";
 }
@@ -62,15 +62,17 @@ $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
 
-$sql = "SELECT * FROM cdb_pre_alert  where tracking LIKE '%" . $search . "%' $sWhere order by prealert_date desc";
+$sql = "SELECT * FROM cdb_pre_alert  where tracking LIKE :search $sWhere order by prealert_date desc";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+$db->bind(':search', '%' . $search . '%');
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+$db->bind(':search', '%' . $search . '%');
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);
@@ -202,7 +204,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'prealert_list');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 
 

@@ -19,12 +19,14 @@
 // *                                                                       *
 // *************************************************************************
 
-
+ob_start();
+ini_set('display_errors', 0);
 
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
+require_csrf();
 
 require_once("../../helpers/querys.php");
 $user = new User;
@@ -36,14 +38,21 @@ if (empty($_POST['fname_recipient']))
     $errors['fname'] = $lang['validate_field_ajax122'];
 if (empty($_POST['lname_recipient']))
     $errors['lname'] = $lang['validate_field_ajax123'];
-if (empty($_POST['phone_custom_recipient']))
-    $errors['phone_custom'] = $lang['validate_field_ajax128'];
 
 
 
 $response = array();
 
- 
+// Gate: stop here if validation failed
+if (!empty($errors)) {
+    $response['status'] = 'error';
+    $response['message'] = implode(' | ', $errors);
+    ob_end_clean();
+    header('Content-type: application/json; charset=UTF-8');
+    echo json_encode($response);
+    exit;
+}
+
 if (!isset($response['status'])) {
 
     $sender_id = (int)$_GET['sender'];
@@ -70,7 +79,7 @@ if (!isset($response['status'])) {
 
     $recipient_id = cdp_insertRecipient($data);
 
-    if ($recipient_id !== null) {
+    if ($recipient_id && (int)$recipient_id > 0) {
 
         $db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $recipient_id . "'");
         $customer_data = $db->cdp_registro();
@@ -112,7 +121,7 @@ if (!isset($response['status'])) {
     }
 
 
-    if ($insert) {
+    if ($recipient_id && (int)$recipient_id > 0 && $insert) {
         $response['status'] = 'success';
         $response['message'] = $lang['message_ajax_success_add'];
         $response['customer_data'] = $customer_data;
@@ -124,52 +133,6 @@ if (!isset($response['status'])) {
 }
 
 // Devuelve la respuesta como JSON
+ob_end_clean();
 header('Content-type: application/json; charset=UTF-8');
 echo json_encode($response);
-
-if (!empty($errors)) {
-?>
-    <div class="alert alert-danger" id="success-alert">
-        <p><span class="icon-minus-sign"></span><i class="close icon-remove-circle"></i>
-            <?php echo $lang['message_ajax_error2']; ?>
-        <ul class="error">
-            <?php
-            foreach ($errors as $error) { ?>
-                <li>
-                    <i class="icon-double-angle-right"></i>
-                    <?php
-                    echo $error;
-                    ?>
-                </li>
-            <?php
-
-            }
-            ?>
-        </ul>
-        </p>
-    </div>
-<?php
-}
-
-if (isset($messages)) {
-
-?>
-    <div class="alert alert-info" id="success-alert">
-        <p><span class="icon-info-sign"></span><i class="close icon-remove-circle"></i>
-            <?php
-            foreach ($messages as $message) {
-                echo $message;
-            }
-
-            ?>
-        </p>
-
-        <script>
-            $("#add_recipient_from_modal_shipments")[0].reset();
-        </script>
-    </div>
-
-
-<?php
-}
-?>

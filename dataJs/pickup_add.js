@@ -624,8 +624,8 @@ function calculateFinalTotal(element = null) {
     max_fixed_charge += fixed_value;
   });
 
-  // precio_total = calculate_weight * price_lb;
-  sumador_total += price_lb;
+  // price_lb holds the pre-computed flat total (from tariff or weight×sys-price).
+  sumador_total = price_lb;
 
   if (sumador_total > core_min_cost_tax) {
     total_impuesto = (sumador_total * tax_value) / 100;
@@ -898,11 +898,11 @@ $("#invoice_form").on("submit", function (event) {
 
   $.ajax({
     type: "POST",
-    url: "ajax/pickup/add_pickup_client_ajax.php",
+    url: (window._pickupSaveUrl || "ajax/pickup/pickup_client_save.php"),
     data: data,
     contentType: false,
     dataType: "json",
-    cache: false, // To unable request pages to be cached
+    cache: false,
     processData: false,
     beforeSend: function (objeto) {
       $("#create_invoice").attr("disabled", true);
@@ -921,6 +921,16 @@ $("#invoice_form").on("submit", function (event) {
       } else {
         cdp_showError(data.errors);
       }
+    },
+    error: function (xhr) {
+      $("#create_invoice").attr("disabled", false);
+      var msg = "Error al guardar el envío.";
+      try {
+        var json = JSON.parse(xhr.responseText);
+        if (json.error) msg = json.error;
+        else if (json.message) msg = json.message;
+      } catch (e) {}
+      Swal.fire({ title: "Error", text: msg, icon: "error", confirmButtonText: "Ok" });
     },
   });
 
@@ -1096,9 +1106,6 @@ function cdp_formatAdressSelection(repo) {
   return repo.text;
 }
 
-// Track the selected recipient type ('user' or 'recipient')
-var selectedRecipientType = 'recipient';
-
 function cdp_select2_init_recipient() {
   var sender_id = $("#sender_id").val();
 
@@ -1132,10 +1139,6 @@ function cdp_select2_init_recipient() {
       $("#recipient_address_id").val(null);
       $("#table-totals").addClass("d-none");
 
-      // Capture the type from the selected option's data
-      var selectedData = $("#recipient_id").select2("data");
-      selectedRecipientType = selectedData && selectedData[0] && selectedData[0].type ? selectedData[0].type : "recipient";
-
       if (recipient_id != null) {
         $("#recipient_address_id").attr("disabled", false);
         $("#add_address_recipient").attr("disabled", false);
@@ -1150,7 +1153,7 @@ function cdp_select2_init_recipient_address() {
   $("#recipient_address_id")
     .select2({
       ajax: {
-        url: "ajax/select2_recipient_addresses.php?id=" + recipient_id + "&type=" + selectedRecipientType,
+        url: "ajax/select2_recipient_addresses.php?id=" + recipient_id,
         dataType: "json",
         delay: 250,
         data: function (params) {
@@ -2008,28 +2011,41 @@ function getTariffs() {
   $.ajax({
     type: "POST",
     data: data,
-    url: "ajax/courier/get_price_range_weight_tariffs_ajax.php",
+    url: "ajax/courier/get_tariffs_client_ajax.php",
     dataType: "json",
-    beforeSend: function (objeto) {
+    beforeSend: function () {
       $(".resultados_ajax").html("Loading...");
     },
-    success: function (data) {
-      if (data.success) {
+    success: function (res) {
+      $(".resultados_ajax").html("");
+      if (res.success) {
+        var flatTotal   = parseFloat(res.total_tarifa) || 0;
+        var priceLbUnit = parseFloat(res.price_lb)     || 0;
+        $("#price_lb").val(flatTotal.toFixed(2));
+        $("#price_lb_label").html(priceLbUnit.toFixed(4));
         $("#table-totals").removeClass("d-none");
         $("#create_invoice").attr("disabled", false);
-        $("#price_lb").val(data.data.price);
-        $("#price_lb_label").html(data.data.price);
         calculateFinalTotal();
       } else {
-        $("#table-totals").addClass("d-none");
-        $("#create_invoice").attr("disabled", true);
-        Swal.fire({
-          title: "Error!",
-          text: data.error,
-          icon: "error",
-          confirmButtonText: "Ok",
-        });
+        // Fallback: chargeable_weight × system price per lb
+        var cw       = parseFloat(res.chargeable_weight) || 0;
+        var sysPrice = parseFloat($("#core_value_weight").val()) || 0;
+        var fallback = (cw > 0 && sysPrice > 0) ? cw * sysPrice : 0;
+        $("#price_lb").val(fallback.toFixed(2));
+        $("#price_lb_label").html(sysPrice.toFixed(4));
+        $("#table-totals").removeClass("d-none");
+        $("#create_invoice").attr("disabled", false);
+        calculateFinalTotal();
+        if (res.error) {
+          $(".resultados_ajax").html(
+            "<small class='text-warning'>" + res.error + " (tarifa general aplicada)</small>"
+          );
+        }
       }
+    },
+    error: function () {
+      $(".resultados_ajax").html("");
+      $("#create_invoice").attr("disabled", false);
     },
   });
 }

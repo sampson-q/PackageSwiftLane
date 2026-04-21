@@ -22,9 +22,6 @@
 
 
 require_once("helpers/querys.php");
-
-$userData = $user->cdp_getUserData();
-
 $ctx = cdp_getAgencyContext();
 $agency_default_id = ($ctx['is_restricted'] && $ctx['agency_id'] !== null) ? (int)$ctx['agency_id'] : 0;
 $db = new Conexion;
@@ -784,6 +781,7 @@ $order_prefix = $settings->prefix;
                             <input type="hidden" value="0" name="reexpedicion_value" id="reexpedicion_value">
 
                             <input type="hidden" name="core_meter" id="core_meter" value="<?php echo $core->meter; ?>" />
+                            <input type="hidden" name="core_value_weight" id="core_value_weight" value="<?php echo (float)$core->value_weight; ?>" />
                             <input type="hidden" name="core_min_cost_tax" id="core_min_cost_tax" value="<?php echo $core->min_cost_tax; ?>" />
                             <input type="hidden" name="core_min_cost_declared_tax" id="core_min_cost_declared_tax" value="<?php echo $core->min_cost_declared_tax; ?>" />
                         </div>
@@ -818,7 +816,7 @@ $order_prefix = $settings->prefix;
     <script src="assets/template/assets/libs/select2/dist/js/select2.min.js"></script>
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
-    <script src="dataJs/courier_add_client.js"></script>
+    <script src="dataJs/courier_add_client.js?v=852"></script>
 
 
 

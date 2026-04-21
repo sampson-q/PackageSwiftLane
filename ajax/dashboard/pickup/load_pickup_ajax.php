@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../../helpers/querys.php');
 require_login();
 require_permission('view_dashboard');
+require_csrf();
 
 $db = new Conexion;
 $user = new User;
@@ -73,7 +74,7 @@ $sql = "SELECT  a.status_invoice, a.is_pickup, a.total_order, a.order_id, a.orde
 			 order by order_id desc
 			 ";
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -192,7 +193,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'load_pickup');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 	</div>
 <?php } ?>

@@ -29,6 +29,7 @@ $core = new Core();
 if ($user->cdp_loginCheck() == true) {
 
   $permissions = $user->cdp_getUserPermissions();
+        $userData = $user->cdp_getUserData();
 
       if (!$user->cdp_hasPermission('view_general_consolidated_locker_packages')) {
           header("location: error403.php");

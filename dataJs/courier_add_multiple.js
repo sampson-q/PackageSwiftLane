@@ -771,20 +771,9 @@ $("#invoice_form").on("submit", function (event) {
 
   var deleted_file_ids = $("#deleted_file_ids").val();
 
-    var tracking_number = $("#tracking_number").val();
-    var estimated_eta = $("#estimated_eta").val();
-
   var data = new FormData();
 
   data.append("packages", JSON.stringify(packagesItems));
-
-    if (tracking_number) {
-        data.append("tracking_number", tracking_number);
-    }
-    
-    if (estimated_eta) {
-        data.append("estimated_eta", estimated_eta);
-    }
 
   if (prefix_check) {
     data.append("prefix_check", prefix_check);
@@ -984,8 +973,6 @@ function cdp_select2_init_sender() {
       allowClear: true,
     })
     .on("change", function (e) {
-      window.recipient_type = 'user';
-
       var sender_id = $("#sender_id").val();
       $("#sender_address_id").attr("disabled", true);
       $("#recipient_id").attr("disabled", true);
@@ -1115,36 +1102,33 @@ function cdp_select2_init_recipient() {
       placeholder: search_recipient,
       allowClear: true,
     })
-    .on("select2:select", function (e) {
-        var data = e.params.data;
-        window.recipient_type = data.type || 'recipient';
+    .on("change", function (e) {
+      var recipient_id = $("#recipient_id").val();
+      $("#add_address_recipient").attr("disabled", true);
+      $("#recipient_address_id").attr("disabled", true);
+      $("#recipient_address_id").val(null);
+      // $("#table-totals").addClass("d-none");
 
-        $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
-        $("#add_address_recipient").prop("disabled", true);
-
-        if ($(this).val()) {
-            $("#recipient_address_id").prop("disabled", false);
-            $("#add_address_recipient").prop("disabled", false);
-        }
-
-        // re-init with correct type
-        cdp_select2_init_recipient_address();
-        scheduleAutoFetch();
+      if (recipient_id != null) {
+        $("#recipient_address_id").attr("disabled", false);
+        $("#add_address_recipient").attr("disabled", false);
+      }
+      cdp_select2_init_recipient_address();
     });
 }
 
 function cdp_select2_init_recipient_address() {
+  var recipient_id = $("#recipient_id").val();
+
   $("#recipient_address_id")
     .select2({
       ajax: {
-        url: "ajax/select2_recipient_addresses.php",
+        url: "ajax/select2_recipient_addresses.php?id=" + recipient_id,
         dataType: "json",
         delay: 250,
         data: function (params) {
           return {
-            id: $("#recipient_id").val(),
-            type: window.recipient_type || 'recipient',
-            q: params.term,
+            q: params.term, // search term
           };
         },
         processResults: function (data) {
@@ -2027,7 +2011,6 @@ $("#calculate_invoice").on("click", function (event) {
     sender_address: sender_address_id,
     recipient_address: recipient_address_id,
     recipient_id: recipient_id,
-    recipient_type: window.recipient_type || 'recipient',
     tariffs_value: tariffs_value,
     declared_value_tax: declared_value_tax,
     insurance_value: insurance_value,

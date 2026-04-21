@@ -2,7 +2,6 @@
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
-require_permission('view_shipment_list');
 
 require_once("../../helpers/querys.php");
 
@@ -54,41 +53,15 @@ try {
         ? (float)$_POST['distance_miles']
         : 0.0;
 
-    // Try to resolve addresses from both possible tables (sender addresses OR recipient addresses).
-    // Prefer the one indicated by recipient_type (sent by frontend), but fallback if not found.
-
-    $recipient_type = isset($_POST['recipient_type']) ? trim($_POST['recipient_type']) : 'recipient';
-
-    // Resolve sender address (sender addresses table is primary)
-    // If not found, try recipient addresses table as a fallback (unlikely but safe).
-    $sender_address = cdp_getSenderAddress($sender_address_id);
-    if (!$sender_address) {
-        $sender_address = cdp_getRecipientAddress($sender_address_id);
-    }
-
-    // Resolve recipient address according to declared type, then fallback to the other table.
-    $recipient_address = null;
-    if ($recipient_type === 'user') {
-        // recipient selected is actually a user -> try sender addresses table first
-        $recipient_address = cdp_getSenderAddress($recipient_address_id);
-        if (!$recipient_address) {
-            $recipient_address = cdp_getRecipientAddress($recipient_address_id);
-        }
-    } else {
-        // normal recipient -> try recipients_addresses table first
-        $recipient_address = cdp_getRecipientAddress($recipient_address_id);
-        if (!$recipient_address) {
-            $recipient_address = cdp_getSenderAddress($recipient_address_id);
-        }
-    }
-
-    $settings = cdp_getSettingsCourier();
+    $sender_address    = cdp_getSenderAddress($sender_address_id);
+    $recipient_address = cdp_getRecipientAddress($recipient_address_id);
+    $settings          = cdp_getSettingsCourier();
     $meter             = isset($settings->meter) ? (float)$settings->meter : 0.0;
 
     if (!$sender_address || !$recipient_address) {
         echo json_encode([
             'success' => false,
-            'error'   => 'Could not resolve sender or recipient addresses.'
+            'error'   => 'No se pudo resolver direcciones de remitente o destinatario.'
         ], JSON_UNESCAPED_UNICODE);
         exit;
     }

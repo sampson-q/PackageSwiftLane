@@ -28,7 +28,7 @@ require_once(__DIR__ . '/../helpers/querys.php');
 $user = new User();
 $db = new Conexion;
 
-$search = cdp_sanitize($_REQUEST['q']);
+$search = isset($_REQUEST['q']) ? trim($_REQUEST['q']) : '';
 
 $list = array();
 $data = [];
@@ -43,16 +43,18 @@ if ($ctx['is_restricted']) {
 	$extraWhere = " AND agency_id = " . (int)$ctx['agency_id'];
 }
 
+$searchParam = '%' . $search . '%';
 $sql = "SELECT * FROM cdb_users
  WHERE
-  (fname LIKE '%" . $search . "%'
-  or lname LIKE '%" . $search . "%'  
-  or email LIKE '%" . $search . "%'
-  or phone LIKE '%" . $search . "%'
-  or locker LIKE '%" . $search . "%')
-   and userlevel='1'" . $extraWhere;
+  (fname LIKE :s
+  OR lname LIKE :s
+  OR email LIKE :s
+  OR phone LIKE :s
+  OR locker LIKE :s)
+  AND userlevel='1'" . $extraWhere;
 
 $db->cdp_query($sql);
+$db->bind(':s', $searchParam);
 $db->cdp_execute();
 
 $datas = $db->cdp_registros();

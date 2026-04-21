@@ -437,6 +437,7 @@ $lang = array(
 	"translate_search_origin" => "Rechercher le pays d'origine",
 	"translate_search_destiny" => "Rechercher le pays de destination",
 	"translate_search_shipmode" => "Rechercher le mode d'expédition",
+	"translate_search_client" => "Rechercher un client",
 	"translate_search_address_country" => "Pays",
 	"translate_search_address_state" => "État",
 	"translate_search_address_city" => "Ville",

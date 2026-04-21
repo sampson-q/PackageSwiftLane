@@ -1,173 +1,296 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang['left127'] ?> | <?php echo $core->site_name; ?></title>
-    <meta name="keywords" content="Courier DEPRIXA-Integral Web System">
-    <meta name="author" content="Jaomweb">
-    <meta name="description" content="">
-    <!-- favicon -->
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
-    <!-- Bootstrap -->
-    <link href="assets/css_main_deprixa/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <!-- Icons -->
-    <link href="assets/css_main_deprixa/css/materialdesignicons.min.css" rel="stylesheet" type="text/css" />
-    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v3.0.6/css/line.css">
-    <!-- Slider -->
-    <link rel="stylesheet" href="assets/css_main_deprixa/css/tiny-slider.css" />
-    <!-- Date picker -->
-    <link rel="stylesheet" href="assets/css_main_deprixa/css/datepicker.min.css">
-    <!-- Main Css -->
-    <link href="assets/css_main_deprixa/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
-    <link href="assets/css_main_deprixa/css/colors/default.css" rel="stylesheet" id="color-opt">
+    <title><?php echo $lang['left127'] ?> | <?php echo htmlspecialchars((string)$core->site_name, ENT_QUOTES, 'UTF-8') ?></title>
+    <link rel="icon" type="image/png" href="assets/<?php echo $core->favicon ?>">
+    <link href="assets/custom_dependencies/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/custom_dependencies/css/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/css_main_deprixa/css/materialdesignicons.min.css" rel="stylesheet">
 
+    <style>
+        :root {
+            --brand: #1a3a6b;
+            --brand2: #2a5298;
+            --brand-grad: linear-gradient(135deg, #1a3a6b 0%, #2a5298 100%);
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
 
+        /* ── NAV ─────────────────────────── */
+        .pub-nav {
+            background: #fff;
+            box-shadow: 0 2px 12px rgba(0,0,0,.08);
+            position: sticky; top: 0; z-index: 1030;
+        }
+        .pub-nav .inner {
+            max-width: 1200px; margin: 0 auto;
+            height: 64px; padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-links { display: flex; align-items: center; gap: 4px; }
+        .nav-link-item {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 8px;
+            font-size: .855rem; font-weight: 600;
+            color: #374151; text-decoration: none;
+            transition: background .15s, color .15s;
+        }
+        .nav-link-item:hover { background: #f0f4ff; color: var(--brand); }
+        .nav-link-item.active { color: var(--brand2); }
+        .btn-nav-login {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 18px; border-radius: 8px;
+            background: var(--brand-grad);
+            color: #fff; font-size: .855rem; font-weight: 600;
+            text-decoration: none; transition: opacity .15s;
+            border: none;
+        }
+        .btn-nav-login:hover { opacity: .88; color: #fff; }
+
+        /* ── HERO ────────────────────────── */
+        .hero {
+            background: var(--brand-grad);
+            position: relative;
+            overflow: hidden;
+            padding: 90px 24px 100px;
+            text-align: center;
+        }
+        .hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: url('assets/css_main_deprixa/images/user/bg.jpg') center/cover no-repeat;
+            opacity: .08;
+        }
+        .hero-content { position: relative; z-index: 2; }
+        .hero h1 {
+            color: #fff;
+            font-size: 2.6rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            text-shadow: 0 2px 12px rgba(0,0,0,.2);
+        }
+        .hero p {
+            color: rgba(255,255,255,.82);
+            font-size: 1.05rem;
+            margin-bottom: 0;
+        }
+
+        /* ── SEARCH CARD ─────────────────── */
+        .search-section {
+            margin-top: -52px;
+            position: relative;
+            z-index: 10;
+            padding: 0 24px 60px;
+        }
+        .search-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(26,58,107,.16);
+            padding: 40px 44px;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+        .search-card h4 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--brand);
+            margin-bottom: 6px;
+        }
+        .search-card > p {
+            font-size: .875rem;
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+
+        /* Toggle type */
+        .track-type-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .track-type-toggle label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: .85rem;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all .15s;
+        }
+        .track-type-toggle input[type=radio] { display: none; }
+        .track-type-toggle input[type=radio]:checked + label {
+            border-color: var(--brand2);
+            background: #eef2ff;
+            color: var(--brand);
+        }
+
+        /* Textarea */
+        .search-card textarea.form-control {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: .9rem;
+            padding: 14px 16px;
+            resize: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .search-card textarea.form-control:focus {
+            border-color: var(--brand2);
+            box-shadow: 0 0 0 3px rgba(42,82,152,.1);
+            outline: none;
+        }
+
+        .btn-track {
+            background: var(--brand-grad);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            height: 52px;
+            width: 100%;
+            transition: opacity .2s, transform .15s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .btn-track:hover { opacity: .9; transform: translateY(-1px); }
+        .btn-track i { font-size: 20px; }
+
+        /* ── FEATURES ────────────────────── */
+        .features-row {
+            max-width: 680px;
+            margin: 24px auto 0;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .feat-pill {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,.9);
+            border: 1px solid rgba(26,58,107,.12);
+            border-radius: 50px;
+            padding: 7px 16px;
+            font-size: .78rem;
+            font-weight: 600;
+            color: var(--brand);
+        }
+        .feat-pill i { font-size: 15px; }
+
+        /* ── FOOTER ──────────────────────── */
+        .pub-footer {
+            text-align: center;
+            padding: 20px 24px;
+            font-size: .8rem;
+            color: #9ca3af;
+            border-top: 1px solid #f3f4f6;
+        }
+        .pub-footer a { color: #6b7280; text-decoration: none; font-weight: 600; }
+        .pub-footer a:hover { color: var(--brand); }
+    </style>
 </head>
+<body style="background:#f0f4ff">
 
-<body class="cover-user">
-    <!-- Loader -->
-    <div id="preloader">
-        <div id="status">
-            <div class="spinner">
-                <div class="double-bounce1"></div>
-                <div class="double-bounce2"></div>
-            </div>
+<!-- NAV -->
+<nav class="pub-nav">
+    <div class="inner">
+        <a class="nav-logo" href="index.php">
+            <?php if ($core->logo_web): ?>
+                <img src="assets/<?php echo htmlspecialchars((string)$core->logo_web, ENT_QUOTES, 'UTF-8') ?>"
+                     alt="<?php echo htmlspecialchars((string)$core->site_name, ENT_QUOTES, 'UTF-8') ?>"
+                     style="height:36px;width:auto">
+            <?php else: ?>
+                <span style="font-weight:800;font-size:1.1rem;color:var(--brand)"><?php echo htmlspecialchars((string)$core->site_name, ENT_QUOTES, 'UTF-8') ?></span>
+            <?php endif; ?>
+        </a>
+        <div class="nav-links">
+            <a href="tracking.php" class="nav-link-item active">
+                <i class="bi bi-geo-alt"></i>
+                <?php echo isset($lang['langs_06']) ? $lang['langs_06'] : 'Track & Trace'; ?>
+            </a>
+            <a href="cotizar.php" class="nav-link-item">
+                <i class="bi bi-calculator"></i>
+                <?php echo isset($lang['cotizador_nav']) ? $lang['cotizador_nav'] : 'Get a Quote'; ?>
+            </a>
+            <a href="login.php" class="btn-nav-login">
+                <i class="bi bi-box-arrow-in-right"></i>
+                <?php echo isset($lang['left121']) ? $lang['left121'] : 'Login'; ?>
+            </a>
         </div>
     </div>
-    <!-- Loader -->
+</nav>
 
-    <!-- Navbar STart -->
-    <header id="topnav" class="defaultscroll sticky">
-        <div class="container">
-            <!-- Logo container-->
-            <a class="logo" href="index.php">
-                <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <h1><?php echo $lang['left127'] ?></h1>
+        <p><?php echo $lang['left128'] ?></p>
+    </div>
+</section>
 
+<!-- SEARCH CARD -->
+<div class="search-section">
+    <div class="search-card">
+        <h4><i class="bi bi-search me-2" style="color:var(--brand2)"></i><?php echo $lang['left127'] ?></h4>
+        <p><?php echo $lang['left130'] ?></p>
 
-            </a>
-
-            <!-- End Logo container-->
-            <div class="menu-extras">
-                <div class="menu-item">
-                    <!-- Mobile menu toggle-->
-                    <a class="navbar-toggle" id="isToggle" onclick="toggleMenu()">
-                        <div class="lines">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </a>
-                    <!-- End mobile menu toggle-->
-                </div>
+        <form method="POST" name="ib_form" id="ib_form">
+            <!-- Type toggle -->
+            <div class="track-type-toggle">
+                <input type="radio" name="trackingType" id="type1" value="1" checked>
+                <label for="type1">
+                    <i class="bi bi-box-seam"></i>
+                    <?php echo $lang['message_title_tracking1'] ?>
+                </label>
+                <input type="radio" name="trackingType" id="type2" value="2">
+                <label for="type2">
+                    <i class="bi bi-bag"></i>
+                    <?php echo $lang['message_title_tracking2'] ?>
+                </label>
             </div>
 
-            <!--Login button Start-->
-            <ul class="buy-button list-inline mb-0">
-                <li class="list-inline-item mb-0">
-                    <a href="index.php">
-                        <div class="login-btn-primary"><span class="btn btn-icon btn-pills btn-soft-primary"><i data-feather="home" class="fea icon-sm"></i></span></div>
-                        <div class="login-btn-light"><span class="btn btn-icon btn-pills btn-light"><i data-feather="home" class="fea icon-sm"></i></span></div>
-                    </a>
-                </li>
+            <textarea name="order_track"
+                      id="order_track"
+                      rows="3"
+                      class="form-control"
+                      placeholder="<?php echo $lang['left130'] ?>"
+                      required></textarea>
 
-            </ul>
-            <!--Login button End-->
+            <button type="submit" class="btn-track">
+                <i class="bi bi-search"></i>
+                <?php echo $lang['left131'] ?>
+            </button>
+        </form>
+    </div>
 
-        </div>
-        <!--end container-->
-    </header>
-    <!--end header-->
-    <!-- Navbar End -->
+    <div class="features-row">
+        <div class="feat-pill"><i class="bi bi-lightning-charge text-warning"></i> <?php echo isset($lang['cotizador_feat1']) ? $lang['cotizador_feat1'] : 'Instant'; ?></div>
+        <div class="feat-pill"><i class="bi bi-lock" style="color:var(--brand2)"></i> <?php echo isset($lang['cotizador_feat2']) ? $lang['cotizador_feat2'] : 'Secure'; ?></div>
+        <div class="feat-pill"><i class="bi bi-clock" style="color:var(--accent,#17b26a)"></i> <?php echo isset($lang['cotizador_feat3']) ? $lang['cotizador_feat3'] : 'Real-time'; ?></div>
+    </div>
+</div>
 
-    <!-- Hero Start -->
-    <section class="bg-half-170 d-table w-100 h-full" style="background: url('assets/images/PackageTracking.svg') center; background-repeat: no-repeat;">
-        <div class="bg-overlay"></div>
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-7 col-md-6">
-                    <div class="title-heading mt-4">
-                        <h1 class="display-4 fw-bold text-white title-dark mb-3"><?php echo $lang['left127'] ?> </span> <br> <?php echo $lang['left128'] ?></h1>
+<!-- FOOTER -->
+<footer class="pub-footer">
+    &copy; <?php echo date('Y') ?> <?php echo htmlspecialchars((string)$core->site_name, ENT_QUOTES, 'UTF-8') ?> &nbsp;&middot;&nbsp;
+    <a href="cotizar.php"><?php echo isset($lang['cotizador_nav']) ? $lang['cotizador_nav'] : 'Get a Quote'; ?></a> &nbsp;&middot;&nbsp;
+    <a href="login.php"><?php echo isset($lang['left121']) ? $lang['left121'] : 'Login'; ?></a>
+</footer>
 
-                    </div>
-                </div>
-                <!--end col-->
-
-                <div class="col-lg-5 col-md-6 mt-4 pt-2 mt-sm-0 pt-sm-0">
-                    <div class="card shadow rounded border-0 ms-lg-5">
-                        <div class="card-body">
-
-                            <form class="login-form" method="POST" name="ib_form" id="ib_form">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group position-relative">
-
-                                            <div class="col-md-12">
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="trackingType" id="trackingType" value="1" checked>
-                                                    <label class="form-check-label" for="trackingType"><?php echo $lang['message_title_tracking1'] ?></label>
-                                                </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="trackingType" id="trackingType" value="2">
-                                                    <label class="form-check-label" for="trackingType"><?php echo $lang['message_title_tracking2'] ?></label>
-                                                </div>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="mb-3">
-
-                                            <div class="form-icon position-relative">
-                                                <i class="mdi mdi-cube-send ml-3 icons"></i>
-                                                <textarea name="order_track" placeholder="<?php echo $lang['left130'] ?>" id="order_track" rows="4" class="form-control ps-5" required></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="col-md-12">
-                                        <div class="d-grid">
-                                            <button type="submit" name="submit" class="btn btn-danger rounded w-100"><i class="mdi mdi-cube-outline ml-3 icons"></i> <?php echo $lang['left131'] ?></button>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <!--end col-->
-            </div>
-            <!--end row-->
-        </div>
-        <!--end container-->
-    </section>
-    <!--end section-->
-
-    <!-- Hero End -->
-
-
-
-
-    <!-- javascript -->
-    <script src="assets/css_main_deprixa/main_deprixa/js/jquery.min.js"></script>
-    <script src="assets/css_main_deprixa/js/bootstrap.bundle.min.js"></script>
-    <!-- SLIDER -->
-    <script src="assets/css_main_deprixa/js/tiny-slider.js "></script>
-    <!-- Datepicker -->
-    <script src="assets/css_main_deprixa/js/datepicker.min.js"></script>
-    <!-- Icons -->
-    <script src="assets/css_main_deprixa/js/feather.min.js"></script>
-    <!-- Main Js -->
-    <script src="assets/css_main_deprixa/js/plugins.init.js"></script>
-    <!--Note: All init js like tiny slider, counter, countdown, maintenance, lightbox, gallery, swiper slider, aos animation etc.-->
-    <script src="assets/css_main_deprixa/js/app.js"></script>
-    <!--Note: All important javascript like page loader, menu, sticky menu, menu-toggler, one page menu etc. -->
-
-    <script src="dataJs/tracking.js"></script>
-
+<script src="assets/custom_dependencies/jquery-3.6.0.min.js"></script>
+<script src="assets/custom_dependencies/js/bootstrap.min.js"></script>
+<script src="dataJs/tracking.js"></script>
 </body>
-
 </html>

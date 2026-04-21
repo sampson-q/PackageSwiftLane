@@ -30,6 +30,7 @@
     {
 
         $permissions = $user->cdp_getUserPermissions();
+        $userData = $user->cdp_getUserData();
 
         if (!$user->cdp_hasPermission('view_global_payments')) {
             header("location: error403.php");

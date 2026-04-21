@@ -185,7 +185,7 @@ $categories   = $core->cdp_getCategories();
                                                 <div class="input-group-text">
                                                     <div class="form-check form-check-inline">
                                                         <input class="form-check-input" type="checkbox" name="prefix_check" id="prefix_check">
-                                                        <?php echo $lang['leftorder13'] ?>
+                                                        <label class="form-check-label" for="prefix_check"><?php echo $lang['leftorder13'] ?></label>
                                                     </div>
                                                 </div>
                                             </div>
@@ -193,7 +193,7 @@ $categories   = $core->cdp_getCategories();
                                             <select class="custom-select input-sm hide" id="code_prefix2" name="code_prefix2">
                                                 <option value=""><?php echo $lang['leftorder14'] ?></option>
                                                 <?php foreach ($code_countries as $row): ?>
-                                                    <option value="<?php echo $row->iso3; ?>"><?php echo $row->iso3 . ' - ' . $row->name; ?></option>
+                                                    <option value="<?php echo h($row->iso3); ?>"><?php echo h($row->iso3) . ' - ' . h($row->name); ?></option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </div>
@@ -240,7 +240,7 @@ $categories   = $core->cdp_getCategories();
                                         <div class="input-group mb-3">
                                             <select class="custom-select col-12" name="origin_off" id="origin_off" required>
                                                 <?php foreach ($office as $row): ?>
-                                                    <option value="<?php echo $row->id; ?>"><?php echo $row->name_off; ?></option>
+                                                    <option value="<?php echo (int)$row->id; ?>"><?php echo h($row->name_off); ?></option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </div>
@@ -345,10 +345,10 @@ $categories   = $core->cdp_getCategories();
                                             <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label mb-1"><?php echo isset($lang['add-title22']) ? $lang['add-title22'] : 'Modo de envío'; ?></label>
                                                 <select class="select2 form-control custom-select" id="order_service_options" name="order_service_options" required style="width:100%">
-                                                    <option value="<?php echo $s_logistics->id; ?>"><?php echo htmlspecialchars($s_logistics->name_item); ?></option>
+                                                    <option value="<?php echo (int)$s_logistics->id; ?>"><?php echo h($s_logistics->name_item); ?></option>
                                                     <?php foreach ($categories as $row): ?>
                                                         <?php if ($row->id != $s_logistics->id): ?>
-                                                        <option value="<?php echo (int)$row->id; ?>"><?php echo htmlspecialchars($row->name_item); ?></option>
+                                                        <option value="<?php echo (int)$row->id; ?>"><?php echo h($row->name_item); ?></option>
                                                         <?php endif; ?>
                                                     <?php endforeach; ?>
                                                 </select>
@@ -364,9 +364,9 @@ $categories   = $core->cdp_getCategories();
                                             <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label mb-1"><?php echo $lang['add-title20'] ?></label>
                                                 <select class="select2 form-control custom-select" id="order_deli_time" name="order_deli_time" required style="width:100%">
-                                                    <option value="<?php echo $delivery_times->id; ?>"><?php echo $delivery_times->delitime; ?></option>
+                                                    <option value="<?php echo (int)$delivery_times->id; ?>"><?php echo h($delivery_times->delitime); ?></option>
                                                     <?php foreach ($delitimerow as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->delitime; ?></option>
+                                                        <option value="<?php echo (int)$row->id; ?>"><?php echo h($row->delitime); ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -374,9 +374,9 @@ $categories   = $core->cdp_getCategories();
                                             <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label mb-1"><?php echo $lang['payment_methods'] ?></label>
                                                 <select class="select2 form-control custom-select" id="order_payment_method" name="order_payment_method" required style="width:100%">
-                                                    <option value="<?php echo $payment_methods->id; ?>"><?php echo $payment_methods->label; ?></option>
+                                                    <option value="<?php echo (int)$payment_methods->id; ?>"><?php echo h($payment_methods->label); ?></option>
                                                     <?php foreach ($paymethodrow as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->label; ?></option>
+                                                        <option value="<?php echo (int)$row->id; ?>"><?php echo h($row->label); ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -469,38 +469,41 @@ $categories   = $core->cdp_getCategories();
                                         <!-- Fila: Categoría item / Embalaje / Mensajería (Modo de envío está arriba en rate-box) -->
                                         <div class="row">
                                             <!-- Item category -->
-                                            <div class="form-group col-md-3">
+                                            <div class="form-group col-md-4">
                                                 <label class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
                                                 <select class="select2 form-control custom-select" id="order_item_category" name="order_item_category" style="width:100%">
-                                                    <option value="<?php echo $s_logistics->id; ?>"><?php echo $s_logistics->name_item; ?></option>
+                                                    <option value="<?php echo (int)$s_logistics->id; ?>"><?php echo h($s_logistics->name_item); ?></option>
                                                     <?php foreach ($categories as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_item; ?></option>
+                                                        <option value="<?php echo (int)$row->id; ?>"><?php echo h($row->name_item); ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
 
                                             <!-- Tipo de embalaje -->
-                                            <div class="form-group col-md-3">
+                                            <div class="form-group col-md-4">
                                                 <label class="control-label col-form-label"><?php echo $lang['add-title17'] ?></label>
                                                 <select class="select2 form-control custom-select" id="order_package" name="order_package" required style="width:100%">
-                                                    <option value="<?php echo $packaging_box->id; ?>"><?php echo $packaging_box->name_pack; ?></option>
+                                                    <option value="<?php echo (int)$packaging_box->id; ?>"><?php echo h($packaging_box->name_pack); ?></option>
                                                     <?php foreach ($packrow as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_pack; ?></option>
+                                                        <option value="<?php echo (int)$row->id; ?>"><?php echo h($row->name_pack); ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
 
                                             <!-- Empresa de mensajería -->
-                                            <div class="form-group col-md-3">
+                                            <div class="form-group col-md-4">
                                                 <label class="control-label col-form-label"><?php echo $lang['add-title18'] ?></label>
                                                 <select class="select2 form-control custom-select" id="order_courier" name="order_courier" required style="width:100%">
-                                                    <option value="<?php echo $courier_comp->id; ?>"><?php echo $courier_comp->name_com; ?></option>
+                                                    <option value="<?php echo (int)$courier_comp->id; ?>"><?php echo h($courier_comp->name_com); ?></option>
                                                     <?php foreach ($courierrow as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_com; ?></option>
+                                                        <option value="<?php echo (int)$row->id; ?>"><?php echo h($row->name_com); ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
+                                        </div>
 
+                                        <!-- Fila: Asignar conductor -->
+                                        <div class="row">
                                             <?php if ($userData->userlevel == 3): ?>
                                                 <div class="col-md-3">
                                                     <label class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
@@ -524,37 +527,35 @@ $categories   = $core->cdp_getCategories();
                                                         <select class="custom-select col-12" id="driver_id" name="driver_id">
                                                             <option value="0">--<?php echo $lang['left209'] ?>--</option>
                                                             <?php foreach ($driverrow as $row): ?>
-                                                                <option value="<?php echo $row->id; ?>"><?php echo $row->fname . ' ' . $row->lname; ?></option>
+                                                                <option value="<?php echo (int)$row->id; ?>"><?php echo h($row->fname) . ' ' . h($row->lname); ?></option>
                                                             <?php endforeach; ?>
                                                         </select>
                                                     </div>
                                                 </div>
                                             <?php endif; ?>
+
+                                            <div class="form-group col-md-3">
+                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
+                                            <div class="input-group mb-3">
+                                                <select class="custom-select col-12" id="status_courier" name="status_courier" required>
+                                                    <option value="<?php echo $styles_status->id; ?>"><?php echo $styles_status->mod_style; ?></option>
+                                                    <?php foreach ($statusrow as $row) : ?>
+                                                        <?php if ($row->id == 8) { ?>
+                                                        <?php } elseif ($row->id == 11) { ?>
+                                                        <?php } elseif ($row->id == 12) { ?>
+                                                        <?php } elseif ($row->id == 14) { ?>
+                                                        <?php } elseif ($row->id == 15) { ?>
+                                                        <?php } elseif ($row->id == 16) { ?>
+                                                        <?php } elseif ($row->id == 13) { ?>
+                                                        <?php } else { ?>
+                                                            <option value="<?php echo $row->id; ?>"><?php echo $row->mod_style; ?></option>
+                                                        <?php } ?>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
                                         </div>
 
-                                        <!-- Fila: Asignar conductor -->
-                                        <div class="row">
-                                            <div class="form-group col-md-3">
-                                                <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
-                                                <div class="input-group mb-3">
-                                                    <select class="custom-select col-12" id="status_courier" name="status_courier" required>
-                                                        <option value="<?php echo $styles_status->id; ?>"><?php echo $styles_status->mod_style; ?></option>
-                                                        <?php foreach ($statusrow as $row) : ?>
-                                                            <?php if ($row->id == 8) { ?>
-                                                            <?php } elseif ($row->id == 11) { ?>
-                                                            <?php } elseif ($row->id == 12) { ?>
-                                                            <?php } elseif ($row->id == 14) { ?>
-                                                            <?php } elseif ($row->id == 15) { ?>
-                                                            <?php } elseif ($row->id == 16) { ?>
-                                                            <?php } elseif ($row->id == 13) { ?>
-                                                            <?php } else { ?>
-                                                                <option value="<?php echo $row->id; ?>"><?php echo $row->mod_style; ?></option>
-                                                            <?php } ?>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                </div>
-                                            </div>
-
+                                            <!-- Fecha (oculta) -->
                                             <div class="col-md-3" style="display:none">
                                                 <label class="control-label col-form-label"><?php echo $lang['add-title15'] ?></label>
                                                 <div class="input-group">
@@ -565,16 +566,6 @@ $categories   = $core->cdp_getCategories();
                                                            placeholder="--<?php echo $lang['left206'] ?>--" readonly
                                                            value="<?php echo date('Y-m-d'); ?>" />
                                                 </div>
-                                            </div>
-
-                                            <div class="form-group col-md-3">
-                                                <label class="control-label col-form-label"><?php echo '# Tracking' ?></label>
-                                                <input type='text' class="form-control" id="tracking_number" name="tracking_number" style="border: 1px solid red;" placeholder="# Tracking" />
-                                            </div>
-                                            
-                                            <div class="form-group col-md-3">
-                                                <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
-                                                <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" style="border: 1px solid red;" />
                                             </div>
                                         </div>
 
@@ -802,11 +793,12 @@ $categories   = $core->cdp_getCategories();
                     <input type="hidden" id="chargeable_weight" name="chargeable_weight" value="0">
                 </div>
 
-                <?php include('views/modals/modal_add_user_shipment.php'); ?>
-                <?php include('views/modals/modal_add_recipient_shipment.php'); ?>
-                <?php include('views/modals/modal_add_addresses_user.php'); ?>
-                <?php include('views/modals/modal_add_addresses_recipient.php'); ?>
             </form>
+
+            <?php include('views/modals/modal_add_user_shipment.php'); ?>
+            <?php include('views/modals/modal_add_recipient_shipment.php'); ?>
+            <?php include('views/modals/modal_add_addresses_user.php'); ?>
+            <?php include('views/modals/modal_add_addresses_recipient.php'); ?>
 
             <?php include 'views/inc/footer.php'; ?>
         </div>

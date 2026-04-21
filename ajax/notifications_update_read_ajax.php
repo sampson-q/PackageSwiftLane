@@ -28,10 +28,17 @@ $user = new User;
 $userData = $user->cdp_getUserData();
 $errors = array();
 
-$user = $_SESSION['userid'];
+$userId = (int)$_SESSION['userid'];
 
-// Llamar a la función para actualizar las notificaciones
-$insert = cdp_updateNotificatonsRea($user);
+// Mark notifications read for this user
+$insert = cdp_updateNotificatonsRea($userId);
+
+// Admins also see user_id=0 system notifications — mark those read too
+if ((int)$_SESSION['userlevel'] === 9) {
+    $db2 = new Conexion;
+    $db2->cdp_query("UPDATE cdb_notifications_users SET notification_read = '1' WHERE user_id = 0");
+    $db2->cdp_execute();
+}
 
 if ($insert) {
     // Si se actualizó correctamente

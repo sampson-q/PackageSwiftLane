@@ -1,44 +1,33 @@
 "use strict";
 
-
 // reporte de ventas cuentas por cobrar basic bar
-$(document).ready(() => {
-    const loadGraphicsECharts = async () => {
-        try {
-            const response = await $.ajax({
-                url: './ajax/dashboard/account_receivable/load_graphics_account_receivable_ajax.php',
-                type: 'POST',
-                dataType: 'json'
-            });
+$(document).ready(function () {
 
-            // Datos para el eje X (meses)
-            const months = [
-                'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'
-            ];
+    var months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'
+    ];
 
-            // Datos para la serie de ventas (eje Y)
-            const salesData = response.map(parseFloat);
+    $.ajax({
+        url: './ajax/dashboard/account_receivable/load_graphics_account_receivable_ajax.php',
+        type: 'POST',
+        dataType: 'json',
+        success: function (response) {
+            if (!response || !Array.isArray(response)) {
+                console.error('Invalid chart data');
+                return;
+            }
 
-            // Inicializa la instancia de ECharts en el elemento con ID 'basic-bar'
+            var salesData = response.map(parseFloat);
+
             var myChart = echarts.init(document.getElementById('basic-bar'));
 
-            // Configuración del gráfico de barras
             var option = {
-                // Configuración del tooltip
                 tooltip: {
                     trigger: 'axis',
-                    axisPointer: {
-                        type: 'shadow'
-                    }
+                    axisPointer: { type: 'shadow' }
                 },
-
-                // Leyenda
-                legend: {
-                    data: ['Site A']
-                },
-
-                // Herramientas
+                legend: { data: [translate_graphic_16] },
                 toolbox: {
                     show: true,
                     feature: {
@@ -47,21 +36,10 @@ $(document).ready(() => {
                         saveAsImage: { show: true }
                     }
                 },
-
-                // Configuración del eje X
                 color: ["#2962FF"],
-                calculable : true,
-                xAxis: {
-                    type: 'category',
-                    data: months
-                },
-
-                // Configuración del eje Y
-                yAxis: {
-                    type: 'value'
-                },
-
-                // Serie de datos
+                calculable: true,
+                xAxis: { type: 'category', data: months },
+                yAxis: { type: 'value' },
                 series: [{
                     name: translate_graphic_16,
                     type: 'bar',
@@ -73,38 +51,31 @@ $(document).ready(() => {
                         ]
                     },
                     markLine: {
-                        data: [
-                            { type: 'average', name: 'Average' }
-                        ]
+                        data: [{ type: 'average', name: 'Average' }]
                     }
                 }]
             };
 
-            // Establece la opción de configuración para mostrar el gráfico
             myChart.setOption(option);
-        } catch (error) {
-            console.error('Error loading sales data:', error);
+        },
+        error: function (xhr, status, err) {
+            console.error('Error loading chart data:', status, err);
         }
-    };
+    });
 
-    loadGraphicsECharts();
     cdp_load(1);
 });
 
 
-
 //Cargar datos AJAX
 function cdp_load(page) {
-
     var parametros = { "page": page };
     $("#loader").fadeIn('slow');
     $.ajax({
         url: './ajax/dashboard/account_receivable/load_account_receivable_ajax.php',
         data: parametros,
-        beforeSend: function (objeto) {
-        },
         success: function (data) {
             $(".outer_div").html(data).fadeIn('slow');
         }
-    })
+    });
 }

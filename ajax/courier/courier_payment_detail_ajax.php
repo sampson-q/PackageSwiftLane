@@ -25,6 +25,7 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
+require_csrf();
 
 
 $db = new Conexion;
@@ -47,7 +48,7 @@ if ($order_id > 0) {
 $sql = "SELECT * FROM cdb_add_order   where order_id = '" . $order_id . "' ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 

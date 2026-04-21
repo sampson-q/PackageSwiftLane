@@ -30,6 +30,7 @@
     {
 
         $permissions = $user->cdp_getUserPermissions();
+        $userData = $user->cdp_getUserData();
         $isAgency = isset($user->userlevel) && (int)$user->userlevel === 6;
 
         // Agencia (userlevel 6) siempre puede crear envíos

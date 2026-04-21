@@ -30,6 +30,7 @@
     {
 
         $permissions = $user->cdp_getUserPermissions();
+        $userData = $user->cdp_getUserData();
 
         if (!$user->cdp_hasPermission('edit_courier_company')) {
             header("location: error403.php");

@@ -25,6 +25,7 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_consolidate_package');
+require_csrf();
 
 
 $db = new Conexion;
@@ -47,7 +48,7 @@ if ($order_id > 0) {
 $sql = "SELECT * FROM cdb_consolidate_packages   where consolidate_id = '" . $order_id . "' ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -121,4 +122,4 @@ $met_payment = $db->cdp_registro();
                                             } ?></b>
         </div>
     </div>
-</div>
+</div></div>

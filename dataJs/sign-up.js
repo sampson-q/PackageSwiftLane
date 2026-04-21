@@ -125,11 +125,7 @@ function cdp_showSuccess(messages) {
     type: "success",
   }).then((okay) => {
     if (okay) {
-      if (window.signupRedirect) {
-        window.location.href = window.signupRedirect;
-      } else {
-        window.location.href = "index.php";
-      }
+      window.location.href = "index.php";
     }
   });
 }
@@ -251,7 +247,7 @@ input.addEventListener("keyup", reset);
   
 
 $("#new_register").on("submit", function (event) {
-  event.preventDefault();
+
 
   // Validación de la contraseña
   var password = $("#pass").val();
@@ -265,21 +261,18 @@ $("#new_register").on("submit", function (event) {
       confirmButtonColor: "#f27474",
       confirmButtonText: "Ok",
     });
+    event.preventDefault(); // Detener el envío del formulario si la contraseña es débil
     return;
   }
 
-  // Use FormData to support file uploads (avatar, document_photo)
+  // Resto del código para enviar el formulario mediante AJAX
   if (iti.isValidNumber()) {
-    var formData = new FormData(this);
-
+    var parametros = $(this).serialize();
     $.ajax({
       type: "POST",
       url: "./ajax/sign_up_ajax.php",
-      data: formData,
+      data: parametros,
       dataType: "json",
-      // Required for FormData — let the browser set the correct multipart boundary
-      processData: false,
-      contentType: false,
       beforeSend: function (objeto) {
         Swal.fire({
           title: message_loading,
@@ -291,7 +284,6 @@ $("#new_register").on("submit", function (event) {
       },
       success: function (data) {
         if (data.success) {
-          window.signupRedirect = data.redirect || null;
           cdp_showSuccess(data.messages);
         } else {
           cdp_showError(data.errors);
@@ -305,4 +297,6 @@ $("#new_register").on("submit", function (event) {
     errorMsg.classList.remove("hide");
     $("#phone_custom").focus();
   }
+  event.preventDefault();
 });
+

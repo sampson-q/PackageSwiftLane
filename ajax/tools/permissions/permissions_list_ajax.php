@@ -130,7 +130,7 @@ if ($numrows > 0) { ?>
 
 
 	<div class="pull-right">
-		<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'permissions_list');	?>
+		<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 	</div>
 	</div>
 <?php } ?>

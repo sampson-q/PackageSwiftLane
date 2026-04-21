@@ -30,9 +30,10 @@ require_permission('view_client_list');
 
 $db = new Conexion;
 $user = new User;
+$userData = $user->cdp_getUserData();
 $ctx = cdp_getAgencyContext();
 
-$search = isset($_REQUEST['search']) ? cdp_sanitize($_REQUEST['search']) : null;
+$search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : '';
 
 $tables = "cdb_users";
 $fields = "*,CONCAT(fname,' ', lname) as name,
@@ -46,9 +47,9 @@ if ($ctx['is_restricted'] && $ctx['agency_id'] !== null) {
 	$sWhere .= " AND 1=0";
 }
 
-if ($search != null) {
+if ($search != '') {
 
-	$sWhere .= " and (username LIKE '%" . $search . "%' or fname LIKE '%" . $search . "%' or lname LIKE '%" . $search . "%' or locker LIKE '%" . $search . "%' or email LIKE '%" . $search . "%' or phone LIKE '%" . $search . "%')";
+	$sWhere .= " and (username LIKE :search or fname LIKE :search or lname LIKE :search or locker LIKE :search or email LIKE :search or phone LIKE :search)";
 }
 
 
@@ -75,12 +76,14 @@ $offset = ($page - 1) * $per_page;
 
 
 $sql = "SELECT $fields FROM  $tables where $sWhere";
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);
@@ -115,20 +118,20 @@ if ($numrows > 0) { ?>
 			<?php foreach ($data as $user) { ?>
 			
 				<tr>
-					<td class="text-center"><?php echo $user->fname; ?> <?php echo $user->lname; ?></td>
-					<td class="text-center"><?php echo $user->email; ?></td>
-					<td class="text-center"><?php echo $user->locker; ?></td>
+					<td class="text-center"><?php echo h($user->fname); ?> <?php echo h($user->lname); ?></td>
+					<td class="text-center"><?php echo h($user->email); ?></td>
+					<td class="text-center"><?php echo h($user->locker); ?></td>
 					<td class="text-center"><?php echo cdp_userStatus($user->active, $user->id, $lang); ?></td>
 					<td class="text-center"><?php echo cdp_isAdmin($user->userlevel, $lang); ?></td>
-					<td class="text-center"><?php echo ($user->adate) ? $user->adate : "-/-"; ?></td>
+					<td class="text-center"><?php echo ($user->adate) ? h($user->adate) : "-/-"; ?></td>
 					<td align='center'>
-						<a href="customers_edit.php?user=<?php echo $user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien46'] ?>"><i class="ti-pencil"></i></a>
-						<a href="newsletter.php?email=<?php echo $user->email; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien45'] ?>"><i style="color:#F5590D" class="ti-email"></i></a>
+						<a href="customers_edit.php?user=<?php echo h($user->id); ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien46'] ?>"><i class="ti-pencil"></i></a>
+						<a href="newsletter.php?email=<?php echo h($user->email); ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien45'] ?>"><i style="color:#F5590D" class="ti-email"></i></a>
 						<?php if ($user->id == 1) : ?>
-							<a data-rel="<?php echo $user->username; ?>"><button type="button" data-toggle="tooltip" data-original-title="Master Admin"><i class="ti-lock" aria-hidden="true"></i></button></a>
+							<a data-rel="<?php echo h($user->username); ?>"><button type="button" data-toggle="tooltip" data-original-title="Master Admin"><i class="ti-lock" aria-hidden="true"></i></button></a>
 						<?php else : ?>
 							<?php if ($userData->userlevel == 9) { ?>
-								<a onclick="cdp_eliminar('<?php echo $user->id; ?>')" id="item_<?php echo $user->id; ?>" class="delete" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien47'] ?>">
+								<a onclick="cdp_eliminar('<?php echo h($user->id); ?>')" id="item_<?php echo h($user->id); ?>" class="delete" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien47'] ?>">
 									<div class="icon-holder"><i class="fi fi-rr-trash"></i></div>
 								</a>
 							<?php } ?>
@@ -144,7 +147,7 @@ if ($numrows > 0) { ?>
 
 
 	<div class="pull-right">
-		<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'customers_list');	?>
+		<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 	</div>
 	</div>
 <?php } ?>

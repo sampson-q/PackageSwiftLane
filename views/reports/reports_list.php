@@ -110,7 +110,6 @@ $userData = $user->cdp_getUserData();
                         'view_package_by_employees',
                         'view_package_by_agencies',
                         'view_package_by_drivers',
-                        'view_top_users_air',
                         ];
                         if ($user->cdp_hasPermission($perModule)) {
 
@@ -122,8 +121,8 @@ $userData = $user->cdp_getUserData();
                                 <!-- title -->
                                 <div class="d-md-flex align-items-center">
                                     <div>
-                                        <h4 class="card-title"><span class="display-7"><iconify-icon icon="glyphs:plane-departure-bold"  style="color:#9B9B8C"></iconify-icon></span> <?php echo 'Air Shipments' ?></h4>
-                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo 'Advanced Air Shipping Reports' ?></h5>
+                                        <h4 class="card-title"><span class="display-7"><i class="mdi mdi-cart-outline" style="color:#9B9B8C"></i></span> <?php echo $lang['report-general02'] ?></h4>
+                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo $lang['report-general07'] ?></h5>
                                     </div>
 
                                 </div>
@@ -151,11 +150,6 @@ $userData = $user->cdp_getUserData();
                                             <td class="title"><a class="link" href="report_packages_registered_driver.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general06'] ?></a></td>
                                         </tr>
                                         <?php } ?>
-                                        <?php if ($user->cdp_hasPermission('view_top_users_air')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_top_users_air.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo 'Top Users' ?></a></td>
-                                        </tr>
-                                        <?php } ?>
                                         <tr>
                                             <td class="title"></td>
                                         </tr>
@@ -181,7 +175,6 @@ $userData = $user->cdp_getUserData();
                         'view_shipment_by_employees',
                         'view_shipment_by_agencies',
                         'view_shipment_by_drivers',
-                        'view_top_users_sea'
                         ];
                         if ($user->cdp_hasPermission($perModule)) {
 
@@ -193,8 +186,8 @@ $userData = $user->cdp_getUserData();
                                 <!-- title -->
                                 <div class="d-md-flex align-items-center">
                                     <div>
-                                        <h4 class="card-title"><span class="display-7"><iconify-icon icon="mingcute:ship-fill"  style="color:#9B9B8C"></iconify-icon></span> <?php echo 'Sea Shipments' ?></h4>
-                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo 'Advanced Sea Shipping Reports' ?></h5>
+                                        <h4 class="card-title"><span class="display-7"><i class="mdi mdi-package-variant" style="color:#9B9B8C"></i></span> <?php echo $lang['report-general08'] ?></h4>
+                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo $lang['report-general09'] ?></h5>
                                     </div>
 
                                 </div>
@@ -224,11 +217,6 @@ $userData = $user->cdp_getUserData();
                                         <?php if ($user->cdp_hasPermission('view_shipment_by_drivers')) { ?>
                                         <tr>
                                             <td class="title"><a class="link" href="report_driver_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general014'] ?></a></td>
-                                        </tr>
-                                        <?php } ?>
-                                        <?php if ($user->cdp_hasPermission('view_top_users_sea')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_top_users_sea.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo 'Top Users' ?></a></td>
                                         </tr>
                                         <?php } ?>
                                     </tbody>

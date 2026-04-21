@@ -21,11 +21,13 @@
 
 ini_set('display_errors', 0);
 
+if (function_exists('opcache_invalidate')) {
+    opcache_invalidate(__FILE__, true);
+}
 
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
-require_permission('view_pickup_list');
 
 require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
@@ -140,14 +142,14 @@ if (empty($errors)) {
             $total_impuesto_aduanero = 0;
             $total_valor_declarado = 0;
 
-            $tariffs_value = $_POST["tariffs_value"];
-            $declared_value_tax = $_POST["declared_value_tax"];
-            $insurance_value = $_POST["insurance_value"];
-            $tax_value = $_POST["tax_value"];
-            $discount_value = $_POST["discount_value"];
-            $reexpedicion_value = $_POST["reexpedicion_value"];
-            $price_lb = $_POST["price_lb"];
-            $insured_value = $_POST["insured_value"];
+            $tariffs_value      = $_POST["tariffs_value"]      ?? 0;
+            $declared_value_tax = $_POST["declared_value_tax"] ?? 0;
+            $insurance_value    = $_POST["insurance_value"]    ?? 0;
+            $tax_value          = $_POST["tax_value"]          ?? 0;
+            $discount_value     = $_POST["discount_value"]     ?? 0;
+            $reexpedicion_value = $_POST["reexpedicion_value"] ?? 0;
+            $price_lb           = $_POST["price_lb"]           ?? 0;
+            $insured_value      = $_POST["insured_value"]      ?? 0;
 
             foreach ($packages as $package) {
 
@@ -179,19 +181,19 @@ if (empty($errors)) {
                     $calculate_weight = $sumador_volumetric;
                 }
 
-                $sumador_valor_declarado += $package->declared_value;
-                $max_fixed_charge += $package->fixed_value;
+                $sumador_valor_declarado += (float)$package->declared_value;
+                $max_fixed_charge += (float)$package->fixed_value;
+            }
 
-                // $precio_total = $calculate_weight * $price_lb;
-                $sumador_total += $price_lb;
+            // price_lb is the pre-computed flat total set by getTariffs() — use directly.
+            $sumador_total = floatval($price_lb);
 
-                if ($sumador_total > $min_cost_tax) {
-                    $total_impuesto = $sumador_total * $tax_value / 100;
-                }
+            if ($sumador_total > $min_cost_tax) {
+                $total_impuesto = $sumador_total * $tax_value / 100;
+            }
 
-                if ($sumador_valor_declarado > $min_cost_declared_tax) {
-                    $total_valor_declarado = $sumador_valor_declarado * $declared_value_tax / 100;
-                }
+            if ($sumador_valor_declarado > $min_cost_declared_tax) {
+                $total_valor_declarado = $sumador_valor_declarado * $declared_value_tax / 100;
             }
 
             $total_descuento = $sumador_total * $discount_value / 100;
@@ -386,11 +388,7 @@ if (empty($errors)) {
             'notification_date' =>  cdp_sanitize(date("Y-m-d H:i:s")),
         );
         // SAVE NOTIFICATION
-        cdp_insertNotification(
-            $dataNotification
-        );
-
-        $notification_id = $db->dbh->lastInsertId();
+        $notification_id = cdp_insertNotification($dataNotification);
 
         //NOTIFICATION TO ADMIN AND EMPLOYEES
         $users_employees = cdp_getUsersAdminEmployees();

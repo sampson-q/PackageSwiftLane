@@ -29,6 +29,7 @@
     {
 
         $permissions = $user->cdp_getUserPermissions();
+        $userData = $user->cdp_getUserData();
 
             if (!$user->cdp_hasPermission('view_statuses')) {
                 header("location: error403.php");

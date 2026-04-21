@@ -31,6 +31,7 @@
 
     
         $permissions = $user->cdp_getUserPermissions();
+        $userData = $user->cdp_getUserData();
 
         if (!$user->cdp_hasPermission('edit_consolidate')) {
             header("location: error403.php");

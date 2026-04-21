@@ -26,9 +26,7 @@ if (!$user->cdp_is_Admin())
 
 require_once("helpers/querys.php");
 
-// Datos de usuario para topbar/sidebar y lógica por rol
-$userData = $user->cdp_getUserData();
-
+require_once("helpers/querys.php");
 $ctx = cdp_getAgencyContext();
 $agency_default_id = ($ctx['is_restricted'] && $ctx['agency_id'] !== null) ? (int)$ctx['agency_id'] : 0;
 
@@ -209,6 +207,7 @@ $order_prefix = $settings->prefix;
                                 <?php echo $lang['message_ajax_error2']; ?>
                                 <br>
                                 Select the country code
+
                             </p>
                         </div>
                     <?php
@@ -231,7 +230,9 @@ $order_prefix = $settings->prefix;
 
                                                         <div class="form-check form-check-inline">
                                                             <input class="form-check-input" type="checkbox" name="prefix_check" id="prefix_check" value="1">
-                                                            <?php echo $lang['leftorder13'] ?>
+                                                            <label class="form-check-label" for="prefix_check">
+                                                                <?php echo $lang['leftorder13'] ?>
+                                                            </label>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -610,22 +611,7 @@ $order_prefix = $settings->prefix;
                                         } ?>
 
                                     </div>
-                                    
-                                    <div class="row">
-                                        <div class="form-group col-md-3">
-                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo '# Tracking' ?></label>
-                                            <div class="input-group mb-3">
-                                                <input type='text' class="form-control" id="tracking_number" name="tracking_number" style="border: 1px solid red;" placeholder="# Tracking" />
-                                            </div>
-                                        </div>
 
-                                        <div class="form-group col-md-3">
-                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
-                                            <div class="input-group mb-3">
-                                                <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" style="border: 1px solid red;" />
-                                            </div>
-                                        </div>
-                                    </div>
 
                                     <div class="row">
                                         <div class="col-md-6">

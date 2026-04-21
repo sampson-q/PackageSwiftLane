@@ -27,6 +27,7 @@
     $core = new Core();
 
     $permissions = $user->cdp_getUserPermissions();
+        $userData = $user->cdp_getUserData();
     
     // ... ask if we are logged in here:
     if ($user->cdp_loginCheck() == true) 

@@ -29,6 +29,7 @@
     {
 
         $permissions = $user->cdp_getUserPermissions();
+        $userData = $user->cdp_getUserData();
 
         if (!$user->cdp_hasPermission('view_shipment_by_clients')) {
             header("location: error403.php");

@@ -26,6 +26,7 @@ require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('payments_gateways_consolidate_shipment');
+require_csrf();
 
 $errors = array();
 session_start();

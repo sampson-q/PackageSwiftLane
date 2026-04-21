@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../../helpers/querys.php');
 require_login();
 require_permission('view_dashboard');
+require_csrf();
 
 $db = new Conexion;
 $user = new User;
@@ -65,7 +66,7 @@ $sql = "SELECT * FROM cdb_add_order where order_payment_method >1
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -110,13 +111,19 @@ if ($numrows > 0) { ?>
 					$count = 0;
 					foreach ($data as $row) {
 
-						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
+						$db->cdp_query("SELECT * FROM cdb_users WHERE id = :sid");
+						$db->bind(':sid', (int)$row->sender_id);
+						$db->cdp_execute();
 						$sender_data = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->receiver_id . "'");
+						$db->cdp_query("SELECT * FROM cdb_users WHERE id = :rid");
+						$db->bind(':rid', (int)$row->receiver_id);
+						$db->cdp_execute();
 						$receiver_data = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->driver_id . "'");
+						$db->cdp_query("SELECT * FROM cdb_users WHERE id = :did");
+						$db->bind(':did', (int)$row->driver_id);
+						$db->cdp_execute();
 						$driver_data = $db->cdp_registro();
 
 
@@ -139,6 +146,9 @@ if ($numrows > 0) { ?>
 						} else if ($row->status_invoice == 3) {
 							$text_status = $lang['invoice_due'];
 							$label_class = "label-danger";
+						} else {
+							$text_status = '-';
+							$label_class = "label-default";
 						}
 
 
@@ -150,7 +160,7 @@ if ($numrows > 0) { ?>
 							<td><b><a data-toggle="modal" data-target="#charges_list" data-id="<?php echo $row->order_id; ?>"><?php echo $row->order_prefix . $row->order_no; ?></a></b></td>
 
 							<td class="text-center">
-								<?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?>
+								<?php echo htmlspecialchars(($sender_data->fname ?? '') . ' ' . ($sender_data->lname ?? '')); ?>
 							</td>
 
 							<td class="text-center">
@@ -191,7 +201,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'load_account_receivable');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 
 

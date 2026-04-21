@@ -26,6 +26,7 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
+require_csrf();
 
 require_once("../../helpers/querys.php");
 require_once("../../helpers/functions.php");
@@ -33,6 +34,7 @@ require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
 require_once("../notify_whatsapp/api_whatsapp_service.php");
 require_once("../notify_sms/api_sms_service.php");
+require_once(__DIR__ . '/../../helpers/auto_notify.php');
 
 
 
@@ -151,7 +153,9 @@ if (empty($errors)) {
         //NOTIFICATION TO CUSTOMER
         cdp_insertNotificationsUsers($notification_id, intval($shipment->sender_id));
 
-
+        // AUTO-NOTIFY: automatically send email/WhatsApp/SMS for this status change.
+        // Runs silently — failures are caught inside and never break this response.
+        cdp_autoNotifyShipmentStatus($shipment_id, $status);
 
 
         $sender_data = cdp_getSenderCourier(intval($shipment->sender_id));

@@ -20,6 +20,14 @@
 // *************************************************************************
 
 
+    // Clear OPcache so all PHP files (including AJAX endpoints) are always fresh
+    if (function_exists('opcache_reset')) { opcache_reset(); }
+
+    // Never cache this page — forces browser to always get fresh HTML/JS references
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+
     require_once("loader.php");
 
     $user = new User();
@@ -29,14 +37,15 @@
     {
 
         $permissions = $user->cdp_getUserPermissions();
+        $userData = $user->cdp_getUserData();
 
         if (!$user->cdp_hasPermission('pickup_add')) {
             header("location: error403.php");
             exit;
         }
 
-       
-      include('views/pickup/pickup_add.php');     
+        $is_client = true;
+        include('views/pickup/pickup_add_full.php');     
            
 
     } else{

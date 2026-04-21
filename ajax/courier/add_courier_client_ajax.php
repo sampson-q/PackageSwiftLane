@@ -26,6 +26,7 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
+require_csrf();
 
 require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
@@ -221,31 +222,25 @@ if (empty($errors)) {
 
                 cdp_insertCourierShipmentPackages($dataAddresses);
 
-                // calculate weight columetric box size
+                // Accumulate totals across all packages
                 $total_metric = $package->length * $package->width * $package->height / $meter;
-                $weight = $package->weight;
-
                 $sumador_volumetric += $total_metric;
-                $sumador_libras += $weight;
-                // calculate weight x price
-                if ($sumador_libras > $sumador_volumetric) {
-                    $calculate_weight = $sumador_libras;
-                } else {
-                    $calculate_weight = $sumador_volumetric;
-                }
+                $sumador_libras     += (float)$package->weight;
+                $sumador_valor_declarado += (float)$package->declared_value;
+                $max_fixed_charge        += (float)$package->fixed_value;
+            }
 
-                $precio_total = $calculate_weight * $price_lb;
-                $sumador_total += $precio_total;
-                $sumador_valor_declarado += $package->declared_value;
-                $max_fixed_charge += $package->fixed_value;
+            // price_lb is the pre-computed flat total (tariff flat rate OR weight×sys-price).
+            // Use it directly — consistent with how calculateFinalTotal() works in the frontend.
+            $calculate_weight = max($sumador_libras, $sumador_volumetric); // kept for volumetric reference
+            $sumador_total    = floatval($price_lb);
 
-                if ($sumador_total > $min_cost_tax) {
-                    $total_impuesto = $sumador_total * $tax_value / 100;
-                }
+            if ($sumador_total > $min_cost_tax) {
+                $total_impuesto = $sumador_total * $tax_value / 100;
+            }
 
-                if ($sumador_valor_declarado > $min_cost_declared_tax) {
-                    $total_valor_declarado = $sumador_valor_declarado * $declared_value_tax / 100;
-                }
+            if ($sumador_valor_declarado > $min_cost_declared_tax) {
+                $total_valor_declarado = $sumador_valor_declarado * $declared_value_tax / 100;
             }
 
             $total_descuento = $sumador_total * $discount_value / 100;

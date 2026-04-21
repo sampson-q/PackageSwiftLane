@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/querys.php');
 require_login();
 require_permission('view_general_reports');
+require_csrf();
 
 
 $db = new Conexion;
@@ -63,7 +64,7 @@ if ($agency > 0) {
 
 if ($userData->userlevel == 3) {
 
-	$sWhere .= " and  a.driver_id = '" . $_SESSION['userid'] . "'";
+	$sWhere .= " and  a.driver_id = '" . (int)$_SESSION['userid'] . "'";
 }
 
 if (!empty($range)) {
@@ -75,23 +76,25 @@ if (!empty($range)) {
 	$fecha_fin = date('Y-m-d', strtotime($fecha[1]));
 
 
-	$sWhere .= " and  a.c_date between '" . $fecha_inicio . "'  and '" . $fecha_fin . "'";
+	$sWhere .= " and  a.c_date between :fecha_inicio  and :fecha_fin";
 }
 $sql = "SELECT a.status_invoice, a.total_weight, a.total_tax_discount, a.sub_total, a.total_tax_insurance, a.total_tax_custom_tariffis, a.total_tax,   a.total_order, a.consolidate_id, a.c_prefix, a.c_no, a.c_date, a.sender_id, a.order_courier,a.status_courier,  b.mod_style, b.color FROM cdb_consolidate_packages as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 $sWhere
 			  and a.status_courier!=14
 
-			 order by consolidate_id desc 
+			 order by consolidate_id desc
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+if (!empty($range)) { $db->bind(':fecha_inicio', $fecha_inicio); $db->bind(':fecha_fin', $fecha_fin); }
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql);
+if (!empty($range)) { $db->bind(':fecha_inicio', $fecha_inicio); $db->bind(':fecha_fin', $fecha_fin); }
 $data = $db->cdp_registros();
 
 
@@ -140,7 +143,7 @@ if ($numrows > 0) { ?>
 					$sumador_total = 0;
 					foreach ($data as $row) {
 
-						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
+						$db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row->sender_id) . "'");
 						$sender_data = $db->cdp_registro();
 
 						$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row->c_prefix . $row->c_no . "'");

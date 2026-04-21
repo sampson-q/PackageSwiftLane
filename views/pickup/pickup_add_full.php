@@ -182,9 +182,12 @@ $order_prefix = $settings->prefix;
                 </div>
             </div>
 
-            <form method="post" id="invoice_form" name="invoice_form" enctype="multipart/form-data">
+            <form method="post" id="invoice_form" name="invoice_form" enctype="multipart/form-data"
+                <?php if (!empty($is_client)): ?>data-save-url="ajax/pickup/pickup_client_save.php"<?php endif; ?>>
+
                 <div class="container-fluid">
                     <div class="row">
+                        <?php if (empty($is_client)): ?>
                         <div class="col-lg-6">
                             <div class="card">
                                 <div class="card-body">
@@ -266,8 +269,10 @@ $order_prefix = $settings->prefix;
                                 </div>
                             </div>
                         </div>
+                        <?php endif; ?>
 
 
+                        <?php if (empty($is_client)): ?>
                         <div class="col-lg-6">
                             <div class="card">
                                 <div class="card-body">
@@ -301,6 +306,7 @@ $order_prefix = $settings->prefix;
                                 </div>
                             </div>
                         </div>
+                        <?php endif; ?>
                     </div>
                     <!-- Row -->
 
@@ -343,16 +349,21 @@ $order_prefix = $settings->prefix;
                                             <div class="row">
                                                 <div class="col-md-10">
                                                     <div class="input-group">
-                                                        <select class="select2 form-control custom-select" id="sender_id" name="sender_id">
+                                                        <select class="select2 form-control custom-select" id="sender_id" name="sender_id" <?php if (!empty($is_client)) echo 'style="pointer-events:none;background:#e9ecef;"'; ?>>
+                                                        <?php if (!empty($is_client)): ?>
+                                                        <option value="<?= (int)$_SESSION['userid'] ?>" selected><?= htmlspecialchars($userData->fname . ' ' . $userData->lname) ?></option>
+                                                        <?php endif; ?>
                                                         </select>
                                                     </div>
                                                 </div>
 
+                                                <?php if (empty($is_client)): ?>
                                                 <div class="col-md-2">
                                                     <div class="input-group-append input-sm">
                                                         <button type="button" class="btn btn-default" data-type_user="user_customer" data-toggle="modal" data-target="#myModalAddUser"><i class="fa fa-plus"></i></button>
                                                     </div>
                                                 </div>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
 
@@ -548,6 +559,9 @@ $order_prefix = $settings->prefix;
                                             </div>
                                         </div>
 
+                                        <?php if (!empty($is_client)): ?>
+                                        <input type="hidden" name="status_courier" id="status_courier" value="14">
+                                        <?php else: ?>
                                         <div class="form-group col-md-3">
                                             <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
                                             <div class="input-group mb-3">
@@ -568,8 +582,9 @@ $order_prefix = $settings->prefix;
                                                 </select>
                                             </div>
                                         </div>
-                                        <?php
+                                        <?php endif; ?>
 
+                                        <?php if (empty($is_client)):
                                         if ($userData->userlevel == 3) { ?>
 
                                             <div class="col-md-3">
@@ -604,7 +619,8 @@ $order_prefix = $settings->prefix;
                                                 </div>
                                             </div>
                                         <?php
-                                        } ?>
+                                        }
+                                        endif; ?>
 
                                     </div>
 
@@ -704,7 +720,7 @@ $order_prefix = $settings->prefix;
                                     </div>
 
                                     <div class="row mt-4">
-                                        <div class="table-responsive " id="table-totals">
+                                        <div class="table-responsive d-none" id="table-totals">
                                             <div class="" id="row">
                                                 <div class="col-md-6">
                                                     <h4 class="card-title">
@@ -960,7 +976,31 @@ $order_prefix = $settings->prefix;
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
     <script src="assets/template/dist/js/app-style-switcher.js"></script>
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
-    <script src="dataJs/pickup_add_full.js"></script>
+    <?php if (!empty($is_client)): ?>
+    <script>
+    window._pickupSaveUrl = "ajax/pickup/add_pickup_client_ajax.php";
+    $(document).ready(function() {
+        setTimeout(function() {
+            $("#sender_id").trigger("change");
+        }, 300);
+    });
+    </script>
+    <?php endif; ?>
+    <script src="dataJs/pickup_add_full.js?v=11"></script>
+    <?php if (!empty($is_client)): ?>
+    <script>
+    // Intercept ANY save ajax call and force client endpoint.
+    // Runs AFTER pickup_add_full.js — overrides any cached JS routing.
+    $.ajaxPrefilter(function(options) {
+        if (options.url && (
+            options.url.indexOf('add_pickup_ajax') !== -1 ||
+            options.url.indexOf('pickup_client_save') !== -1
+        )) {
+            options.url = 'ajax/pickup/add_pickup_client_ajax.php';
+        }
+    });
+    </script>
+    <?php endif; ?>
 
 </body>
 

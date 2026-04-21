@@ -1,3 +1,4 @@
+<?php $userData = $userData ?? $user->cdp_getUserData(); ?>
 	<header class="topbar <?php echo isset($show_dashboard_new_header) && $show_dashboard_new_header ? 'topbar-new-variant' : ''; ?>">
 		<nav class="navbar top-navbar navbar-expand-md <?php echo isset($show_dashboard_new_header) && $show_dashboard_new_header ? 'navbar-light' : 'navbar-dark'; ?>">
 				<!-- This is for the sidebar toggle which is visible on mobile only -->

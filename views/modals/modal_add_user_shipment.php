@@ -139,15 +139,15 @@
 							<div class="form-group col-md-6" style="display:none;">
 								<label for="inputcom" class="control-label col-form-label"><?php echo $lang['leftorder14442'] ?></label>
 								<div class="input-group mb-3">
-									<input type="number" class="form-control" name="locker" id="locker" value="<?php print_r(cdp_generarCodigo('' . $core->digit_random_locker . '')); ?>" onchange="cdp_validateLockerNumber(this.value, '<?php echo $verifylocker; ?>');">
-									<!-- <input type="hidden" name="order_no_main" id="order_no_main" value="<?php echo $lockerauto; ?>"> -->
+									<input type="number" class="form-control" name="locker" id="locker" value="<?php print_r(cdp_generarCodigo('' . $core->digit_random_locker . '')); ?>" onchange="cdp_validateLockerNumber(this.value, '<?php echo $verifylocker ?? ''; ?>');">
+									<!-- <input type="hidden" name="order_no_main" id="order_no_main" value="<?php echo $lockerauto ?? ''; ?>"> -->
 								</div>
 							</div>
 						<?php } ?>
 
 				</div>
 				<div class="modal-footer">
-					<button type="submit" class="btn btn-danger" id="save_data_user"><?php echo $lang['modal-text6'] ?></button>
+					<button type="button" class="btn btn-danger" id="save_data_user" onclick="$('#add_user_from_modal_shipments').trigger('submit');"><?php echo $lang['modal-text6'] ?></button>
 					<button type="button" class="btn btn-secondary" data-dismiss="modal"><?php echo $lang['modal-text5'] ?></button>
 				</div>
 				</form>

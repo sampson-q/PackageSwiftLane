@@ -195,7 +195,7 @@ $address_order = $db->cdp_registro();
                                                 <div class="input-group-prepend">
                                                     <div class="input-group-text"><span style="color:#ff0000"><b><?php echo $lang['inv-shipping9'] ?></b></span></div>
                                                 </div>
-                                                <input type="text" class="form-control" name="order_no" id="order_no" value="<?php echo $row_order->order_prefix . $row_order->order_no; ?>" readonly>
+                                                <input type="text" class="form-control" name="order_no" id="order_no" value="<?php echo h($row_order->order_prefix) . h($row_order->order_no); ?>" readonly>
                                             </div>
 
                                         </div>
@@ -206,9 +206,9 @@ $address_order = $db->cdp_registro();
                                                 <select class="custom-select col-12" id="agency" name="agency">
 
                                                     <?php foreach ($agencyrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->agency == $row->id) {
+                                                        <option value="<?php echo (int)$row->id; ?>" <?php if ($row_order->agency == $row->id) {
                                                                                                     echo 'selected';
-                                                                                                } ?>><?php echo $row->name_branch; ?>
+                                                                                                } ?>><?php echo h($row->name_branch); ?>
 
                                                         </option>
                                                     <?php endforeach; ?>
@@ -225,9 +225,9 @@ $address_order = $db->cdp_registro();
                                                     <select class="custom-select col-12" id="origin_off" name="origin_off">
 
                                                         <?php foreach ($office as $row) : ?>
-                                                            <option value="<?php echo $row->id; ?>" <?php if ($row_order->origin_off == $row->id) {
+                                                            <option value="<?php echo (int)$row->id; ?>" <?php if ($row_order->origin_off == $row->id) {
                                                                                                         echo 'selected';
-                                                                                                    } ?>><?php echo $row->name_off; ?>
+                                                                                                    } ?>><?php echo h($row->name_off); ?>
 
                                                             </option>
                                                         <?php endforeach; ?>
@@ -275,7 +275,7 @@ $address_order = $db->cdp_registro();
 
                                             <div class="input-group">
                                                 <select class="select2 form-control custom-select" id="sender_id" name="sender_id" disabled>
-                                                    <option value="<?php echo $sender_data->id; ?>"><?php echo $sender_data->fname . " " . $sender_data->lname; ?></option>
+                                                    <option value="<?php echo (int)$sender_data->id; ?>"><?php echo h($sender_data->fname) . " " . h($sender_data->lname); ?></option>
                                                 </select>
 
 
@@ -290,7 +290,7 @@ $address_order = $db->cdp_registro();
                                                 <div class="col-md-10">
                                                     <div class="input-group">
                                                         <select class="select2 form-control" id="sender_address_id" name="sender_address_id">
-                                                            <option value="<?php echo $row_order->sender_address_id; ?>"><?php echo $address_order->sender_address; ?></option>
+                                                            <option value="<?php echo (int)$row_order->sender_address_id; ?>"><?php echo h($address_order->sender_address); ?></option>
                                                         </select>
                                                     </div>
                                                 </div>
@@ -337,7 +337,7 @@ $address_order = $db->cdp_registro();
                                             <div class="input-group">
 
                                                 <select class="select2 form-control custom-select" id="recipient_id" name="recipient_id" disabled>
-                                                    <option value="<?php echo $receiver_data->id; ?>"><?php echo $receiver_data->fname . " " . $receiver_data->lname; ?></option>
+                                                    <option value="<?php echo (int)$receiver_data->id; ?>"><?php echo h($receiver_data->fname) . " " . h($receiver_data->lname); ?></option>
                                                 </select>
                                             </div>
                                         </div>
@@ -350,7 +350,7 @@ $address_order = $db->cdp_registro();
                                                 <div class="col-md-10">
                                                     <div class="input-group">
                                                         <select class="select2 form-control" id="recipient_address_id" name="recipient_address_id">
-                                                            <option value="<?php echo $row_order->receiver_address_id; ?>"><?php echo $address_order->recipient_address; ?></option>
+                                                            <option value="<?php echo (int)$row_order->receiver_address_id; ?>"><?php echo h($address_order->recipient_address); ?></option>
                                                         </select>
                                                     </div>
                                                 </div>
@@ -386,9 +386,9 @@ $address_order = $db->cdp_registro();
                                                     <?php foreach ($categories as $row) :
 
                                                     ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->order_item_category == $row->id) {
+                                                        <option value="<?php echo (int)$row->id; ?>" <?php if ($row_order->order_item_category == $row->id) {
                                                                                                     echo 'selected';
-                                                                                                }  ?>><?php echo $row->name_item; ?></option>
+                                                                                                }  ?>><?php echo h($row->name_item); ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -400,9 +400,9 @@ $address_order = $db->cdp_registro();
                                                 <select class="custom-select col-12" id="order_package" name="order_package" required>
                                                     <option value="0">--<?php echo $lang['left203'] ?>--</option>
                                                     <?php foreach ($packrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->order_package == $row->id) {
+                                                        <option value="<?php echo (int)$row->id; ?>" <?php if ($row_order->order_package == $row->id) {
                                                                                                     echo 'selected';
-                                                                                                } ?>><?php echo $row->name_pack; ?></option>
+                                                                                                } ?>><?php echo h($row->name_pack); ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -414,9 +414,9 @@ $address_order = $db->cdp_registro();
                                                 <select class="custom-select col-12" id="order_courier" name="order_courier" required>
                                                     <option value="0">--<?php echo $lang['left204'] ?>--</option>
                                                     <?php foreach ($courierrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->order_courier == $row->id) {
+                                                        <option value="<?php echo (int)$row->id; ?>" <?php if ($row_order->order_courier == $row->id) {
                                                                                                     echo 'selected';
-                                                                                                } ?>><?php echo $row->name_com; ?></option>
+                                                                                                } ?>><?php echo h($row->name_com); ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -428,9 +428,9 @@ $address_order = $db->cdp_registro();
                                                 <select class="custom-select col-12" id="order_service_options" name="order_service_options" required>
                                                     <option value="0">--<?php echo $lang['left205'] ?>--</option>
                                                     <?php foreach ($moderow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->order_service_options == $row->id) {
+                                                        <option value="<?php echo (int)$row->id; ?>" <?php if ($row_order->order_service_options == $row->id) {
                                                                                                     echo 'selected';
-                                                                                                } ?>><?php echo $row->ship_mode; ?></option>
+                                                                                                } ?>><?php echo h($row->ship_mode); ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -446,9 +446,9 @@ $address_order = $db->cdp_registro();
                                                 <select class="custom-select col-12" id="order_deli_time" name="order_deli_time" required>
                                                     <option value="0">--<?php echo $lang['left207'] ?>--</option>
                                                     <?php foreach ($delitimerow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->order_deli_time == $row->id) {
+                                                        <option value="<?php echo (int)$row->id; ?>" <?php if ($row_order->order_deli_time == $row->id) {
                                                                                                     echo 'selected';
-                                                                                                } ?>><?php echo $row->delitime; ?></option>
+                                                                                                } ?>><?php echo h($row->delitime); ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -460,9 +460,9 @@ $address_order = $db->cdp_registro();
                                             <div class="input-group mb-3">
                                                 <select class="custom-select col-12" id="order_payment_method" name="order_payment_method" required>
                                                     <?php foreach ($paymethodrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->order_payment_method == $row->id) {
+                                                        <option value="<?php echo (int)$row->id; ?>" <?php if ($row_order->order_payment_method == $row->id) {
                                                                                                     echo 'selected';
-                                                                                                } ?>><?php echo $row->label; ?></option>
+                                                                                                } ?>><?php echo h($row->label); ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -475,9 +475,9 @@ $address_order = $db->cdp_registro();
                                                     <option value="0">--<?php echo $lang['left210'] ?>--</option>
                                                     <?php foreach ($statusrow as $row) : ?>
 
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->status_courier == $row->id) {
+                                                        <option value="<?php echo (int)$row->id; ?>" <?php if ($row_order->status_courier == $row->id) {
                                                                                                     echo 'selected';
-                                                                                                } ?>><?php echo $row->mod_style; ?></option>
+                                                                                                } ?>><?php echo h($row->mod_style); ?></option>
 
                                                     <?php endforeach; ?>
                                                 </select>
@@ -516,8 +516,8 @@ $address_order = $db->cdp_registro();
                                                         <?php foreach ($driverrow as $row) : ?>
                                                             <option <?php if ($row_order->driver_id == $row->id) {
                                                                         echo 'selected';
-                                                                    } ?> value="<?php echo $row->id; ?>">
-                                                                <?php echo $row->fname . ' ' . $row->lname; ?>
+                                                                    } ?> value="<?php echo (int)$row->id; ?>">
+                                                                <?php echo h($row->fname) . ' ' . h($row->lname); ?>
                                                             </option>
                                                         <?php endforeach; ?>
                                                     </select>
@@ -606,17 +606,17 @@ $address_order = $db->cdp_registro();
                                                 $count++;
                                             ?>
 
-                                                <div class="col-md-3" id="file_delete_item_<?php echo $file->id; ?>">
-                                                    <img style="width: 180px; height: 180px;" class="img-thumbnail" src="<?php echo $src; ?>">
+                                                <div class="col-md-3" id="file_delete_item_<?php echo h($file->id); ?>">
+                                                    <img style="width: 180px; height: 180px;" class="img-thumbnail" src="<?php echo h($src); ?>">
                                                     <div class="row ">
                                                         <div class=" col-md-12 mb-3 mt-2">
-                                                            <p class="text-justify"><a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></p>
+                                                            <p class="text-justify"><a style="color:#7460ee;" target="_blank" href="<?php echo h($file->url); ?>" class=""><?php echo h($file->name); ?> </a></p>
                                                         </div>
                                                     </div>
 
                                                     <div class="row">
                                                         <div class="mb-2">
-                                                            <button type="button" class="btn btn-danger btn-sm" onclick="cdp_deleteImgAttached('<?php echo $file->id; ?>');"><i class="fa fa-trash"></i></button>
+                                                            <button type="button" class="btn btn-danger btn-sm" onclick="cdp_deleteImgAttached('<?php echo h($file->id); ?>');"><i class="fa fa-trash"></i></button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -916,8 +916,8 @@ $address_order = $db->cdp_registro();
                         </div>
                     </div>
 
-                    <input type="hidden" name="order_id" id="order_id" value="<?php echo $row_order->order_id; ?>" />
-                    <input type="hidden" name="core_meter" id="core_meter" value="<?php echo $row_order->volumetric_percentage; ?>" />
+                    <input type="hidden" name="order_id" id="order_id" value="<?php echo h($row_order->order_id); ?>" />
+                    <input type="hidden" name="core_meter" id="core_meter" value="<?php echo h($row_order->volumetric_percentage); ?>" />
                     <input type="hidden" name="core_min_cost_tax" id="core_min_cost_tax" value="<?php echo $core->min_cost_tax; ?>" />
                     <input type="hidden" name="core_min_cost_declared_tax" id="core_min_cost_declared_tax" value="<?php echo $core->min_cost_declared_tax; ?>" />
             </form>

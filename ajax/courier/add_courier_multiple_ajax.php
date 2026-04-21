@@ -26,6 +26,7 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
+require_csrf();
 
 require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
@@ -198,9 +199,7 @@ if (empty($errors)) {
                 'due_date' =>  $due_date,
                 'status_invoice' =>  $status_invoice,
                 'volumetric_percentage' =>  $meter,
-                'manual_tariff' =>  $tariff_mode,
-                'tracking_number' => cdp_sanitize(intval(value: $_POST['tracking_number'])),
-                'estimated_eta' => cdp_sanitize($_POST['estimated_eta'])
+                'manual_tariff' =>  $tariff_mode
 
             );
 
@@ -529,8 +528,9 @@ if (empty($errors)) {
                     // Manejo del error, por ejemplo, establecer una variable para mostrar un mensaje de error al usuario
                 }
 
-                cdp_insertPackageTracking($shipment_id, $_SESSION['userid'], $_POST['tracking_number'], $_POST['estimated_eta']);
-                
+
+
+
                 $messages[] = $lang['message_ajax_success_add_shipment'];
             } else {
                 $errors['critical_error'] = $lang['message_ajax_error2'];

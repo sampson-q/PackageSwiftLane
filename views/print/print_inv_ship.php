@@ -283,11 +283,9 @@ $address_order = $db->cdp_registro();
             $total_peso = $sumador_libras + $sumador_volumetric;
             $total_seguro = $row->tax_insurance_value * $row->total_insured_value / 100;
             $total_impuesto_aduanero = $total_peso * $row->tax_custom_tariffis_value;
-            $total_envio = ($sumador_total - $total_descuento) + $total_impuesto + $total_seguro + $total_impuesto_aduanero + $total_valor_declarado + $max_fixed_charge + $row->total_reexp;
+            // Use the stored total_order (calculated and saved when the shipment was created)
+            $total_envio = cdb_money_format((float)$row->total_order);
             $sumador_total = cdb_money_format_bar($sumador_total);
-            $sumador_libras = $sumador_libras;
-            $sumador_volumetric = $sumador_volumetric;
-            $total_envio = cdb_money_format($total_envio);
             $total_seguro = cdb_money_format_bar($total_seguro);
             $total_peso = $total_peso;
             $total_impuesto_aduanero = cdb_money_format_bar($total_impuesto_aduanero);

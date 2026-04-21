@@ -257,11 +257,13 @@
     var message_error_moduleroles15 = "<?php echo $lang["rolesp39"]; ?>"
     var message_error_moduleroles16 = "<?php echo $lang["rolesp38"]; ?>"
 
-    var translate_sender = "<?php echo $lang["sender_search_title"]; ?>"
-    var translate_date_of_shipment_from = "<?php echo $lang["shipment_date_from"]; ?>"
-    var translate_date_of_shipment_to = "<?php echo $lang["shipment_date_to"]; ?>"
-    var translate_date_of_pickup = "<?php echo $lang["shipment_pickup_date"]; ?>"
-    var translate_sender_package = "<?php echo $lang["sender_package"]; ?>"
-    var translate_amount = "<?php echo $lang["left293"]; ?>"
+
+
+
+
+
+
+
+
 
 </script>

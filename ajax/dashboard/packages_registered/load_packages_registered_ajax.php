@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../../helpers/querys.php');
 require_login();
 require_permission('view_dashboard');
+require_csrf();
 
 
 $db = new Conexion;
@@ -64,7 +65,7 @@ $sql = "SELECT a.is_prealert, a.tracking_purchase, a.provider_purchase, a.price_
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -230,6 +231,6 @@ if ($numrows > 0) { ?>
 
 
 	<div class="pull-right">
-		<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'load_packages_registered');	?>
+		<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 	</div>
 <?php } ?>

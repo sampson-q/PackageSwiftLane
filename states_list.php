@@ -28,6 +28,7 @@ $core = new Core();
 if ($user->cdp_loginCheck() == true) {
 
     $permissions = $user->cdp_getUserPermissions();
+        $userData = $user->cdp_getUserData();
 
     if (!$user->cdp_hasPermission('manage_states')) {
         header("location: error403.php");

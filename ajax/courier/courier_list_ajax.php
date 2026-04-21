@@ -34,7 +34,7 @@ $core = new Core;
 $userData = $user->cdp_getUserData();
 $permissions = $user->cdp_getUserPermissions();
 
-$search = cdp_sanitize($_REQUEST['search']);
+$search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : '';
 $status_courier = intval($_REQUEST['status_courier']);
 
 $sWhere = "";
@@ -52,9 +52,9 @@ if ($userData->userlevel == 3) {
 } else {
 	$sWhere .= "";
 }
-if ($search != null) {
+if ($search != '') {
 
-	$sWhere .= " and  CONCAT(a.order_prefix,a.order_no) LIKE '%" . $search . "%'";
+	$sWhere .= " and  CONCAT(a.order_prefix,a.order_no) LIKE :search";
 }
 if ($status_courier > 0) {
 
@@ -104,12 +104,14 @@ $sql = "SELECT a.order_incomplete,  a.status_invoice,  a.is_consolidate, a.is_pi
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);
@@ -132,26 +134,26 @@ if ($numrows > 0) { ?>
 					}
 					?>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
-					<th><b><?php echo $lang['ddate'] ?></b></th>
+					<th class="text-center"><b><?php echo $lang['ddate'] ?></b></th>
 					<?php
 					if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-						<th><b><?php echo $lang['left498'] ?></b></th>
+						<th class="text-center"><b><?php echo $lang['left498'] ?></b></th>
 
 					<?php } ?>
-					<th><b><?php echo $lang['left499'] ?></b></th>
+					<th class="text-center"><b><?php echo $lang['left499'] ?></b></th>
 
 					<?php
 					if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-						<th><b><?php echo $lang['lorigin'] ?></b></th>
+						<th class="text-center"><b><?php echo $lang['lorigin'] ?></b></th>
 					<?php } ?>
 
-					<th><b><?php echo $lang['ldestination'] ?></b></th>
-					<th><b><?php echo $lang['lpayment'] ?></b></th>
-					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
+					<th class="text-center"><b><?php echo $lang['ldestination'] ?></b></th>
+					<th class="text-center"><b><?php echo $lang['lpayment'] ?></b></th>
+					<th class="text-center"><b><?php echo $lang['lstatusshipment'] ?></b></th>
 					<th class=""><b><?php echo $lang['ship-all5'] ?></b></th>
-					<th></th>
-					<th><b><?php echo $lang['global-3'] ?></b></th>
-					<th><b></b></th>
+					<th class="text-center"></th>
+					<th class="text-center"><b><?php echo $lang['global-3'] ?></b></th>
+					<th class="text-center"><b></b></th>
 				</tr>
 			</thead>
 			<tbody id="projects-tbl">
@@ -213,17 +215,6 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row->order_prefix . $row->order_no . "'");
 						$address_order = $db->cdp_registro();
 
-                        $db->cdp_query("SELECT consolidate_id FROM cdb_consolidate_detail where order_no='" . $row->order_no . "'");
-						$consolidate_id = $db->cdp_registro() -> consolidate_id;
-						
-                        $db->cdp_query("SELECT status_courier FROM cdb_consolidate where consolidate_id='" . $consolidate_id . "'");
-						$consolidate_status_courier = $db->cdp_registro() -> status_courier;
-                        
-                        $db->cdp_query("SELECT * FROM cdb_styles where id='" . $consolidate_status_courier . "'");
-						$consolidate_style = $db->cdp_registro();
-                        
-                        $db->cdp_query("SELECT t_date FROM cdb_courier_track where order_track='" . $row->order_prefix . $row->order_no . "' AND (status_courier = 15 OR status_courier = 8)");
-						$package_tracking = $db->cdp_registro();
 
 
 					?>
@@ -236,7 +227,7 @@ if ($numrows > 0) { ?>
 										<?php if ($row->status_courier != 21) { ?>
 
 											<div class="custom-control custom-checkbox">
-												<input type="checkbox" class="custom-control-input" value="<?php echo $row->order_no; ?>" name="checkbox[]" id="cst_<?php echo $count; ?>">
+												<input type="checkbox" class="custom-control-input" value="<?php echo h($row->order_no); ?>" name="checkbox[]" id="cst_<?php echo $count; ?>">
 												<label class="custom-control-label" for="cst_<?php echo $count; ?>">&nbsp;</label>
 											</div>
 
@@ -245,41 +236,40 @@ if ($numrows > 0) { ?>
 
 								</td>
 							<?php } ?>
-							<td><b><a href="courier_view.php?id=<?php echo $row->order_id; ?>"><?php echo $row->order_prefix . $row->order_no; ?></a></b></td>
-							<td>
-								<?php echo $row->order_date; ?>
+							<td><b><a href="courier_view.php?id=<?php echo h($row->order_id); ?>"><?php echo h($row->order_prefix) . h($row->order_no); ?></a></b></td>
+							<td class="text-center">
+								<?php echo h($row->order_date); ?>
 							</td>
 							<?php
 							if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-								<td>
-									<?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?>
+								<td class="text-center">
+									<?php echo h($sender_data->fname); ?> <?php echo h($sender_data->lname); ?>
 								</td>
 							<?php } ?>
-							<td>
-								<?php echo $receiver_data->fname; ?> <?php echo $receiver_data->lname; ?>
+							<td class="text-center">
+								<?php echo htmlspecialchars(($receiver_data->fname ?? '') . ' ' . ($receiver_data->lname ?? '')); ?>
 							</td>
 
 							<?php
 							if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-								<td><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
+								<td class="text-center"><?php echo htmlspecialchars(($address_order->sender_country ?? '') . '-' . ($address_order->sender_city ?? '')); ?></td>
 							<?php } ?>
-							<td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
+							<td class="text-center"><?php echo htmlspecialchars(($address_order->recipient_country ?? '') . '-' . ($address_order->recipient_city ?? '')); ?></td>
 
-							<td>
-							    <?php echo isset($met_payment->name_pay) ? $met_payment->name_pay : 'N/A'; ?>
+							<td class="text-center">
+							    <?php echo isset($met_payment->name_pay) ? h($met_payment->name_pay) : 'N/A'; ?>
 							</td>
 
 
 							<td class="">
 
-								<!-- <span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->mod_style; ?></span> -->
-                                 <span style="background: <?php echo $row->is_consolidate ? $consolidate_style->color : $row->color; ?>;" class="label label-large"><?php echo $row->is_consolidate ? $consolidate_style->mod_style : $row->mod_style; ?></span>
+								<span style="background: <?php echo h($row->color); ?>;" class="label label-large"><?php echo $row->mod_style; ?></span>
 								<br>
 
 								<?php
 								if ($row->is_pickup == true) { ?>
 
-									<span style="background: <?php echo $status_style_pickup->color; ?>;" class="label label-large"><?php echo $status_style_pickup->mod_style; ?></span>
+									<span style="background: <?php echo h($status_style_pickup->color); ?>;" class="label label-large"><?php echo $status_style_pickup->mod_style; ?></span>
 								<?php
 								}
 								?>
@@ -287,7 +277,7 @@ if ($numrows > 0) { ?>
 								<?php
 								if ($row->is_consolidate == true) { ?>
 
-									<span style="background: <?php echo $status_style_consolidate->color; ?>;" class="label label-large"><?php echo $status_style_consolidate->mod_style; ?></span>
+									<span style="background: <?php echo h($status_style_consolidate->color); ?>;" class="label label-large"><?php echo $status_style_consolidate->mod_style; ?></span>
 								<?php
 								}
 								?>
@@ -317,15 +307,15 @@ if ($numrows > 0) { ?>
 								<?php } ?>
 							</td>
 
-							<td>
+							<td class="text-center">
 								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
 							</td>
 
-							<td>
+							<td class="text-center">
 								<?php if ($row->status_invoice == 2) { ?>
 									<?php if ($userData->userlevel == 1) { ?>
 
-										<a style="background: #34e89e;" class="label label" href="add_payment_gateways_courier.php?id_order=<?php echo $row->order_id; ?>">
+										<a style="background: #34e89e;" class="label label" href="add_payment_gateways_courier.php?id_order=<?php echo h($row->order_id); ?>">
 											<i style="color:#343a40" class="fas fa-dollar-sign"></i>
 											&nbsp;<?php echo $lang['leftorder35'] ?>
 										</a>
@@ -344,7 +334,7 @@ if ($numrows > 0) { ?>
 							        <div class="dropdown-menu" style="overflow-y: auto; max-height: 200px;">
 							            <!-- VER DETALLES DE ENVÍO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('view_shipment_details')) { ?>
-							                <a class="dropdown-item" href="courier_view.php?id=<?php echo $row->order_id; ?>" title="<?php echo $lang['tooledit'] ?>">
+							                <a class="dropdown-item" href="courier_view.php?id=<?php echo h($row->order_id); ?>" title="<?php echo $lang['tooledit'] ?>">
 							                    <i style="color:#343a40" class="fa fa-search"></i>
 							                    &nbsp;<?php echo $lang['leftorder266'] ?>
 							                </a>
@@ -353,7 +343,7 @@ if ($numrows > 0) { ?>
 							            <!-- VERIFICAR PAGOS DE ENVÍOS PERMISO -->
 							            <?php if ($row->status_invoice == 2 && $user->cdp_hasPermission('verify_payments')) { ?>
 							                <?php if ($userData->userlevel == 1) { ?>
-							                    <a class="dropdown-item" href="add_payment_gateways_courier.php?id_order=<?php echo $row->order_id; ?>">
+							                    <a class="dropdown-item" href="add_payment_gateways_courier.php?id_order=<?php echo h($row->order_id); ?>">
 							                        <i style="color:#343a40" class="fas fa-dollar-sign"></i>
 							                        &nbsp;<?php echo $lang['leftorder32'] ?>
 							                    </a>
@@ -363,7 +353,7 @@ if ($numrows > 0) { ?>
 							            <!-- VERIFICAR PAGOS DE ENVÍOS (Status = 3) PERMISO -->
 							            <?php if ($row->status_invoice == 3 && $user->cdp_hasPermission('verify_payments')) { ?>
 							                <?php if ($userData->userlevel != 1) { ?>
-							                    <a class="dropdown-item" data-toggle="modal" data-target="#detail_payment_packages" data-id="<?php echo $row->order_id; ?>" data-customer="<?php echo $row->sender_id; ?>">
+							                    <a class="dropdown-item" data-toggle="modal" data-target="#detail_payment_packages" data-id="<?php echo h($row->order_id); ?>" data-customer="<?php echo h($row->sender_id); ?>">
 							                        <i style="color:#343a40" class="fas fa-dollar-sign"></i>
 							                        &nbsp;<?php echo $lang['leftorder33'] ?>
 							                    </a>
@@ -372,7 +362,7 @@ if ($numrows > 0) { ?>
 
 							            <!-- ACEPTAR ENVÍO PERMISO -->
 							            <?php if ($row->order_incomplete == 0 && $row->is_pickup == 0 && $user->cdp_hasPermission('complete_client_shipment') && $userData->userlevel != 1) { ?>
-							                <a class="dropdown-item" href="courier_accept.php?id=<?php echo $row->order_id; ?>" title="<?php echo $lang['tooledit'] ?>">
+							                <a class="dropdown-item" href="courier_accept.php?id=<?php echo h($row->order_id); ?>" title="<?php echo $lang['tooledit'] ?>">
 							                    <i style="color:#343a40" class="ti-pencil"></i>
 							                    &nbsp;<?php echo $lang['leftorder34'] ?>
 							                </a>
@@ -380,7 +370,7 @@ if ($numrows > 0) { ?>
 
 							            <!-- IMPRIMIR ETIQUETA DE ENVÍO PERMISO -->
 							            <?php if ($row->order_incomplete == 0 && $user->cdp_hasPermission('print_label')) { ?>
-							                <a class="dropdown-item" href="print_label_ship.php?id=<?php echo $row->order_id; ?>" target="_blank">
+							                <a class="dropdown-item" href="print_label_ship.php?id=<?php echo h($row->order_id); ?>" target="_blank">
 							                    <i style="color:#343a40" class="ti-printer"></i>
 							                    &nbsp;<?php echo $lang['toollabel'] ?>
 							                </a>
@@ -390,7 +380,7 @@ if ($numrows > 0) { ?>
 							            <?php if ($row->order_incomplete == 1 && $user->cdp_hasPermission('edit_shipment')) { ?>
 							                <?php if ($row->is_consolidate == 0 ) { ?>
 							                    <?php if ($row->status_courier != 8) { ?>
-							                        <a class="dropdown-item" href="courier_edit.php?id=<?php echo $row->order_id; ?>" title="<?php echo $lang['tooledit'] ?>">
+							                        <a class="dropdown-item" href="courier_edit.php?id=<?php echo h($row->order_id); ?>" title="<?php echo $lang['tooledit'] ?>">
 							                            <i style="color:#343a40" class="ti-pencil"></i>
 							                            &nbsp;<?php echo $lang['tooledit'] ?>
 							                        </a>
@@ -401,7 +391,7 @@ if ($numrows > 0) { ?>
 							            <!-- ANULAR ENVÍO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('cancel_shipment')) { ?>
 						                    <?php if ($row->status_courier != 21 && $row->status_courier != 12) { ?>
-						                        <a class="dropdown-item" data-id="<?php echo $row->order_id; ?>" href="#" data-toggle="modal" data-target="#myModalCancel">
+						                        <a class="dropdown-item" data-id="<?php echo h($row->order_id); ?>" href="#" data-toggle="modal" data-target="#myModalCancel">
 						                            <i style="color:#f62d51" class="fas fa-times-circle"></i>
 						                            &nbsp;<?php echo $lang['leftorder34444']; ?>
 						                        </a>
@@ -411,7 +401,7 @@ if ($numrows > 0) { ?>
 							            <!-- ELIMINAR ENVÍO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('delete_shipment')) { ?>
 						                    <?php if ($row->is_consolidate == 0 && $row->status_courier != 8) { ?>
-						                        <a class="dropdown-item" data-id="<?php echo $row->order_id; ?>" href="#" data-toggle="modal" data-target="#myModalDeletes">
+						                        <a class="dropdown-item" data-id="<?php echo h($row->order_id); ?>" href="#" data-toggle="modal" data-target="#myModalDeletes">
 						                            <i style="color:#f62d51" class="ti-trash"></i>
 						                            &nbsp;<?php echo $lang['leftorder34445']; ?>
 						                        </a>
@@ -421,7 +411,7 @@ if ($numrows > 0) { ?>
 							            <!-- ASIGNAR CONDUCTOR A ENVÍO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('assign_drivers')) { ?>
 							                <?php if ($row->status_courier != 21 && $row->status_courier != 12 && $row->status_courier != 8) { ?>
-							                    <a class="dropdown-item" data-toggle="modal" data-target="#modalDriver" data-id_shipment="<?php echo $row->order_id; ?>">
+							                    <a class="dropdown-item" data-toggle="modal" data-target="#modalDriver" data-id_shipment="<?php echo h($row->order_id); ?>">
 							                        <i style="color:#ff0000" class="fas fa-car"></i>
 							                        &nbsp;<?php echo $lang['left208']; ?>
 							                    </a>
@@ -431,7 +421,7 @@ if ($numrows > 0) { ?>
 							            <!-- SEGUIMIENTO DE ENVÍO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('track_shipment')) { ?>
 							                <?php if ($row->status_courier != 21 && $row->status_courier != 12) { ?>
-							                    <a class="dropdown-item" href="courier_shipment_tracking.php?id=<?php echo $row->order_id; ?>" title="<?php echo $lang['toolupdate'] ?>">
+							                    <a class="dropdown-item" href="courier_shipment_tracking.php?id=<?php echo h($row->order_id); ?>" title="<?php echo $lang['toolupdate'] ?>">
 							                        <i style="color:#20c997" class="ti-reload"></i>&nbsp;<?php echo $lang['toolupdate']; ?>
 							                    </a>
 							                <?php } ?>
@@ -439,7 +429,7 @@ if ($numrows > 0) { ?>
 
 							            <!-- IMPRIMIR ENVÍO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('print_shipment')) { ?>
-							                <a class="dropdown-item" target="blank" href="print_inv_ship.php?id=<?php echo $row->order_id; ?>">
+							                <a class="dropdown-item" target="blank" href="print_inv_ship.php?id=<?php echo h($row->order_id); ?>">
 							                    <i style="color:#343a40" class="ti-printer"></i>
 							                    &nbsp;<?php echo $lang['toolprint']; ?>
 							                </a>
@@ -447,7 +437,7 @@ if ($numrows > 0) { ?>
 
 							            <!-- ENVIAR CORREO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('send_email_attachment')) { ?>
-							                <a class="dropdown-item" href="#" data-toggle="modal" data-id="<?php echo $row->order_id; ?>" data-email="<?php echo $sender_data->email; ?>" data-order="<?php echo $row->order_prefix . $row->order_no; ?>" data-target="#myModal">
+							                <a class="dropdown-item" href="#" data-toggle="modal" data-id="<?php echo h($row->order_id); ?>" data-email="<?php echo h($sender_data->email); ?>" data-order="<?php echo h($row->order_prefix) . h($row->order_no); ?>" data-target="#myModal">
 							                    <i class="fas fa-envelope"></i>
 							                    &nbsp;<?php echo $lang['leftorder36']; ?>
 							                </a>
@@ -466,7 +456,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'courier_list');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 		<script src="dataJs/courier_ajax.js"></script>
 	</div>

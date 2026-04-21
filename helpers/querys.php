@@ -5006,19 +5006,19 @@ function cdp_insertTariffsCustom($datos)
     )');
 
     // obligatorios del form
-    $db->bind(':country_origin',      $datos['country_origin']);
-    $db->bind(':country_destiny',     $datos['country_destiny']);
-    $db->bind(':state_destinystates', $datos['state_destinystates']);
-    $db->bind(':city_destinycities',  $datos['city_destinycities']);
-    $db->bind(':ship_mode',           $datos['ship_mode']);
-    $db->bind(':initial_range',       $datos['initial_range']);
-    $db->bind(':final_range',         $datos['final_range']);
-    $db->bind(':tariff_price',        $datos['tariff_price']);
+    $db->cdp_bind(':country_origin',      $datos['country_origin']);
+    $db->cdp_bind(':country_destiny',     $datos['country_destiny']);
+    $db->cdp_bind(':state_destinystates', $datos['state_destinystates']);
+    $db->cdp_bind(':city_destinycities',  $datos['city_destinycities']);
+    $db->cdp_bind(':ship_mode',           $datos['ship_mode']);
+    $db->cdp_bind(':initial_range',       $datos['initial_range']);
+    $db->cdp_bind(':final_range',         $datos['final_range']);
+    $db->cdp_bind(':tariff_price',        $datos['tariff_price']);
 
     // columnas presentes en la tabla pero no en el form -> por defecto 0
-    $db->bind(':order_item_category', isset($datos['order_item_category']) ? (int)$datos['order_item_category'] : 0);
-    $db->bind(':order_package',       isset($datos['order_package']) ? (int)$datos['order_package'] : 0);
-    $db->bind(':order_courier',       isset($datos['order_courier']) ? (int)$datos['order_courier'] : 0);
+    $db->cdp_bind(':order_item_category', isset($datos['order_item_category']) ? (int)$datos['order_item_category'] : 0);
+    $db->cdp_bind(':order_package',       isset($datos['order_package']) ? (int)$datos['order_package'] : 0);
+    $db->cdp_bind(':order_courier',       isset($datos['order_courier']) ? (int)$datos['order_courier'] : 0);
 
     return $db->cdp_execute();
 }
@@ -5646,11 +5646,14 @@ function cdp_calculateTariffServerSide($sender_id, $sender_address_id, $recipien
     $peso_real_total  = 0.0;
     $volumetric_total = 0.0;
     foreach ($packages as $p) {
-        $qty    = isset($p['qty'])    ? (float)$p['qty']    : (isset($p->qty)    ? (float)$p->qty    : 1.0);
-        $length = isset($p['length']) ? (float)$p['length'] : (isset($p->length) ? (float)$p->length : 0.0);
-        $width  = isset($p['width'])  ? (float)$p['width']  : (isset($p->width)  ? (float)$p->width  : 0.0);
-        $height = isset($p['height']) ? (float)$p['height'] : (isset($p->height) ? (float)$p->height : 0.0);
-        $weight = isset($p['weight']) ? (float)$p['weight'] : (isset($p->weight) ? (float)$p->weight : 0.0);
+        // PHP 8: using array bracket syntax on a stdClass object throws a Fatal Error.
+        // Always cast to array first so both stdClass objects and associative arrays work.
+        $pa     = is_array($p) ? $p : (array)$p;
+        $qty    = isset($pa['qty'])    ? (float)$pa['qty']    : 1.0;
+        $length = isset($pa['length']) ? (float)$pa['length'] : 0.0;
+        $width  = isset($pa['width'])  ? (float)$pa['width']  : 0.0;
+        $height = isset($pa['height']) ? (float)$pa['height'] : 0.0;
+        $weight = isset($pa['weight']) ? (float)$pa['weight'] : 0.0;
         if ($qty <= 0) {
             $qty = 1.0;
         }
@@ -7110,31 +7113,6 @@ function updateCustomerPackagesStatusDelivered($data)
     $db->bind(':order_id', $data['shipment_id']);
     $db->bind(':photo_delivered', $data['photo_delivered']);
 
-
-    return $db->cdp_execute();
-}
-
-function cdp_insertPackageTracking($order_id, $user_id, $tracking_number, $estimated_eta) {
-    $db = new Conexion;
-
-    $db->cdp_query('INSERT INTO cdb_package_tracking_number
-        (
-            order_id,
-            user_id,
-            tracking_number,
-            estimated_eta
-        )
-        VALUES (
-            :order_id,
-            :user_id,
-            :tracking_number,
-            :estimated_eta
-        )');
-
-    $db->bind(':order_id', $order_id);
-    $db->bind(':user_id', $user_id);
-    $db->bind(':tracking_number', $tracking_number);
-    $db->bind(':estimated_eta', $estimated_eta);
 
     return $db->cdp_execute();
 }

@@ -25,8 +25,10 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
+require_csrf();
 
 require_once("../../helpers/querys.php");
+require_once(__DIR__ . '/../../helpers/auto_notify.php');
 
 session_start();
 
@@ -53,6 +55,13 @@ foreach ($data as $key) {
         // Insertar en cdb_courier_track
         $user = $_SESSION['userid'];
         cdp_updateShipTrackingMultiple($tracking, $status, $comment, $office, $user);
+
+        // AUTO-NOTIFY: send email/WhatsApp/SMS for this status change automatically.
+        // Uses order_id from the already-loaded $courier record.
+        // Runs silently — failures are caught inside and never break this response.
+        if (!empty($courier->order_id)) {
+            cdp_autoNotifyShipmentStatus(intval($courier->order_id), intval($status));
+        }
 
         // Agregar mensaje de éxito
         $message[$key] = $key . ' ' . $lang['modal-text30'];

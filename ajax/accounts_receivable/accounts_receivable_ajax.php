@@ -26,14 +26,15 @@ require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/querys.php');
 require_login();
 require_permission('view_receivable_accounts');
+require_csrf();
 
 $db = new Conexion;
 $user = new User;
 $core = new Core;
 $userData = $user->cdp_getUserData();
 
-$range = cdp_sanitize($_REQUEST['range']);
-$search = cdp_sanitize($_REQUEST['search']);
+$range = isset($_REQUEST['range']) ? trim($_REQUEST['range']) : '';
+$search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : '';
 $agency_courier = intval($_REQUEST['agency_courier']);
 $customer_id = intval($_REQUEST['customer_id']);
 
@@ -50,9 +51,9 @@ if (isset($userData->userlevel)) {
 	}
 }
 
-if ($search != null) {
+if ($search != '') {
 
-	$sWhere .= " and  CONCAT(order_prefix, order_no) LIKE '%" . $search . "%'";
+	$sWhere .= " and  CONCAT(order_prefix, order_no) LIKE :search";
 }
 
 if ($agency_courier > 0 && (!isset($userData->userlevel) || (int)$userData->userlevel !== 6)) {
@@ -75,7 +76,7 @@ if (!empty($range)) {
 	$fecha_fin = date('Y-m-d', strtotime($fecha[1]));
 
 
-	$sWhere .= " and order_date between '" . $fecha_inicio . "'  and '" . $fecha_fin . "'";
+	$sWhere .= " and order_date between :fecha_inicio and :fecha_fin";
 }
 
 // // pagination variables
@@ -101,12 +102,16 @@ $sql = "SELECT * FROM cdb_add_order where order_payment_method >1
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
+if (!empty($range)) { $db->bind(':fecha_inicio', $fecha_inicio); $db->bind(':fecha_fin', $fecha_fin); }
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
+if (!empty($range)) { $db->bind(':fecha_inicio', $fecha_inicio); $db->bind(':fecha_fin', $fecha_fin); }
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);
@@ -234,7 +239,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'accounts_receivable');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 
 		<script src="dataJs/account_receivable_ajax.js"></script>

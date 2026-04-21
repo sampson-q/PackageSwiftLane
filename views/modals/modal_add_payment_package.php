@@ -27,7 +27,7 @@
 	                    <div class="input-group mb-3">                                       
 	                        <select class="custom-select col-12" id="mode_pay" name="mode_pay" required="" >
 	                         <option value=""><?php echo $lang['left243'] ?></option>
-	                        <?php foreach ($payrow as $row):?>
+	                        <?php foreach (($payrow ?? []) as $row):?>
 	                            <option value="<?php echo $row->id; ?>"><?php echo $row->name_pay; ?></option>
 	                        <?php endforeach;?>
 	                        </select>

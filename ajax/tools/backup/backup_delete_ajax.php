@@ -23,6 +23,7 @@ require_once(__DIR__ . '/../../../loader.php');
 require_once(__DIR__ . '/../../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_tools');
+require_csrf();
 
   /* == Delete SQL Backup == */
   if (isset($_POST['deleteBackup'])):
@@ -38,4 +39,4 @@ require_permission('view_tools');
     <?php
 
       
-  endif;
+  endif;  endif;

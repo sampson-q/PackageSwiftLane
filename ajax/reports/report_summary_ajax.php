@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/querys.php');
 require_login();
 require_permission('view_general_reports');
+require_csrf();
 
 $db = new Conexion;
 $user = new User;
@@ -73,7 +74,7 @@ if (!empty($range)) {
 	$fecha_fin = date('Y-m-d', strtotime($fecha[1]));
 
 
-	$sWhere .= " and  order_date between '" . $fecha_inicio . "'  and '" . $fecha_fin . "'";
+	$sWhere .= " and  order_date between :fecha_inicio  and :fecha_fin";
 }
 
 $db->cdp_query("UPDATE cdb_add_order SET  status_invoice =3  WHERE due_date<now() and status_invoice !=1 and order_payment_method >1");
@@ -82,20 +83,20 @@ $db->cdp_query("UPDATE cdb_add_order SET  status_invoice =3  WHERE due_date<now(
 $db->cdp_execute();
 
 
-$sql = "SELECT * FROM cdb_add_order where order_payment_method >1  
-			
+$sql = "SELECT * FROM cdb_add_order where order_payment_method >1
 			$sWhere
-			
-			 order by order_id desc 
+			 order by order_id desc
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+if (!empty($range)) { $db->bind(':fecha_inicio', $fecha_inicio); $db->bind(':fecha_fin', $fecha_fin); }
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql);
+if (!empty($range)) { $db->bind(':fecha_inicio', $fecha_inicio); $db->bind(':fecha_fin', $fecha_fin); }
 $data = $db->cdp_registros();
 
 
@@ -144,13 +145,13 @@ if ($numrows > 0) { ?>
 
 					foreach ($data as $row) {
 
-						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
+						$db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row->sender_id) . "'");
 						$sender_data = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->receiver_id . "'");
+						$db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row->receiver_id) . "'");
 						$receiver_data = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->driver_id . "'");
+						$db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row->driver_id) . "'");
 						$driver_data = $db->cdp_registro();
 
 

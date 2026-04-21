@@ -29,6 +29,7 @@ $core = new Core();
 if ($user->cdp_loginCheck() == true) {
 
         $permissions = $user->cdp_getUserPermissions();
+        $userData = $user->cdp_getUserData();
 
         if (!$user->cdp_hasPermission('add_consolidate_package')) {
             header("location: error403.php");

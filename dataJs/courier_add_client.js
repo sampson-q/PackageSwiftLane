@@ -614,8 +614,9 @@ function calculateFinalTotal(element = null) {
     max_fixed_charge += fixed_value;
   });
 
-  // precio_total = calculate_weight * price_lb;
-  sumador_total += price_lb;
+  // price_lb holds the pre-computed flat total (from tariff or weight×sys-price).
+  // Use it directly — no multiplication needed here.
+  sumador_total = price_lb;
 
   if (sumador_total > core_min_cost_tax) {
     total_impuesto = (sumador_total * tax_value) / 100;
@@ -1102,8 +1103,6 @@ function cdp_formatAdressSelection(repo) {
   return repo.text;
 }
 
-var selectedRecipientType = 'recipient';
-
 function cdp_select2_init_recipient() {
   var sender_id = $("#sender_id").val();
 
@@ -1137,11 +1136,6 @@ function cdp_select2_init_recipient() {
       $("#recipient_address_id").val(null);
       $("#table-totals").addClass("d-none");
 
-          // Capture the type from the selected option's data
-      var selectedData = $("#recipient_id").select2("data");
-      selectedRecipientType = selectedData && selectedData[0] && selectedData[0].type ? selectedData[0].type : "recipient";
-
-
       if (recipient_id != null) {
         $("#recipient_address_id").attr("disabled", false);
         $("#add_address_recipient").attr("disabled", false);
@@ -1153,12 +1147,10 @@ function cdp_select2_init_recipient() {
 function cdp_select2_init_recipient_address() {
   var recipient_id = $("#recipient_id").val();
 
-    var recipient_type = window.recipient_type || "recipient";
-
   $("#recipient_address_id")
     .select2({
       ajax: {
-        url: "ajax/select2_recipient_addresses.php?id=" + recipient_id + "&type=" + selectedRecipientType,
+        url: "ajax/select2_recipient_addresses.php?id=" + recipient_id,
         dataType: "json",
         delay: 250,
         data: function (params) {
@@ -2019,43 +2011,77 @@ function cdp_showSuccess(messages, shipment_id) {
 }
 
 function getTariffs() {
-  var recipient_id = $("#recipient_id").val();
-  var recipient_address_id = $("#recipient_address_id").val();
-  var sender_id = $("#sender_id_temp").val();
-  var sender_address_id = $("#sender_address_id").val();
-  var packages = JSON.stringify(packagesItems);
+  var recipient_id          = $("#recipient_id").val();
+  var recipient_address_id  = $("#recipient_address_id").val();
+  var sender_address_id     = $("#sender_address_id").val();
+  var order_service_options = $("#order_service_options").val();
+  var packages              = JSON.stringify(packagesItems);
 
-  var data = {
-    packages: packages,
-    sender_id: sender_id,
-    sender_address: sender_address_id,
-    recipient_address: recipient_address_id,
-    recipient_id: recipient_id,
+  var postData = {
+    packages:              packages,
+    sender_address:        sender_address_id,
+    recipient_address:     recipient_address_id,
+    recipient_id:          recipient_id,
+    order_service_options: order_service_options || "",
   };
 
   $.ajax({
-    type: "POST",
-    data: data,
-    url: "ajax/courier/get_price_range_weight_tariffs_ajax.php",
+    type:     "POST",
+    data:     postData,
+    url:      "ajax/courier/get_tariffs_client_ajax.php",
     dataType: "json",
-    beforeSend: function (objeto) {},
-    success: function (data) {
-      if (data.success) {
+    success: function (res) {
+      if (res.success) {
+        // total_tarifa = the flat rate from the tariff table ($10 for range 1-12 lbs).
+        // This is used directly as the subtotal — no weight multiplication needed.
+        var flatTotal   = parseFloat(res.total_tarifa) || 0;
+        // price_lb (per-unit) shown in label for reference only.
+        var priceLbUnit = parseFloat(res.price_lb)     || 0;
+
+        $("#price_lb").val(flatTotal.toFixed(2));
+        $("#price_lb_label").html(priceLbUnit.toFixed(4));
         $("#table-totals").removeClass("d-none");
         $("#create_invoice").attr("disabled", false);
-        $("#price_lb").val(data.data.price);
-        $("#price_lb_label").html(data.data.price);
         calculateFinalTotal();
       } else {
-        $("#table-totals").addClass("d-none");
-        $("#create_invoice").attr("disabled", true);
-        Swal.fire({
-          title: "Error!",
-          text: data.error,
-          icon: "error",
-          confirmButtonText: "Ok",
-        });
+        // No tariff found → fallback: chargeable_weight × system per-lb price.
+        var cw       = parseFloat(res.chargeable_weight || 0);
+        var sysPrice = parseFloat($("#core_value_weight").val()) || 0;
+
+        // Compute local chargeable weight if not returned by server
+        if (!cw) {
+          packagesItems.forEach(function (item) {
+            cw += parseFloat(item.weight || 0) * Math.max(1, parseFloat(item.qty || 1));
+          });
+          cw = Math.round(cw * 100) / 100;
+        }
+
+        if (cw > 0 && sysPrice > 0) {
+          var fallbackTotal = Math.round(cw * sysPrice * 100) / 100;
+          $("#price_lb").val(fallbackTotal.toFixed(2));
+          $("#price_lb_label").html(sysPrice.toFixed(4));
+          $("#table-totals").removeClass("d-none");
+          $("#create_invoice").attr("disabled", false);
+          calculateFinalTotal();
+        } else {
+          $("#table-totals").addClass("d-none");
+          $("#create_invoice").attr("disabled", true);
+          Swal.fire({
+            title:             "Error!",
+            text:              res.error,
+            icon:              "error",
+            confirmButtonText: "Ok",
+          });
+        }
       }
+    },
+    error: function () {
+      Swal.fire({
+        title:             "Error!",
+        text:              "Server error calculating tariff. Please try again.",
+        icon:              "error",
+        confirmButtonText: "Ok",
+      });
     },
   });
 }

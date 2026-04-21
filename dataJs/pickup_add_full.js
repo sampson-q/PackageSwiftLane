@@ -64,6 +64,93 @@ $(function () {
   cdp_select2_init_sender_address();
   cdp_select2_init_recipient_address();
   cdp_select2_init_recipient();
+
+  $("#calculate_invoice").on("click", function (event) {
+    event.preventDefault();
+
+    var sender_id = $("#sender_id").val();
+    var sender_address_id = $("#sender_address_id").val();
+    var recipient_id = $("#recipient_id").val();
+    var recipient_address_id = $("#recipient_address_id").val();
+
+    if (!sender_id || !sender_address_id || !recipient_id || !recipient_address_id) {
+      Swal.fire({
+        title: "Atención",
+        text: "Debe seleccionar remitente, dirección del remitente, destinatario y dirección del destinatario.",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    var packages = JSON.stringify(packagesItems);
+    var tariffs_value = $("#tariffs_value").val();
+    var declared_value_tax = $("#declared_value_tax").val();
+    var insurance_value = $("#insurance_value").val();
+    var tax_value = $("#tax_value").val();
+    var discount_value = $("#discount_value").val();
+    var reexpedicion_value = parseFloat($("#reexpedicion_value").val());
+    var price_lb = parseFloat($("#price_lb").val());
+    var insured_value = parseFloat($("#insured_value").val());
+
+    var data = {
+      packages: packages,
+      sender_id: sender_id,
+      sender_address: sender_address_id,
+      recipient_address: recipient_address_id,
+      recipient_id: recipient_id,
+      order_service_options: $("#order_service_options").val() || "",
+      tariffs_value: tariffs_value,
+      declared_value_tax: declared_value_tax,
+      insurance_value: insurance_value,
+      tax_value: tax_value,
+      discount_value: discount_value,
+      reexpedicion_value: reexpedicion_value,
+      price_lb: price_lb,
+      insured_value: insured_value,
+    };
+
+    Swal.fire({
+      title: "Calculando...",
+      allowOutsideClick: false,
+      didOpen: function () {
+        Swal.showLoading();
+      },
+    });
+
+    $.ajax({
+      type: "POST",
+      data: data,
+      url: "ajax/courier/get_price_range_weight_tariffs_ajax.php",
+      dataType: "json",
+      success: function (resp) {
+        Swal.close();
+        if (resp.success) {
+          $("#table-totals").removeClass("d-none");
+          $("#create_invoice").attr("disabled", false);
+          var flatTotal = parseFloat(resp.total_tarifa) || parseFloat(resp.data && resp.data.price) || 0;
+          $("#price_lb").val(flatTotal.toFixed(2));
+          $("#tariff_mode").prop("checked", false);
+          calculateFinalTotal();
+        } else {
+          Swal.fire({
+            title: "Error!",
+            text: resp.error || "No se pudo calcular la tarifa.",
+            icon: "error",
+            confirmButtonText: "Ok",
+          });
+        }
+      },
+      error: function (xhr) {
+        var msg = "Error al calcular tarifa.";
+        try {
+          var json = JSON.parse(xhr.responseText);
+          if (json.error) msg = json.error;
+        } catch (e) {}
+        Swal.fire({ title: "Error", text: msg, icon: "error", confirmButtonText: "Ok" });
+      },
+    });
+  });
 });
 
 function cdp_load_countries(modal) {
@@ -789,7 +876,7 @@ $("#invoice_form").on("submit", function (event) {
 
   $.ajax({
     type: "POST",
-    url: "ajax/pickup/add_pickup_ajax.php",
+    url: (document.getElementById("order_no") === null ? "ajax/pickup/add_pickup_client_ajax.php" : (window._pickupSaveUrl || "ajax/pickup/add_pickup_ajax.php")),
     data: data,
     contentType: false,
     dataType: "json",
@@ -812,6 +899,16 @@ $("#invoice_form").on("submit", function (event) {
       } else {
         cdp_showError(data.errors);
       }
+    },
+    error: function (xhr) {
+      $("#create_invoice").attr("disabled", false);
+      var msg = "Error al guardar el envío.";
+      try {
+        var json = JSON.parse(xhr.responseText);
+        if (json.error) msg = json.error;
+        else if (json.message) msg = json.message;
+      } catch (e) {}
+      Swal.fire({ title: "Error", text: msg, icon: "error", confirmButtonText: "Ok" });
     },
   });
 
@@ -1139,8 +1236,6 @@ function cdp_formatAdressSelection(repo) {
   return repo.text;
 }
 
-var selectedRecipientType = 'recipient';
-
 function cdp_select2_init_recipient() {
   var sender_id = $("#sender_id").val();
 
@@ -1174,9 +1269,6 @@ function cdp_select2_init_recipient() {
       $("#recipient_address_id").val(null);
       // $("#table-totals").addClass("d-none");
 
-      var selectedData = $("#recipient_id").select2("data");
-      selectedRecipientType = selectedData && selectedData[0] && selectedData[0].type ? selectedData[0].type : "recipient";
-
       if (recipient_id != null) {
         $("#recipient_address_id").attr("disabled", false);
         $("#add_address_recipient").attr("disabled", false);
@@ -1191,7 +1283,7 @@ function cdp_select2_init_recipient_address() {
   $("#recipient_address_id")
     .select2({
       ajax: {
-        url: "ajax/select2_recipient_addresses.php?id=" + recipient_id + "&type=" + selectedRecipientType,
+        url: "ajax/select2_recipient_addresses.php?id=" + recipient_id,
         dataType: "json",
         delay: 250,
         data: function (params) {
@@ -1911,53 +2003,53 @@ var errorMap = [
 ];
 
 var input = document.querySelector("#phone_custom");
-var iti = window.intlTelInput(input, {
-  geoIpLookup: function (callback) {
-    $.get("http://ipinfo.io", function () {}, "jsonp").always(function (resp) {
-      var countryCode = resp && resp.country ? resp.country : "";
-      callback(countryCode);
-    });
-  },
-  initialCountry: "auto",
-  nationalMode: true,
-
-  separateDialCode: true,
-  utilsScript: "assets/template/assets/libs/intlTelInput/utils.js",
-});
+var iti = null;
+if (input) {
+  iti = window.intlTelInput(input, {
+    geoIpLookup: function (callback) {
+      $.get("http://ipinfo.io", function () {}, "jsonp").always(function (resp) {
+        var countryCode = resp && resp.country ? resp.country : "";
+        callback(countryCode);
+      });
+    },
+    initialCountry: "auto",
+    nationalMode: true,
+    separateDialCode: true,
+    utilsScript: "assets/template/assets/libs/intlTelInput/utils.js",
+  });
+}
 
 var reset = function () {
-  input.classList.remove("error");
-  input_recipient.classList.remove("error");
-
-  errorMsg.innerHTML = "";
-  errorMsg.classList.add("hide");
-  validMsg.classList.add("hide");
-
-  errorMsgRecipient.innerHTML = "";
-  errorMsgRecipient.classList.add("hide");
-  validMsgRecipient.classList.add("hide");
+  if (input) input.classList.remove("error");
+  if (typeof input_recipient !== "undefined" && input_recipient) input_recipient.classList.remove("error");
+  if (errorMsg) { errorMsg.innerHTML = ""; errorMsg.classList.add("hide"); }
+  if (validMsg) validMsg.classList.add("hide");
+  if (errorMsgRecipient) { errorMsgRecipient.innerHTML = ""; errorMsgRecipient.classList.add("hide"); }
+  if (validMsgRecipient) validMsgRecipient.classList.add("hide");
 };
 
-// on blur: validate
-input.addEventListener("blur", function () {
-  reset();
-  if (input.value.trim()) {
-    if (iti.isValidNumber()) {
-      $("#phone").val(iti.getNumber());
-
-      validMsg.classList.remove("hide");
-    } else {
-      input.classList.add("error");
-      var errorCode = iti.getValidationError();
-      errorMsg.innerHTML = errorMap[errorCode];
-      errorMsg.classList.remove("hide");
+if (input) {
+  // on blur: validate
+  input.addEventListener("blur", function () {
+    reset();
+    if (input.value.trim()) {
+      if (iti && iti.isValidNumber()) {
+        $("#phone").val(iti.getNumber());
+        if (validMsg) validMsg.classList.remove("hide");
+      } else {
+        input.classList.add("error");
+        if (iti && errorMsg) {
+          var errorCode = iti.getValidationError();
+          errorMsg.innerHTML = errorMap[errorCode];
+          errorMsg.classList.remove("hide");
+        }
+      }
     }
-  }
-});
+  });
 
-// on keyup / change flag: reset
-input.addEventListener("change", reset);
-input.addEventListener("keyup", reset);
+  input.addEventListener("change", reset);
+  input.addEventListener("keyup", reset);
+}
 
 function cdp_validateTrackNumber(value, trackDigits) {
   cdp_convertStrPad(value, trackDigits);
@@ -1983,49 +2075,51 @@ function cdp_convertStrPad(value, dbDigits) {
   $("#order_no").val(pad);
 }
 
-var input = document.getElementById("order_no");
-
-input.addEventListener("keypress", function (event) {
-  if (event.charCode < 48 || event.charCode > 57) {
-    event.preventDefault();
-  }
-});
+var inputOrderNo = document.getElementById("order_no");
+if (inputOrderNo) {
+  inputOrderNo.addEventListener("keypress", function (event) {
+    if (event.charCode < 48 || event.charCode > 57) {
+      event.preventDefault();
+    }
+  });
+}
 
 var input_recipient = document.querySelector("#phone_custom_recipient");
-var iti_recipient = window.intlTelInput(input_recipient, {
-  geoIpLookup: function (callback) {
-    $.get("http://ipinfo.io", function () {}, "jsonp").always(function (resp) {
-      var countryCode = resp && resp.country ? resp.country : "";
-      callback(countryCode);
-    });
-  },
-  initialCountry: "auto",
-  nationalMode: true,
+if (input_recipient) {
+  var iti_recipient = window.intlTelInput(input_recipient, {
+    geoIpLookup: function (callback) {
+      $.get("http://ipinfo.io", function () {}, "jsonp").always(function (resp) {
+        var countryCode = resp && resp.country ? resp.country : "";
+        callback(countryCode);
+      });
+    },
+    initialCountry: "auto",
+    nationalMode: true,
+    separateDialCode: true,
+    utilsScript: "assets/template/assets/libs/intlTelInput/utils.js",
+  });
 
-  separateDialCode: true,
-  utilsScript: "assets/template/assets/libs/intlTelInput/utils.js",
-});
-
-// on blur: validate
-input_recipient.addEventListener("blur", function () {
-  reset();
-  if (input_recipient.value.trim()) {
-    if (iti_recipient.isValidNumber()) {
-      $("#phone_recipient").val(iti_recipient.getNumber());
-
-      validMsgRecipient.classList.remove("hide");
-    } else {
-      input_recipient.classList.add("error");
-      var errorCode = iti_recipient.getValidationError();
-      errorMsgRecipient.innerHTML = errorMap[errorCode];
-      errorMsgRecipient.classList.remove("hide");
+  // on blur: validate
+  input_recipient.addEventListener("blur", function () {
+    if (typeof reset === "function") reset();
+    if (input_recipient.value.trim()) {
+      if (iti_recipient.isValidNumber()) {
+        $("#phone_recipient").val(iti_recipient.getNumber());
+        if (validMsgRecipient) validMsgRecipient.classList.remove("hide");
+      } else {
+        input_recipient.classList.add("error");
+        var errorCode = iti_recipient.getValidationError();
+        if (errorMsgRecipient) {
+          errorMsgRecipient.innerHTML = errorMap[errorCode];
+          errorMsgRecipient.classList.remove("hide");
+        }
+      }
     }
-  }
-});
+  });
 
-// on keyup / change flag: reset
-input_recipient.addEventListener("change", reset);
-input_recipient.addEventListener("keyup", reset);
+  input_recipient.addEventListener("change", function () { if (typeof reset === "function") reset(); });
+  input_recipient.addEventListener("keyup", function () { if (typeof reset === "function") reset(); });
+}
 
 function cdp_showError(errors) {
   var html_code = "";
@@ -2063,67 +2157,3 @@ function cdp_showSuccess(messages, shipment_id) {
   });
 }
 
-$("#calculate_invoice").on("click", function (event) {
-  var recipient_id = $("#recipient_id").val();
-  var recipient_address_id = $("#recipient_address_id").val();
-  var sender_id = $("#sender_id").val();
-  var sender_address_id = $("#sender_address_id").val();
-  var packages = JSON.stringify(packagesItems);
-
-  var tariffs_value = $("#tariffs_value").val();
-  var declared_value_tax = $("#declared_value_tax").val();
-  var insurance_value = $("#insurance_value").val();
-  var tax_value = $("#tax_value").val();
-  var discount_value = $("#discount_value").val();
-  var reexpedicion_value = $("#reexpedicion_value").val();
-  var price_lb = $("#price_lb").val();
-  var insured_value = $("#insured_value").val();
-
-  reexpedicion_value = parseFloat(reexpedicion_value);
-  insured_value = parseFloat(insured_value);
-  price_lb = parseFloat(price_lb);
-
-  var data = {
-    packages: packages,
-    sender_id: sender_id,
-    sender_address: sender_address_id,
-    recipient_address: recipient_address_id,
-    recipient_id: recipient_id,
-    tariffs_value: tariffs_value,
-    declared_value_tax: declared_value_tax,
-    insurance_value: insurance_value,
-    tax_value: tax_value,
-    discount_value: discount_value,
-    reexpedicion_value: reexpedicion_value,
-    price_lb: price_lb,
-    insured_value: insured_value,
-  };
-
-  $.ajax({
-    type: "POST",
-    data: data,
-    url: "ajax/courier/get_price_range_weight_tariffs_ajax.php",
-    dataType: "json",
-    beforeSend: function (objeto) {
-      $(".resultados_ajax").html("Mensaje: loading...");
-    },
-    success: function (data) {
-      if (data.success) {
-        $("#table-totals").removeClass("d-none");
-        $("#create_invoice").attr("disabled", false);
-        $("#price_lb").val(data.data.price);
-        calculateFinalTotal();
-      } else {
-        // $("#table-totals").addClass("d-none");
-        $("#create_invoice").attr("disabled", true);
-        Swal.fire({
-          title: "Error!",
-          text: data.error,
-          icon: "error",
-          confirmButtonText: "Ok",
-        });
-      }
-    },
-  });
-  event.preventDefault();
-});

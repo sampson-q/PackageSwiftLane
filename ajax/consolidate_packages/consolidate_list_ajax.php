@@ -32,7 +32,7 @@ $user = new User;
 $core = new Core;
 $userData = $user->cdp_getUserData();
 
-$search = cdp_sanitize($_REQUEST['search']);
+$search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : '';
 $status_courier = intval($_REQUEST['status_courier']);
 
 $sWhere = "";
@@ -50,9 +50,9 @@ if ($userData->userlevel == 3) {
 } else {
 	$sWhere .= "";
 }
-if ($search != null) {
+if ($search != '') {
 
-	$sWhere .= " and  CONCAT(a.c_prefix,a.c_no) LIKE '%" . $search . "%'";
+	$sWhere .= " and  CONCAT(a.c_prefix,a.c_no) LIKE :search";
 }
 if ($status_courier > 0) {
 
@@ -75,12 +75,14 @@ $sql = "SELECT   a.status_invoice, a.total_order, a.consolidate_id , a.c_prefix,
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);
@@ -318,7 +320,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'consolidate_list_packages');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 
 		<script src="dataJs/consolidate_package_ajax.js"></script>

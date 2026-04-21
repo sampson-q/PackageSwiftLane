@@ -23,6 +23,13 @@
 
 $userData = $user->cdp_getUserData();
 
+// Force OPcache to reload all pickup-related endpoints on every page load
+if (function_exists('opcache_invalidate')) {
+    opcache_invalidate(__DIR__ . '/../../ajax/pickup/pickup_client_save.php', true);
+    opcache_invalidate(__DIR__ . '/../../ajax/pickup/add_pickup_client_ajax.php', true);
+    opcache_invalidate(__DIR__ . '/../../ajax/courier/get_price_range_weight_tariffs_ajax.php', true);
+    opcache_invalidate(__DIR__ . '/../../ajax/courier/get_tariffs_client_ajax.php', true);
+}
 ?>
 
 <!DOCTYPE html>
@@ -253,7 +260,7 @@ $userData = $user->cdp_getUserData();
                             </div>
                         </div>
                     </div>
-                    <!-- Row: Agencia/Sucursal y Oficina origen (parametrizable) -->
+                    <!-- Row: Agencia/Sucursal, Oficina, Categoría, Tipo de paquete -->
                     <?php
                     $agency_default_id = 0;
                     if (isset($userData->userlevel) && (int)$userData->userlevel === 6) {
@@ -265,10 +272,12 @@ $userData = $user->cdp_getUserData();
                         <div class="col-lg-6">
                             <div class="card">
                                 <div class="card-body">
+                                    <h4 class="card-title"><i class="mdi mdi-store" style="color:#20c997"></i> <?php echo isset($lang['left201']) ? $lang['left201'] : 'Agencia / Sucursal'; ?></h4>
+                                    <hr>
                                     <div class="form-row">
                                         <div class="form-group col-md-6">
                                             <label for="agency" class="control-label col-form-label"><?php echo isset($lang['left201']) ? $lang['left201'] : 'Agencia / Sucursal'; ?></label>
-                                            <div class="input-group mb-3">
+                                            <div class="input-group">
                                                 <?php if ($agency_default_id > 0) { ?><input type="hidden" name="agency" id="agency" value="<?php echo $agency_default_id; ?>"><?php } ?>
                                                 <select class="custom-select col-12" id="<?php echo ($agency_default_id > 0) ? 'agency_select' : 'agency'; ?>" name="<?php echo ($agency_default_id > 0) ? '' : 'agency'; ?>" required <?php echo ($agency_default_id > 0) ? 'disabled style="pointer-events:none;background:#e9ecef;"' : ''; ?>>
                                                     <?php foreach ($agencyrow as $row) : ?>
@@ -279,7 +288,7 @@ $userData = $user->cdp_getUserData();
                                         </div>
                                         <div class="form-group col-md-6">
                                             <label for="origin_off" class="control-label col-form-label"><?php echo isset($lang['add-title14']) ? $lang['add-title14'] : 'Oficina origen'; ?></label>
-                                            <div class="input-group mb-3">
+                                            <div class="input-group">
                                                 <select class="custom-select col-12" id="origin_off" name="origin_off">
                                                     <?php foreach ($office as $row) : ?>
                                                         <option value="<?php echo (int)$row->id; ?>"><?php echo htmlspecialchars($row->name_off ?? ''); ?></option>
@@ -291,98 +300,58 @@ $userData = $user->cdp_getUserData();
                                 </div>
                             </div>
                         </div>
+
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h4 class="card-title"><i class="mdi mdi-book-multiple" style="color:#20c997"></i> <?php echo $lang['add-title13'] ?></h4>
+                                    <hr>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-6">
+                                            <label for="order_item_category" class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
+                                            <select class="custom-select col-12" id="order_item_category" name="order_item_category" required>
+                                                <?php foreach ($categories as $row) : ?>
+                                                    <option value="<?php echo $row->id; ?>"><?php echo $row->name_item; ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <label for="order_package" class="control-label col-form-label"><?php echo $lang['add-title17'] ?></label>
+                                            <select class="custom-select col-12" id="order_package" name="order_package">
+                                                <?php foreach ($packrow as $row) : ?>
+                                                    <option value="<?php echo $row->id; ?>"><?php echo $row->name_pack; ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <input type='hidden' name="order_date" id="order_date" value="<?php echo date('Y-m-d'); ?>" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <!-- Row -->
 
-
+                    <!-- Row: Archivos adjuntos -->
                     <div class="row">
                         <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-book-multiple" style="color:#20c997"></i> <?php echo $lang['add-title13'] ?></h4>
-                                    <br>
-                                    <div class="row">
-
-                                        <div class="form-group col-md-6">
-                                            <label for="inputlname" class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
-                                            <div class="input-group">
-                                                <select class="custom-select col-12" id="order_item_category" name="order_item_category" required>
-                                                    <?php foreach ($categories as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_item; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-
-                                        </div>
-
-                                        <div class="form-group col-md-6">
-                                            <label for="inputlname" class="control-label col-form-label"><?php echo $lang['add-title17'] ?></label>
-                                            <div class="input-group mb-3">
-                                                <select class="custom-select col-12" id="order_package" name="order_package">
-                                                    <?php foreach ($packrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_pack; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-
-
-                                        <div class="col-md-4" style="display: none;">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title1555'] ?></i></label>
-                                            <div class="input-group">
-                                                <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
-                                                    <div class="input-group-text"><i style="color:#ff0000" class="fa fa-calendar"></i></div>
-                                                </div>
-                                                <input type='text' class="form-control" name="order_date" id="order_date" placeholder="--<?php echo $lang['left206'] ?>--" data-toggle="tooltip" data-placement="bottom" title="<?php echo $lang['add-title1555'] ?>" readonly value="<?php echo date('Y-m-d'); ?>" />
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div>
-                                                <label class="control-label" id="selectItem"> <?php echo $lang['leftorder15']; ?></label>
-                                            </div>
-
-                                            <input class="custom-file-input" id="filesMultiple" name="filesMultiple[]" multiple="multiple" type="file" style="display: none;" onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
-
-
-                                            <button type="button" id="openMultiFile" class="btn btn-default  pull-left  mb-4"> <i class='fa fa-paperclip' id="openMultiFile" style="font-size:18px; cursor:pointer;"></i> <?php echo $lang['leftorder16']; ?> </button>
-
-
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-12 row" id="image_preview"></div>
-
-                                    <div class="col-md-4 mt-4">
-                                        <div id="clean_files" class="hide">
-                                            <button type="button" id="clean_file_button" class="btn btn-danger ml-3">
-                                                <i class='fa fa-trash' style="font-size:18px; cursor:pointer;"></i>
-                                                <?php echo $lang['leftorder17']; ?>
+                                    <div class="d-flex align-items-center justify-content-between flex-wrap">
+                                        <label class="control-label mb-0" id="selectItem"><?php echo $lang['leftorder15']; ?></label>
+                                        <div class="d-flex align-items-center">
+                                            <input class="custom-file-input" id="filesMultiple" name="filesMultiple[]" multiple="multiple" type="file" style="display:none;" onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
+                                            <button type="button" id="openMultiFile" class="btn btn-default btn-sm mr-2">
+                                                <i class="fa fa-paperclip"></i> <?php echo $lang['leftorder16']; ?>
                                             </button>
-
+                                            <div id="clean_files" class="hide">
+                                                <button type="button" id="clean_file_button" class="btn btn-danger btn-sm">
+                                                    <i class="fa fa-trash"></i> <?php echo $lang['leftorder17']; ?>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <div class="row">
-                                        <div class="resultados_file col-md-4 pull-right mt-4">
-
-
-                                        </div>
-                                    </div>
-
-
-                                    <div class="row">
-
-                                        <div class="resultados_file col-md-4 pull-right mt-4">
-
-                                        </div>
-                                    </div>
-
+                                    <div class="row mt-2" id="image_preview"></div>
+                                    <div class="resultados_file mt-2"></div>
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -464,9 +433,9 @@ $userData = $user->cdp_getUserData();
                                                 <div class="row row-shadow input-container"> 
                                                   <div class="col-sm-12 col-md-6 col-lg-2">
                                                     <div class="form-group">
-                                                        <label for="emailAddress1"><?php echo $lang['left905'] ?> &nbsp; <?php echo $core->weight_p; ?> </label>
+                                                        <label for="price_lb_label"><?php echo $lang['left905'] ?> &nbsp; <?php echo $core->weight_p; ?> </label>
                                                         <div class="input-group">
-                                                          <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event, this)" class="form-control form-control-sm" value="<?php echo $core->value_weight; ?>" name="price_lb" id="price_lb" style="border: 1px solid red;" readonly>
+                                                          <input type="text" class="form-control form-control-sm" id="price_lb_label" value="<?php echo $core->value_weight; ?>" style="border: 1px solid red;" readonly>
                                                         </div>
                                                      </div>
                                                   </div>
@@ -658,7 +627,8 @@ $userData = $user->cdp_getUserData();
                                 </div>
                             </div>
 
-                            <input type="hidden" value="<?php echo $core->value_weight; ?>" name="price_lb" id="price_lb">
+                            <input type="hidden" value="<?php echo (float)$core->value_weight; ?>" name="price_lb" id="price_lb">
+                            <input type="hidden" name="core_value_weight" id="core_value_weight" value="<?php echo (float)$core->value_weight; ?>" />
                             <input type="hidden" value="0" name="discount_value" id="discount_value">
                             <input type="hidden" value="100" name="insured_value" id="insured_value">
                             <input type="hidden" value="<?php echo $core->insurance; ?>" name="insurance_value" id="insurance_value">
@@ -696,6 +666,16 @@ $userData = $user->cdp_getUserData();
     <!-- ============================================================== -->
 
     <?php include('helpers/languages/translate_to_js.php'); ?>
+    <script>
+    // Force any cached JS still targeting the old endpoint to use the new one.
+    // $.ajaxPrefilter runs before the XHR is opened — guaranteed redirect.
+    window._pickupSaveUrl = "ajax/pickup/pickup_client_save.php";
+    $.ajaxPrefilter(function(options) {
+        if (options.url && options.url.indexOf('add_pickup_client_ajax.php') !== -1) {
+            options.url = window._pickupSaveUrl;
+        }
+    });
+    </script>
 
     <script src="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
@@ -704,7 +684,7 @@ $userData = $user->cdp_getUserData();
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
     <script src="assets/template/dist/js/app-style-switcher.js"></script>
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
-    <script src="dataJs/pickup_add.js"></script>
+    <script src="dataJs/pickup_add.js?v=859"></script>
 
 </body>
 

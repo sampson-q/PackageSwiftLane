@@ -78,7 +78,7 @@ $sql = "SELECT a.origin_off, a.agency, a.total_weight, a.total_tax_discount, a.s
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 

@@ -5,6 +5,7 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_consolidate_list');
+require_csrf();
 
 
 $core = new Core;

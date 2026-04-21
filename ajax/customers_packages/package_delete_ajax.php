@@ -26,6 +26,7 @@ require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_client_list');
+require_csrf();
 
 $db = new Conexion;
 $user = new User;
@@ -43,7 +44,10 @@ if (empty($_POST['id_delete']))
 
 if (empty($errors)) {
 
-    $db->cdp_query("SELECT * FROM cdb_customers_packages where order_id=" . $_POST['id_delete'] . "");
+    $delete_id = (int) $_POST['id_delete'];
+    $db->cdp_query("SELECT * FROM cdb_customers_packages WHERE order_id = :oid");
+    $db->bind(':oid', $delete_id);
+    $db->cdp_execute();
     $trackings_order = $db->cdp_registro();
 
 
@@ -52,7 +56,7 @@ if (empty($errors)) {
 
     $data = array(
 
-        'id' => trim($_POST['id_delete'])
+        'id' => $delete_id
     );
 
 

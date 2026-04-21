@@ -19,6 +19,7 @@
 // *                                                                       *
 // *************************************************************************
 
+ob_start();
 ini_set('display_errors', 0);
 
 require_once("../../loader.php");
@@ -26,6 +27,7 @@ require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
+require_csrf();
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
 require_once("../notify_whatsapp/api_whatsapp_service.php");
@@ -129,27 +131,6 @@ if (empty($errors)) {
     $order_incomplete = 1;
     $tariff_mode      = isset($_POST['tariff_mode']) ? 1 : 0; // 1 = manual, 0 = motor tarifas
 
-    if ($tariff_mode == 0 && isset($_POST['packages'])) {
-        $packages_pre = json_decode($_POST['packages']);
-        if (is_array($packages_pre) && count($packages_pre) > 0) {
-            $distance_miles_pre = (float)($_POST['distance_miles'] ?? 0);
-            $order_svc_pre      = (int)($_POST['order_service_options'] ?? 0);
-            $tariff_pre = cdp_calculateTariffServerSide(
-                intval($_POST['sender_id']),
-                intval($_POST['sender_address_id']),
-                intval($_POST['recipient_id']),
-                intval($_POST['recipient_address_id']),
-                $order_svc_pre,
-                $packages_pre,
-                $distance_miles_pre,
-                (float)$meter
-            );
-            if ($tariff_pre === null) {
-                $errors['tariff_not_found'] = isset($lang['tariff_no_configured']) ? $lang['tariff_no_configured'] : 'No hay tarifa configurada para la ruta/modo/peso indicados.';
-            }
-        }
-    }
-
     if (empty($errors)) {
 
     $agencyId = (int)$_POST["agency"];
@@ -200,8 +181,6 @@ if (empty($errors)) {
         'status_invoice'       => $status_invoice,
         'volumetric_percentage'=> $meter,
         'manual_tariff'        => $tariff_mode,
-        'tracking_number' => cdp_sanitize(intval($_POST['tracking_number'])),
-        'estimated_eta' => cdp_sanitize($_POST['estimated_eta'])
     );
 
     $shipment_id = cdp_insertCourierShipment($dataShipment);
@@ -646,14 +625,15 @@ if (empty($errors)) {
             error_log('Error generating or sending SMS for receiver: ' . $e->getMessage());
         }
 
-        cdp_insertPackageTracking($shipment_id, $_SESSION['userid'], cdp_sanitize($_POST['tracking_number']), cdp_sanitize($_POST['estimated_eta']));
-
         $messages[] = $lang['message_ajax_success_add_shipment'];
     } else {
         $errors['critical_error'] = $lang['message_ajax_error2'];
     }
     }
 }
+
+ob_end_clean();
+header('Content-Type: application/json; charset=UTF-8');
 
 if (!empty($errors)) {
     echo json_encode([

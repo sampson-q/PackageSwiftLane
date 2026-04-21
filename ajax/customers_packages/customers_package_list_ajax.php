@@ -34,7 +34,7 @@ $core = new Core;
 $userData = $user->cdp_getUserData();
 $permissions = $user->cdp_getUserPermissions();
 
-$search = cdp_sanitize($_REQUEST['search']);
+$search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : '';
 $status_courier = intval($_REQUEST['status_courier']);
 
 $sWhere = "";
@@ -52,9 +52,9 @@ if ($userData->userlevel == 3) {
 } else {
 	$sWhere .= "";
 }
-if ($search != null) {
+if ($search != '') {
 
-	$sWhere .= " and  CONCAT(a.order_prefix,a.order_no) LIKE '%" . $search . "%'";
+	$sWhere .= " and  CONCAT(a.order_prefix,a.order_no) LIKE :search";
 }
 if ($status_courier > 0) {
 
@@ -84,12 +84,14 @@ $sql = "SELECT a.is_prealert, a.is_consolidate, a.tracking_purchase, a.provider_
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);
@@ -219,15 +221,15 @@ if ($numrows > 0) { ?>
 							if ($userData->userlevel != 1) { ?>
 
 								<td class="text-center">
-									<?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?>
+									<?php echo htmlspecialchars(($sender_data->fname ?? '') . ' ' . ($sender_data->lname ?? '')); ?>
 								</td>
 
 							<?php } ?>
 
 
 
-							<td class="text-center"><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
-							<td class="text-center"><?php echo $courier_com->name_com; ?></td>
+							<td class="text-center"><?php echo htmlspecialchars(($address_order->sender_country ?? '') . '-' . ($address_order->sender_city ?? '')); ?></td>
+							<td class="text-center"><?php echo htmlspecialchars($courier_com->name_com ?? '-'); ?></td>
 
 							<td class="text-center">
 								<?php echo $row->provider_purchase; ?>
@@ -407,7 +409,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'customers_package_list');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 
 		<script src="dataJs/customers_packages_ajax.js"></script>

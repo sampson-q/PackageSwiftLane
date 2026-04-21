@@ -25,6 +25,7 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_receivable_accounts');
+require_csrf();
 
 
 $db = new Conexion;
@@ -145,4 +146,4 @@ $charges = $db->cdp_registro();
 
 		<textarea class="form-control" id="notes" name="notes" rows="2" value="<?php echo $charges->note; ?>"><?php echo $charges->note; ?></textarea>
 	</div>
-</div>
+</div></div>

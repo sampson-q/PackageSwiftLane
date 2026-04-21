@@ -1,88 +1,61 @@
 "use strict";
 
-
-
-$(function () {
-  cdp_load(1);
-
-});
-
-
 //Grafico de ventas de paquetes MORRIS LINE CHART AJAX
 
-$(document).ready(() => {
-  const loadGraphicsmorris = async () => {
-    try {
-      const response = await $.ajax({
+$(document).ready(function () {
+
+    $.ajax({
         url: './ajax/dashboard/packages_registered/load_graphics_packages_registered_ajax.php',
         type: 'POST',
-        dataType: 'json'
-      });
+        dataType: 'json',
+        success: function (response) {
 
-      // Convertimos los datos recibidos en el formato necesario para Morris.js
-      const data = [];
-      const months = [
-            translate_graphic_0,
-            translate_graphic_1,
-            translate_graphic_2,
-            translate_graphic_3,
-            translate_graphic_4,
-            translate_graphic_5,
-            translate_graphic_6,
-            translate_graphic_7,
-            translate_graphic_8,
-            translate_graphic_9,
-            translate_graphic_10,
-            translate_graphic_11
-        ];
+            if (!response || !Array.isArray(response) || response.length === 0) {
+                return;
+            }
 
+            var months = [
+                translate_graphic_0,
+                translate_graphic_1,
+                translate_graphic_2,
+                translate_graphic_3,
+                translate_graphic_4,
+                translate_graphic_5,
+                translate_graphic_6,
+                translate_graphic_7,
+                translate_graphic_8,
+                translate_graphic_9,
+                translate_graphic_10,
+                translate_graphic_11
+            ];
 
-      for (let i = 0; i < response.length; i++) {
-        data.push({
-          month: months[i], // Usamos los nombres de los meses en lugar de "Month 1", "Month 2", etc.
-          sales: parseFloat(response[i] || 0) // Convertimos el dato de ventas a número
-        });
-      }
+            var data = [];
+            for (var i = 0; i < response.length; i++) {
+                data.push({
+                    month: months[i],
+                    sales: parseFloat(response[i]) || 0
+                });
+            }
 
-      // Creamos el gráfico de líneas utilizando Morris.js
-      const salesChart = new Morris.Line({
-        element: 'morris-sales-chart-packages',
-        data: data,
-        xkey: 'month',
-        ykeys: ['sales'],
-        labels: [translate_graphic_13],
-        gridLineColor: '#eef0f2',
-        lineColors: ['#2962FF'],
-        lineWidth: 1,
-        hideHover: 'auto',
-        xLabelAngle: 60, // Rotamos los nombres de los meses para evitar superposiciones
-        parseTime: false, // Desactivamos el análisis de tiempo para los nombres de los meses
-        gridTextSize: 12 // Tamaño del texto en el eje Y (afecta la altura de las líneas horizontales)
-      });
-    } catch (error) {
-      console.error('Error loading sales data:', error);
-    }
-  };
+            Morris.Line({
+                element: 'morris-sales-chart-packages',
+                data: data,
+                xkey: 'month',
+                ykeys: ['sales'],
+                labels: [translate_graphic_13],
+                gridLineColor: '#eef0f2',
+                lineColors: ['#2962FF'],
+                lineWidth: 2,
+                hideHover: 'auto',
+                xLabelAngle: 60,
+                parseTime: false,
+                gridTextSize: 12,
+                ymin: 0
+            });
+        },
+        error: function (xhr, status, err) {
+            console.error('Error loading chart data:', status, err);
+        }
+    });
 
-  loadGraphicsmorris();
-  cdp_load(1);
 });
-
- 
-//Cargar datos AJAX
-function cdp_load(page) {
-
-  var parametros = { "page": page };
-  $("#loader").fadeIn('slow');
-  $.ajax({
-    url: './ajax/dashboard/packages_registered/load_packages_registered_ajax.php',
-    data: parametros,
-    beforeSend: function (objeto) {
-    },
-    success: function (data) {
-      $(".outer_divz").html(data).fadeIn('slow');
-    }
-  })
-}
-
-

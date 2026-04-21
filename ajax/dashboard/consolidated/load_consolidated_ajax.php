@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../../helpers/querys.php');
 require_login();
 require_permission('view_dashboard');
+require_csrf();
 
 $db = new Conexion;
 $user = new User;
@@ -76,7 +77,7 @@ $sql = "SELECT  a.total_order, a.consolidate_id , a.c_prefix, a.c_no, a.c_date, 
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -193,7 +194,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'load_consolidated');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 
 

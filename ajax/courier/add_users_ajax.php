@@ -19,12 +19,14 @@
 // *                                                                       *
 // *************************************************************************
 
-  
+ ob_start();
+ini_set('display_errors', 0);
 
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
+require_csrf();
 
 require_once("../../helpers/querys.php");
 $user = new User;
@@ -65,6 +67,15 @@ if (isset($_POST['register_customer_to_user']) && $_POST['register_customer_to_u
     }
 }
 
+// Gate: stop here if validation failed
+if (!empty($errors)) {
+    $response['status'] = 'error';
+    $response['message'] = implode(' | ', $errors);
+    ob_end_clean();
+    header('Content-type: application/json; charset=UTF-8');
+    echo json_encode($response);
+    exit;
+}
 
 // Verificar si el correo electrónico ya está en uso y si es válido
 if ($user->cdp_emailExists($_POST['email'])) {
@@ -82,11 +93,11 @@ if (!isset($response['status'])) {
     $data = array(
         'lname' => cdp_sanitize($_POST['lname']),
         'fname' => cdp_sanitize($_POST['fname']),
-        'phone' => cdp_sanitize($_POST['phone']),
+        'phone' => cdp_sanitize($_POST['phone'] ?? ''),
         'email' => cdp_sanitize($_POST['email']),
         'userlevel' => '1',
         'active' => '1',
-        'locker' => cdp_sanitize($_POST['locker']),
+        'locker' => cdp_sanitize($_POST['locker'] ?? ''),
         'username' => '',
         'password' => '',
         'created' => date("Y-m-d H:i:s"),
@@ -194,57 +205,6 @@ if (!isset($response['status'])) {
 }
 
 // Devuelve la respuesta como JSON
+ob_end_clean();
 header('Content-type: application/json; charset=UTF-8');
 echo json_encode($response);
-
-
-if (!empty($errors)) {
-?>
-    <div class="alert alert-danger" id="success-alert">
-        <p><span class="icon-minus-sign"></span><i class="close icon-remove-circle"></i>
-            <?php echo $lang['message_ajax_error2']; ?>
-        <ul class="error">
-            <?php
-            foreach ($errors as $error) { ?>
-                <li>
-                    <i class="icon-double-angle-right"></i>
-                    <?php
-                    echo $error;
-
-                    ?>
-
-                </li>
-            <?php
-
-            }
-            ?>
-        </ul>
-        </p>
-    </div>
-
-
-
-<?php
-}
-
-if (isset($messages)) {
-
-?>
-    <div class="alert alert-info" id="success-alert">
-        <p><span class="icon-info-sign"></span><i class="close icon-remove-circle"></i>
-            <?php
-            foreach ($messages as $message) {
-                echo $message;
-            }
-
-            ?>
-        </p>
-
-        <script>
-            $("#add_user_from_modal_shipments")[0].reset();
-        </script>
-    </div>
-
-<?php
-}
-?>

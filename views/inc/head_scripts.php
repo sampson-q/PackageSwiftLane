@@ -1,3 +1,4 @@
+<?php if (function_exists('csrf_token')): ?><meta name="csrf-token" content="<?php echo csrf_token(); ?>"><?php endif; ?>
 <link href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet">
 <!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -26,8 +27,6 @@
 <link href="assets/customClassPagination.css" rel="stylesheet">
 <link href="assets/css/scroll-menu.css" rel="stylesheet"> 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
-<link rel="stylesheet" type="text/css" href="assets/template/assets/libs/select2/dist/css/select2.min.css">
-<link rel="stylesheet" href="assets/template/assets/libs/intlTelInput/intlTelInput.css">
 
 
 <?php

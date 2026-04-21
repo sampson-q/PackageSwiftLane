@@ -19,6 +19,7 @@
 // *                                                                       *
 // *************************************************************************
 
+ob_start();
 ini_set('display_errors', 0);
 
 require_once("../../loader.php");
@@ -26,6 +27,7 @@ require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
+require_csrf();
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
 require_once("../notify_sms/api_sms_service.php");
@@ -429,6 +431,9 @@ if (empty($errors)) {
 // =======================
 // RESPUESTA JSON
 // =======================
+ob_end_clean();
+header('Content-Type: application/json; charset=UTF-8');
+
 if (!empty($errors)) {
     echo json_encode(array(
         'success' => false,

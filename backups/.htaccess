@@ -1,0 +1,4 @@
+# SEC-FIX M-5: Denegar acceso directo al directorio de backups desde el navegador.
+# Los backups solo se sirven a través de download.php (que exige autenticación de admin).
+Order Deny,Allow
+Deny from all

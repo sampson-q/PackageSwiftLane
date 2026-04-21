@@ -19,12 +19,14 @@
 // *                                                                       *
 // *************************************************************************
 
-
+ob_start();
+ini_set('display_errors', 0);
 
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
+require_csrf();
 
 require_once("../../helpers/querys.php");
 $user = new User;
@@ -55,6 +57,15 @@ if (empty($_POST['postal_modal_recipient_address']))
 
 $response = array();
 
+// Gate: stop here if validation failed
+if (!empty($errors)) {
+    $response['status'] = 'error';
+    $response['message'] = implode(' | ', $errors);
+    ob_end_clean();
+    header('Content-type: application/json; charset=UTF-8');
+    echo json_encode($response);
+    exit;
+}
 
 if (!isset($response['status'])) {
 
@@ -105,52 +116,6 @@ if (!isset($response['status'])) {
 }
 
 // Devuelve la respuesta como JSON
+ob_end_clean();
 header('Content-type: application/json; charset=UTF-8');
 echo json_encode($response);
-
-if (!empty($errors)) {
-?>
-    <div class="alert alert-danger" id="success-alert">
-        <p><span class="icon-minus-sign"></span><i class="close icon-remove-circle"></i>
-            <?php echo $lang['message_ajax_error2']; ?>
-        <ul class="error">
-            <?php
-            foreach ($errors as $error) { ?>
-                <li>
-                    <i class="icon-double-angle-right"></i>
-                    <?php
-                    echo $error;
-                    ?>
-
-                </li>
-            <?php
-
-            }
-            ?>
-        </ul>
-        </p>
-    </div>
-<?php
-}
-
-if (isset($messages)) {
-
-?>
-    <div class="alert alert-info" id="success-alert">
-        <p><span class="icon-info-sign"></span><i class="close icon-remove-circle"></i>
-            <?php
-            foreach ($messages as $message) {
-                echo $message;
-            }
-            ?>
-        </p>
-
-        <script>
-            $("#add_address_recipients_from_modal_shipments")[0].reset();
-        </script>
-    </div>
-
-
-<?php
-}
-?>

@@ -25,6 +25,7 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_general_reports');
+require_csrf();
 
 
 $db = new Conexion;
@@ -59,25 +60,26 @@ if (!empty($range)) {
 	$fecha_fin = date('Y-m-d', strtotime($fecha[1]));
 
 
-	$sWhere .= " and  a.order_date between '" . $fecha_inicio . "'  and '" . $fecha_fin . "'";
+	$sWhere .= " and  a.order_date between :fecha_inicio  and :fecha_fin";
 }
 
 $sql = "SELECT  a.total_declared_value, a.agency, a.origin_off, a.total_weight, a.sub_total, a.total_tax_discount, a.total_tax_insurance, a.total_tax_custom_tariffis, a.total_tax,  a.tracking_purchase, a.provider_purchase, a.price_purchase, a.status_invoice, a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM
 			 cdb_customers_packages as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 $sWhere
-			  
 
-			 order by order_id desc 
+			 order by order_id desc
 			 ";
 
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+if (!empty($range)) { $db->bind(':fecha_inicio', $fecha_inicio); $db->bind(':fecha_fin', $fecha_fin); }
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql);
+if (!empty($range)) { $db->bind(':fecha_inicio', $fecha_inicio); $db->bind(':fecha_fin', $fecha_fin); }
 $data = $db->cdp_registros();
 
 
@@ -133,11 +135,11 @@ if ($numrows > 0) { ?>
 
 
 
-						$db->cdp_query("SELECT * FROM cdb_offices where id= '" . $row->origin_off . "'");
+						$db->cdp_query("SELECT * FROM cdb_offices where id= '" . intval($row->origin_off) . "'");
 						$offices = $db->cdp_registro();
 
 
-						$db->cdp_query("SELECT * FROM cdb_branchoffices where id= '" . $row->agency . "'");
+						$db->cdp_query("SELECT * FROM cdb_branchoffices where id= '" . intval($row->agency) . "'");
 						$branchoffices = $db->cdp_registro();
 
 

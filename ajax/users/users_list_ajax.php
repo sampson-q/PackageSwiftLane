@@ -30,7 +30,7 @@ require_permission('view_user_list');
 $db = new Conexion;
 
 
-$search = cdp_sanitize($_REQUEST['search']);
+$search = isset($_REQUEST['search']) ? trim($_REQUEST['search']) : '';
 
 $tables = "cdb_users u LEFT JOIN cdb_user_roles r ON u.userlevel = r.role_id";
 $fields = "u.*, r.role_name, CONCAT(u.fname,' ', u.lname) as name,
@@ -39,9 +39,9 @@ $fields = "u.*, r.role_name, CONCAT(u.fname,' ', u.lname) as name,
 
 $sWhere = "(u.userlevel=2 or u.userlevel=9 or u.userlevel=3 or u.userlevel=4 or u.userlevel=6)";
 
-if ($search != null) {
+if ($search != '') {
 
-        $sWhere .= " and (u.username LIKE '%" . $search . "%' or u.fname LIKE '%" . $search . "%' or u.lname LIKE '%" . $search . "%' or u.locker LIKE '%" . $search . "%' or u.email LIKE '%" . $search . "%' or u.phone LIKE '%" . $search . "%')";
+        $sWhere .= " and (u.username LIKE :search or u.fname LIKE :search or u.lname LIKE :search or u.locker LIKE :search or u.email LIKE :search or u.phone LIKE :search)";
 }
 
 // // pagination variables
@@ -51,12 +51,14 @@ $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
 $sql = "SELECT $fields FROM  $tables where $sWhere";
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+if ($search != '') { $db->bind(':search', '%' . $search . '%'); }
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);
@@ -113,7 +115,7 @@ if ($numrows > 0) { ?>
 					<?php endif; ?>
 					<td align='center'>
 					<?php
-					$can_edit = ($user->userlevel == 9 || $user->userlevel == 2) && ($user->userlevel != 9 || $current_userlevel == 9);
+					$can_edit = in_array((int)$user->userlevel, [2, 4, 6, 9]) && ($user->userlevel != 9 || $current_userlevel == 9);
 					if ($can_edit && in_array((int)$user->userlevel, [2, 4, 6, 9])) : ?>
 					    <a href="users_edit.php?user=<?php echo $user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien46'] ?>">
 					        <i class="ti-pencil" aria-hidden="true"></i>
@@ -152,7 +154,7 @@ if ($numrows > 0) { ?>
 
 
 	<div class="pull-right">
-		<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'users_list');	?>
+		<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 	</div>
 </div>
 <?php } ?>

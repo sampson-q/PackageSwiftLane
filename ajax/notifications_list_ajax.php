@@ -46,7 +46,7 @@ $sql = "SELECT b.user_id,  b.shipping_type,  a.id_notifi_user, b.notification_de
 		$sWhere
 		order by b.notification_id desc";
 
-$db->cdp_query($sql);
+$query_count = $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -191,7 +191,7 @@ if ($numrows > 0) { ?>
 
 
 		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'notifications_list');	?>
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang);	?>
 		</div>
 	</div>
 	</div>

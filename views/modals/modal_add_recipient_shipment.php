@@ -91,7 +91,7 @@
 
 				</div>
 				<div class="modal-footer">
-					<button type="submit" class="btn btn-danger" id="save_data_recipient"><?php echo $lang['modal-text6'] ?></button>
+					<button type="button" class="btn btn-danger" id="save_data_recipient" onclick="$('#add_recipient_from_modal_shipments').trigger('submit');"><?php echo $lang['modal-text6'] ?></button>
 					<button type="button" class="btn btn-secondary" data-dismiss="modal"><?php echo $lang['modal-text5'] ?></button>
 				</div>
 				</form>

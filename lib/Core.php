@@ -413,7 +413,7 @@ class Core
   public function cdp_getShipmode()
   {
     // Use categories table as shipping modes
-    $sql = "SELECT id, name_item AS ship_mode FROM cdb_shipping_mode ORDER BY id ASC";
+    $sql = "SELECT id, name_item AS ship_mode FROM cdb_category ORDER BY id ASC";
 
     $this->db->cdp_query($sql);
     $this->db->cdp_execute();
@@ -511,7 +511,7 @@ class Core
     $invNum = $this->db->cdp_fetch_assoc();
     $max_id = $invNum['order_no'];
     $cod = $max_id;
-    $sig = (int) $cod + 1;
+    $sig = $cod + 1;
 
     $Strsig = (string)$sig;
     $formato = str_pad($Strsig, "" . $digitss . "", "0", STR_PAD_LEFT);
@@ -545,7 +545,7 @@ class Core
     $sig = $cod + 1;
 
     $Strsig = (string)$sig;
-    $formato = str_pad($Strsig, (int)$digits, "0", STR_PAD_LEFT);
+    $formato = str_pad($Strsig, "" . $digits . "", "0", STR_PAD_LEFT);
 
 
 
@@ -576,7 +576,7 @@ class Core
     $sig = $cod + 1;
 
     $Strsig = (string)$sig;
-    $formato = str_pad($Strsig, (int)$digits, "0", STR_PAD_LEFT);
+    $formato = str_pad($Strsig, "" . $digits . "", "0", STR_PAD_LEFT);
 
 
 
@@ -609,7 +609,7 @@ class Core
     $sig = $cod + 1;
 
     $Strsig = (string)$sig;
-    $formato = str_pad($Strsig, (int)$digits, "0", STR_PAD_LEFT);
+    $formato = str_pad($Strsig, "" . $digits . "", "0", STR_PAD_LEFT);
 
 
 
@@ -671,16 +671,4 @@ class Core
 
     return $row;
   }
-
-      /**
-     * Core::cdp_getVirtualMailBoxes()
-     */
-    public function cdp_getVirtualMailBoxes($where) {
-        $sql = "SELECT * FROM cdb_virtual_mailbox_addresses $where";
-        $this->db->cdp_query($sql);
-        $this->db->cdp_execute();
-        $row = $this->db->cdp_registros();
-
-        return $row;
-    }
 }

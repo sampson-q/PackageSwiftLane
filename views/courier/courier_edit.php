@@ -159,7 +159,7 @@ $numrows     = $db->cdp_rowCount();
                                                     </div>
                                                 </div>
                                                 <input type="text" class="form-control" name="order_no" id="order_no"
-                                                       value="<?php echo $row_order->order_prefix . $row_order->order_no; ?>" readonly>
+                                                       value="<?php echo h($row_order->order_prefix) . h($row_order->order_no); ?>" readonly>
                                             </div>
                                         </div>
 
@@ -186,9 +186,9 @@ $numrows     = $db->cdp_rowCount();
                                                     <select class="custom-select col-12" id="origin_off" name="origin_off" required>
                                                         <option value="0">--<?php echo $lang['left343'] ?>--</option>
                                                         <?php foreach ($office as $row): ?>
-                                                            <option value="<?php echo $row->id; ?>"
+                                                            <option value="<?php echo (int)$row->id; ?>"
                                                                 <?php if ($row_order->origin_off == $row->id) echo 'selected'; ?>>
-                                                                <?php echo $row->name_off; ?>
+                                                                <?php echo h($row->name_off); ?>
                                                             </option>
                                                         <?php endforeach; ?>
                                                     </select>
@@ -242,8 +242,8 @@ $numrows     = $db->cdp_rowCount();
                                                     <div class="input-group">
                                                         <select class="select2 form-control custom-select" id="sender_id"
                                                                 name="sender_id">
-                                                            <option value="<?php echo $sender_data->id; ?>">
-                                                                <?php echo $sender_data->fname . " " . $sender_data->lname; ?>
+                                                            <option value="<?php echo (int)$sender_data->id; ?>">
+                                                                <?php echo h($sender_data->fname) . " " . h($sender_data->lname); ?>
                                                             </option>
                                                         </select>
                                                     </div>
@@ -270,8 +270,8 @@ $numrows     = $db->cdp_rowCount();
                                                     <div class="input-group">
                                                         <select class="select2 form-control" id="sender_address_id"
                                                                 name="sender_address_id">
-                                                            <option value="<?php echo $row_order->sender_address_id; ?>">
-                                                                <?php echo $address_order->sender_address; ?>
+                                                            <option value="<?php echo (int)$row_order->sender_address_id; ?>">
+                                                                <?php echo h($address_order->sender_address); ?>
                                                             </option>
                                                         </select>
                                                     </div>
@@ -335,8 +335,8 @@ $numrows     = $db->cdp_rowCount();
                                                     <div class="input-group">
                                                         <select class="select2 form-control custom-select"
                                                                 id="recipient_id" name="recipient_id">
-                                                            <option value="<?php echo $receiver_data->id; ?>">
-                                                                <?php echo $receiver_data->fname . " " . $receiver_data->lname; ?>
+                                                            <option value="<?php echo (int)$receiver_data->id; ?>">
+                                                                <?php echo h($receiver_data->fname) . " " . h($receiver_data->lname); ?>
                                                             </option>
                                                         </select>
                                                     </div>
@@ -364,8 +364,8 @@ $numrows     = $db->cdp_rowCount();
                                                     <div class="input-group">
                                                         <select class="select2 form-control" id="recipient_address_id"
                                                                 name="recipient_address_id">
-                                                            <option value="<?php echo $row_order->receiver_address_id; ?>">
-                                                                <?php echo $address_order->recipient_address; ?>
+                                                            <option value="<?php echo (int)$row_order->receiver_address_id; ?>">
+                                                                <?php echo h($address_order->recipient_address); ?>
                                                             </option>
                                                         </select>
                                                     </div>
@@ -453,9 +453,9 @@ $numrows     = $db->cdp_rowCount();
                                                         name="order_deli_time" required>
                                                     <option value="0">--<?php echo $lang['left207'] ?>--</option>
                                                     <?php foreach ($delitimerow as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"
+                                                        <option value="<?php echo (int)$row->id; ?>"
                                                             <?php if ($row_order->order_deli_time == $row->id) echo 'selected'; ?>>
-                                                            <?php echo $row->delitime; ?>
+                                                            <?php echo h($row->delitime); ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>
@@ -470,9 +470,9 @@ $numrows     = $db->cdp_rowCount();
                                                 <select class="custom-select col-12" id="order_payment_method"
                                                         name="order_payment_method" required>
                                                     <?php foreach ($paymethodrow as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"
+                                                        <option value="<?php echo (int)$row->id; ?>"
                                                             <?php if ($row_order->order_payment_method == $row->id) echo 'selected'; ?>>
-                                                            <?php echo $row->label; ?>
+                                                            <?php echo h($row->label); ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>
@@ -605,15 +605,15 @@ $numrows     = $db->cdp_rowCount();
                                                     $src = $file->url;
                                                 }
                                                 ?>
-                                                <div class="col-md-3" id="file_delete_item_<?php echo $file->id; ?>">
+                                                <div class="col-md-3" id="file_delete_item_<?php echo h($file->id); ?>">
                                                     <img style="width: 180px; height: 180px;"
-                                                         class="img-thumbnail" src="<?php echo $src; ?>">
+                                                         class="img-thumbnail" src="<?php echo h($src); ?>">
                                                     <div class="row">
                                                         <div class="col-md-12 mb-3 mt-2">
                                                             <p class="text-justify">
                                                                 <a style="color:#7460ee;" target="_blank"
-                                                                   href="<?php echo $file->url; ?>">
-                                                                    <?php echo $file->name; ?>
+                                                                   href="<?php echo h($file->url); ?>">
+                                                                    <?php echo h($file->name); ?>
                                                                 </a>
                                                             </p>
                                                         </div>
@@ -621,7 +621,7 @@ $numrows     = $db->cdp_rowCount();
                                                     <div class="row">
                                                         <div class="mb-2">
                                                             <button type="button" class="btn btn-danger btn-sm"
-                                                                    onclick="cdp_deleteImgAttached('<?php echo $file->id; ?>');">
+                                                                    onclick="cdp_deleteImgAttached('<?php echo h($file->id); ?>');">
                                                                 <i class="fa fa-trash"></i>
                                                             </button>
                                                         </div>
@@ -657,9 +657,9 @@ $numrows     = $db->cdp_rowCount();
                                                 <select class="custom-select col-12" id="order_item_category"
                                                         name="order_item_category" required>
                                                     <?php foreach ($categories as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"
+                                                        <option value="<?php echo (int)$row->id; ?>"
                                                             <?php if ($row_order->order_item_category == $row->id) echo 'selected'; ?>>
-                                                            <?php echo $row->name_item; ?>
+                                                            <?php echo h($row->name_item); ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>
@@ -675,9 +675,9 @@ $numrows     = $db->cdp_rowCount();
                                                         name="order_package" required>
                                                     <option value="0">--<?php echo $lang['left203'] ?>--</option>
                                                     <?php foreach ($packrow as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"
+                                                        <option value="<?php echo (int)$row->id; ?>"
                                                             <?php if ($row_order->order_package == $row->id) echo 'selected'; ?>>
-                                                            <?php echo $row->name_pack; ?>
+                                                            <?php echo h($row->name_pack); ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>
@@ -693,9 +693,9 @@ $numrows     = $db->cdp_rowCount();
                                                         name="order_courier" required>
                                                     <option value="0">--<?php echo $lang['left204'] ?>--</option>
                                                     <?php foreach ($courierrow as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"
+                                                        <option value="<?php echo (int)$row->id; ?>"
                                                             <?php if ($row_order->order_courier == $row->id) echo 'selected'; ?>>
-                                                            <?php echo $row->name_com; ?>
+                                                            <?php echo h($row->name_com); ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>
@@ -736,9 +736,9 @@ $numrows     = $db->cdp_rowCount();
                                                         name="status_courier" required>
                                                     <option value="0">--<?php echo $lang['left210'] ?>--</option>
                                                     <?php foreach ($statusrow as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"
+                                                        <option value="<?php echo (int)$row->id; ?>"
                                                             <?php if ($row_order->status_courier == $row->id) echo 'selected'; ?>>
-                                                            <?php echo $row->mod_style; ?>
+                                                            <?php echo h($row->mod_style); ?>
                                                         </option>
                                                     <?php endforeach; ?>
                                                 </select>
@@ -774,9 +774,9 @@ $numrows     = $db->cdp_rowCount();
                                                             name="driver_id">
                                                         <option value="0">--<?php echo $lang['left209'] ?>--</option>
                                                         <?php foreach ($driverrow as $row): ?>
-                                                            <option value="<?php echo $row->id; ?>"
+                                                            <option value="<?php echo (int)$row->id; ?>"
                                                                 <?php if ($row_order->driver_id == $row->id) echo 'selected'; ?>>
-                                                                <?php echo $row->fname . ' ' . $row->lname; ?>
+                                                                <?php echo h($row->fname) . ' ' . h($row->lname); ?>
                                                             </option>
                                                         <?php endforeach; ?>
                                                     </select>
@@ -802,7 +802,7 @@ $numrows     = $db->cdp_rowCount();
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event,this)"
                                                                        class="form-control form-control-sm"
-                                                                       value="<?php echo $row_order->value_weight; ?>"
+                                                                       value="<?php echo h($row_order->value_weight); ?>"
                                                                        name="price_lb" id="price_lb"
                                                                        style="border:1px solid red;">
                                                             </div>
@@ -817,7 +817,7 @@ $numrows     = $db->cdp_rowCount();
                                                                 <input type="text"
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event,this)"
-                                                                       value="<?php echo $row_order->tax_discount; ?>"
+                                                                       value="<?php echo h($row_order->tax_discount); ?>"
                                                                        name="discount_value" id="discount_value"
                                                                        class="form-control form-control-sm">
                                                             </div>
@@ -836,7 +836,7 @@ $numrows     = $db->cdp_rowCount();
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event,this)"
                                                                        class="form-control form-control-sm"
-                                                                       value="<?php echo $row_order->total_insured_value; ?>"
+                                                                       value="<?php echo h($row_order->total_insured_value); ?>"
                                                                        name="insured_value" id="insured_value"
                                                                        style="border: 1px solid darkorange;">
                                                             </div>
@@ -853,7 +853,7 @@ $numrows     = $db->cdp_rowCount();
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event,this)"
                                                                        class="form-control form-control-sm"
-                                                                       value="<?php echo $row_order->tax_insurance_value; ?>"
+                                                                       value="<?php echo h($row_order->tax_insurance_value); ?>"
                                                                        name="insurance_value" id="insurance_value"
                                                                        style="border: 1px solid darkorange;">
                                                             </div>
@@ -873,7 +873,7 @@ $numrows     = $db->cdp_rowCount();
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event,this)"
                                                                        class="form-control form-control-sm"
-                                                                       value="<?php echo $row_order->tax_custom_tariffis_value; ?>"
+                                                                       value="<?php echo h($row_order->tax_custom_tariffis_value); ?>"
                                                                        name="tariffs_value" id="tariffs_value">
                                                             </div>
                                                             <?php if ($core->for_symbol !== null): ?>
@@ -892,7 +892,7 @@ $numrows     = $db->cdp_rowCount();
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event,this)"
                                                                        class="form-control form-control-sm"
-                                                                       value="<?php echo $row_order->tax_value; ?>"
+                                                                       value="<?php echo h($row_order->tax_value); ?>"
                                                                        name="tax_value" id="tax_value">
                                                             </div>
                                                             <?php if ($core->for_symbol !== null): ?>
@@ -911,7 +911,7 @@ $numrows     = $db->cdp_rowCount();
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event,this)"
                                                                        class="form-control form-control-sm"
-                                                                       value="<?php echo $row_order->declared_value; ?>"
+                                                                       value="<?php echo h($row_order->declared_value); ?>"
                                                                        name="declared_value_tax" id="declared_value_tax">
                                                             </div>
                                                             <?php if ($core->for_symbol !== null): ?>
@@ -929,7 +929,7 @@ $numrows     = $db->cdp_rowCount();
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event,this)"
                                                                        class="form-control form-control-sm"
-                                                                       value="<?php echo $row_order->total_reexp; ?>"
+                                                                       value="<?php echo h($row_order->total_reexp); ?>"
                                                                        name="reexpedicion_value" id="reexpedicion_value">
                                                             </div>
                                                             <span id="reexpedicion_label"></span>
@@ -1001,9 +1001,9 @@ $numrows     = $db->cdp_rowCount();
                 </div><!-- /.container-fluid -->
 
                 <input type="hidden" name="order_id" id="order_id"
-                       value="<?php echo $row_order->order_id; ?>" />
+                       value="<?php echo h($row_order->order_id); ?>" />
                 <input type="hidden" name="core_meter" id="core_meter"
-                       value="<?php echo $row_order->volumetric_percentage; ?>" />
+                       value="<?php echo h($row_order->volumetric_percentage); ?>" />
                 <input type="hidden" name="core_min_cost_tax" id="core_min_cost_tax"
                        value="<?php echo $core->min_cost_tax; ?>" />
                 <input type="hidden" name="core_min_cost_declared_tax" id="core_min_cost_declared_tax"

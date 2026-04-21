@@ -25,6 +25,7 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_receivable_accounts');
+require_csrf();
 
 $db = new Conexion;
 $user = new User;
@@ -134,4 +135,4 @@ $pendiente = $data->total_order - $sum_payment->total;
 
 		<textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
 	</div>
-</div>
+</div></div>

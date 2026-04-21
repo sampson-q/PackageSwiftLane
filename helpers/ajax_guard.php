@@ -69,3 +69,40 @@ function _ajax_guard_send($httpCode, array $body)
     echo json_encode($body);
     exit;
 }
+
+/**
+ * Genera (o reutiliza) el token CSRF de la sesión actual.
+ * Llamar desde views PHP para inyectar en el meta tag.
+ */
+function csrf_token(): string
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * Valida el token CSRF del request actual.
+ * Acepta el token como header X-CSRF-TOKEN o como campo POST _csrf_token.
+ * Llama a _ajax_guard_send(403, ...) y termina si no coincide.
+ */
+function require_csrf(): void
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+    $token = $_SERVER['HTTP_X_CSRF_TOKEN']
+          ?? $_POST['_csrf_token']
+          ?? '';
+    if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+        _ajax_guard_send(403, [
+            'success' => false,
+            'error'   => 'CSRF',
+            'message' => 'Invalid or missing security token. Reload the page and try again.'
+        ]);
+    }
+}
