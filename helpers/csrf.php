@@ -21,7 +21,7 @@ if (!function_exists('cdp_csrf_token')) {
     {
         cdp_csrf_ensure_session();
 
-        if (empty($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token']) || strlen($_SESSION['csrf_token']) < 32) {
+        if (empty($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token']) || strlen($_SESSION['csrf_token']) !== 64) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
 
@@ -56,4 +56,3 @@ if (!function_exists('cdp_csrf_validate_request')) {
         return $provided !== '' && hash_equals($expected, $provided);
     }
 }
-

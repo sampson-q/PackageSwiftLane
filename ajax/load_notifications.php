@@ -35,6 +35,7 @@ $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
 $perPage = 10;
 $start = ($page - 1) * $perPage;
 $userId = isset($_SESSION['userid']) ? (int)$_SESSION['userid'] : 0;
+$maxBatchNotificationIds = 100;
 
 $sql = "SELECT a.user_id, b.shipping_type, a.id_notifi_user, b.notification_description, b.notification_date , b.order_id , a.notification_status, a.notification_read, b.notification_id
         FROM cdb_notifications_users AS a
@@ -110,7 +111,7 @@ $bg = $rowCount > 0 ? 'bg-primary' : 'bg-danger';
                 }
                 if (!empty($notificationIds)) {
                     $ids = array_values(array_unique(array_map('intval', $notificationIds)));
-                    $ids = array_slice($ids, 0, 100);
+                    $ids = array_slice($ids, 0, $maxBatchNotificationIds);
                     $placeholders = [];
                     foreach ($ids as $idx => $nid) {
                         $placeholders[] = ':nid_' . $idx;

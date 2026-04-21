@@ -3505,7 +3505,9 @@ function cdp_updateNotificatonsRea($user, $isAdmin = false)
               AND (n.user_id IS NULL OR n.user_id = 0)
         ");
         $db->bind(':user_id', (int)$user);
-        $db->cdp_execute();
+        if (!$db->cdp_execute()) {
+            return false;
+        }
     }
 
     return true;
