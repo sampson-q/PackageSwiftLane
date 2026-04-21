@@ -4,7 +4,9 @@ if (!function_exists('cdp_csrf_ensure_session')) {
     function cdp_csrf_ensure_session()
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
-            @session_start();
+            if (!headers_sent()) {
+                session_start();
+            }
         }
     }
 }

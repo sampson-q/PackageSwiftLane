@@ -24,9 +24,9 @@
 require_once('helpers/querys.php');
 
 if (isset($_GET['order_track'])) {
-	$orderTrackInput = trim((string)$_GET['order_track']);
-	$orderTrack = preg_replace('/[^A-Za-z0-9\-]/', '', $orderTrackInput);
-	$results = cdp_getCourierTrack($orderTrack);
+	$rawOrderTrackInput = trim((string)$_GET['order_track']);
+	$sanitizedOrderTrack = preg_replace('/[^A-Za-z0-9\-]/', '', $rawOrderTrackInput);
+	$results = cdp_getCourierTrack($sanitizedOrderTrack);
 	$track = $results['data'];
 } else {
 
@@ -48,7 +48,7 @@ $db->cdp_query("
 	SELECT a.id, a.order_track, a.t_dest, a.t_date, a.t_city, a.comments, a.status_courier, b.mod_style FROM cdb_courier_track as a
 	INNER JOIN cdb_styles as b ON a.status_courier = b.id 
 	where a.order_track=:order_track ORDER BY a.t_date");
-$db->bind(':order_track', $orderTrack);
+$db->bind(':order_track', $sanitizedOrderTrack);
 $db->cdp_execute();
 
 $courier_track = $db->cdp_registros();
@@ -263,7 +263,7 @@ if ($track != null) {
 									<div class='col-lg-8 col-md-12 text-center'>
 										<img src='assets/images/alert/ohh_shipment_rate.png' class='img-fluid' alt=''/>
 										<div class='text-uppercase mt-4 display-4'>Oh ! no</div>
-										<div class='text-capitalize text-dark mb-4 display-6'>" . $lang['track-shipment1'] . " <strong style='color:#FF0000;'>" . htmlspecialchars($orderTrackInput, ENT_QUOTES, 'UTF-8') . " </strong></div>
+										<div class='text-capitalize text-dark mb-4 display-6'>" . $lang['track-shipment1'] . " <strong style='color:#FF0000;'>" . htmlspecialchars($rawOrderTrackInput, ENT_QUOTES, 'UTF-8') . " </strong></div>
 										<p class='text-muted para-desc mx-auto'><span class='text-primary font-weight-bold'>" . $lang['track-shipment2'] . "</span></p>
 									</div>
 								", false; ?>
