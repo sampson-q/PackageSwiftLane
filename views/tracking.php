@@ -14,7 +14,6 @@
     <link href="assets/css_main_deprixa/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <!-- Icons -->
     <link href="assets/css_main_deprixa/css/materialdesignicons.min.css" rel="stylesheet" type="text/css" />
-    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v3.0.6/css/line.css">
     <!-- Slider -->
     <link rel="stylesheet" href="assets/css_main_deprixa/css/tiny-slider.css" />
     <!-- Date picker -->

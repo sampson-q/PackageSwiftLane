@@ -67,11 +67,9 @@ if (isset($_POST['login'])) {
         <link href="assets/css_main_deprixa/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
         <!-- Icons -->
         <link href="assets/css_main_deprixa/css/materialdesignicons.min.css" rel="stylesheet" type="text/css" />
-        <link rel="stylesheet" href="https://unicons.iconscout.com/release/v3.0.6/css/line.css">
         <!-- Main Css -->
         <link href="assets/css_main_deprixa/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
         <link href="assets/css_main_deprixa/css/colors/default.css" rel="stylesheet" id="color-opt">
-        <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
     </head>
 
     <body>
@@ -105,16 +103,16 @@ if (isset($_POST['login'])) {
                                             </a>
                                             
                                             <div class="col-3">
-                                                <a href="tracking.php" class="btn btn-light"><iconify-icon icon="flowbite:tracking-solid" class="fs-5" style="color:grey"></iconify-icon> <?php echo $lang['langs_06'] ?></a>
+                                                <a href="tracking.php" class="btn btn-light"><i data-feather="truck" class="fea icon-sm"></i> <?php echo $lang['langs_06'] ?></a>
                                             </div>
                                             <div class="col-3" href="index.php">
-                                                <a href="https://swiftglobalhq.com/" target="_blank" class="btn btn-light"><iconify-icon icon="arcticons:emoji-web" class="fs-5" style="color:grey"></iconify-icon> <?php echo 'Website'?></a>
+                                                <a href="https://swiftglobalhq.com/" target="_blank" class="btn btn-light"><i data-feather="globe" class="fea icon-sm"></i> <?php echo 'Website'?></a>
                                             </div>
                                             <div class="col-3">
-                                                <a href="https://swiftglobalhq.com/authorization-shipping-form/" target="_blank" class="btn btn-light"><iconify-icon icon="clarity:form-line" class="fs-5" style="color:grey"></iconify-icon> <?php echo 'Auth. Form'; ?></a>
+                                                <a href="https://swiftglobalhq.com/authorization-shipping-form/" target="_blank" class="btn btn-light"><i data-feather="file-text" class="fea icon-sm"></i> <?php echo 'Auth. Form'; ?></a>
                                             </div>
                                             <div class="col-3" href="index.php">
-                                                <a href="sign-up.php" class="btn btn-light"><iconify-icon icon="mdi:user-add" class="fs-5" style="color:grey"></iconify-icon> <?php echo 'Register'?></a>
+                                                <a href="sign-up.php" class="btn btn-light"><i data-feather="user-plus" class="fea icon-sm"></i> <?php echo 'Register'?></a>
                                             </div>
                                         </div>
                                         <div><br></div>

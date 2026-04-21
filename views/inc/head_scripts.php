@@ -1,4 +1,7 @@
+<?php require_once __DIR__ . '/../../helpers/csrf.php'; ?>
 <link href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet">
+<meta name="csrf-param" content="<?php echo htmlspecialchars(cdp_csrf_param(), ENT_QUOTES, 'UTF-8'); ?>">
+<meta name="csrf-token" content="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 <!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

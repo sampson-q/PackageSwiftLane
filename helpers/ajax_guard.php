@@ -6,6 +6,7 @@
  */
 
 if (!defined('DEPRIXAPRO_AJAX_GUARD_LOADED')) {
+    require_once __DIR__ . '/csrf.php';
     if (!class_exists('User')) {
         require_once dirname(__DIR__) . '/loader.php';
     }
@@ -27,6 +28,8 @@ function require_login()
     if (empty($user->logged_in)) {
         _ajax_guard_send(401, ['success' => false, 'error' => 'Unauthorized', 'message' => 'Sesión requerida']);
     }
+
+    _ajax_guard_require_csrf();
 }
 
 /**
@@ -64,8 +67,22 @@ function _ajax_guard_send($httpCode, array $body)
         header('HTTP/1.1 401 Unauthorized');
     } elseif ($httpCode === 403) {
         header('HTTP/1.1 403 Forbidden');
+    } elseif ($httpCode === 419) {
+        header('HTTP/1.1 419 Authentication Timeout');
     }
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($body);
     exit;
+}
+
+function _ajax_guard_require_csrf()
+{
+    $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+    if (!in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+        return;
+    }
+
+    if (!cdp_csrf_validate_request()) {
+        _ajax_guard_send(419, ['success' => false, 'error' => 'Invalid CSRF token', 'message' => 'CSRF token missing or invalid']);
+    }
 }

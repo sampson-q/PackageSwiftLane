@@ -6,6 +6,35 @@
 <!----Footer End--->
 
 <script src="assets/template/assets/libs/jquery/dist/jquery.min.js"></script>
+<script>
+    (function ($) {
+        if (!$ || !$.ajaxSetup) return;
+
+        function csrfToken() {
+            return $('meta[name="csrf-token"]').attr('content') || '';
+        }
+
+        function csrfParam() {
+            return $('meta[name="csrf-param"]').attr('content') || '_csrf_token';
+        }
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                var method = ((settings && settings.type) || 'GET').toUpperCase();
+                if (['POST', 'PUT', 'PATCH', 'DELETE'].indexOf(method) === -1) return;
+
+                var token = csrfToken();
+                if (!token) return;
+
+                xhr.setRequestHeader('X-CSRF-Token', token);
+
+                if (settings && settings.data && typeof FormData !== 'undefined' && settings.data instanceof FormData) {
+                    settings.data.append(csrfParam(), token);
+                }
+            }
+        });
+    })(window.jQuery);
+</script>
 
 <!-- Bootstrap tether Core JavaScript -->
 <script src="assets/template/assets/libs/popper.js/dist/umd/popper.min.js"></script>

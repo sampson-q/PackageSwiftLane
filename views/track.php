@@ -24,9 +24,9 @@
 require_once('helpers/querys.php');
 
 if (isset($_GET['order_track'])) {
-
-	$results = cdp_getCourierTrack($_GET['order_track']);
-
+	$orderTrackInput = trim((string)$_GET['order_track']);
+	$orderTrack = preg_replace('/[^A-Za-z0-9\-]/', '', $orderTrackInput);
+	$results = cdp_getCourierTrack($orderTrack);
 	$track = $results['data'];
 } else {
 
@@ -34,33 +34,60 @@ if (isset($_GET['order_track'])) {
 }
 
 
+$sender_data = null;
+$receiver_data = null;
+$delivery_time = null;
+$address_order = null;
+$order_items = [];
+$item_description = '';
+$sumador_libras = 0;
+$sumador_volumetric = 0;
+$count = 0;
 
 $db->cdp_query("
-
 	SELECT a.id, a.order_track, a.t_dest, a.t_date, a.t_city, a.comments, a.status_courier, b.mod_style FROM cdb_courier_track as a
-
 	INNER JOIN cdb_styles as b ON a.status_courier = b.id 
-
-	where a.order_track='" . $_GET['order_track'] . "' ORDER BY a.t_date");
+	where a.order_track=:order_track ORDER BY a.t_date");
+$db->bind(':order_track', $orderTrack);
+$db->cdp_execute();
 
 $courier_track = $db->cdp_registros();
 if ($track != null) {
 
-	$db->cdp_query("SELECT * FROM cdb_users where id= '" . $track->sender_id . "'");
+	$db->cdp_query("SELECT * FROM cdb_users where id=:sender_id");
+	$db->bind(':sender_id', (int)$track->sender_id);
+	$db->cdp_execute();
 	$sender_data = $db->cdp_registro();
 
-	$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $track->receiver_id . "'");
+	$db->cdp_query("SELECT * FROM cdb_recipients where id=:receiver_id");
+	$db->bind(':receiver_id', (int)$track->receiver_id);
+	$db->cdp_execute();
 	$receiver_data = $db->cdp_registro();
 
-	$db->cdp_query("SELECT * FROM cdb_delivery_time where id= '" . $track->order_deli_time . "'");
+	$db->cdp_query("SELECT * FROM cdb_delivery_time where id=:delivery_time_id");
+	$db->bind(':delivery_time_id', (int)$track->order_deli_time);
+	$db->cdp_execute();
 	$delivery_time = $db->cdp_registro();
 
 
-	$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $track->order_prefix . $track->order_no . "'");
+	$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track=:order_track");
+	$db->bind(':order_track', (string)$track->order_prefix . (string)$track->order_no);
+	$db->cdp_execute();
 	$address_order = $db->cdp_registro();
+	if (!$address_order) {
+		$address_order = (object)[
+			'sender_country' => '',
+			'sender_city' => '',
+			'sender_address' => '',
+			'recipient_country' => '',
+			'recipient_city' => '',
+			'recipient_address' => ''
+		];
+	}
 
 
-	$db->cdp_query("SELECT SUM(order_item_length) as total0 from cdb_add_order_item where order_id='" . $track->order_id . "'");
+	$db->cdp_query("SELECT SUM(order_item_length) as total0 from cdb_add_order_item where order_id=:order_id");
+	$db->bind(':order_id', (int)$track->order_id);
 	$db->cdp_execute();
 	$row0 = $db->cdp_registro();
 
@@ -68,7 +95,8 @@ if ($track != null) {
 
 	// volumetric query of the box width
 
-	$db->cdp_query("SELECT SUM(order_item_width) as total1 from cdb_add_order_item where order_id='" . $track->order_id . "'");
+	$db->cdp_query("SELECT SUM(order_item_width) as total1 from cdb_add_order_item where order_id=:order_id");
+	$db->bind(':order_id', (int)$track->order_id);
 	$db->cdp_execute();
 	$row1 = $db->cdp_registro();
 
@@ -76,7 +104,8 @@ if ($track != null) {
 
 	// volumetric query of the box width
 
-	$db->cdp_query("SELECT SUM(order_item_height) as total2 from cdb_add_order_item where order_id='" . $track->order_id . "'");
+	$db->cdp_query("SELECT SUM(order_item_height) as total2 from cdb_add_order_item where order_id=:order_id");
+	$db->bind(':order_id', (int)$track->order_id);
 	$db->cdp_execute();
 	$row2 = $db->cdp_registro();
 
@@ -87,10 +116,13 @@ if ($track != null) {
 	$height = $rw_add2; //Height
 
 
-	$total_metric = $length * $width * $height / $track->volumetric_percentage;
+	$volPercent = (float)$track->volumetric_percentage;
+	$total_metric = $volPercent > 0 ? ($length * $width * $height / $volPercent) : 0;
 
 
-	$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . $track->order_id . "'");
+	$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id=:order_id");
+	$db->bind(':order_id', (int)$track->order_id);
+	$db->cdp_execute();
 	$order_items = $db->cdp_registros();
 
 
@@ -104,7 +136,7 @@ if ($track != null) {
 
 		$item_description = $row_item->order_item_description;
 
-		$total_metric = $row_item->order_item_length * $row_item->order_item_width * $row_item->order_item_height / $track->volumetric_percentage;
+		$total_metric = $volPercent > 0 ? ($row_item->order_item_length * $row_item->order_item_width * $row_item->order_item_height / $volPercent) : 0;
 
 		// calculate weight x price
 		if ($weight_item > $total_metric) {
@@ -231,7 +263,7 @@ if ($track != null) {
 									<div class='col-lg-8 col-md-12 text-center'>
 										<img src='assets/images/alert/ohh_shipment_rate.png' class='img-fluid' alt=''/>
 										<div class='text-uppercase mt-4 display-4'>Oh ! no</div>
-										<div class='text-capitalize text-dark mb-4 display-6'>" . $lang['track-shipment1'] . " <strong style='color:#FF0000;'>" . $_GET['order_track'] . " </strong></div>
+										<div class='text-capitalize text-dark mb-4 display-6'>" . $lang['track-shipment1'] . " <strong style='color:#FF0000;'>" . htmlspecialchars($orderTrackInput, ENT_QUOTES, 'UTF-8') . " </strong></div>
 										<p class='text-muted para-desc mx-auto'><span class='text-primary font-weight-bold'>" . $lang['track-shipment2'] . "</span></p>
 									</div>
 								", false; ?>
@@ -276,7 +308,9 @@ if ($track != null) {
 
 										<?php
 
-										$db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . $track->order_id . "' ORDER BY date_file");
+										$db->cdp_query("SELECT * FROM cdb_order_files where order_id=:order_id ORDER BY date_file");
+										$db->bind(':order_id', (int)$track->order_id);
+										$db->cdp_execute();
 										$files_order = $db->cdp_registros();
 										$numrows = $db->cdp_rowCount();
 

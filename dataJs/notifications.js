@@ -33,6 +33,15 @@ function cdp_updateNotificationsRead() {
                 $.ajax({
                     type: 'post',
                     url: './ajax/notifications_update_read_ajax.php',
+                    data: (function () {
+                        var token = $('meta[name="csrf-token"]').attr('content') || '';
+                        var param = $('meta[name="csrf-param"]').attr('content') || '_csrf_token';
+                        var payload = {};
+                        if (token) {
+                            payload[param] = token;
+                        }
+                        return payload;
+                    })(),
                     success: function(data) {
                         $('html, body').animate({
                             scrollTop: 0
@@ -49,5 +58,4 @@ function cdp_updateNotificationsRead() {
         }
     });
 }
-
 
