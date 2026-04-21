@@ -136,7 +136,7 @@ $address_order = $db->cdp_registro();
                     <?php echo $lang['inv-shipping4'] ?>: <?php echo $core->c_address; ?> - <?php echo $core->c_country; ?>-<?php echo $core->c_city; ?>
                 </td>
                 <td style="border: 0;  text-align: center" width="48%">
-                    </br><div style="font-weight:700; letter-spacing: 2px; padding-top: 6px;"><?php echo htmlspecialchars($row->order_prefix . $row->order_no, ENT_QUOTES, 'UTF-8'); ?></div>
+                    <br><div style="font-weight:700; letter-spacing: 2px; padding-top: 6px;"><?php echo htmlspecialchars($row->order_prefix . $row->order_no, ENT_QUOTES, 'UTF-8'); ?></div>
                 </td>
             </tr>
         </table>
