@@ -23,6 +23,10 @@
 
 require_once('helpers/querys.php');
 
+require_once('helpers/phpmailer/class.phpmailer.php');
+require_once('helpers/phpmailer/class.smtp.php');
+require_once('ajax/notify_whatsapp/api_whatsapp_service_v2.php');
+
 $userData = $user->cdp_getUserData();
 if ($userData->userlevel == 1)
     cdp_redirect_to("login.php");
@@ -192,6 +196,101 @@ if (isset($_POST["total_item"])) {
         $db->bind(':is_consolidate',  $is_consolidate);
 
         $db->cdp_execute();
+
+        // =======================
+        // WhatsApp v2 Notification per Package (Template 13)
+        // =======================
+        try {
+            $package_order_id = intval($_POST["order_id"][$count]);
+            $package_prefix = cdp_sanitize($_POST["prefix"][$count]);
+            $package_order_no = cdp_sanitize($_POST["order_no_item"][$count]);
+            $package_tracking = $package_prefix . $package_order_no;
+
+            // Get the original package shipment data
+            $db_pkg = new Conexion;
+            $db_pkg->cdp_query("SELECT sender_id, receiver_id FROM cdb_add_order WHERE order_id = :id");
+            $db_pkg->bind(':id', $package_order_id);
+            $db_pkg->cdp_execute();
+            $package_data = $db_pkg->cdp_registro();
+
+            if ($package_data) {
+                $package_sender = cdp_getSenderCourier(intval($package_data->sender_id));
+
+                if (!empty($package_sender->phone)) {
+                    // Get template 13 for package consolidation
+                    $tpl = getTemplateWhatsApp(13);
+
+                    if ($tpl) {
+                        // Get package details
+                        $db_pkg_detail = new Conexion;
+                        $db_pkg_detail->cdp_query("SELECT order_datetime, status_courier FROM cdb_add_order WHERE order_id = :id");
+                        $db_pkg_detail->bind(':id', $package_order_id);
+                        $db_pkg_detail->cdp_execute();
+                        $pkg_detail = $db_pkg_detail->cdp_registro();
+
+                        // Get settings
+                        $db_settings = new Conexion;
+                        $db_settings->cdp_query("SELECT * FROM cdb_settings LIMIT 1");
+                        $db_settings->cdp_execute();
+                        $settings = $db_settings->cdp_registro();
+
+                        // Current status = Consolidated
+                        $consolidation_status = "Consolidated";
+                        $invoice_status = "Pending";
+
+                        // Order date
+                        $order_date = $pkg_detail ? date('M d, Y', strtotime($pkg_detail->order_datetime)) : 'N/A';
+
+                        // Get recipient name
+                        $package_receiver = cdp_getRecipientCourier(intval($package_data->receiver_id));
+                        $recipient_name = $package_receiver ? ($package_receiver->fname . ' ' . $package_receiver->lname) : 'N/A';
+
+                        // Origin and destination from consolidation addresses
+                        $origin = $final_sender_city->name . ', ' . $final_sender_state->name;
+                        $destination = $final_recipient_city->name . ', ' . $final_recipient_state->name;
+
+                        // Tracking URL
+                        $package_app_url = $settings->site_url . 'track.php?order_track=' . $package_tracking;
+
+                        // Format the message with all placeholders
+                        $whatsapp_body = str_replace(
+                            [
+                                '[CUSTOMER_FULLNAME]',
+                                '[TRACKING_NUMBER]',
+                                '[PREV_STATUS]',
+                                '[CURR_STATUS]',
+                                '[INV_STATUS]',
+                                '[ORD_DATE]',
+                                '[RECIPIENT]',
+                                '[ORIGIN]',
+                                '[DESTINATION]',
+                                '[APP_URL]',
+                                '[COMPANY_NAME]'
+                            ],
+                            [
+                                ucfirst("{$package_sender->fname} {$package_sender->lname}"),
+                                $package_tracking,
+                                'In Transit',
+                                $consolidation_status,
+                                $invoice_status,
+                                $order_date,
+                                $recipient_name,
+                                $origin,
+                                $destination,
+                                $package_app_url,
+                                $settings->site_name
+                            ],
+                            $tpl->body
+                        );
+
+                        // Send via v2 API
+                        sendNotificationWhatsApp_v2($package_sender, $whatsapp_body);
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            error_log('Error sending WhatsApp v2 notification for consolidation edit package: ' . $e->getMessage());
+        }
     }
 
     //INSERT HISTORY USER
