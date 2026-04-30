@@ -28,6 +28,7 @@ require_login();
 require_permission('view_shipment_list');
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
+require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 require_once("../notify_sms/api_sms_service.php");
 
 $user = new User;
@@ -417,6 +418,84 @@ if (empty($errors)) {
             sendNotificationSMS($receiver_data, $newbodyS_receiver, $notify_sms_receiver);
         } catch (Exception $e) {
             error_log('Error generating or sending SMS for receiver: ' . $e->getMessage());
+        }
+
+        // =======================
+        // WhatsApp v2 Notification (Template 13)
+        // =======================
+        if (!empty($sender_data->phone)) {
+            try {
+                // Get template 13 for package status update
+                $tpl = getTemplateWhatsApp(13);
+
+                if ($tpl) {
+                    // Get current and previous status
+                    $current_status = cdp_getCourierstatusApi(intval($_POST["status_courier"]));
+                    $current_status_name = $current_status ? $current_status->mod_style : 'N/A';
+
+                    // Get previous status from tracking history
+                    $db_prev_status = new Conexion;
+                    $db_prev_status->cdp_query("SELECT status_courier FROM cdb_courier_shipment_track WHERE order_id = :id ORDER BY id DESC LIMIT 2");
+                    $db_prev_status->bind(':id', $shipment_id);
+                    $db_prev_status->cdp_execute();
+                    $prev_records = $db_prev_status->cdp_registros();
+
+                    $prev_status_name = 'N/A';
+                    if (count($prev_records) >= 2) {
+                        $prev_status_obj = cdp_getCourierstatusApi($prev_records[1]->status_courier);
+                        $prev_status_name = $prev_status_obj ? $prev_status_obj->mod_style : 'N/A';
+                    }
+
+                    // Get invoice status
+                    $invoice_status = $shipment->status_invoice == 1 ? 'Paid' : 'Pending';
+
+                    // Get order date
+                    $order_date = date('M d, Y', strtotime($shipment->order_datetime));
+
+                    // Get recipient name
+                    $recipient_name = $receiver_data ? ($receiver_data->fname . ' ' . $receiver_data->lname) : 'N/A';
+
+                    // Get origin and destination
+                    $origin = $final_sender_city->name . ', ' . $final_sender_state->name;
+                    $destination = $final_recipient_city->name . ', ' . $final_recipient_state->name;
+
+                    // Format the message with all placeholders
+                    $whatsapp_body = str_replace(
+                        [
+                            '[CUSTOMER_FULLNAME]',
+                            '[TRACKING_NUMBER]',
+                            '[PREV_STATUS]',
+                            '[CURR_STATUS]',
+                            '[INV_STATUS]',
+                            '[ORD_DATE]',
+                            '[RECIPIENT]',
+                            '[ORIGIN]',
+                            '[DESTINATION]',
+                            '[APP_URL]',
+                            '[COMPANY_NAME]'
+                        ],
+                        [
+                            ucfirst("{$sender_data->fname} {$sender_data->lname}"),
+                            $fullshipment,
+                            $prev_status_name,
+                            $current_status_name,
+                            $invoice_status,
+                            $order_date,
+                            $recipient_name,
+                            $origin,
+                            $destination,
+                            $app_url,
+                            $settings->site_name
+                        ],
+                        $tpl->body
+                    );
+
+                    // Send via v2 API
+                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                }
+            } catch (Exception $e) {
+                error_log('Error sending WhatsApp v2 notification to sender on edit: ' . $e->getMessage());
+            }
         }
 
         $messages[] = $lang['message_ajax_success_add_update'];
