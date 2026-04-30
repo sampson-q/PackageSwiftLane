@@ -31,7 +31,7 @@ require_once("../../helpers/querys.php");
 require_once("../../helpers/functions.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
-require_once("../notify_whatsapp/api_whatsapp_service.php");
+require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 require_once("../notify_sms/api_sms_service.php");
 
  
@@ -192,7 +192,7 @@ if (empty($errors)) {
             $email_template->body
         );
 
-        $newbody = cdp_cleanOut($body);
+        $newbody = cdp_cleanOutx($body);
 
         //SENDMAIL PHP
 
@@ -280,14 +280,26 @@ if (empty($errors)) {
         //NOTIFICATION TO CUSTOMER
         cdp_insertNotificationsUsers($notification_id, intval($shipment->sender_id));
 
-        //NOTIFY WHATSAPP API
+        //NOTIFY WHATSAPP API v2
+        if (!empty($sender_data->phone)) {
+            try {
+                // Get template 3 for package delivery
+                $tpl = getTemplateWhatsApp(3);
 
-        if (isset($_POST['notify_whatsapp_sender']) && intval($_POST['notify_whatsapp_sender']) == 1) {
-            $notification_result =  sendNotificationWhatsApp($sender_data, 5, null, $fullshipment);
-        }
+                if ($tpl) {
+                    // Format the message with tracking number placeholder
+                    $whatsapp_body = str_replace(
+                        '[TRACKING_NUMBER]',
+                        $fullshipment,
+                        $tpl->body
+                    );
 
-        if (isset($_POST['notify_whatsapp_receiver']) && intval($_POST['notify_whatsapp_receiver']) == 1) {
-            $notification_result =  sendNotificationWhatsApp($receiver_data, 5, null, $fullshipment);
+                    // Send via v2 API
+                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                }
+            } catch (Exception $e) {
+                error_log('Error sending WhatsApp v2 notification to sender on delivery: ' . $e->getMessage());
+            }
         }
 
         // Obtener el estado de las casillas de verificación
