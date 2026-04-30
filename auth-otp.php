@@ -221,6 +221,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Main Css -->
     <link href="assets/css_main_deprixa/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
     <link href="assets/css_main_deprixa/css/colors/default.css" rel="stylesheet" id="color-opt">
+    <link href="assets/css_main_deprixa/css/auth-pages.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <style>
         .otp-box {
@@ -242,7 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 
-<body>
+<body class="auth-page">
 
     <div id="preloader">
         <div id="status">
@@ -254,99 +255,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="back-to-home">
-        <a href="login.php" class="back-button btn btn-icon btn-primary"><i data-feather="arrow-left" class="icons"></i></a>
+        <a href="login.php" class="back-button btn btn-icon btn-primary" aria-label="Back to login"><i data-feather="arrow-left" class="icons"></i></a>
     </div>
 
-    <section class="cover-user bg-white">
+    <section class="auth-shell">
         <div class="container-fluid px-0">
-            <div class="row g-0 position-relative">
-                <div class="col-lg-5 cover-my-30 order-2">
-                    <div class="cover-user-img d-flex align-items-center">
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="card login-page border-0" style="z-index: 1">
-                                    <div class="card-title text-center">
-                                        <a class="logo" href="index.php">
-                                            <?php echo ($core->logo_web)
-                                                ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>'
-                                                : $core->site_name; ?>
-                                        </a>
-                                    </div>
-                                    <div><br></div>
-                                    <div class="card-body p-0">
-                                        <h4 class="card-title text-center">OTP Verification</h4>
-                                        <p class="text-center">Enter the one-time password sent to your email or WhatsApp</p>
-
-                                        <div id="msgholder2">
-                                            <?php if ($message): ?>
-                                                <div class="alert alert-success">
-                                                    <p><?php echo $message; ?></p>
-                                                </div>
-                                            <?php endif; ?>
-                                            <?php if ($error): ?>
-                                                <div class="alert alert-danger">
-                                                    <p>
-                                                        <span class="icon-minus-sign"></span>
-                                                        <i class="close icon-remove-circle"></i>
-                                                        <span>Error!</span> <?php echo $error; ?>
-                                                    </p>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-
-                                        <div id="loader" style="display:none"></div>
-
-                                        <form class="login-form mt-4" method="post" id="otp-form">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <div class="mb-3">
-                                                        <!--
-                                                            Six individual digit boxes.
-                                                            JS assembles them into the hidden otp_code field
-                                                            both on every keystroke (syncHidden) and on submit.
-                                                        -->
-                                                        <div class="d-flex justify-content-center gap-2" id="otp_boxes">
-                                                            <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-                                                            <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-                                                            <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-                                                            <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-                                                            <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-                                                            <input type="text" maxlength="1" class="otp-box form-control text-center fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-                                                        </div>
-                                                        <!-- FIX: given id="otp_code_hidden" so initOtpBoxes can
-                                                             target it with a plain ID selector, matching how the
-                                                             modal version works. No more selector-string mismatch. -->
-                                                        <input type="hidden" name="otp_code" id="otp_code_hidden">
-                                                    </div>
-                                                </div>
-
-                                                <div class="row justify-content-center">
-                                                    <div class="col-auto mb-0">
-                                                        <button type="submit" class="btn btn-grad px-5">Verify</button>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-12 text-center">
-                                                    <p class="mb-0 mt-3">
-                                                        <small class="text-dark me-2">Didn't receive a code?</small>
-                                                        <button type="submit" name="resend" value="1"
-                                                            class="btn btn-link p-0 text-dark fw-bold"
-                                                            style="vertical-align: baseline;">
-                                                            Resend code
-                                                        </button>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="row g-0 auth-shell__grid">
+                <div class="col-lg-6 auth-shell__panel auth-shell__panel--visual order-2 order-lg-1" style="--auth-visual-image: url('assets/images/OT(1)P.svg');">
+                    <div class="auth-visual"></div>
                 </div>
 
-                <div class="col-lg-7 offset-lg-5 padding-less img order-1" data-jarallax='{"speed": 0.5}'>
-                    <img src="assets/images/OT(1)P.svg" width="1000px" class="img-fluid" alt="">
+                <div class="col-lg-6 auth-shell__panel auth-shell__panel--form order-1 order-lg-2">
+                    <div class="auth-card auth-card--compact card login-page border-0">
+                        <div class="auth-card__top text-center">
+                            <a class="logo" href="index.php">
+                                <?php echo ($core->logo_web)
+                                    ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>'
+                                    : $core->site_name; ?>
+                            </a>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="text-center">
+                                <h4 class="auth-heading mb-2">OTP Verification</h4>
+                                <p class="auth-subtitle">Enter the code sent to your email or WhatsApp.</p>
+                            </div>
+
+                            <div id="msgholder2" class="mt-4">
+                                <?php if ($message): ?>
+                                    <div class="alert alert-success">
+                                        <p class="mb-0"><?php echo $message; ?></p>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if ($error): ?>
+                                    <div class="alert alert-danger">
+                                        <p class="mb-0">
+                                            <span class="icon-minus-sign"></span>
+                                            <i class="close icon-remove-circle"></i>
+                                            <span>Error!</span> <?php echo $error; ?>
+                                        </p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div id="loader" style="display:none"></div>
+
+                            <form class="login-form mt-4" method="post" id="otp-form">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-center gap-2 flex-wrap" id="otp_boxes">
+                                                <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                                                <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                                                <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                                                <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                                                <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                                                <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                                            </div>
+                                            <input type="hidden" name="otp_code" id="otp_code_hidden">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 mt-2">
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-grad">Verify</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 text-center">
+                                        <p class="mb-0 mt-3">
+                                            <button type="submit" name="resend" value="1" class="btn btn-link p-0 text-dark fw-bold align-baseline">Resend code</button>
+                                        </p>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

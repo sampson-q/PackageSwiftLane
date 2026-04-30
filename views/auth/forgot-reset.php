@@ -60,9 +60,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Main Css -->
     <link href="assets/css_main_deprixa/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
     <link href="assets/css_main_deprixa/css/colors/default.css" rel="stylesheet" id="color-opt">
+    <link href="assets/css_main_deprixa/css/auth-pages.css" rel="stylesheet" type="text/css" />
 </head>
 
-<body>
+<body class="auth-page">
 
     <!-- Loader -->
     <div id="preloader">
@@ -76,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Loader -->
 
     <div class="back-to-home">
-        <a href="forgot-password.php" class="back-button btn btn-icon btn-primary"><i data-feather="arrow-left" class="icons"></i></a>
+        <a href="forgot-password.php" class="back-button btn btn-icon btn-primary" aria-label="Back to forgot password"><i data-feather="arrow-left" class="icons"></i></a>
     </div>
 
     <!-- Hero Start -->
@@ -87,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="cover-user-img d-flex align-items-center">
                         <div class="row">
                             <div class="col-12">
-                                <div class="card login-page border-0" style="z-index: 1">
+                                <div class="card auth-card auth-card--compact login-page border-0" style="z-index: 1">
                                     <div class="card-title text-center">
                                         <a class="logo" href="index.php">
                                             <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>

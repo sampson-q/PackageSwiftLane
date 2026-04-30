@@ -17,6 +17,7 @@
     <!-- Main Css -->
     <link href="assets/css_main_deprixa/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
     <link href="assets/css_main_deprixa/css/colors/default.css" rel="stylesheet" id="color-opt">
+    <link href="assets/css_main_deprixa/css/auth-pages.css" rel="stylesheet" type="text/css" />
 
     <script type="text/javascript" src="assets/js/jquery.js"></script>
     <script type="text/javascript" src="assets/js/jquery-ui.js"></script>
@@ -28,7 +29,7 @@
 
 </head>
 
-<body>
+<body class="auth-page">
 
     <!-- Loader -->
     <div id="preloader">
@@ -42,7 +43,7 @@
     <!-- Loader -->
 
     <div class="back-to-home">
-        <a href="" class="back-button btn btn-icon btn-primary"><i data-feather="arrow-left" class="icons"></i></a>
+        <a href="login.php" class="back-button btn btn-icon btn-primary" aria-label="Back to login"><i data-feather="arrow-left" class="icons"></i></a>
     </div>
 
     <!-- Hero Start -->
@@ -53,7 +54,7 @@
                     <div class="cover-user-img d-flex align-items-center">
                         <div class="row">
                             <div class="col-12">
-                                <div class="card border-0" style="z-index: 1">
+                                    <div class="card auth-card auth-card--compact border-0" style="z-index: 1">
                                     <div class="card-title text-center">
                                         <a class="logo" href="index.php">
                                             <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>

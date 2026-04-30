@@ -70,9 +70,10 @@ if (isset($_POST['login'])) {
         <!-- Main Css -->
         <link href="assets/css_main_deprixa/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
         <link href="assets/css_main_deprixa/css/colors/default.css" rel="stylesheet" id="color-opt">
+        <link href="assets/css_main_deprixa/css/auth-pages.css" rel="stylesheet" type="text/css" />
     </head>
 
-    <body>
+    <body class="auth-page">
         <!-- Loader -->
         <div id="preloader">
             <div id="status">
@@ -85,126 +86,101 @@ if (isset($_POST['login'])) {
         <!-- Loader -->
 
         <div class="back-to-home">
-            <a href="" class="back-button btn btn-icon btn-primary"><i data-feather="arrow-left" class="icons"></i></a>
+            <a href="index.php" class="back-button btn btn-icon btn-primary" aria-label="Back to home"><i data-feather="arrow-left" class="icons"></i></a>
         </div>
 
-        <!-- Hero Start -->
-        <section class="cover-user bg-white">
+        <section class="auth-shell">
             <div class="container-fluid px-0">
-                <div class="row position-relative">
-                    <div class="col-lg-5 cover-my-30 order-2">
-                        <div class="cover-user-img d-flex align-items-center">
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="card login-page border-0" style="z-index: 1">
-                                        <div class="card-title text-center row">
-                                            <a class="logo" href="index.php">
-                                                <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
-                                            </a>
-                                            
-                                            <div class="col-3">
-                                                <a href="tracking.php" class="btn btn-light"><i data-feather="truck" class="fea icon-sm"></i> <?php echo $lang['langs_06'] ?></a>
-                                            </div>
-                                            <div class="col-3" href="index.php">
-                                                <a href="https://swiftglobalhq.com/" target="_blank" class="btn btn-light"><i data-feather="globe" class="fea icon-sm"></i> <?php echo 'Website'?></a>
-                                            </div>
-                                            <div class="col-3">
-                                                <a href="https://swiftglobalhq.com/authorization-shipping-form/" target="_blank" class="btn btn-light"><i data-feather="file-text" class="fea icon-sm"></i> <?php echo 'Auth. Form'; ?></a>
-                                            </div>
-                                            <div class="col-3" href="index.php">
-                                                <a href="sign-up.php" class="btn btn-light"><i data-feather="user-plus" class="fea icon-sm"></i> <?php echo 'Register'?></a>
-                                            </div>
-                                        </div>
-                                        <div><br></div>
-                                        <div class="card-body p-0">
+                <div class="row g-0 auth-shell__grid">
+                    <div class="col-lg-6 auth-shell__panel auth-shell__panel--visual order-2 order-lg-1" style="--auth-visual-image: url('assets/images/Login.svg');">
+                        <div class="auth-visual"></div>
+                    </div>
 
-                                            <div id="msgholder2">
+                    <div class="col-lg-6 auth-shell__panel auth-shell__panel--form order-1 order-lg-2">
+                        <div class="auth-card auth-card--compact card login-page border-0">
+                            <div class="auth-card__top text-center">
+                                <a class="logo" href="index.php">
+                                    <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
+                                </a>
+                            </div>
+
+                            <div class="card-body">
+                                <div class="text-center">
+                                    <h4 class="auth-heading mb-2"><?php echo $lang['message_title_login0'] ?></h4>
+                                    <p class="auth-subtitle">Use your account to continue.</p>
+                                </div>
+
+                                <div id="msgholder2" class="mt-4">
+                                    <?php
+                                    if (isset($login) && $login->errors) {
+                                    ?>
+                                        <div class="alert alert-danger" id="success-alert">
+                                            <p class="mb-0"><span class="icon-minus-sign"></span>
+                                                <i class="close icon-remove-circle"></i>
+                                                <span>Error!</span>
                                                 <?php
-                                                if (isset($login)) {
-                                                    if ($login->errors) {
-                                                ?>
-                                                        <div class="alert alert-danger" id="success-alert">
-                                                            <p><span class="icon-minus-sign"></span>
-                                                                <i class="close icon-remove-circle"></i>
-                                                                <span>Error!</span>
-                                                                <?php
-                                                                foreach ($login->errors as $error) {
-                                                                    echo $error;
-                                                                } ?>
-                                                            </p>
-                                                        </div>
-                                                <?php
-                                                    }
+                                                foreach ($login->errors as $error) {
+                                                    echo $error;
                                                 }
                                                 ?>
-                                            </div>
-                                            <div id="loader" style="display:none"></div>
-                                            <form class="login-form mt-4" method="post" name="login_form" id="login-form">
-                                                <div class="row">
-                                                    <div class="col-lg-12">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><?php echo 'Swift ' . $lang['left115'] ?> <span class="text-danger">*</span></label>
-                                                            <div class="form-icon position-relative">
-                                                                <i data-feather="mail" class="fea icon-sm icons"></i>
-                                                                <input type="text" class="form-control ps-5" placeholder="<?php echo $lang['left116'] . ' / Email' ?>" name="username" id="username" required="">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <!--end col-->
+                                            </p>
+                                        </div>
+                                    <?php } ?>
+                                </div>
 
-                                                    <div class="col-lg-12">
-                                                        <div class="mb-3">
-                                                            <label class="form-label"><?php echo $lang['left117'] ?> <span class="text-danger">*</span></label>
-                                                            <div class="form-icon position-relative">
-                                                                <i data-feather="shield" class="fea icon-sm icons"></i>
-                                                                <input type="password" class="form-control ps-5" placeholder="<?php echo $lang['left118'] ?>" name="password" id="password" required="">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <!--end col-->
+                                <div id="loader" style="display:none"></div>
 
-                                                    <div class="col-lg-12">
-                                                        <div class="d-flex justify-content-between">
-                                                            <div class="mb-3">
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox" name="remember_me" value="1" id="flexCheckDefault">
-                                                                    <label class="form-check-label" for="flexCheckDefault"><?php echo $lang['left120'] ?></label>
-                                                                </div>
-                                                            </div>
-                                                            <p class="forgot-pass mb-0"><a href="forgot-password.php" class="text-dark fw-bold"><?php echo $lang['left119'] ?></a></p>
-                                                        </div>
-                                                    </div>
-                                                    <!--end col-->
-
-                                                    <div class="col-lg-12 mb-0">
-                                                        <div class="d-grid">
-                                                            <button class="btn btn-grad"><?php echo $lang['left121'] ?></button>
-                                                            <input name="login" type="hidden" value="1" />
-                                                        </div>
-                                                    </div>
+                                <form class="login-form mt-4" method="post" name="login_form" id="login-form">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="mb-3">
+                                                <label class="form-label"><?php echo 'Swift ' . $lang['left115'] ?> <span class="text-danger">*</span></label>
+                                                <div class="form-icon position-relative">
+                                                    <i data-feather="mail" class="fea icon-sm icons"></i>
+                                                    <input type="text" class="form-control ps-5" placeholder="<?php echo $lang['left116'] . ' / Email' ?>" name="username" id="username" required="" autocomplete="username">
                                                 </div>
-                                                <!--end row-->
-                                            </form>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="mb-3">
+                                                <label class="form-label"><?php echo $lang['left117'] ?> <span class="text-danger">*</span></label>
+                                                <div class="form-icon position-relative">
+                                                    <i data-feather="shield" class="fea icon-sm icons"></i>
+                                                    <input type="password" class="form-control ps-5" placeholder="<?php echo $lang['left118'] ?>" name="password" id="password" required="" autocomplete="current-password">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                                <div class="form-check mb-0">
+                                                    <input class="form-check-input" type="checkbox" name="remember_me" value="1" id="flexCheckDefault">
+                                                    <label class="form-check-label" for="flexCheckDefault"><?php echo $lang['left120'] ?></label>
+                                                </div>
+                                                <p class="forgot-pass mb-0"><a href="forgot-password.php" class="text-dark fw-bold"><?php echo $lang['left119'] ?></a></p>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12 mt-2">
+                                            <div class="d-grid">
+                                                <button class="btn btn-grad"><?php echo $lang['left121'] ?></button>
+                                                <input name="login" type="hidden" value="1" />
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12 text-center auth-footer-links">
+                                            <a href="tracking.php" class="text-dark fw-bold me-3"><?php echo $lang['langs_06'] ?></a>
+                                            <a href="sign-up.php" class="text-dark fw-bold">Register</a>
                                         </div>
                                     </div>
-                                </div>
-                                <!--end col-->
-
+                                </form>
                             </div>
-                            <!--end row-->
-                        </div> <!-- end about detail -->
-                    </div> <!-- end col -->
-
-                    <div class="col-lg-7 offset-lg-5 padding-less img order-1" data-jarallax='{"speed": 0.5}'>
-                        <img src="assets/images/Login.svg" width="1000px" class="img-fluid" alt="">
+                        </div>
                     </div>
                 </div>
-                <!--end row-->
             </div>
-            <!--end container fluid-->
         </section>
-        <!--end section-->
-        <!-- Hero End -->
 
         <!-- javascript -->
         <script src="assets/custom_dependencies/jquery-3.6.0.min.js"></script>
