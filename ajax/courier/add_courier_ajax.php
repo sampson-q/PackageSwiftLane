@@ -28,7 +28,7 @@ require_login();
 require_permission('view_shipment_list');
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
-require_once("../notify_whatsapp/api_whatsapp_service.php");
+require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 require_once("../notify_sms/api_sms_service.php");
 
 $user   = new User;
@@ -458,7 +458,7 @@ if (empty($errors)) {
             $email_template->body
         );
 
-        $newbody = cdp_cleanOut($body);
+        $newbody = cdp_cleanOutx($body);
 
         // --- Email (PHP mail o SMTP) ---
         if ($check_mail == 'PHP') {
@@ -604,26 +604,89 @@ if (empty($errors)) {
 
         cdp_insertCourierShipmentAddresses($dataAddressesShip);
 
-        // =======================
-        // WHATSAPP
-        // =======================
-        $notify_whatsapp_sender   = isset($_POST['notify_whatsapp_sender']) && $_POST['notify_whatsapp_sender'] == 1;
-        $notify_whatsapp_receiver = isset($_POST['notify_whatsapp_receiver']) && $_POST['notify_whatsapp_receiver'] == 1;
-
-        function sendWhatsAppNotification($data, $shipment_id, $type) {
+        if (!empty($sender_data->phone)) {
             try {
-                sendNotificationWhatsAppWithPDF($data, $shipment_id, $type);
+                // Get template 4 for package registration
+                $tpl = getTemplateWhatsApp(4);
+
+                if ($tpl) {
+                    // Build packages details list
+                    $packages_details = '';
+                    if (isset($packages) && is_array($packages) && count($packages) > 0) {
+                        foreach ($packages as $index => $package) {
+                            $packages_details .= ($index + 1) . ". " .
+                                $package->description . "\n" .
+                                "   • Qty: " . $package->qty . "\n" .
+                                "   • Weight: " . $package->weight . " lbs\n" .
+                                "   • Dimensions: " . $package->length .
+                                " x " . $package->width .
+                                " x " . $package->height . " inches\n" .
+                                "   • Declared Value: $" . number_format($package->declared_value, 2) . "\n";
+
+                            if ($package->fixed_value > 0) {
+                                $packages_details .= "   • Fixed Value: $" . number_format($package->fixed_value, 2) . "\n";
+                            }
+                            $packages_details .= "\n";
+                        }
+                    }
+
+                    // Get courier name
+                    $db_courier = new Conexion;
+                    $db_courier->cdp_query("SELECT courier_name FROM cdb_courier_com WHERE id = :id");
+                    $db_courier->bind(':id', $_POST["order_courier"]);
+                    $db_courier->cdp_execute();
+                    $courier_obj = $db_courier->cdp_registro();
+                    $courier_name = $courier_obj ? $courier_obj->courier_name : 'Standard';
+
+                    // Get service type
+                    $db_service = new Conexion;
+                    $db_service->cdp_query("SELECT s_name FROM cdb_shipping_mode WHERE id = :id");
+                    $db_service->bind(':id', $_POST["order_service_options"]);
+                    $db_service->cdp_execute();
+                    $service_obj = $db_service->cdp_registro();
+                    $service_type = $service_obj ? $service_obj->s_name : 'Standard';
+
+                    // Get delivery time
+                    $db_delivery = new Conexion;
+                    $db_delivery->cdp_query("SELECT deli_time_description FROM cdb_delivery_time WHERE id = :id");
+                    $db_delivery->bind(':id', $_POST["order_deli_time"]);
+                    $db_delivery->cdp_execute();
+                    $delivery_obj = $db_delivery->cdp_registro();
+                    $delivery_time = $delivery_obj ? $delivery_obj->deli_time_description : 'N/A';
+
+                    // Format the message with all placeholders
+                    $whatsapp_body = str_replace(
+                        [
+                            '[CUSTOMER_FULLNAME]',
+                            '[TRACKING_NUMBER]',
+                            '[PACKAGES_DETAILS]',
+                            '[COURIER_NAME]',
+                            '[SERVICE_TYPE]',
+                            '[DELIVERY_TIME]',
+                            '[TOTAL_AMOUNT]',
+                            '[COMPANY_SITE_URL]',
+                            '[COMPANY_NAME]'
+                        ],
+                        [
+                            ucfirst("{$sender_data->fname} {$sender_data->lname}"),
+                            $fullshipment,
+                            trim($packages_details),
+                            $courier_name,
+                            $service_type,
+                            $delivery_time,
+                            '$' . number_format($total_envio, 2),
+                            $settings->site_url,
+                            $settings->site_name
+                        ],
+                        $tpl->body
+                    );
+
+                    // Send via v2 API
+                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                }
             } catch (Exception $e) {
-                error_log('Error sending WhatsApp notification: ' . $e->getMessage());
+                error_log('Error sending WhatsApp v2 notification to sender: ' . $e->getMessage());
             }
-        }
-
-        if ($notify_whatsapp_sender) {
-            sendWhatsAppNotification($sender_data, $shipment_id, 3);
-        }
-
-        if ($notify_whatsapp_receiver) {
-            sendWhatsAppNotification($receiver_data, $shipment_id, 3);
         }
 
         // =======================
