@@ -32,3 +32,4 @@ assets/uploads/
 
 api/v1/storage/pending_logins/*
 api/v1/storage/pending_signups/*
+.vscode
