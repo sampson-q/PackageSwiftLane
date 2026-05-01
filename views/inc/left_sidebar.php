@@ -11,7 +11,7 @@
 						<!-- User Profile-->
 						<div class="user-profile d-flex no-block dropdown m-t-20">
 							<div class="user-pic">
-								<img src="assets/<?php echo ($userData->avatar) ? $userData->avatar : "blank.png"; ?>" class="rounded-circle" width="50" />
+								<img src="<?php echo ($userData->avatar) ? $userData->avatar : "blank.png"; ?>" class="rounded-circle" width="50" />
 							</div>
 							<?php
 							date_default_timezone_set("" . $core->timezone . "");
@@ -882,7 +882,7 @@
 						<!-- User Profile-->
 						<div class="user-profile d-flex no-block dropdown m-t-20">
 							<div class="user-pic">
-								<img src="assets/<?php echo ($userData->avatar) ? $userData->avatar : "uploads/blank.png"; ?>" class="rounded-circle" width="50" />
+								<img src="<?php echo ($userData->avatar) ? $userData->avatar : "uploads/blank.png"; ?>" class="rounded-circle" width="50" />
 							</div>
 							<?php
 							date_default_timezone_set("" . $core->timezone . "");
@@ -1686,7 +1686,7 @@
 						<!-- User Profile-->
 						<div class="user-profile d-flex no-block dropdown m-t-20">
 							<div class="user-pic">
-								<img src="assets/<?php echo ($userData->avatar) ? $userData->avatar : "uploads/blank.png"; ?>" class="rounded-circle" width="50" />
+								<img src="<?php echo ($userData->avatar) ? $userData->avatar : "uploads/blank.png"; ?>" class="rounded-circle" width="50" />
 							</div>
 							<?php
 							date_default_timezone_set("" . $core->timezone . "");
@@ -1979,7 +1979,7 @@
 						<!-- User Profile-->
 						<div class="user-profile d-flex no-block dropdown m-t-20">
 							<div class="user-pic">
-								<img src="assets/<?php echo ($userData->avatar) ? $userData->avatar : "uploads/blank.png"; ?>" class="rounded-circle" width="50" />
+								<img src="<?php echo ($userData->avatar) ? $userData->avatar : "uploads/blank.png"; ?>" class="rounded-circle" width="50" />
 							</div>
 							<?php
 							date_default_timezone_set("" . $core->timezone . "");
