@@ -886,6 +886,8 @@ $("#invoice_form").on("submit", function (event) {
     data.append("filesMultiple[]", document.getElementById("filesMultiple").files[i]);
   }
 
+  data.append('_csrf_token', $('input[name="_csrf_token"]').val());
+
 $.ajax({
     type: "POST",
     url: "ajax/customers_packages/add_customers_packages_ajax.php",
