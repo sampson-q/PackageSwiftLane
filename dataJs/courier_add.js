@@ -869,6 +869,8 @@ $("#invoice_form").on("submit", function (event) {
     }
   }
 
+  data.append('_csrf_token', $('input[name="_csrf_token"]').val());
+
   $.ajax({
     type: "POST",
     url: "ajax/courier/add_courier_ajax.php",
