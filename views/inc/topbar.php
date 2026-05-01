@@ -76,12 +76,12 @@
 					<li class="nav-item d-none d-md-block"><a class="nav-link waves-effect waves-dark text-body" href="javascript:void(0)"><iconify-icon icon="solar:settings-outline" class="font-22"></iconify-icon></a></li>
 					<?php } ?>
 					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle text-muted waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="assets/<?php echo ($userData->avatar) ? $userData->avatar : "uploads/blank.png"; ?>" class="rounded-circle" width="36" height="36" />&nbsp;<?php if (empty($show_dashboard_new_header)) { ?><iconify-icon icon="solar:alt-arrow-down-outline"></iconify-icon><?php } ?></a>
+						<a class="nav-link dropdown-toggle text-muted waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="<?php echo ($userData->avatar) ? $userData->avatar : "uploads/blank.png"; ?>" class="rounded-circle" width="36" height="36" />&nbsp;<?php if (empty($show_dashboard_new_header)) { ?><iconify-icon icon="solar:alt-arrow-down-outline"></iconify-icon><?php } ?></a>
 						<div class="dropdown-menu dropdown-menu-right user-dd animated flipInY">
 							<span class="with-arrow"><span class="bg-primary"></span></span>
 							<div class="d-flex no-block align-items-center p-15 bg-primary text-white m-b-10">
 								<div class="">
-									<img src="assets/<?php echo ($userData->avatar) ? $userData->avatar : "uploads/blank.png"; ?>" class="rounded-circle" width="80" />
+									<img src="<?php echo ($userData->avatar) ? $userData->avatar : "uploads/blank.png"; ?>" class="rounded-circle" width="80" />
 								</div>
 								<div class="m-l-10">
 									<h4 class="m-b-0"><?php echo $userData->username; ?></h4>
