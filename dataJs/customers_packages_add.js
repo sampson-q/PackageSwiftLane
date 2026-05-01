@@ -1530,3 +1530,67 @@ function cdp_showSuccess(messages, shipment_id) {
     }
   });
 }
+
+$("#calculate_invoice").on("click", function (event) {
+  var recipient_id = $("#recipient_id").val();
+  var recipient_address_id = $("#recipient_address_id").val();
+  var sender_id = $("#sender_id").val();
+  var sender_address_id = $("#sender_address_id").val();
+  var packages = JSON.stringify(packagesItems);
+
+  var tariffs_value = $("#tariffs_value").val();
+  var declared_value_tax = $("#declared_value_tax").val();
+  var insurance_value = $("#insurance_value").val();
+  var tax_value = $("#tax_value").val();
+  var discount_value = $("#discount_value").val();
+  var reexpedicion_value = $("#reexpedicion_value").val();
+  var price_lb = $("#price_lb").val();
+  var insured_value = $("#insured_value").val();
+
+  reexpedicion_value = parseFloat(reexpedicion_value);
+  insured_value = parseFloat(insured_value);
+  price_lb = parseFloat(price_lb);
+
+  var data = {
+    packages: packages,
+    sender_id: sender_id,
+    sender_address: sender_address_id,
+    tariffs_value: tariffs_value,
+    declared_value_tax: declared_value_tax,
+    insurance_value: insurance_value,
+    tax_value: tax_value,
+    discount_value: discount_value,
+    reexpedicion_value: reexpedicion_value,
+    price_lb: price_lb,
+    insured_value: insured_value,
+  };
+
+  $.ajax({
+    type: "POST",
+    data: data,
+    headers: {
+    'X-CSRF-TOKEN': $('input[name="_csrf_token"]').val()
+},
+    url: "ajax/courier/get_price_range_weight_tariffs_pickup_ajax.php",
+    dataType: "json",
+    beforeSend: function (objeto) {},
+    success: function (data) {
+      if (data.success) {
+        $("#table-totals").removeClass("d-none");
+        $("#create_invoice").attr("disabled", false);
+        $("#price_lb").val(data.data.price);
+        calculateFinalTotal();
+      } else {
+        $("#table-totals").addClass("d-none");
+        $("#create_invoice").attr("disabled", true);
+        Swal.fire({
+          title: "Error!",
+          text: data.error,
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+      }
+    },
+  });
+  event.preventDefault();
+});
