@@ -21,7 +21,6 @@
 
 ini_set('display_errors', 0);
 
-
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
@@ -30,13 +29,12 @@ require_permission('view_client_list');
 require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
-require_once("../notify_whatsapp/api_whatsapp_service.php");
+// require_once("../notify_whatsapp/api_whatsapp_service.php");
 require_once("../notify_sms/api_sms_service.php");
 
 $user = new User;
 $core = new Core;
 $errors = array();
-
 
 if (empty($_POST['tracking_purchase']))
 
@@ -295,7 +293,7 @@ if (empty($errors)) {
                     $email_template->body
                 );
 
-                $newbody = cdp_cleanOut($body);
+                $newbody = cdp_cleanOutx($body);
 
                 //SENDMAIL PHP
 
@@ -434,12 +432,10 @@ if (empty($errors)) {
 
                 cdp_insertCourierShipmentAddresses($dataAddresses);
 
-                //NOTIFY WHATSAPP API
-                if (isset($_POST['notify_whatsapp_sender']) && $_POST['notify_whatsapp_sender'] == 1) {
-                    sendNotificationWhatsAppWithPDFPackages($sender_data, $shipment_id, 8);
-                }
-
-
+                // //NOTIFY WHATSAPP API
+                // if (isset($_POST['notify_whatsapp_sender']) && $_POST['notify_whatsapp_sender'] == 1) {
+                //     sendNotificationWhatsAppWithPDFPackages($sender_data, $shipment_id, 8);
+                // }
 
                 // Obtener el estado de las casillas de verificación
                 $notify_sms_sender = isset($_POST['notify_sms_sender']) && $_POST['notify_sms_sender'] == 1;

@@ -32,7 +32,6 @@ require_once("../../helpers/phpmailer/class.smtp.php");
 // require_once("../notify_whatsapp/api_whatsapp_service.php");
 require_once("../notify_sms/api_sms_service.php");
 
-
 $user = new User;
 $core = new Core;
 $errors = array();
@@ -328,7 +327,7 @@ if (empty($errors)) {
             $email_template->body
         );
 
-        $newbody = cdp_cleanOut($body);
+        $newbody = cdp_cleanOutx($body);
 
         //SENDMAIL PHP
 
