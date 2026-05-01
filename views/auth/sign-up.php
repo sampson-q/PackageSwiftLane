@@ -69,11 +69,26 @@
     <section class="auth-shell">
         <div class="container-fluid px-0">
             <div class="row g-0 auth-shell__grid">
-                <div class="col-lg-5 auth-shell__panel auth-shell__panel--visual order-2 order-lg-1" style="--auth-visual-image: url('assets/images/Registration.svg');">
-                    <div class="auth-visual"></div>
+                <div class="col-lg-5 auth-shell__panel auth-shell__panel--visual order-1 order-lg-1">
+                    <div class="auth-visual d-flex flex-column justify-content-center h-100">
+                        <a class="auth-mobile-logo auth-brand" href="index.php">
+                            <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
+                        </a>
+                        <div class="auth-visual-copy">
+                            <span class="auth-badge">Create account</span>
+                            <h1>Set up your profile once, move faster later.</h1>
+                            <p>Enter the essentials, add your contact details, and finish registration in a clean guided flow.</p>
+                            <div class="auth-mini-list">
+                                <span>Profile</span>
+                                <span>Contact</span>
+                                <span>Security</span>
+                            </div>
+                        </div>
+                        <img src="assets/images/Registration.svg" class="auth-visual__image img-fluid" alt="Registration illustration">
+                    </div>
                 </div>
 
-                <div class="col-lg-7 auth-shell__panel auth-shell__panel--form order-1 order-lg-2">
+                <div class="col-lg-7 auth-shell__panel auth-shell__panel--form order-2 order-lg-2">
                     <div class="auth-card auth-card--signup card border-0" style="z-index: 1">
                         <div class="auth-card__top text-center">
                             <a class="logo" href="index.php">

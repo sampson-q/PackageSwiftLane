@@ -261,11 +261,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <section class="auth-shell">
         <div class="container-fluid px-0">
             <div class="row g-0 auth-shell__grid">
-                <div class="col-lg-6 auth-shell__panel auth-shell__panel--visual order-2 order-lg-1" style="--auth-visual-image: url('assets/images/OT(1)P.svg');">
-                    <div class="auth-visual"></div>
+                <div class="col-lg-6 auth-shell__panel auth-shell__panel--visual order-1 order-lg-1">
+                    <div class="auth-visual d-flex flex-column justify-content-center h-100">
+                        <a class="auth-mobile-logo auth-brand" href="index.php">
+                            <?php echo ($core->logo_web)
+                                ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>'
+                                : $core->site_name; ?>
+                        </a>
+                        <div class="auth-visual-copy">
+                            <span class="auth-badge">Secure verification</span>
+                            <h1>Confirm the session, then continue.</h1>
+                            <p>Use the code sent to your email or WhatsApp to finish the sign-in flow.</p>
+                            <div class="auth-mini-list">
+                                <span>Email</span>
+                                <span>WhatsApp</span>
+                                <span>Trusted device</span>
+                            </div>
+                        </div>
+                        <img src="assets/images/OT(1)P.svg" class="auth-visual__image img-fluid" alt="OTP verification illustration">
+                    </div>
                 </div>
 
-                <div class="col-lg-6 auth-shell__panel auth-shell__panel--form order-1 order-lg-2">
+                <div class="col-lg-6 auth-shell__panel auth-shell__panel--form order-2 order-lg-2">
                     <div class="auth-card auth-card--compact card login-page border-0">
                         <div class="auth-card__top text-center">
                             <a class="logo" href="index.php">

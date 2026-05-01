@@ -46,73 +46,69 @@
         <a href="login.php" class="back-button btn btn-icon btn-primary" aria-label="Back to login"><i data-feather="arrow-left" class="icons"></i></a>
     </div>
 
-    <!-- Hero Start -->
-    <section class="cover-user bg-home bg-white">
+    <section class="auth-shell">
         <div class="container-fluid px-0">
-            <div class="row g-0 position-relative">
-                <div class="col-lg-5 cover-my-30 order-2">
-                    <div class="cover-user-img d-flex align-items-center">
-                        <div class="row">
-                            <div class="col-12">
-                                    <div class="card auth-card auth-card--compact border-0" style="z-index: 1">
-                                    <div class="card-title text-center">
-                                        <a class="logo" href="index.php">
-                                            <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
+            <div class="row g-0 auth-shell__grid">
+                <div class="col-lg-6 auth-shell__panel auth-shell__panel--visual order-1 order-lg-1">
+                    <div class="auth-visual d-flex flex-column justify-content-center h-100">
+                        <a class="auth-mobile-logo auth-brand" href="index.php">
+                            <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
+                        </a>
+                        <div class="auth-visual-copy">
+                            <span class="auth-badge">Account recovery</span>
+                            <h1>Reset access without starting over.</h1>
+                            <p>Use the email tied to your account and continue the recovery flow.</p>
+                            <div class="auth-mini-list">
+                                <span>Email</span>
+                                <span>OTP</span>
+                                <span>Recovery</span>
+                            </div>
+                        </div>
+                        <img src="assets/images/ForgotPassword.svg" alt="Forgot password illustration" class="auth-visual__image img-fluid">
+                    </div>
+                </div>
 
-
-                                        </a>
-                                    </div>
-                                    <div><br></div>
-                                    <div class="card-body p-0">
-                                        <h4 class="card-title text-center"><?php echo $lang['left172'] ?></h4>
-                                        <div id="resultados_ajax"></div>
-                                        <div id="loader" style="display:none"></div>
-                                        <form class="login-form mt-4" name="forgotPassword" id="forgotPassword" method="post">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <p class="text-muted"><?php echo $lang['message_title_forgot1'] ?></p>
-                                                    <div class="mb-3">
-                                                        <label class="form-label"><?php echo $lang['lemailad'] ?> <span class="text-danger">*</span></label>
-                                                        <div class="form-icon position-relative">
-                                                            <i data-feather="mail" class="fea icon-sm icons"></i>
-                                                            <input type="email" class="form-control ps-5" placeholder="<?php echo $lang['left176'] ?>" id="email" name="email" required="">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <!--end col-->
-                                                <div class="col-lg-12">
-                                                    <div class="d-grid">
-                                                        <button type="submit" name="dosubmit" class="btn btn-danger"><?php echo $lang['langs_010108'] ?></button>
-                                                    </div>
-                                                </div>
-                                                <!--end col-->
-                                                <div class="mx-auto">
-                                                    <p class="mb-0 mt-3"><small class="text-dark me-2"><?php echo $lang['langs_010109'] ?> </br><?php if ($core->reg_allowed) : ?></small>
-                                                        <a href="sign-up.php" class="text-dark fw-bold"><?php echo $lang['langs_010110'] ?></a><?php endif; ?> | <a href="index.php" class="text-dark fw-bold"><?php echo $lang['langs_010111'] ?></a>
-
-                                                    </p>
-                                                </div>
-                                                <!--end col-->
+                <div class="col-lg-6 auth-shell__panel auth-shell__panel--form order-2 order-lg-2">
+                    <div class="auth-card auth-card--compact card auth-card--forgot border-0" style="z-index: 1">
+                        <div class="auth-card__top text-center">
+                            <a class="logo" href="index.php">
+                                <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <h4 class="card-title text-center"><?php echo $lang['left172'] ?></h4>
+                            <div id="resultados_ajax"></div>
+                            <div id="loader" style="display:none"></div>
+                            <form class="login-form mt-4" name="forgotPassword" id="forgotPassword" method="post">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <p class="text-muted"><?php echo $lang['message_title_forgot1'] ?></p>
+                                        <div class="mb-3">
+                                            <label class="form-label"><?php echo $lang['lemailad'] ?> <span class="text-danger">*</span></label>
+                                            <div class="form-icon position-relative">
+                                                <i data-feather="mail" class="fea icon-sm icons"></i>
+                                                <input type="email" class="form-control ps-5" placeholder="<?php echo $lang['left176'] ?>" id="email" name="email" required="">
                                             </div>
-                                            <!--end row-->
-                                        </form>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-grid">
+                                            <button type="submit" name="dosubmit" class="btn btn-danger"><?php echo $lang['langs_010108'] ?></button>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 text-center auth-footer-links">
+                                        <a href="sign-up.php" class="text-dark fw-bold"><?php echo $lang['langs_010110'] ?></a>
+                                        <span class="mx-2 text-muted">|</span>
+                                        <a href="index.php" class="text-dark fw-bold"><?php echo $lang['langs_010111'] ?></a>
                                     </div>
                                 </div>
-                            </div>
-                            <!--end col-->
+                            </form>
                         </div>
-                        <!--end row-->
-                    </div> <!-- end about detail -->
-                </div> <!-- end col -->
-
-                <div class="col-lg-7 offset-lg-5 padding-less img order-1" style="background-image:url('assets\\images\\ForgotPassword.svg')" data-jarallax='{"speed": 0.5}'></div><!-- end col -->
+                    </div>
+                </div>
             </div>
-            <!--end row-->
         </div>
-        <!--end container fluid-->
     </section>
-    <!--end section-->
-    <!-- Hero End -->
 
 
 
