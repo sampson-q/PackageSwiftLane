@@ -413,7 +413,7 @@ class Core
   public function cdp_getShipmode()
   {
     // Use categories table as shipping modes
-    $sql = "SELECT id, name_item AS ship_mode FROM cdb_shipping_mode ORDER BY id ASC";
+    $sql = "SELECT id, ship_mode FROM cdb_shipping_mode ORDER BY id ASC";
 
     $this->db->cdp_query($sql);
     $this->db->cdp_execute();
