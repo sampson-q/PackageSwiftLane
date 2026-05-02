@@ -5873,7 +5873,8 @@ function cdp_insertCourierShipment($datos)
         due_date,
         status_invoice,
         order_incomplete,
-        manual_tariff                 
+        manual_tariff,
+        recipient_type           
         )
     VALUES
         (
@@ -5901,12 +5902,14 @@ function cdp_insertCourierShipment($datos)
         :due_date,
         :status_invoice,
         :order_incomplete,
-        :manual_tariff
+        :manual_tariff,
+        :recipient_type
         )
 ");
 
     $db->bind(':manual_tariff',  $datos['manual_tariff']);
     $db->bind(':order_incomplete',  $datos['order_incomplete']);
+    $db->bind(':recipient_type',  $datos['recipient_type']);
     $db->bind(':is_pickup',  $datos['is_pickup']);
     $db->bind(':user_id',  $datos['user_id']);
     $db->bind(':order_prefix',  $datos['order_prefix']);
