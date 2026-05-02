@@ -57,10 +57,17 @@ $row_order = $data['data'];
 $db->cdp_query("SELECT * FROM cdb_styles where id= '" . $row_order->status_courier . "'");
 $status_courier = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->sender_id . "'");
+$db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row_order->sender_id) . "'");
 $sender_data = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row_order->receiver_id . "'");
+$recipient_type = isset($row_order->recipient_type) ? $row_order->recipient_type : 'recipient';
+
+if ($recipient_type === 'user') {
+    $db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row_order->receiver_id) . "'");
+} else {
+    $db->cdp_query("SELECT * FROM cdb_recipients where id= '" . intval($row_order->receiver_id) . "'");
+}
+
 $receiver_data = $db->cdp_registro();
 
 $db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row_order->c_prefix . $row_order->c_no . "'");
