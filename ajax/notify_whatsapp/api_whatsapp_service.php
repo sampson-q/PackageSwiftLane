@@ -7,7 +7,7 @@ if (!defined('DEPRIXAPRO_LOADER_LOADED')) {
     require_permission('view_dashboard');
 }
 require_once(__DIR__ . "/../../helpers/querys.php");
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../../helpers/vendor/autoload.php';
 
 use Spipu\Html2Pdf\Html2Pdf;
 use Spipu\Html2Pdf\Exception\Html2PdfException;
