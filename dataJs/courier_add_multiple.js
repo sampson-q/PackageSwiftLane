@@ -899,6 +899,8 @@ $("#invoice_form").on("submit", function (event) {
     data.append("filesMultiple[]", document.getElementById("filesMultiple").files[i]);
   }
 
+  data.append('_csrf_token', $('input[name="_csrf_token"]').val());
+
   $.ajax({
     type: "POST",
     url: "ajax/courier/add_courier_multiple_ajax.php",
@@ -1129,7 +1131,7 @@ function cdp_select2_init_recipient() {
 
         // re-init with correct type
         cdp_select2_init_recipient_address();
-        scheduleAutoFetch();
+        // scheduleAutoFetch();
     });
 }
 
@@ -2043,6 +2045,9 @@ $("#calculate_invoice").on("click", function (event) {
     data: data,
     url: "ajax/courier/get_price_range_weight_tariffs_ajax.php",
     dataType: "json",
+    headers: {
+        'X-CSRF-TOKEN': $('input[name="_csrf_token"]').val()
+    },
     beforeSend: function (objeto) {},
     success: function (data) {
       if (data.success) {

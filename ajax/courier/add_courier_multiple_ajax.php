@@ -30,7 +30,7 @@ require_permission('view_shipment_list');
 require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
-require_once("../notify_whatsapp/api_whatsapp_service.php");
+// require_once("../notify_whatsapp/api_whatsapp_service.php");
 require_once("../notify_sms/api_sms_service.php");
 
 
@@ -493,17 +493,15 @@ if (empty($errors)) {
 
                 cdp_insertCourierShipmentAddresses($dataAddresses);
 
-                //NOTIFY WHATSAPP API
+                // //NOTIFY WHATSAPP API
 
-                if (isset($_POST['notify_whatsapp_sender']) && $_POST['notify_whatsapp_sender'] == 1) {
-                    sendNotificationWhatsAppWithPDF($sender_data, $shipment_id, 3);
-                }
+                // if (isset($_POST['notify_whatsapp_sender']) && $_POST['notify_whatsapp_sender'] == 1) {
+                //     sendNotificationWhatsAppWithPDF($sender_data, $shipment_id, 3);
+                // }
 
-                if (isset($_POST['notify_whatsapp_receiver']) && $_POST['notify_whatsapp_receiver'] == 1) {
-                    sendNotificationWhatsAppWithPDF($receiver_data, $shipment_id, 3);
-                }
-
-
+                // if (isset($_POST['notify_whatsapp_receiver']) && $_POST['notify_whatsapp_receiver'] == 1) {
+                //     sendNotificationWhatsAppWithPDF($receiver_data, $shipment_id, 3);
+                // }
 
                 // Obtener el estado de las casillas de verificación
                 $notify_sms_sender = isset($_POST['notify_sms_sender']) && $_POST['notify_sms_sender'] == 1;
