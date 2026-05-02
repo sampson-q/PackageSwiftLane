@@ -699,9 +699,14 @@ if (isset($_POST["create_invoice"])) {
     cdp_insertNotificationsUsers($notification_id, $_POST['sender_id']);
 
 
-    $db->cdp_query("SELECT * FROM cdb_senders_addresses where id_addresses= '" . $_POST["sender_address_id"] . "'");
+    $db->cdp_query("SELECT * FROM cdb_senders_addresses where id_addresses= '" . intval($_POST["sender_address_id"]) . "'");
 
     $sender_address_data = $db->cdp_registro();
+
+    if (!$sender_address_data) {
+        error_log('ERROR: Sender address not found. ID: ' . intval($_POST["sender_address_id"]));
+        die('Error: Sender address not found. Please refresh and try again.');
+    }
 
     $sender_country = $sender_address_data->country;
     $sender_state = $sender_address_data->state;
@@ -719,9 +724,22 @@ if (isset($_POST["create_invoice"])) {
     $final_sender_city = $sender_city['data'];
 
 
-    $db->cdp_query("SELECT * FROM cdb_recipients_addresses where id_addresses= '" . $_POST["recipient_address_id"] . "'");
+    $recipient_type = isset($_POST["recipient_type"]) ? cdp_sanitize($_POST["recipient_type"]) : 'recipient';
+    if ($recipient_type === 'user') {
+        // Query sender addresses (when recipient IS the sender)
+        $db->cdp_query("SELECT * FROM cdb_senders_addresses where id_addresses= '" . intval($_POST["recipient_address_id"]) . "'");
+    } else {
+        // Query recipient addresses (custom recipients)
+        $db->cdp_query("SELECT * FROM cdb_recipients_addresses where id_addresses= '" . intval($_POST["recipient_address_id"]) . "'");
+    }
 
     $recipient_address_data = $db->cdp_registro();
+
+    // If address was in SELECT2 dropdown, it WILL exist here. If not, something went wrong.
+    if (!$recipient_address_data) {
+        error_log('ERROR: Recipient address not found. Type: ' . $recipient_type . ', ID: ' . intval($_POST["recipient_address_id"]));
+        die('Error: Recipient address not found. Please refresh and try again.');
+    }
 
     $recipient_address = $recipient_address_data->address;
     $recipient_country = $recipient_address_data->country;
@@ -1181,6 +1199,8 @@ if (isset($_POST["create_invoice"])) {
                                                     </div>
                                                 </div>
                                             </div>
+                                            
+                                            <input type="hidden" id="recipient_type" name="recipient_type" value="recipient">
                                         </div>
                                     </div>
                                 </div>
