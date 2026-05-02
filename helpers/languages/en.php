@@ -3104,7 +3104,7 @@ $lang = array(
 
 	/** Consolidates **/
 	"langs_083" => "Consolidate List",
-	"langs_084" => "Save consolidated shipments",
+	"langs_084" => "Save Consolidated Shipments",
 	"langs_10084" => "Update Consolidated",
 	"langs_085" => "Consolidated Delivered Shipments",
 	"langs_086" => "To",
