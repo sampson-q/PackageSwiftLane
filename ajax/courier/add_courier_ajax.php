@@ -201,7 +201,8 @@ if (empty($errors)) {
         'volumetric_percentage'=> $meter,
         'manual_tariff'        => $tariff_mode,
         'tracking_number' => cdp_sanitize(intval($_POST['tracking_number'])),
-        'estimated_eta' => cdp_sanitize($_POST['estimated_eta'])
+        'estimated_eta' => cdp_sanitize($_POST['estimated_eta']),
+        'recipient_type' => cdp_sanitize($_POST['recipient_type'] ?? 'recipient'),
     );
 
     $shipment_id = cdp_insertCourierShipment($dataShipment);
@@ -568,8 +569,16 @@ if (empty($errors)) {
         $sender_city_obj   = cdp_getCity($sender_city);
         $final_sender_city = $sender_city_obj['data'];
 
-        // Dirección destinatario
-        $recipient_address_data = cdp_getRecipientAddress(intval($_POST["recipient_address_id"]));
+        $recipient_type = isset($_POST["recipient_type"]) ? cdp_sanitize($_POST["recipient_type"]) : 'recipient';
+        if ($recipient_type === 'user') {
+            // Query sender addresses (when recipient IS the sender)
+            $db->cdp_query("SELECT * FROM cdb_senders_addresses where id_addresses= '" . intval($_POST["recipient_address_id"]) . "'");
+        } else {
+            // Query recipient addresses (custom recipients)
+            $db->cdp_query("SELECT * FROM cdb_recipients_addresses where id_addresses= '" . intval($_POST["recipient_address_id"]) . "'");
+        }
+
+        $recipient_address_data = $db->cdp_registro();
 
         $recipient_address  = $recipient_address_data->address;
         $recipient_country  = $recipient_address_data->country;
