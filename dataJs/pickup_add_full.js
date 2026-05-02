@@ -787,6 +787,8 @@ $("#invoice_form").on("submit", function (event) {
     data.append("filesMultiple[]", document.getElementById("filesMultiple").files[i]);
   }
 
+  data.append('_csrf_token', $('input[name="_csrf_token"]').val());
+
   $.ajax({
     type: "POST",
     url: "ajax/pickup/add_pickup_ajax.php",
@@ -2104,6 +2106,9 @@ $("#calculate_invoice").on("click", function (event) {
     data: data,
     url: "ajax/courier/get_price_range_weight_tariffs_ajax.php",
     dataType: "json",
+    headers: {
+        'X-CSRF-TOKEN': $('input[name="_csrf_token"]').val()
+    },
     beforeSend: function (objeto) {
       $(".resultados_ajax").html("Mensaje: loading...");
     },
