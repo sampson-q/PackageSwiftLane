@@ -29,7 +29,7 @@ require_permission('view_client_list');
 require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
-// require_once("../notify_whatsapp/api_whatsapp_service.php");
+require_once("../notify_whatsapp/api_whatsapp_service.php");
 require_once("../notify_sms/api_sms_service.php");
 
 $user = new User;
@@ -469,11 +469,11 @@ if (empty($errors)) {
 
         cdp_insertCourierShipmentAddresses($dataAddresses);
 
-        // //NOTIFY WHATSAPP ULTRASMG API
+        //NOTIFY WHATSAPP ULTRASMG API
         
-        // if (isset($_POST['notify_whatsapp_sender']) && $_POST['notify_whatsapp_sender'] == 1) {
-        //     sendNotificationWhatsAppWithPDFPackages($sender_data, $shipment_id, 8);
-        // }
+        if (isset($_POST['notify_whatsapp_sender']) && $_POST['notify_whatsapp_sender'] == 1) {
+            sendNotificationWhatsAppWithPDFPackages($sender_data, $shipment_id, 8);
+        }
 
 
 
