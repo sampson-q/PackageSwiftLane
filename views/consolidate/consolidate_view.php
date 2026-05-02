@@ -345,7 +345,7 @@ if ($row_order->status_invoice == 1) {
                                             <h5> &nbsp;<b><?php echo $lang['leftorder37'] ?></b></h5>
                                             <p class="text-muted  m-l-5"><?php echo $packaging->name_pack; ?></p>
                                             <h5> &nbsp;<b><?php echo $lang['leftorder48'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo  $met_payment->name_pay; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo  $met_payment->met_payment; ?></p>
                                         </div>
 
                                     </div>
