@@ -401,7 +401,7 @@ function cdp_select2_init_recipient_address() {
                 data: function (params) {
                     return {
                         id: recipient_id,
-                        type: recipient_type, // 🔥 CRITICAL
+                        type: recipient_type,
                         q: params.term
                     };
                 },
@@ -870,6 +870,7 @@ $("#invoice_form").on("submit", function (event) {
   }
 
   data.append('_csrf_token', $('input[name="_csrf_token"]').val());
+  data.append('recipient_type', window.recipient_type || 'recipient');
 
   $.ajax({
     type: "POST",
