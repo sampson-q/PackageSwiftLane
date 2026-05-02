@@ -56,8 +56,8 @@ $ship_modes = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_delivery_time where id= '" . $infoship->time_default5 . "'");
 $delivery_times = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_met_payment where id= '" . $infoship->pay_default6 . "'");
-$metod_payment = $db->cdp_registro();
+$db->cdp_query("SELECT * FROM cdb_met_payment");
+$metod_payment = $db->cdp_registros();
 
 $db->cdp_query("SELECT * FROM cdb_payment_methods where id= '" . $infoship->payment_default7 . "'");
 $payment_methods = $db->cdp_registro();
@@ -789,9 +789,7 @@ if (isset($_POST["create_invoice"])) {
     $db->bind(':recipient_zip_code',   $recipient_zip_code);
     $db->bind(':recipient_address',   $recipient_address);
 
-    $db->cdp_execute();
-
-     if ($db->cdp_execute()) {
+    if ($db->cdp_execute()) {
         // Éxito al insertar en la base de datos
         $order_id = $db->dbh->lastInsertId();
         $message = "Data has been saved successfully";
@@ -938,9 +936,9 @@ if (isset($_POST["create_invoice"])) {
             </div>
 
             <form method="post" id="invoice_form" name="invoice_form" enctype="multipart/form-data">
+                <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
                 <div class="container-fluid">
-
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="card">
@@ -1279,9 +1277,8 @@ if (isset($_POST["create_invoice"])) {
                                             <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title23'] ?> <i style="color:#ff0000" class="fas fa-donate"></i></label>
                                             <div class="input-group">
                                                 <select class="select2 form-control custom-select" id="order_pay_mode" name="order_pay_mode" required="" style="width: 100%;">
-                                                    <option value="<?php echo $metod_payment->id; ?>"><?php echo $metod_payment->name_pay; ?></option>
-                                                    <?php foreach ($payrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_pay; ?></option>
+                                                    <?php foreach ($metod_payment as $row) : ?>
+                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->met_payment; ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -1603,16 +1600,11 @@ if (isset($_POST["create_invoice"])) {
                                                         <input type="hidden" name="total_impuesto_aduanero_input" id="total_impuesto_aduanero_input" />
                                                         <input type="hidden" name="total_envio_input" id="total_envio_input" />
                                                         <input type="hidden" name="total_weight_input" id="total_weight_input" />
-                                                        <button type="button" name="calculate_invoice" id="calculate_invoice" class="btn btn-info">
+                                                        <!-- <button type="button" name="calculate_invoice" id="calculate_invoice" class="btn btn-info">
                                                             <i class="fas fa-calculator"></i>
                                                             <span class="ml-1"><?php echo $lang['leftorder17714']; ?></span>
-                                                        </button>
-
-                                                        <button type="button" name="calculate_invoice" id="calculate_invoice" class="btn btn-info">
-                                                            <i class="fas fa-calculator"></i>
-                                                            <span class="ml-1"><?php echo $lang['leftorder17714'] ?></span>
-                                                        </button>
-                                                        <input type="submit" name="create_invoice" id="create_invoice" class="btn btn-danger" value="<?php echo $lang['langs_084']; ?>" disabled />
+                                                        </button> -->
+                                                        <input type="submit" name="create_invoice" id="create_invoice" class="btn btn-danger" value="<?php echo $lang['langs_084']; ?>" />
                                                     </div>
                                                 </div>
                                             </div>
