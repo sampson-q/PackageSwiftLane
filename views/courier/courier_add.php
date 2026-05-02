@@ -773,7 +773,10 @@ $categories   = $core->cdp_getCategories();
                                                     <!-- Botones -->
                                                     <div class="row mt-3">
                                                         <div class="col-12 text-right">
-                                                            
+                                                            <!-- <button type="button" name="calculate_invoice" id="calculate_invoice" class="btn btn-info">
+                                                                <i class="fas fa-calculator"></i>
+                                                                <span class="ml-1"><?php echo $lang['leftorder17714']; ?></span>
+                                                            </button> -->
                                                             <button type="submit" name="create_invoice" id="create_invoice" class="btn btn-danger">
                                                                 <i class="fas fa-save"></i>
                                                                 <span class="ml-1"><?php echo $lang['left1103'] ?></span>
