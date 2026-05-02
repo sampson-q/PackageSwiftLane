@@ -68,7 +68,7 @@ $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
 
-$sql = "SELECT   a.status_invoice, a.total_order, a.consolidate_id , a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM cdb_consolidate as a
+$sql = "SELECT   a.recipient_type, a.status_invoice, a.total_order, a.consolidate_id, a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options, b.mod_style, b.color FROM cdb_consolidate as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 $sWhere
 			  and a.status_courier!=14
@@ -104,15 +104,15 @@ if ($numrows > 0) { ?>
 					}
 					?>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['left498'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['left499'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lorigin'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['ldestination'] ?></b></th>
+					<th><b><?php echo $lang['left498'] ?></b></th>
+					<th><b><?php echo $lang['left499'] ?></b></th>
+					<th><b><?php echo $lang['lorigin'] ?></b></th>
+					<th><b><?php echo $lang['ldestination'] ?></b></th>
 					<th><b><?php echo $lang['left533020007'] ?></b></th>
 					<th class=""><b><?php echo $lang['ship-all5'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lstatusshipment'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['global-3'] ?></b></th>
-					<th class="text-center"></th>
+					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
+					<th><b><?php echo $lang['global-3'] ?></b></th>
+					<th></th>
 				</tr>
 			</thead>
 
@@ -134,11 +134,18 @@ if ($numrows > 0) { ?>
 					$count = 0;
 					foreach ($data as $row) {
 
-						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
-						$sender_data = $db->cdp_registro();
+                        $db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row->sender_id) . "'");
+                        $sender_data = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row->receiver_id . "'");
-						$receiver_data = $db->cdp_registro();
+                        $recipient_type = isset($row->recipient_type) ? $row->recipient_type : 'recipient';
+
+                        if ($recipient_type === 'user') {
+                            $db->cdp_query("SELECT id, fname, lname FROM cdb_users where id= '" . intval($row->receiver_id) . "'");
+                        } else {
+                            $db->cdp_query("SELECT id, fname, lname FROM cdb_recipients where id= '" . intval($row->receiver_id) . "'");
+                        }
+
+                        $receiver_data = $db->cdp_registro();
 
 						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->driver_id . "'");
 						$driver_data = $db->cdp_registro();
@@ -192,16 +199,16 @@ if ($numrows > 0) { ?>
 								<?php echo $lang['ddate'] ?>: <b><?php echo $row->c_date; ?></b>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<?php echo $receiver_data->fname; ?> <?php echo $receiver_data->lname; ?>
 							</td>
 
-							<td class="text-center"><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
-							<td class="text-center"><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
+							<td class="text-wrap: wrap;"><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
+							<td style="text-wrap: wrap;"><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
 
 							
 							<td><?php
@@ -209,7 +216,7 @@ if ($numrows > 0) { ?>
 								if ($driver_data != null) {
 									echo $driver_data->fname; ?> <?php echo $driver_data->lname;
 																} ?></td>
-							<td class="text-center">
+							<td>
 								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
 							</td>
 
