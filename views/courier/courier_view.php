@@ -66,7 +66,14 @@ $status_courier = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->sender_id . "'");
 $sender_data = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row_order->receiver_id . "'");
+$recipient_type = isset($row_order->recipient_type) ? $row_order->recipient_type : 'recipient';
+
+if ($recipient_type === 'user') {
+    $db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row_order->receiver_id) . "'");
+} else {
+    $db->cdp_query("SELECT * FROM cdb_recipients where id= '" . intval($row_order->receiver_id) . "'");
+}
+
 $receiver_data = $db->cdp_registro();
 
 $db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row_order->order_prefix . $row_order->order_no . "'");
@@ -78,7 +85,8 @@ $courier_com = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_category where id= '" . $row_order->order_item_category . "'");
 $category = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_shipping_mode where id= '" . $row_order->order_service_options . "'");
+// $db->cdp_query("SELECT * FROM cdb_shipping_mode where id= '" . $row_order->order_service_options . "'");
+$db->cdp_query("SELECT * FROM cdb_shipping_mode where id= 8");
 $order_service_options = $db->cdp_registro();
 
 $db->cdp_query("SELECT * FROM cdb_packaging where id= '" . $row_order->order_package . "'");
@@ -99,6 +107,9 @@ $met_payment = $db->cdp_registro();
 
 $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . $_GET['id'] . "'");
 $order_items = $db->cdp_registros();
+
+$db->cdp_query("SELECT tracking_number, estimated_eta FROM cdb_package_tracking_number WHERE order_id='" . $_GET['id'] . "'");
+$postal_tracking = $db->cdp_registro();
 
 
 $dias_ = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
@@ -226,8 +237,6 @@ if ($row_order->status_invoice == 1) {
                                                         <?php echo $lang['left533020014'] ?>
                                                     </button>
                                                     <div class="dropdown-menu scrollable-menu" style="overflow-y: auto; max-height: 500px;">
-
-
                                                         <!-- VERIFICAR PAGOS DE ENVÍOS PERMISO -->
                                                         <?php if ($row_order->status_invoice == 2 && $user->cdp_hasPermission('verify_payments')) { ?>
                                                             <?php if ($userData->userlevel == 1) { ?>
@@ -346,24 +355,20 @@ if ($row_order->status_invoice == 1) {
                                             </div>
                                         </div>
                                     <?php } ?>
-
                                 </div>
 
                                 <div class="row">
-
                                     <div class=" col-sm-12 col-md-6 mb-2">
-                                        <b class=""><?php echo $lang['left506'] ?></b>
-                                        <span class="label" style="background-color: <?php echo $status_courier->color; ?>"><?php echo $status_courier->mod_style; ?>
-                                        </span>
+                                        <b class=""><?php echo $lang['left506']?></b>
+                                        <span class="label" style="background-color: <?php echo $status_courier->color; ?>"><?php echo $status_courier->mod_style; ?></span>
                                     </div>
 
                                     <div class=" col-sm-12 col-md-6 mb-2">
                                         <b class=""><?php echo $lang['left533020022'] ?></b>
-                                        <span class="label <?php echo $label_class; ?>"><?php echo $text_status; ?>
-                                        </span>
+                                        <span class="label <?php echo $label_class; ?>"><?php echo $text_status; ?></span>
                                     </div>
-
                                 </div>
+
                                 <br>
 
                                 <div class="row">
@@ -371,9 +376,8 @@ if ($row_order->status_invoice == 1) {
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['tools-branchOffice4'] ?></b></h5>
                                             <p class="text-muted  m-l-5">
-                                                <?php if ($branchoffices != null) {
-                                                    echo $branchoffices->name_branch;
-                                                } ?></p>
+                                                <?php if ($branchoffices != null) { echo $branchoffices->name_branch; } ?>
+                                            </p>
                                         </div>
                                     </div>
 
@@ -381,12 +385,10 @@ if ($row_order->status_invoice == 1) {
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['tools-office1'] ?></b></h5>
                                             <p class="text-muted  m-l-5">
-                                                <?php if ($offices != null) {
-                                                    echo $offices->name_off;
-                                                } ?></p>
+                                                <?php if ($offices != null) { echo $offices->name_off; } ?>
+                                            </p>
                                         </div>
                                     </div>
-
 
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
@@ -396,40 +398,52 @@ if ($row_order->status_invoice == 1) {
                                     </div>
                                 </div>
 
-
                                 <div class="row">
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
-                                            <h5> &nbsp;<b><?php echo $lang['track-shipment19'] ?></b></h5>
+                                            <h5>&nbsp;<b><?php echo $lang['track-shipment19'] ?></b></h5>
                                             <p class="text-muted  m-l-5">
-
                                                 <?php echo $row_order->order_datetime; ?></p>
 
-                                            <h5> &nbsp;<b><?php echo $lang['langs_034'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php if ($delivery_time != null) {
-                                                                                echo $delivery_time->delitime;
-                                                                            } ?></p>
+                                            <h5>&nbsp;<b><?php echo $lang['langs_034'] ?></b></h5>
+                                            <p class="text-muted  m-l-5">
+                                                <?php if ($delivery_time != null) { echo $delivery_time->delitime;} ?>
+                                            </p>
                                         </div>
-
                                     </div>
 
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['tools-courier1'] ?></b></h5>
+                                            <p class="text-muted  m-l-5">
+                                                <?php if ($courier_com != null) { echo $courier_com->name_com; } ?>
+                                            </p>
 
-                                            <p class="text-muted  m-l-5"><?php if ($courier_com != null) {
-                                                                                echo $courier_com->name_com;
-                                                                            } ?></p>
                                             <h5> &nbsp;<b><?php echo $lang['tools-shipmode1'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php if ($order_service_options != null) {
-                                                                                echo $order_service_options->ship_mode;
-                                                                            } ?></p>
+                                            <p class="text-muted  m-l-5">
+                                                <?php echo $order_service_options->ship_mode . ' (' . $order_service_options->detail . ')'; ?>
+                                            </p>
                                         </div>
                                     </div>
+                                    
+                                    <div class=" col-sm-12 col-md-4 mb-2">
+                                        <div class="">
+                                            <h5> &nbsp;<b><?php echo $lang['eta'] ?></b></h5>
+                                            <p class="text-muted  m-l-5">
+                                                <?php echo $postal_tracking->estimated_eta != null ? $postal_tracking->estimated_eta : 'N/A'; ?>
+                                            </p>
 
+                                            <h5> &nbsp;<b><?php echo $lang['postal_tracking'] ?></b></h5>
+                                            <p class="text-muted  m-l-5">
+                                                <?php echo $postal_tracking->tracking_number != null ? $postal_tracking->tracking_number : 'N/A'; ?>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
                                     <?php if ($row_order->status_courier == 21) { ?>
                                         <?php if ($row_order->reason_cancel != null) { ?>
-
                                             <div class="col-md-12 pt-4">
                                                 <div class="">
                                                     <h5> &nbsp;<b><?php echo $lang['left533020023'] ?></b></h5>
@@ -439,21 +453,13 @@ if ($row_order->status_invoice == 1) {
                                                         } ?></b>
                                                 </div>
                                             </div>
-
-                                    <?php
-
-                                        }
-                                    }
-
-                                    ?>
+                                    <?php } }?>
                                 </div>
 
                                 <?php
                                 $track_c = $row_order->order_prefix . $row_order->order_no;
 
-
                                 $db->cdp_query("SELECT * FROM cdb_payments_gateway  where order_track ='" . $track_c . "'");
-
                                 $order_p = $db->cdp_registro();
 
                                 if ($order_p) {
