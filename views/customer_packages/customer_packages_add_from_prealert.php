@@ -170,6 +170,7 @@ $order_prefix = $settings->prefix_online_shopping;
             </div>
 
             <form method="post" id="invoice_form" name="invoice_form" enctype="multipart/form-data">
+                <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
                 <div class="container-fluid">
 
