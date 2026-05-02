@@ -158,7 +158,8 @@ if (isset($_POST["create_invoice"])) {
                     status_courier,
                     driver_id,
                     seals_package,
-                    status_invoice
+                    status_invoice,
+                    recipient_type
                     )
                 VALUES
                     (
@@ -197,7 +198,8 @@ if (isset($_POST["create_invoice"])) {
                     :status_courier,
                     :driver_id,
                     :seals_package,
-                    :status_invoice
+                    :status_invoice,
+                    :recipient_type
                     )
             ");
 
@@ -238,6 +240,7 @@ if (isset($_POST["create_invoice"])) {
     $db->bind(':status_courier',  cdp_sanitize($_POST["status_courier"]));
     $db->bind(':driver_id',  cdp_sanitize($_POST["driver_id"]));
     $db->bind(':seals_package',  cdp_sanitize($_POST["seals"]));
+    $db->bind(':recipient_type', isset($_POST["recipient_type"]) ? cdp_sanitize($_POST["recipient_type"]) : 'recipient');
 
     $db->cdp_execute();
 
