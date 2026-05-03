@@ -158,9 +158,7 @@ if ($numrows > 0) { ?>
 				<?php if (!$data) { ?>
 					<tr>
 						<td colspan="6">
-							<?php echo "
-				<i align='center' class='display-3 text-warning d-block'><img src='assets/images/alert/ohh_shipment.png' width='150' /></i>								
-				", false; ?>
+							<?php echo "<i align='center' class='display-3 text-warning d-block'><img src='assets/images/alert/ohh_shipment.png' width='150' /></i>", false; ?>
 						</td>
 					</tr>
 				<?php } else { ?>
@@ -270,10 +268,11 @@ if ($numrows > 0) { ?>
 							if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
 								<td><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
 							<?php } ?>
-							<td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
+
+							<td><?php echo $recipient_type == 'user' ? $address_order->sender_country : $address_order->recipient_country; ?>-<?php echo $recipient_type == 'user' ? $address_order->sender_city : $address_order->recipient_city; ?></td>
 
 							<td>
-							    <?php echo isset($met_payment->name_pay) ? $met_payment->name_pay : 'N/A'; ?>
+							    <?php echo isset($met_payment->met_payment) ? $met_payment->met_payment : 'N/A'; ?>
 							</td>
 
 
