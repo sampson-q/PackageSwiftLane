@@ -60,7 +60,12 @@ $status_courier = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->sender_id . "'");
 $sender_data = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row_order->receiver_id . "'");
+if ($row_order->recipient_type == 'user') {
+    $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->receiver_id . "'");
+} else {
+    $db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row_order->receiver_id . "'");
+}
+
 $receiver_data = $db->cdp_registro();
 
 $db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row_order->c_prefix . $row_order->c_no . "'");
@@ -204,7 +209,7 @@ if ($row_order->status_invoice == 1) {
                                 <div class="mb-3" id="resultados_ajax"></div>
                                 <div class="row">
                                     <div class=" col-sm-12 col-md-6 mb-2">
-                                        <h4 class=" pull-left"><b class="text-danger"><?php echo $lang['langs_020'] ?></b><span><?php echo $row_order->c_prefix . $row_order->c_no; ?></span></h4>
+                                        <h4 class="pull-left"><b class="text-danger"><?php echo $lang['langs_020'] . ' ' ?></b><span><?php echo $row_order->c_prefix . $row_order->c_no; ?></span></h4>
                                     </div>
 
                                     <div class=" col-sm-12 col-md-12 mb-2">
@@ -330,7 +335,7 @@ if ($row_order->status_invoice == 1) {
                                             <h5> &nbsp;<b><?php echo $lang['leftorder37'] ?></b></h5>
                                             <p class="text-muted  m-l-5"><?php echo $packaging->name_pack; ?></p>
                                             <h5> &nbsp;<b><?php echo $lang['leftorder48'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo  $met_payment->name_pay; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo  $met_payment->met_payment; ?></p>
                                         </div>
 
                                     </div>
@@ -338,14 +343,18 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['tools-courier1'] ?></b></h5>
-
-                                            <p class="text-muted  m-l-5"><?php if ($courier_com != null) {
-                                                                                echo $courier_com->name_com;
-                                                                            } ?></p>
+                                            <p class="text-muted  m-l-5">
+                                                <?php if ($courier_com != null) {
+                                                    echo $courier_com->name_com;
+                                                } ?>
+                                            </p>
+                                            
                                             <h5> &nbsp;<b><?php echo $lang['tools-shipmode1'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php if ($order_service_options != null) {
-                                                                                echo $order_service_options->ship_mode;
-                                                                            } ?></p>
+                                            <p class="text-muted  m-l-5">
+                                                <?php if ($order_service_options != null) {
+                                                    echo $order_service_options->ship_mode;
+                                                } ?>
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -369,10 +378,6 @@ if ($row_order->status_invoice == 1) {
                                         $text_status_payment = $order_->status;
                                         $label_class_payment = "label-warning";
                                     }
-
-
-
-
                                 ?>
 
                                     <div class="row">
