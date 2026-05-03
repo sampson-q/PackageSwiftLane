@@ -1327,21 +1327,21 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien6'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $receiver_data->fname . ' ' . $receiver_data->lname; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo $recipient_type == 'user' ? $sender_data->fname . ' ' . $sender_data->lname : $receiver_data->fname . ' ' . $receiver_data->lname; ?></p>
                                         </div>
                                     </div>
 
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien5'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $receiver_data->email; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo $recipient_type == 'user' ? $sender_data->email : $receiver_data->email; ?></p>
                                         </div>
                                     </div>
 
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien9'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $receiver_data->phone; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo $recipient_type == 'user' ? $sender_data->phone : $receiver_data->phone; ?></p>
                                         </div>
                                     </div>
                                 </div>
@@ -1350,14 +1350,14 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien10'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $address_order->recipient_address; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo $recipient_type == 'user' ? $address_order->sender_address : $address_order->recipient_address; ?></p>
                                         </div>
                                     </div>
 
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien12'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $address_order->recipient_country; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo $recipient_type == 'user' ? $address_order->sender_country : $address_order->recipient_country; ?></p>
 
                                         </div>
                                     </div>
@@ -1366,7 +1366,7 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien13'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $address_order->recipient_city; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo $recipient_type == 'user' ? $address_order->sender_city : $address_order->recipient_city; ?></p>
                                         </div>
                                     </div>
                                 </div>
