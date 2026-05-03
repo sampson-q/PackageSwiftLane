@@ -433,7 +433,6 @@ $order_prefix = $settings->prefix;
                                         </div>
 
                                         <div class="col-md-12">
-
                                             <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['recipient_search_address_title'] ?></label>
 
                                             <div class="row">
@@ -449,6 +448,8 @@ $order_prefix = $settings->prefix;
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <input type="hidden" id="recipient_type" name="recipient_type" value="recipient">
                                         </div>
                                     </div>
                                 </div>
