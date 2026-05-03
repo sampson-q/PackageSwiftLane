@@ -840,6 +840,8 @@ function cdp_select2_init_recipient() {
       var selectedData = $("#recipient_id").select2("data");
       selectedRecipientType = selectedData && selectedData[0] && selectedData[0].type ? selectedData[0].type : "recipient";
 
+      $("#recipient_type").val(selectedRecipientType);
+
       if (recipient_id != null) {
         $("#recipient_address_id").attr("disabled", false);
         $("#add_address_recipient").attr("disabled", false);

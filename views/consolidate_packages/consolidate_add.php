@@ -54,8 +54,8 @@ $ship_modes = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_delivery_time where id= '" . $infoship->time_default5 . "'");
 $delivery_times = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_met_payment where id= '" . $infoship->pay_default6 . "'");
-$metod_payment = $db->cdp_registro();
+$db->cdp_query("SELECT * FROM cdb_met_payment");
+$metod_payment = $db->cdp_registros();
 
 $db->cdp_query("SELECT * FROM cdb_payment_methods where id= '" . $infoship->payment_default7 . "'");
 $payment_methods = $db->cdp_registro();
@@ -152,7 +152,8 @@ if (isset($_POST["create_invoice"])) {
                     status_courier,
                     driver_id,
                     seals_package,
-                    status_invoice
+                    status_invoice,
+                    recipient_type
                     )
                 VALUES
                     (
@@ -192,7 +193,8 @@ if (isset($_POST["create_invoice"])) {
                     :status_courier,
                     :driver_id,
                     :seals_package,
-                    :status_invoice
+                    :status_invoice,
+                    :recipient_type
                     )
             ");
 
@@ -238,6 +240,7 @@ if (isset($_POST["create_invoice"])) {
     $db->bind(':status_courier',  cdp_sanitize($_POST["status_courier"]));
     $db->bind(':driver_id',  cdp_sanitize($_POST["driver_id"]));
     $db->bind(':seals_package',  cdp_sanitize($_POST["seals"]));
+    $db->bind(':recipient_type', isset($_POST["recipient_type"]) ? cdp_sanitize($_POST["recipient_type"]) : 'recipient');
 
     $db->cdp_execute();
 
@@ -626,7 +629,14 @@ if (isset($_POST["create_invoice"])) {
     $final_sender_city = $sender_city['data'];
 
 
-    $db->cdp_query("SELECT * FROM cdb_recipients_addresses where id_addresses= '" . $_POST["recipient_address_id"] . "'");
+    $recipient_type = isset($_POST["recipient_type"]) ? cdp_sanitize($_POST["recipient_type"]) : 'recipient';
+    if ($recipient_type === 'user') {
+        // Query sender addresses (when recipient IS the sender)
+        $db->cdp_query("SELECT * FROM cdb_senders_addresses where id_addresses= '" . intval($_POST["recipient_address_id"]) . "'");
+    } else {
+        // Query recipient addresses (custom recipients)
+        $db->cdp_query("SELECT * FROM cdb_recipients_addresses where id_addresses= '" . intval($_POST["recipient_address_id"]) . "'");
+    }
 
     $recipient_address_data = $db->cdp_registro();
 
@@ -846,6 +856,7 @@ if (isset($_POST["create_invoice"])) {
             </div>
 
             <form method="post" id="invoice_form" name="invoice_form" enctype="multipart/form-data">
+                <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
                 <div class="container-fluid">
 
@@ -1075,7 +1086,6 @@ if (isset($_POST["create_invoice"])) {
                                         </div>
 
                                         <div class="col-md-12">
-
                                             <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['recipient_search_address_title'] ?></label>
 
                                             <div class="row">
@@ -1092,6 +1102,7 @@ if (isset($_POST["create_invoice"])) {
                                                     </div>
                                                 </div>
                                             </div>
+                                            <input type="hidden" id="recipient_type" name="recipient_type" value="recipient">
                                         </div>
                                     </div>
                                 </div>
@@ -1188,9 +1199,8 @@ if (isset($_POST["create_invoice"])) {
                                             <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title23'] ?> <i style="color:#ff0000" class="fas fa-donate"></i></label>
                                             <div class="input-group mb-3">
                                                 <select class="select2 form-control custom-select" id="order_pay_mode" name="order_pay_mode" required="" style="width: 100%;">
-                                                    <option value="<?php echo $metod_payment->id; ?>"><?php echo $metod_payment->name_pay; ?></option>
-                                                    <?php foreach ($payrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_pay; ?></option>
+                                                    <?php foreach ($metod_payment as $row) : ?>
+                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->met_payment; ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -1426,13 +1436,13 @@ if (isset($_POST["create_invoice"])) {
                                                         <input type="hidden" name="total_envio_input" id="total_envio_input" />
                                                         <input type="hidden" name="total_weight_input" id="total_weight_input" />
 
-                                                        <button type="button" name="calculate_invoice" id="calculate_invoice" class="btn btn-info">
+                                                        <!-- <button type="button" name="calculate_invoice" id="calculate_invoice" class="btn btn-info">
                                                             <i class="fas fa-calculator"></i>
                                                             <span class="ml-1">
                                                                 <?php echo $lang['leftorder17714'] ?>
                                                             </span>
-                                                        </button>
-                                                        <input type="submit" name="create_invoice" id="create_invoice" class="btn btn-danger" value="<?php echo $lang['langs_084']; ?>" disabled />
+                                                        </button> -->
+                                                        <input type="submit" name="create_invoice" id="create_invoice" class="btn btn-danger" value="<?php echo $lang['langs_084']; ?>" />
                                                     </div>
                                                 </div>
                                             </div>
