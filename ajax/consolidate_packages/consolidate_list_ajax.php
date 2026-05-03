@@ -67,7 +67,7 @@ $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
 
-$sql = "SELECT   a.status_invoice, a.total_order, a.consolidate_id , a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM cdb_consolidate_packages as a
+$sql = "SELECT   a.status_invoice, a.recipient_type, a.total_order, a.consolidate_id , a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM cdb_consolidate_packages as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 $sWhere
 			  and a.status_courier!=14
@@ -104,16 +104,16 @@ if ($numrows > 0) { ?>
 					}
 					?>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['left498'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['left499'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lorigin'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['ldestination'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lstatusshipment'] ?></b></th>
+					<th><b><?php echo $lang['left498'] ?></b></th>
+					<th><b><?php echo $lang['left499'] ?></b></th>
+					<th><b><?php echo $lang['lorigin'] ?></b></th>
+					<th><b><?php echo $lang['ldestination'] ?></b></th>
+					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
 					
 					<th class=""><b><?php echo $lang['ship-all5'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['global-3'] ?></b></th>
+					<th><b><?php echo $lang['global-3'] ?></b></th>
 
-					<th class="text-center"><b></b></th>
+					<th><b></b></th>
 				</tr>
 			</thead>
 			<tbody id="projects-tbl">
@@ -137,7 +137,13 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
 						$sender_data = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row->receiver_id . "'");
+                        $recipient_type = $row->recipient_type;
+                        if ($recipient_type === 'user') {
+                            $db->cdp_query("SELECT id, fname, lname FROM cdb_users where id= '" . intval($row->receiver_id) . "'");
+                        } else {
+                            $db->cdp_query("SELECT id, fname, lname FROM cdb_recipients where id= '" . intval($row->receiver_id) . "'");
+                        }
+
 						$receiver_data = $db->cdp_registro();
 
 						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->driver_id . "'");
@@ -193,16 +199,16 @@ if ($numrows > 0) { ?>
 								<?php echo $lang['ddate'] ?>: <b><?php echo $row->c_date; ?></b>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?>
 							</td>
 
-							<td class="text-center">
-								<?php echo $receiver_data->fname; ?> <?php echo $receiver_data->lname; ?>
+							<td>
+								<?php echo $recipient_type == 'user' ? $sender_data->fname : $receiver_data->fname; ?> <?php echo $recipient_type == 'user' ? $sender_data->lname : $receiver_data->lname; ?>
 							</td>
 
-							<td class="text-center"><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
-							<td class="text-center"><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
+							<td><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
+							<td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
 
 							<td class="">
 
@@ -210,13 +216,13 @@ if ($numrows > 0) { ?>
 
 							</td>
 
-							<td class="text-center">
+							<td>
 								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
 							</td>
 							
 							<?php if ($row->status_invoice == 2) { ?>
 								<?php if ($userData->userlevel == 1) { ?>
-									<td class="text-center">
+									<td>
 									<a style="background: #34e89e;" class="label label" href="add_payment_gateways_consolidate_package.php?id_order=<?php echo $row->consolidate_id; ?>">
 										<i style="color:#343a40" class="fas fa-dollar-sign"></i>
 										&nbsp;<?php echo $lang['leftorder35'] ?>
