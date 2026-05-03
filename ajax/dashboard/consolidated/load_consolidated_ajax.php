@@ -66,7 +66,7 @@ if (isset($_REQUEST['search'])) {
 }
 
 
-$sql = "SELECT  a.total_order, a.consolidate_id , a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM cdb_consolidate as a
+$sql = "SELECT  a.total_order, a.recipient_type, a.consolidate_id , a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM cdb_consolidate as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 $swhere
 			and month(c_date)='$month' AND year(c_date)='$year'
@@ -127,7 +127,14 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
 						$sender_data = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row->receiver_id . "'");
+						$recipient_type = isset($row->recipient_type) ? $row->recipient_type : 'recipient';
+
+                        if ($recipient_type === 'user') {
+                            $db->cdp_query("SELECT id, fname, lname FROM cdb_users where id= '" . intval($row->receiver_id) . "'");
+                        } else {
+                            $db->cdp_query("SELECT id, fname, lname FROM cdb_recipients where id= '" . intval($row->receiver_id) . "'");
+                        }
+
 						$receiver_data = $db->cdp_registro();
 
 						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->driver_id . "'");
@@ -167,7 +174,7 @@ if ($numrows > 0) { ?>
 
 							<td class="text-center"><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
 							<td class="text-center"><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
-							<td class="text-center"><?php echo $met_payment->name_pay; ?></td>
+							<td class="text-center"><?php echo $met_payment->met_payment; ?></td>
 
 							<td class="">
 
