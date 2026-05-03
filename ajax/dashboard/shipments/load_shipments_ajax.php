@@ -64,7 +64,7 @@ $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
 
-$sql = "SELECT a.status_invoice,  a.order_incomplete,  a.is_consolidate, a.is_pickup,  a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM
+$sql = "SELECT a.status_invoice, a.recipient_type, a.order_incomplete,  a.is_consolidate, a.is_pickup,  a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM
 			 cdb_add_order as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 and a.status_courier!=14
@@ -106,9 +106,7 @@ if ($numrows > 0) { ?>
 				<?php if (!$data) { ?>
 					<tr>
 						<td colspan="6">
-							<?php echo "
-				<i align='center' class='display-3 text-warning d-block'><img src='assets/images/alert/ohh_shipment.png' width='150' /></i>								
-				", false; ?>
+							<?php echo "<i align='center' class='display-3 text-warning d-block'><img src='assets/images/alert/ohh_shipment.png' width='150' /></i>", false; ?>
 						</td>
 					</tr>
 				<?php } else { ?>
@@ -121,7 +119,14 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
 						$sender_data = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row->receiver_id . "'");
+						$recipient_type = isset($row->recipient_type) ? $row->recipient_type : 'recipient';
+
+                        if ($recipient_type === 'user') {
+                            $db->cdp_query("SELECT id, fname, lname FROM cdb_users where id= '" . intval($row->receiver_id) . "'");
+                        } else {
+                            $db->cdp_query("SELECT id, fname, lname FROM cdb_recipients where id= '" . intval($row->receiver_id) . "'");
+                        }
+
 						$receiver_data = $db->cdp_registro();
 
 						$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row->order_prefix . $row->order_no . "'");
@@ -175,10 +180,10 @@ if ($numrows > 0) { ?>
 							</td>
 
 							<td>
-								<?php echo $receiver_data->fname; ?> <?php echo $receiver_data->lname; ?>
+								<?php echo $recipient_type == 'user' ? $sender_data->fname : $receiver_data->fname; ?> <?php echo $recipient_type == 'user' ? $sender_data->lname : $receiver_data->lname; ?>
 							</td>
 
-							<td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
+							<td><?php echo $recipient_type == 'user' ? $address_order->sender_country : $address_order->recipient_country; ?>-<?php echo $recipient_type == 'user' ? $address_order->sender_city : $address_order->recipient_city; ?></td>
 
 							<td>
 								<?php echo cdb_money_format($row->total_order); ?>
