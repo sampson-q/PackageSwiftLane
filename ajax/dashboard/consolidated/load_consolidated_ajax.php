@@ -95,13 +95,13 @@ if ($numrows > 0) { ?>
 				<tr>
 
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['ddate'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['left498'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['left499'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lorigin'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['ldestination'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lpayment'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lstatusshipment'] ?></b></th>
+					<th><b><?php echo $lang['ddate'] ?></b></th>
+					<th><b><?php echo $lang['left498'] ?></b></th>
+					<th><b><?php echo $lang['left499'] ?></b></th>
+					<th><b><?php echo $lang['lorigin'] ?></b></th>
+					<th><b><?php echo $lang['ldestination'] ?></b></th>
+					<th><b><?php echo $lang['lpayment'] ?></b></th>
+					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
 					<th><b><?php echo $lang['left533020007'] ?></b></th>
 					<th class=""><b><?php echo $lang['ship-all5'] ?></b></th>
 				</tr>
@@ -160,21 +160,21 @@ if ($numrows > 0) { ?>
 						<tr class="card-hovera">
 
 							<td><b><a href="consolidate_view.php?id=<?php echo $row->consolidate_id; ?>"><?php echo $row->c_prefix . $row->c_no; ?></a></b></td>
-							<td class="text-center">
+							<td>
 								<?php echo $row->c_date; ?>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<?php echo $receiver_data->fname; ?> <?php echo $receiver_data->lname; ?>
 							</td>
 
-							<td class="text-center"><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
-							<td class="text-center"><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
-							<td class="text-center"><?php echo $met_payment->met_payment; ?></td>
+							<td><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
+							<td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
+							<td><?php echo $met_payment->met_payment; ?></td>
 
 							<td class="">
 
@@ -186,7 +186,7 @@ if ($numrows > 0) { ?>
 								if ($driver_data != null) {
 									echo $driver_data->fname; ?> <?php echo $driver_data->lname;
 																} ?></td>
-							<td class="text-center">
+							<td>
 								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
 							</td>
 						</tr>
