@@ -88,6 +88,7 @@ if (empty($_POST['status_courier']))
 if (empty($_POST['order_payment_method']))
     $errors['order_payment_method'] = $lang['validate_field_ajax158'];
 
+$recipient_type = isset($_POST["recipient_type"]) ? cdp_sanitize($_POST["recipient_type"]) : 'recipient';
 
 if (empty($errors)) {
 
@@ -166,6 +167,7 @@ if (empty($errors)) {
         'status_invoice' =>  $status_invoice,
         'volumetric_percentage' =>  $meter,
         'manual_tariff' =>  $tariff_mode,
+        'gi' => $recipient_type
 
     );
 
@@ -362,7 +364,7 @@ if (empty($errors)) {
             $email_template->body
         );
 
-        $newbody = cdp_cleanOut($body);
+        $newbody = cdp_cleanOutx($body);
 
         //SENDMAIL PHP
 
@@ -481,7 +483,16 @@ if (empty($errors)) {
         $final_sender_city = $sender_city['data'];
 
 
-        $recipient_address_data = cdp_getRecipientAddress(intval($_POST["recipient_address_id"]));
+        $recipient_type = isset($_POST["recipient_type"]) ? cdp_sanitize($_POST["recipient_type"]) : 'recipient';
+        if ($recipient_type === 'user') {
+            // Query sender addresses (when recipient IS the sender)
+            $db->cdp_query("SELECT * FROM cdb_senders_addresses where id_addresses= '" . intval($_POST["recipient_address_id"]) . "'");
+        } else {
+            // Query recipient addresses (custom recipients)
+            $db->cdp_query("SELECT * FROM cdb_recipients_addresses where id_addresses= '" . intval($_POST["recipient_address_id"]) . "'");
+        }
+
+        $recipient_address_data = $db->cdp_registro();
 
         $recipient_address = $recipient_address_data->address;
         $recipient_country = $recipient_address_data->country;
