@@ -65,7 +65,7 @@ if (isset($_REQUEST['search'])) {
 }
 
 
-$sql = "SELECT  a.status_invoice, a.is_pickup, a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM
+$sql = "SELECT  a.status_invoice, a.recipient_type, a.is_pickup, a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM
 			 cdb_add_order as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 where a.is_pickup=1 
@@ -90,13 +90,13 @@ if ($numrows > 0) { ?>
 			<thead>
 				<tr>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['ddate'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['left498'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['left499'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lorigin'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['ldestination'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lstatusshipment'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lpayment'] ?></b></th>
+					<th><b><?php echo $lang['ddate'] ?></b></th>
+					<th><b><?php echo $lang['left498'] ?></b></th>
+					<th><b><?php echo $lang['left499'] ?></b></th>
+					<th><b><?php echo $lang['lorigin'] ?></b></th>
+					<th><b><?php echo $lang['ldestination'] ?></b></th>
+					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
+					<th><b><?php echo $lang['lpayment'] ?></b></th>
 
 
 				</tr>
@@ -118,7 +118,12 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
 						$sender_data = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row->receiver_id . "'");
+						if ($row->recipient_type == 'user') {
+							$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->receiver_id . "'");
+						} else {
+							$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row->receiver_id . "'");
+						}
+
 						$receiver_data = $db->cdp_registro();
 
 						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->driver_id . "'");
@@ -143,22 +148,22 @@ if ($numrows > 0) { ?>
 					?>
 						<tr class="card-hovera">
 							<td><b><a href="courier_view.php?id=<?php echo $row->order_id; ?>"><?php echo $row->order_prefix . $row->order_no; ?></a></b></td>
-							<td class="text-center">
+							<td>
 								<?php echo $row->order_date; ?>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<?php echo $receiver_data->fname; ?> <?php echo $receiver_data->lname; ?>
 							</td>
 
-							<td class="text-center"><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
-							<td class="text-center"><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
+							<td><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
+							<td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
 
-							<td class="text-center">
+							<td>
 
 								<span style="background: <?php echo $status_style_pickup->color; ?>;" class="label label-large"><?php echo $status_style_pickup->mod_style; ?></span>
 								<br>
@@ -177,7 +182,7 @@ if ($numrows > 0) { ?>
 								}
 								?>
 							</td>
-							<td class="text-center"><?php if ($met_payment != null) {
+							<td><?php if ($met_payment != null) {
 														echo $met_payment->name_pay;
 													} ?></td>
 
