@@ -54,7 +54,12 @@ $order_items = $db->cdp_registros();
 $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->sender_id . "'");
 $sender_data = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row_order->receiver_id . "'");
+if ($row_order->recipient_type == 'user') {
+    $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->receiver_id . "'");
+} else {
+    $db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row_order->receiver_id . "'");
+}
+
 $receiver_data = $db->cdp_registro();
 
 
@@ -426,7 +431,7 @@ if (isset($_POST["total_item"])) {
         <?php $courierrow = $core->cdp_getCouriercom(); ?>
         <?php $statusrow = $core->cdp_getStatus(); ?>
         <?php $packrow = $core->cdp_getPack(); ?>
-        <?php $payrow = $core->cdp_getPayment(); ?>
+        <?php $payrow = $core->cdp_getPaymentMethod(); ?>
         <?php $itemrow = $core->cdp_getItem(); ?>
         <?php $moderow = $core->cdp_getShipmode(); ?>
         <?php $driverrow = $user->cdp_userAllDriver(); ?>
@@ -743,9 +748,10 @@ if (isset($_POST["total_item"])) {
                                                 <select class="custom-select col-12" id="order_pay_mode" name="order_pay_mode">
                                                     <option value="0">--<?php echo $lang['left243'] ?>--</option>
                                                     <?php foreach ($payrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->order_pay_mode == $row->id) {
-                                                                                                    echo 'selected';
-                                                                                                } ?>><?php echo $row->name_pay; ?></option>
+                                                        <option value="<?php echo $row->id; ?>"
+                                                            <?php if ($row_order->order_pay_mode == $row->id) {echo 'selected'; } ?>>
+                                                                <?php echo $row->label; ?>
+                                                        </option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
