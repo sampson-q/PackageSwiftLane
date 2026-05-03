@@ -777,6 +777,11 @@ $("#invoice_form").on("submit", function (event) {
     data.append("tariff_mode", tariff_mode);
   }
 
+    var recipient_type = $("#recipient_type").val();
+    if (recipient_type) {
+        data.append("recipient_type", recipient_type);
+    }
+
   if (deleted_file_ids) {
     data.append("deleted_file_ids", deleted_file_ids);
   }
@@ -1178,6 +1183,8 @@ function cdp_select2_init_recipient() {
 
       var selectedData = $("#recipient_id").select2("data");
       selectedRecipientType = selectedData && selectedData[0] && selectedData[0].type ? selectedData[0].type : "recipient";
+
+      $("#recipient_type").val(selectedRecipientType);
 
       if (recipient_id != null) {
         $("#recipient_address_id").attr("disabled", false);
