@@ -58,7 +58,12 @@ $order_items = $db->cdp_registros();
 $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->sender_id . "'");
 $sender_data = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row_order->receiver_id . "'");
+if ($row_order->recipient_type == 'user') {
+    $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->receiver_id . "'");
+} else {
+    $db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row_order->receiver_id . "'");
+}
+
 $receiver_data = $db->cdp_registro();
 
 
