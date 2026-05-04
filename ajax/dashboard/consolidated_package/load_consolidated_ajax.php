@@ -66,7 +66,7 @@ if (isset($_REQUEST['search'])) {
 }
 
 
-$sql = "SELECT  a.total_order, a.consolidate_id , a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM cdb_consolidate_packages as a
+$sql = "SELECT  a.total_order, a.recipient_type, a.consolidate_id , a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM cdb_consolidate_packages as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 $swhere
 			and month(c_date)='$month' AND year(c_date)='$year'
@@ -94,14 +94,14 @@ if ($numrows > 0) { ?>
 			<thead>
 				<tr>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['ddate'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['left498'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['left499'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lorigin'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['ldestination'] ?></b></th>
-					<!-- <th class="text-center"><b><?php echo $lang['lshipline'] ?></b></th> -->
-					<th class="text-center"><b><?php echo $lang['lpayment'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lstatusshipment'] ?></b></th>
+					<th><b><?php echo $lang['ddate'] ?></b></th>
+					<th><b><?php echo $lang['left498'] ?></b></th>
+					<th><b><?php echo $lang['left499'] ?></b></th>
+					<th><b><?php echo $lang['lorigin'] ?></b></th>
+					<th><b><?php echo $lang['ldestination'] ?></b></th>
+					<!-- <th><b><?php echo $lang['lshipline'] ?></b></th> -->
+					<th><b><?php echo $lang['lpayment'] ?></b></th>
+					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
 					<th><b><?php echo $lang['left533020007'] ?></b></th>
 					<th class=""><b><?php echo $lang['ship-all5'] ?></b></th>
 				</tr>
@@ -127,7 +127,11 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
 						$sender_data = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row->receiver_id . "'");
+						if ($row->recipient_type == 'user') {
+							$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->receiver_id . "'");
+						} else {
+							$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row->receiver_id . "'");
+						}
 						$receiver_data = $db->cdp_registro();
 
 						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->driver_id . "'");
@@ -153,21 +157,21 @@ if ($numrows > 0) { ?>
 						<tr class="card-hovera">
 
 							<td><b><a href="consolidate_view.php?id=<?php echo $row->consolidate_id; ?>"><?php echo $row->c_prefix . $row->c_no; ?></a></b></td>
-							<td class="text-center">
+							<td>
 								<?php echo $row->c_date; ?>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<?php echo $receiver_data->fname; ?> <?php echo $receiver_data->lname; ?>
 							</td>
 
-							<td class="text-center"><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
-							<td class="text-center"><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
-							<td class="text-center"><?php echo $met_payment->name_pay; ?></td>
+							<td><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
+							<td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
+							<td><?php echo $met_payment->met_payment; ?></td>
 
 							<td class="">
 
@@ -179,7 +183,7 @@ if ($numrows > 0) { ?>
 								if ($driver_data != null) {
 									echo $driver_data->fname; ?> <?php echo $driver_data->lname;
 																} ?></td>
-							<td class="text-center">
+							<td>
 								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
 							</td>
 						</tr>
