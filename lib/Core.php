@@ -367,11 +367,23 @@ class Core
 
 
   /**
-   * Core::cdp_getPayment()
+   * Core::cdp_getPaymentActive()
    */
-  public function cdp_getPayment()
+  public function cdp_getPaymentActive()
   {
     $sql = "SELECT * FROM cdb_met_payment WHERE is_active = 1 ORDER BY id ASC";
+    $this->db->cdp_query($sql);
+    $this->db->cdp_execute();
+    $row = $this->db->cdp_registros();
+
+    return $row;
+  }
+  
+    /**
+    * Core::cdp_getPayment()
+    */
+  public function cdp_getPayment() {
+    $sql = "SELECT * FROM cdb_met_payment";
     $this->db->cdp_query($sql);
     $this->db->cdp_execute();
     $row = $this->db->cdp_registros();
