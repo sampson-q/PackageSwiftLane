@@ -21,7 +21,7 @@
 
 
 $userData = $user->cdp_getUserData();
-$virtualMailboxes = $core->cdp_getVirtualMailboxes(' WHERE id = 1');
+$virtualMailboxes = $core->cdp_getVirtualMailboxes(' WHERE default_address = 1');
 
 $db = new Conexion;
 
@@ -146,36 +146,28 @@ foreach ($data as $row) {
                                                 <?php foreach ($virtualMailboxes as $virtualMailbox) {
                                                     $db->cdp_query("SELECT * FROM cdb_countries WHERE id='" . $virtualMailbox-> cdb_countries_id . "'");
                                                     $db->cdp_execute();
-                                                    $flag = strtolower($db->cdp_registro()->iso2);
-
-                                                    $pattern = '/\(?locker\s*ID\)?/i';
-                                                    $updatedAddress = preg_replace($pattern, ' (' . $userData->locker . ') ', $virtualMailbox->address);
+                                                    $country_data = $db->cdp_registro();
                                                     ?>
                                                     
                                                     <div class="col-5">
                                                         <div class="card">
                                                             <div class="card-body">
                                                                 <h4 class="col-12">
-                                                                    <?= $virtualMailbox->country; ?>
+                                                                    <?= $country_data->name; ?>
                                                                     <span class="display-20 flag-circle">
-                                                                        <i class="fi fi-<?php echo $flag; ?>"></i>
+                                                                        <i class="fi fi-<?php echo strtolower($country_data->iso2); ?>"></i>
                                                                         <hr>
                                                                     </span>
                                                                 </h4>
                                                                 <ul class="list-style-none">
                                                                     <li class="mb-2">
                                                                         <div class="row">
-                                                                            <div class="col-3">
+                                                                            <div class="col-9">
                                                                                 <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
                                                                                     <div class="me-2">
-                                                                                        <h5 class="mb-0"><?php echo $lang['virtual_mailbox-1']; ?></h5>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="col-9">
-                                                                                <div class="user-progress align-items-center gap-3">
-                                                                                    <div class="align-items-center gap-1">
-                                                                                        <h6 class="text-muted"><?php echo $updatedAddress; ?></h6>
+                                                                                        <h5 class="mb-0">
+                                                                                            <?php echo $userData->fname . ' ' . $userData->lname . ' (' . $userData->locker . ')'; ?>
+                                                                                        </h5>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -184,17 +176,10 @@ foreach ($data as $row) {
 
                                                                     <li class="mb-2">
                                                                         <div class="row">
-                                                                            <div class="col-3">
+                                                                            <div class="col-9">
                                                                                 <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
                                                                                     <div class="me-2">
-                                                                                        <h5 class="mb-0"><?php echo $lang['dash-general-39'] ?></h5>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="col-9">
-                                                                                <div class="user-progress align-items-center gap-3">
-                                                                                    <div class="align-items-center gap-1">
-                                                                                        <h6 class="text-muted"><?php echo $userData->locker; ?></h6>
+                                                                                        <h5 class="mb-0"><?php echo $virtualMailbox->address; ?></h5>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -203,36 +188,10 @@ foreach ($data as $row) {
 
                                                                     <li class="mb-2">
                                                                         <div class="row">
-                                                                            <div class="col-3">
+                                                                            <div class="col-9">
                                                                                 <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
                                                                                     <div class="me-2">
-                                                                                        <h5 class="mb-0"><?php echo $lang['left92'] ?></h5>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="col-9">
-                                                                                <div class="user-progress align-items-center gap-3">
-                                                                                    <div class="align-items-center gap-1">
-                                                                                        <h6 class="text-muted"><?php echo $virtualMailbox->city; ?></h6>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </li>
-
-                                                                    <li class="mb-3">
-                                                                        <div class="row">
-                                                                            <div class="col-3">
-                                                                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                                                    <div class="me-2">
-                                                                                        <h5 class="mb-0"><?php echo $lang['left94'] ?></h5>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="col-9">
-                                                                                <div class="user-progress align-items-center gap-3">
-                                                                                    <div class="align-items-center gap-1">
-                                                                                        <h6 class="text-muted"><?php echo $virtualMailbox->postcode; ?></h6>
+                                                                                        <h5 class="mb-0"><?php echo $virtualMailbox->city . ' ' . $virtualMailbox->postcode ?></h5>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
