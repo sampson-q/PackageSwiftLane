@@ -29,9 +29,9 @@ try {
 
     // Validaciones básicas
     $err = '';
-    if (!$sender_id)            $err = 'Falta remitente';
-    if (!$sender_address_id)    $err = 'Falta dirección remitente';
-    if (!count($packages))      $err = 'Faltan paquetes';
+    if (!$sender_id)            $err = 'Sender is required';
+    if (!$sender_address_id)    $err = 'Sender address is required';
+    if (!count($packages))      $err = 'Packages are required';
 
     if ($err) {
         echo json_encode(['success' => false, 'error' => $err], JSON_UNESCAPED_UNICODE);
