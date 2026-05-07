@@ -413,41 +413,6 @@ $order_prefix = $settings->prefix;
 
                                     </div>
 
-
-                                    <div class="row" style="display:none">
-
-                                        <!--/span-->
-                                        <div class="form-group col-md-3">
-                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title20'] ?></label>
-                                            <div class="input-group mb-3">
-                                                <select class="select2 form-control custom-select" id="order_deli_time" name="order_deli_time" required style="width: 100%;">
-                                                    <option value="<?php echo $delivery_times->id; ?>"><?php echo $delivery_times->delitime; ?></option>
-                                                    <?php foreach ($delitimerow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->delitime; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <!--/span-->
-
-
-                                        <div class="form-group col-md-3">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
-                                            <div class="input-group mb-3">
-                                                <select class="select2 form-control custom-select" id="status_courier" name="status_courier" required style="width: 100%;">
-                                                    <option value="<?php echo $styles_status->id; ?>"><?php echo $styles_status->mod_style; ?></option>
-                                                    <?php foreach ($statusrow as $row) : ?>
-                                                        <?php if ($row->mod_style == 'Delivered') { ?>
-                                                        <?php } elseif ($row->mod_style == 'Consolidate') { ?>
-                                                        <?php } else { ?>
-                                                            <option value="<?php echo $row->id; ?>"><?php echo $row->mod_style; ?></option>
-                                                        <?php } ?>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <div class="row">
 
                                         <div class="form-group col-md-4">
