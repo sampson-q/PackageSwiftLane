@@ -156,8 +156,8 @@ class User
         ));
 
         // FIX 2: send via both channels, matching what the resend path does
-        $otpService->sendOtpEmail($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], $challenge['expires_at'], 'login');
-        $otpService->sendOtpWhatsApp($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], $challenge['expires_at'], 'login');
+        $otpService->sendOtpEmail($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], 'login');
+        $otpService->sendOtpWhatsApp($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], 'login');
 
         $_SESSION['otp_login_challenge'] = $challenge['id'];
         $_SESSION['otp_login_user_id']   = $user->id;
