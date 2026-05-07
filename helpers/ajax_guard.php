@@ -19,8 +19,7 @@ if (!defined('DEPRIXAPRO_AJAX_GUARD_LOADED')) {
 /**
  * Asegura que haya sesión activa. Si no, envía 401 JSON y termina.
  */
-function require_login()
-{
+function require_login() {
     global $user;
     if (!isset($user) || !($user instanceof User)) {
         $user = new User();
@@ -36,14 +35,13 @@ function require_login()
  * Asegura que el usuario tenga al menos uno de los permisos. Si no, envía 403 JSON y termina.
  * @param string|string[] $permission Nombre del permiso (o array de nombres, cualquiera)
  */
-function require_permission($permission)
-{
+function require_permission($permission) {
     global $user;
     if (!isset($user) || !($user instanceof User)) {
         $user = new User();
     }
     if (empty($user->logged_in)) {
-        _ajax_guard_send(401, ['success' => false, 'error' => 'Unauthorized', 'message' => 'Sesión requerida']);
+        _ajax_guard_send(401, ['success' => false, 'error' => 'Unauthorized', 'message' => 'Session Required']);
     }
     $perms = is_array($permission) ? $permission : [$permission];
     // Agencia (userlevel 6) siempre tiene acceso a view_client_list y view_recipients
@@ -52,7 +50,7 @@ function require_permission($permission)
         return;
     }
     if (!$user->cdp_hasPermission($perms)) {
-        _ajax_guard_send(403, ['success' => false, 'error' => 'Forbidden', 'message' => 'Sin permiso para esta acción']);
+        _ajax_guard_send(403, ['success' => false, 'error' => 'Forbidden', 'message' => 'No permission for this action']);
     }
 }
 
@@ -61,8 +59,7 @@ function require_permission($permission)
  * @param int $httpCode 401 o 403
  * @param array $body
  */
-function _ajax_guard_send($httpCode, array $body)
-{
+function _ajax_guard_send($httpCode, array $body) {
     if ($httpCode === 401) {
         header('HTTP/1.1 401 Unauthorized');
     } elseif ($httpCode === 403) {
@@ -75,8 +72,7 @@ function _ajax_guard_send($httpCode, array $body)
     exit;
 }
 
-function _ajax_guard_require_csrf()
-{
+function _ajax_guard_require_csrf() {
     $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
     if (!in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
         return;
