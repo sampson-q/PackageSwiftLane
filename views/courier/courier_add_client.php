@@ -477,9 +477,9 @@ $order_prefix = $settings->prefix;
                                             <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title23'] ?> <i style="color:#ff0000" class="fas fa-donate"></i></label>
                                             <div class="input-group mb-3">
                                                 <select class="select2 form-control custom-select" id="order_pay_mode" name="order_pay_mode" required="" style="width: 100%;">
-                                                    <option value="<?php echo $metod_payment->id; ?>"><?php echo $metod_payment->name_pay; ?></option>
+                                                    <option value="<?php echo $metod_payment->id; ?>"><?php echo $metod_payment->met_payment; ?></option>
                                                     <?php foreach ($payrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_pay; ?></option>
+                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->met_payment; ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
