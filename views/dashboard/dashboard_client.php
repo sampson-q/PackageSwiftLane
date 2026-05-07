@@ -162,12 +162,12 @@ foreach ($data as $row) {
                                                                 <ul class="list-style-none">
                                                                     <li class="mb-2">
                                                                         <div class="row">
-                                                                            <div class="col-9">
+                                                                            <div class="col-12">
                                                                                 <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
                                                                                     <div class="me-2">
-                                                                                        <h5 class="mb-0">
+                                                                                        <h4 class="mb-0">
                                                                                             <?php echo $userData->fname . ' ' . $userData->lname . ' (' . $userData->locker . ')'; ?>
-                                                                                        </h5>
+                                                                                        </h4>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -179,7 +179,7 @@ foreach ($data as $row) {
                                                                             <div class="col-9">
                                                                                 <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
                                                                                     <div class="me-2">
-                                                                                        <h5 class="mb-0"><?php echo $virtualMailbox->address; ?></h5>
+                                                                                        <h6 class="mb-0"><?php echo $virtualMailbox->address; ?></h6>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -191,7 +191,7 @@ foreach ($data as $row) {
                                                                             <div class="col-9">
                                                                                 <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
                                                                                     <div class="me-2">
-                                                                                        <h5 class="mb-0"><?php echo $virtualMailbox->city . ' ' . $virtualMailbox->postcode ?></h5>
+                                                                                        <h6 class="mb-0"><?php echo $virtualMailbox->city . ' ' . $virtualMailbox->postcode ?></h6>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
