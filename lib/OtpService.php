@@ -144,8 +144,27 @@ $projectRoot = dirname(__DIR__);
             $this->db->cdp_execute();
         }
 
+        /**
+         * Map purpose to correct email template ID.
+         * FIXED: Uses actual template IDs from cdb_email_templates table
+         *
+         * @param string $purpose The OTP purpose (login, forgot, signup, password reset)
+         * @return int Email template ID
+         */
+        private function getEmailTemplateId($purpose) {
+            $templateMap = [
+                'login'           => 28,  // "Login One-Time Password"
+                'password reset'  => 27,  // "Password Reset Request"
+                'forgot'          => 27,  // Same as password reset
+                'signup'          => 30,  // "Registration One-Time Password"
+            ];
+
+            return $templateMap[$purpose] ?? 30; // Default to signup template if unmapped
+        }
+
         public function sendOtpEmail($email, $name, $code, $purpose) {
-            $emailTplId = ($purpose === 'password reset') ? 27 : (($purpose === 'login') ? 30 : 28);
+            // FIX: Use corrected template ID mapping
+            $emailTplId = $this->getEmailTemplateId($purpose);
             $emailTpl   = cdp_getEmailTemplatesdg1i4($emailTplId);
 
             if ($emailTpl) {
