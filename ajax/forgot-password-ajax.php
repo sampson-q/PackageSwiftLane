@@ -28,8 +28,8 @@
     }
 
     $challenge = $otp->createChallenge((int)$u->id, 'forgot', ['email' => $u->email]);
-    $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $challenge['expires_at'], 'password reset');
-    $otp->sendOtpWhatsApp($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $challenge['expires_at'], 'password reset');
+    $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], 'password reset');
+    $otp->sendOtpWhatsApp($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], 'password reset');
     $_SESSION['otp_forgot_challenge'] = $challenge['id'];
     $_SESSION['otp_forgot_user_id']   = (int)$u->id;
 
