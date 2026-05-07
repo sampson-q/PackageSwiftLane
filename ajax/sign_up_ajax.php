@@ -108,7 +108,6 @@ if (empty($error)) {
         $_SESSION['pending_signup']['email'],
         $_SESSION['pending_signup']['fname'] . ' ' . $_SESSION['pending_signup']['lname'],
         $challenge['code'],
-        $challenge['expires_at'],
         'signup'
     );
     $_SESSION['otp_signup_challenge'] = $challenge['id'];
