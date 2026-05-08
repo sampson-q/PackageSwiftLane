@@ -230,6 +230,7 @@ $current_role = $role_query['rowCount'] ? $role_query['data']->role_name : '';
 										<div class="card-body">
 
 										<form enctype="multipart/form-data" class="form-horizontal form-material" id="edit_user" name="edit_user" method="post">
+                                            <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 										
 											<section>
 												<div class="row">

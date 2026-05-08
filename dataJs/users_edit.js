@@ -147,7 +147,8 @@ $("#edit_user").on("submit", function (event) {
 
     // Siempre enviar rol/userlevel (Administrator, Driver, Employee, Agency, etc.)
     data.append("userlevel", userlevel);
- 
+
+    data.append('_csrf_token', $('input[name="_csrf_token"]').val());
 
     $.ajax({
       type: "POST",
