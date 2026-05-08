@@ -49,7 +49,7 @@ if (!isset($response['status'])) {
     // Verificar si el archivo se cargó correctamente
     if ($_FILES['file_invoice']['error'] !== UPLOAD_ERR_OK) {
         $response['status'] = 'error';
-        $response['message'] = 'Error al cargar el archivo adjunto.';
+        $response['message'] = 'Error uploading attachment.';
     } else {
         // Mover el archivo al directorio de destino
         $target_dir = "../../pre_alert_files/";
@@ -57,7 +57,7 @@ if (!isset($response['status'])) {
         $target_file = $target_dir . $image_name;
         if (!move_uploaded_file($_FILES["file_invoice"]["tmp_name"], $target_file)) {
             $response['status'] = 'error';
-            $response['message'] = 'Error al mover el archivo al directorio de destino.';
+            $response['message'] = 'Error moving the file to the destination directory.';
         } else {
             // Resto de tu código para insertar en la base de datos
             // Crear un arreglo de datos para la inserción en la base de datos
