@@ -147,6 +147,7 @@ $userData = $user->cdp_getUserData();
 										<!-- <div id="loader" style="display:none"></div> -->
 										<!-- <div id="msgholder"></div> -->
 										<form class="form-horizontal form-material" id="save_data" name="save_data" method="post">
+                                            <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 											<header><b><?php echo $lang['ws-add-text32'] ?></b></header> <br><br>
 											<section>
 												<div class="row">

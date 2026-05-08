@@ -67,6 +67,7 @@ $row_order = $data['data'];
                                 <div id="resultados_ajax"></div>
 
                                 <form class="form-horizontal form-material" id="push_notification_form" name="push_notification_form" method="post">
+                                    <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                     <section>
                                         <div class="row form-group">
                                             <label class="col-1 text-center"><?php echo $lang['push_notifications_type'] . ':' ?></label>

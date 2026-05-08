@@ -33,6 +33,7 @@
 				<div class="col-12">
 					<div class="card-body">
 						<form class="form-horizontal form-material" id="save_config" name="save_config" method="post">
+                            <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
 							<h4 class="card-title"><b><?php echo $lang['tools-config30'] ?></b> => <img src='assets/images/alert/paypal.jpg' width='153' /></h4>
 							<section>

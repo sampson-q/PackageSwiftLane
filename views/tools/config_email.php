@@ -19,7 +19,7 @@
 		                <div><hr><br></div>
 
 						<form class="form-horizontal form-material" id="save_config_email" name="save_config_email" method="post">
-					
+                            <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
 							<h4 class="card-title"><?php echo $lang['tools-config110'] ?></h4>
 							<h6 class="card-subtitle">(<?php echo $lang['tools-config54'] ?>)</h6>

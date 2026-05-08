@@ -31,6 +31,7 @@
                 <div><hr><br></div>
 
 				<form class="form-horizontal form-material" id="save_seo_config" name="save_seo_config" method="post">
+                    <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
 					<p class="text-muted" style="color: red; font-size: small;">
 					    <?php echo $lang['metaseo19'] ?>
