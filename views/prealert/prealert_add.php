@@ -113,6 +113,7 @@ $userData = $user->cdp_getUserData();
                                 <div class="">
                                     <div class="col-lg-12 ml-auto mt-8 ">
                                         <form method="post" accept-charset="utf-8" name="form_prealert" id="form_prealert" enctype="multipart/form-data">
+                                            <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                             <div class="row">
 
                                                 <div class="col-md-6">

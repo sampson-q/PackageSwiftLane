@@ -150,6 +150,8 @@ $('#form_prealert').submit(function (event) {
         $('#date_prealert').removeClass('is-invalid'); // Remover la marca de inválido
     }
 
+    formData.get('_csrf_token');
+
 
     // Verificar si el campo de archivo no está adjunto y mostrar una alerta si es necesario
     if (formData.get('file_invoice').size === 0) {
