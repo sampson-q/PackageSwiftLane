@@ -445,6 +445,8 @@ $("#edit_user").on("submit", function (event) {
       data.append("address_id[]", ai.value);
     }
 
+    data.append('_csrf_token', $('input[name="_csrf_token"]').val());
+
     $.ajax({
       type: "POST",
       url: "ajax/customers/customers_profile_edit_ajax.php",

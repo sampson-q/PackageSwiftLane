@@ -200,6 +200,7 @@ $user_addreses = $db->cdp_registros();
                                         <!-- <div id="loader" style="display:none"></div> -->
                                         
                                         <form class="form-horizontal form-material" id="edit_user" name="edit_user" method="post" enctype="multipart/form-data">
+                                            <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                             <section>
                                                 <div class="row">
                                                     <div class="col-md-6">
