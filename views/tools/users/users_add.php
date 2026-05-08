@@ -128,8 +128,9 @@ $office = $core->cdp_getOffices();
                                 <div><hr><br></div>
 
 								<form class="form-horizontal form-material" id="save_user" name="save_user" method="post">
-									<section>
+                                    <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
+									<section>
 										<div class="row">
 											<div class="col-md-4">
 												<div class="form-group">
@@ -205,12 +206,12 @@ $office = $core->cdp_getOffices();
 											<div class="col-md-6">
 											    <div class="form-group">
 											        <label for="emailAddress1"><?php echo $lang['user_manage15'] ?></label>
-       <select class="custom-select form-control" id="role" name="role" onchange="toggleDriverFields()" >
-           <option value="" selected disabled><?php echo $lang['left393']; ?></option>
-           <?php foreach ($roles as $role) : ?>
-               <option value="<?php echo $role->role_id; ?>"><?php echo isset($lang['role_'.$role->role_id]) ? $lang['role_'.$role->role_id] : $role->role_name; ?></option>
-           <?php endforeach; ?>
-       </select>
+                                                    <select class="custom-select form-control" id="userlevel" name="role" onchange="toggleDriverFields()" >
+                                                        <option value="" selected disabled><?php echo $lang['left393']; ?></option>
+                                                        <?php foreach ($roles as $role) : ?>
+                                                            <option value="<?php echo $role->role_id; ?>"><?php echo isset($lang['role_'.$role->role_id]) ? $lang['role_'.$role->role_id] : $role->role_name; ?></option>
+                                                        <?php endforeach; ?>
+                                                    </select>
 											    </div>
 											</div>
 
