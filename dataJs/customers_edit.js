@@ -451,6 +451,8 @@ $("#edit_user").on("submit", function (event) {
     for (var ai of address_id) {
       data.append("address_id[]", ai.value);
     }
+
+    data.append('_csrf_token', $('input[name="_csrf_token"]').val());
  
     $.ajax({
       type: "POST",

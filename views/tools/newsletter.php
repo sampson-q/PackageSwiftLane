@@ -134,6 +134,7 @@ if (isset($_GET['email'])) {
 
 
                                 <form class="form-horizontal form-material" name="send_email" id="send_email" method="post">
+                                    <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                     <section>
                                         <div class="row">
                                             <div class="col-md-6">

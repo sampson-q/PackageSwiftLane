@@ -132,6 +132,7 @@ if (($userData->userlevel ?? 0) != 6 && !$user->cdp_hasPermission('add_client'))
 
                                 <div id="resultados_ajax"></div>
                                 <form class="form-horizontal form-material" id="save_user" name="save_user" method="post">
+                                    <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                     <section>
 
                                         <div class="row">
