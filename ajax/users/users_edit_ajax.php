@@ -5,216 +5,222 @@
 // * Copyright (c) JAOMWEB. All Rights Reserved                            *
 // *                                                                       *
 // *************************************************************************
-// *                                                                       *
-// * Email: support@jaom.info                                              *
-// * Website: http://www.jaom.info                                         *
-// *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * This software is furnished under a license and may be used and copied *
-// * only  in  accordance  with  the  terms  of such  license and with the *
-// * inclusion of the above copyright notice.                              *
-// * If you Purchased from Codecanyon, Please read the full License from   *
-// * here- http://codecanyon.net/licenses/standard                         *
-// *                                                                       *
-// *************************************************************************
-
-
 
 require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
-require_login();
-require_permission('view_user_list');
 
-$user = new User;
-$core = new Core;
-$errors = array();
+header('Content-type: application/json; charset=UTF-8');
 
+try {
+    require_login();
+    require_permission('view_user_list');
 
-if (empty($_POST['branch_office']))
+    $user = new User;
+    $core = new Core;
+    $errors = array();
 
-    $errors['branch_office'] = $lang['validate_field_ajax121'];
+    // ============================================================
+    // STEP 1: SECURITY CHECKS
+    // ============================================================
 
-if (empty($_POST['fname']))
-
-    $errors['fname'] = $lang['validate_field_ajax122'];
-if (empty($_POST['lname']))
-
-    $errors['lname'] = $lang['validate_field_ajax123'];
-
-if (empty($_POST['email']))
-
-    $errors['email'] = $lang['validate_field_ajax125'];
-
-if ($user->cdp_emailExists($_POST['email'], $_POST['id']))
-
-    $errors[] = $lang['validate_field_ajax126'];
-
-if (!$user->cdp_isValidEmail($_POST['email']))
-
-    $errors[] = $lang['validate_field_ajax127'];
-
-if (empty($_POST['phone']))
-
-    $errors['phone'] = $lang['validate_field_ajax128'];
-
-
-if (CDP_APP_MODE_DEMO === true) {
-?>
-
-    <div class="alert alert-warning" id="success-alert">
-        <p><span class="icon-minus-sign"></span><i class="close icon-remove-circle"></i>
-            <span>Error! </span> There was an error processing the request
-        <ul class="error">
-
-            <li>
-                <i class="icon-double-angle-right"></i>
-                This is a demo version, this action is not allowed, <a class="btn waves-effect waves-light btn-xs btn-success" href="https://codecanyon.net/item/courier-deprixa-pro-integrated-web-system-v32/15216982" target="_blank">Buy DEPRIXA PRO</a> the full version and enjoy all the functions...
-
-            </li>
-
-
-        </ul>
-        </p>
-    </div>
-    <?php
-} else {
-
-    if (empty($errors)) {
-
-
-        header('Content-type: application/json; charset=UTF-8');
-    
-        $response = array();
-
-
-        if (isset($_POST['document_type'])) {
-
-            $document_type = $_POST['document_type'];
-        } else {
-
-            $document_type = '';
-        }
-
-        if (isset($_POST['document_number'])) {
-
-            $document_number = $_POST['document_number'];
-        } else {
-
-            $document_number = '';
-        }
-
-        $data = array(
-
-            'email' => cdp_sanitize($_POST['email']),
-            'lname' => cdp_sanitize($_POST['lname']),
-            'fname' => cdp_sanitize($_POST['fname']),
-            'newsletter' => intval($_POST['newsletter']),
-            'notes' => cdp_sanitize($_POST['notes']),
-            'phone' => cdp_sanitize($_POST['phone']),
-            'gender' => cdp_sanitize($_POST['gender']),
-            'document_number' => cdp_sanitize($document_number),
-            'document_type' => cdp_sanitize($document_type),
-            'active' => cdp_sanitize($_POST['active']),
-            'id' => cdp_sanitize($_POST['id'])
-        );
-
-        $userDataEdit = cdp_getUserEdit4bozo($_POST['id']);
-
-        if ($userDataEdit['rowCount'] == 1 && (int)$userDataEdit['data']->userlevel === 9 && (int)$user->userlevel !== 9) {
-            header('Content-type: application/json; charset=UTF-8');
-            echo json_encode([
-                'status' => 'error',
-                'message' => isset($lang['super_admin_edit_only']) ? $lang['super_admin_edit_only'] : 'Only a Super Admin can edit this user.'
-            ]);
-            exit;
-        }
-
-        if ($_POST['password'] != "") {
-
-            $data['password'] = password_hash($_POST['password'], PASSWORD_DEFAULT);
-        } else {
-
-            $data['password'] = $userDataEdit['data']->password;
-        }
-
-
-
-        // Rol/userlevel: priorizar el enviado por el formulario (select userlevel incluye todos los roles)
-        $data['userlevel'] = isset($_POST['userlevel']) ? intval($_POST['userlevel']) : (int)$userDataEdit['data']->userlevel;
-
-
-
-        if (!empty($_POST['branch_office'])) {
-
-            $data['branch_office'] = $_POST['branch_office'];
-        } else {
-
-            $data['branch_office'] = $userDataEdit['data']->name_off;
-        }
-
-
-        $insert = cdp_updateUserrx0xr($data);
-
-
-        if ($insert) {
-            $response['status'] = 'success';
-            $response['message'] = $lang['message_ajax_success_updated'];
-        } else {
-            $response['status'] = 'error';
-            $response['message'] = $lang['message_ajax_error1'];
-        }
-
-
-        echo json_encode($response);
+    if (CDP_APP_MODE_DEMO === true) {
+        http_response_code(403);
+        echo json_encode(['status' => 'error', 'message' => 'Demo mode blocked']);
+        exit;
     }
 
+    if (empty($_POST['_csrf_token'])) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'CSRF token missing']);
+        exit;
+    }
+
+    $user_id = isset($_POST['id']) ? intval(trim($_POST['id'])) : 0;
+    if (!$user_id || $user_id < 1) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Invalid user ID']);
+        exit;
+    }
+
+    // ============================================================
+    // STEP 2: FETCH CURRENT USER
+    // ============================================================
+
+    $userDataEdit = cdp_getUserEdit4bozo($user_id);
+    if (!$userDataEdit || $userDataEdit['rowCount'] != 1) {
+        http_response_code(404);
+        echo json_encode(['status' => 'error', 'message' => 'User not found']);
+        exit;
+    }
+
+    $currentUser = $userDataEdit['data'];
+
+    // ============================================================
+    // STEP 3: PERMISSION CHECK
+    // ============================================================
+
+    if ((int)$currentUser->userlevel === 9 && (int)$user->userlevel !== 9) {
+        http_response_code(403);
+        echo json_encode(['status' => 'error', 'message' => 'No permission to edit this user']);
+        exit;
+    }
+
+    // ============================================================
+    // STEP 4: PREPARE NEW DATA & DETECT CHANGES
+    // ============================================================
+
+    $newData = array(
+        'fname'         => trim($_POST['fname'] ?? ''),
+        'lname'         => trim($_POST['lname'] ?? ''),
+        'email'         => trim($_POST['email'] ?? ''),
+        'phone'         => trim($_POST['phone'] ?? ''),
+        'gender'        => $_POST['gender'] ?? '',
+        'active'        => isset($_POST['active']) ? intval($_POST['active']) : null,
+        'newsletter'    => isset($_POST['newsletter']) ? intval($_POST['newsletter']) : null,
+        'notes'         => $_POST['notes'] ?? '',
+        'branch_office' => trim($_POST['branch_office'] ?? ''),
+        'password'      => $_POST['password'] ?? '',
+        'document_type' => $_POST['document_type'] ?? '',
+        'document_number' => $_POST['document_number'] ?? '',
+        'userlevel'     => isset($_POST['userlevel']) ? intval($_POST['userlevel']) : (int)$currentUser->userlevel,
+    );
+
+    // Detect what changed
+    $fieldsChanged = array(
+        'fname'         => $newData['fname'] !== $currentUser->fname,
+        'lname'         => $newData['lname'] !== $currentUser->lname,
+        'email'         => $newData['email'] !== $currentUser->email,
+        'phone'         => $newData['phone'] !== $currentUser->phone,
+        'gender'        => $newData['gender'] !== $currentUser->gender,
+        'active'        => $newData['active'] !== (int)$currentUser->active,
+        'newsletter'    => $newData['newsletter'] !== (int)$currentUser->newsletter,
+        'notes'         => $newData['notes'] !== $currentUser->notes,
+        'branch_office' => $newData['branch_office'] !== $currentUser->name_off,
+        'password'      => !empty($newData['password']),
+        'document_type' => $newData['document_type'] !== $currentUser->document_type,
+        'document_number' => $newData['document_number'] !== $currentUser->document_number,
+        'userlevel'     => $newData['userlevel'] !== (int)$currentUser->userlevel,
+    );
+
+    // ============================================================
+    // STEP 5: VALIDATE ONLY CHANGED FIELDS
+    // ============================================================
+
+    if ($fieldsChanged['fname']) {
+        if (empty($newData['fname'])) {
+            $errors['fname'] = 'First name is required.';
+        } elseif (strlen($newData['fname']) < 2) {
+            $errors['fname'] = 'First name must be at least 2 characters.';
+        }
+    }
+
+    if ($fieldsChanged['lname']) {
+        if (empty($newData['lname'])) {
+            $errors['lname'] = 'Last name is required.';
+        } elseif (strlen($newData['lname']) < 2) {
+            $errors['lname'] = 'Last name must be at least 2 characters.';
+        }
+    }
+
+    if ($fieldsChanged['email']) {
+        if (empty($newData['email'])) {
+            $errors['email'] = 'Email is required.';
+        } elseif (!$user->cdp_isValidEmail($newData['email'])) {
+            $errors['email'] = 'Invalid email format.';
+        } elseif ($user->cdp_emailExists($newData['email'], $user_id)) {
+            $errors['email'] = 'This email is already in use.';
+        }
+    }
+
+    if ($fieldsChanged['phone']) {
+        if (empty($newData['phone'])) {
+            $errors['phone'] = 'Phone is required.';
+        } elseif (strlen($newData['phone']) < 7) {
+            $errors['phone'] = 'Phone is invalid.';
+        }
+    }
+
+    if ($fieldsChanged['branch_office']) {
+        if (empty($newData['branch_office'])) {
+            $errors['branch_office'] = 'Branch office is required.';
+        }
+    }
+
+    if ($fieldsChanged['password']) {
+        if (strlen($newData['password']) < 6) {
+            $errors['password'] = 'Password must be 6+ characters.';
+        }
+    }
+
+    // ============================================================
+    // STEP 6: CHECK FOR ERRORS
+    // ============================================================
 
     if (!empty($errors)) {
-    ?>
-        <div class="alert alert-danger" id="success-alert">
-            <p><span class="icon-minus-sign"></span><i class="close icon-remove-circle"></i>
-                <?php echo $lang['message_ajax_error2']; ?>
-            <ul class="error">
-                <?php
-                foreach ($errors as $error) { ?>
-                    <li>
-                        <i class="icon-double-angle-right"></i>
-                        <?php
-                        echo $error;
-
-                        ?>
-
-                    </li>
-                <?php
-
-                }
-                ?>
-            </ul>
-            </p>
-        </div>
-
-    <?php
+        http_response_code(422);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Validation failed',
+            'errors' => $errors
+        ]);
+        exit;
     }
 
-    if (isset($messages)) {
+    // ============================================================
+    // STEP 7: BUILD UPDATE ARRAY WITH ALL REQUIRED FIELDS
+    // ============================================================
+    // The cdp_updateUserrx0xr() function requires ALL fields to be present
 
-    ?>
-        <div class="alert alert-info alert-dismissible fade show" role="alert">
-            <p><span class="icon-info-sign"></span>
-                <?php
-                foreach ($messages as $message) {
-                    echo $message;
-                }
-                ?>
-            </p>
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
+    $updateData = array(
+        'id'             => $user_id,
+        'fname'          => $fieldsChanged['fname'] ? $newData['fname'] : $currentUser->fname,
+        'lname'          => $fieldsChanged['lname'] ? $newData['lname'] : $currentUser->lname,
+        'email'          => $fieldsChanged['email'] ? $newData['email'] : $currentUser->email,
+        'phone'          => $fieldsChanged['phone'] ? $newData['phone'] : $currentUser->phone,
+        'gender'         => $fieldsChanged['gender'] ? $newData['gender'] : $currentUser->gender,
+        'active'         => $fieldsChanged['active'] ? $newData['active'] : (int)$currentUser->active,
+        'newsletter'     => $fieldsChanged['newsletter'] ? $newData['newsletter'] : (int)$currentUser->newsletter,
+        'notes'          => $fieldsChanged['notes'] ? $newData['notes'] : $currentUser->notes,
+        'branch_office'  => $fieldsChanged['branch_office'] ? $newData['branch_office'] : $currentUser->name_off,
+        'document_type'  => $fieldsChanged['document_type'] ? $newData['document_type'] : $currentUser->document_type,
+        'document_number'=> $fieldsChanged['document_number'] ? $newData['document_number'] : $currentUser->document_number,
+        'userlevel'      => $fieldsChanged['userlevel'] ? $newData['userlevel'] : (int)$currentUser->userlevel,
+        'password'       => $fieldsChanged['password'] ? password_hash($newData['password'], PASSWORD_DEFAULT) : $currentUser->password,
+    );
 
-<?php
+    // ============================================================
+    // STEP 8: PERFORM UPDATE
+    // ============================================================
+
+    $result = cdp_updateUserrx0xr($updateData);
+
+    if ($result === true || $result == 1 || !empty($result)) {
+        http_response_code(200);
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'User updated successfully',
+            'data' => [
+                'user_id' => $user_id,
+                'changed' => array_keys(array_filter($fieldsChanged)),
+                'updated_at' => date('Y-m-d H:i:s')
+            ]
+        ]);
+    } else {
+        http_response_code(500);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Failed to update user in database'
+        ]);
     }
+
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Server error: ' . $e->getMessage()
+    ]);
 }
+
+exit;
 ?>
