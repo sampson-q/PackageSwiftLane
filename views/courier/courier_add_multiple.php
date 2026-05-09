@@ -159,7 +159,7 @@ $order_prefix = $settings->prefix;
         <?php $driverrow = $user->cdp_userAllDriver(); ?>
         <?php $delitimerow = $core->cdp_getDelitime(); ?>
         <?php $track = $core->cdp_order_track(); ?>
-        <?php $categories = $core->cdp_getCategories(); ?>
+        <?php $categories = $core->cdp_getCategoriesById(27); ?>
         <?php $code_countries = $core->cdp_getCodeCountries(); ?>
 
         <!-- End Left Sidebar - style you can find in sidebar.scss  -->
@@ -464,7 +464,7 @@ $order_prefix = $settings->prefix;
                                         <div class="form-group col-md-3">
                                             <label for="inputlname" class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
                                             <div class="input-group mb-3">
-                                                <select class="select2 form-control custom-select" id="order_item_category" name="order_item_category" required style="width: 100%;">
+                                                <select class="select2 form-control custom-select" id="order_item_category" name="order_item_category" disabled required style="width: 100%;">
                                                     <option value="<?php echo $s_logistics->id; ?>"><?php echo $s_logistics->name_item; ?></option>
                                                     <?php foreach ($categories as $row) : ?>
                                                         <option value="<?php echo $row->id; ?>"><?php echo $row->name_item; ?></option>

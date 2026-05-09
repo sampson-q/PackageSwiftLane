@@ -72,7 +72,7 @@ $packrow      = $core->cdp_getPack();
 $moderow      = $core->cdp_getShipmode();
 $modeafterrow = $core->cdp_getShipmodeafter();
 $courierrow   = $core->cdp_getCouriercom();
-$categories   = $core->cdp_getCategories();
+$categories   = $core->cdp_getCategoriesById(27);
 
 ?>
 <!DOCTYPE html>
@@ -345,7 +345,7 @@ $categories   = $core->cdp_getCategories();
                                         <div class="form-row">
                                             <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label mb-1"><?php echo isset($lang['add-title22']) ? $lang['add-title22'] : 'Modo de envío'; ?></label>
-                                                <select class="select2 form-control custom-select" id="order_service_options" name="order_service_options" required style="width:100%">
+                                                <select class="select2 form-control custom-select" id="order_service_options" name="order_service_options" required style="width:100%" disabled>
                                                     <option value="<?php echo $s_logistics->id; ?>"><?php echo htmlspecialchars($s_logistics->name_item); ?></option>
                                                     <?php foreach ($categories as $row): ?>
                                                         <?php if ($row->id != $s_logistics->id): ?>
@@ -472,7 +472,7 @@ $categories   = $core->cdp_getCategories();
                                             <!-- Item category -->
                                             <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
-                                                <select class="select2 form-control custom-select" id="order_item_category" name="order_item_category" style="width:100%">
+                                                <select class="select2 form-control custom-select" id="order_item_category" name="order_item_category" style="width:100%" disabled>
                                                     <option value="<?php echo $s_logistics->id; ?>"><?php echo $s_logistics->name_item; ?></option>
                                                     <?php foreach ($categories as $row): ?>
                                                         <option value="<?php echo $row->id; ?>"><?php echo $row->name_item; ?></option>

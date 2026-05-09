@@ -128,7 +128,7 @@ $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel =
         <?php $driverrow = $user->cdp_userAllDriver(); ?>
         <?php $delitimerow = $core->cdp_getDelitime(); ?>
         <?php $track = $core->cdp_online_shopping_track(); ?>
-        <?php $categories = $core->cdp_getCategories(); ?>
+        <?php $categories = $core->cdp_getCategoriesById(26); ?>
         <?php $code_countries = $core->cdp_getCodeCountries(); ?>
         <?php $trackDigitsx = $core->cdp_trackDigits(); ?>
 
@@ -387,7 +387,7 @@ $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel =
 
                                             <label for="inputlname" class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
                                             <div class="input-group mb-3">
-                                                <select class="custom-select col-12" id="order_item_category" name="order_item_category" required>
+                                                <select class="custom-select col-12" id="order_item_category" name="order_item_category" disabled required>
                                                     <?php foreach ($categories as $row) : ?>
                                                         <option value="<?php echo $row->id; ?>"><?php echo $row->name_item; ?></option>
                                                     <?php endforeach; ?>

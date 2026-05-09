@@ -132,7 +132,7 @@ $order_prefix = $settings->prefix_online_shopping;
         <?php $driverrow = $user->cdp_userAllDriver(); ?>
         <?php $delitimerow = $core->cdp_getDelitime(); ?>
         <?php $track = $core->cdp_online_shopping_track(); ?>
-        <?php $categories = $core->cdp_getCategories(); ?>
+        <?php $categories = $core->cdp_getCategoriesById(26); ?>
         <?php $code_countries = $core->cdp_getCodeCountries(); ?>
 
         <!-- End Left Sidebar - style you can find in sidebar.scss  -->
@@ -384,7 +384,7 @@ $order_prefix = $settings->prefix_online_shopping;
 
                                             <label for="inputlname" class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
                                             <div class="input-group">
-                                                <select class="custom-select col-12" id="order_item_category" name="order_item_category" required>
+                                                <select class="custom-select col-12" id="order_item_category" name="order_item_category" disabled required>
                                                     <?php foreach ($categories as $row) : ?>
                                                         <option value="<?php echo $row->id; ?>"><?php echo $row->name_item; ?></option>
                                                     <?php endforeach; ?>
