@@ -45,21 +45,21 @@
 					<?php } ?>
 
 					<li class="nav-small-cap"> <span class="hide-menu"></span></li>
-
+                    <li class="sidebar-item">----------------------------------------</li>
 					<li class="sidebar-item">
 						<a class="sidebar-link waves-effect waves-dark" href="index.php" aria-expanded="false">
 							<iconify-icon icon="solar:widget-4-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-2'] ?></span>
 						</a>
 					</li>
-					
+					<li class="sidebar-item">----------------------------------------</li>
                     <li class="sidebar-item">
 						<a class="sidebar-link waves-effect waves-dark" href="locker_search.php" aria-expanded="false">
 							<iconify-icon icon="ph:lockers-light" class="fs-5"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-00'] . ' Search' ?></span>
 						</a>
 					</li>
-                    
+                    <li class="sidebar-item">----------------------------------------</li>
                     <li class="sidebar-item">
 						<a class="sidebar-link waves-effect waves-dark" href="pickup_client.php" aria-expanded="false">
 							<iconify-icon icon="f7:tray-arrow-up-fill" class="fs-5"></iconify-icon>
@@ -81,6 +81,7 @@
 
 					?>
 
+                    <li class="sidebar-item">----------------------------------------</li>
                     <!-- Module online shopping-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
@@ -164,6 +165,7 @@
 						if ($user->cdp_hasPermission($perModule)) {
 
 					?>
+                    <li class="sidebar-item">----------------------------------------</li>
 					<!-- Module shipment-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
@@ -237,6 +239,7 @@
 						if ($user->cdp_hasPermission($perModule)) {
 
 					?>
+                    <li class="sidebar-item">----------------------------------------</li>
 					<!-- Module pickup-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
@@ -290,6 +293,8 @@
 						if ($user->cdp_hasPermission($perModule)) {
 
 					?>
+                    
+                    <li class="sidebar-item">----------------------------------------</li>
 					<!-- CONSOLIDATE -->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
@@ -396,7 +401,7 @@
 					</li>
 					<?php } ?>
 
-
+                    <li class="sidebar-item">----------------------------------------</li>
 					<?php if ($user->cdp_hasPermission('view_general_reports')) { ?>
 					<!-- Module general report-->	
 					<li class="sidebar-item">
@@ -407,6 +412,7 @@
 					</li>
 					<?php } ?>
 
+                    <li class="sidebar-item">----------------------------------------</li>
                     <?php if ($user->cdp_hasPermission('push_notifications')) { ?>
 					<!-- push notifications-->
 					<li class="sidebar-item">
@@ -427,6 +433,7 @@
 						if ($user->cdp_hasPermission($perModule)) {
 
 					?>
+                    <li class="sidebar-item">----------------------------------------</li>
 					<!-- Module account receivaible-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
@@ -470,6 +477,7 @@
 						if ($showCustomerRecipients) {
 
 					?>
+                    <li class="sidebar-item">----------------------------------------</li>
 					<!-- Module customer and recipints list-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
@@ -506,6 +514,7 @@
 						if ($user->cdp_hasPermission($perModule)) {
 
 					?>
+                    <li class="sidebar-item">----------------------------------------</li>
 					<!-- Module user list-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
@@ -544,6 +553,7 @@
 						if ($user->cdp_hasPermission($perModule)) {
 
 					?>
+                    <li class="sidebar-item">----------------------------------------</li>
 					<!-- Module roles and permissions-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
@@ -570,7 +580,7 @@
 						</ul>
 					</li>
 					<?php } ?>
-
+                    <li class="sidebar-item">----------------------------------------</li>
                     <?php if ($user->cdp_hasPermission('view_general_reports')) { ?>
 					<!-- Module general report-->	
 					<li class="sidebar-item">
@@ -589,6 +599,7 @@
 						if ($user->cdp_hasPermission($perModule)) {
 
 					?>
+                    <li class="sidebar-item">----------------------------------------</li>
 					<!-- Module generalconfiguracion  -->
 					<li class="nav-small-cap">
 						<iconify-icon icon="solar:menu-dots-bold" class="fs-5"></iconify-icon>
