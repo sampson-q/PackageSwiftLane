@@ -643,6 +643,19 @@ class Core
     return $row;
   }
 
+    /**
+    * Core::cdp_getCategoriesById()
+    **/
+
+    public function cdp_getCategoriesById($id) {
+        $sql = "SELECT * FROM cdb_category WHERE id = :id";
+        $this->db->cdp_query($sql);
+        $this->db->bind(':id', $id, PDO::PARAM_INT);
+        $this->db->cdp_execute();
+        $row = $this->db->cdp_registro();
+
+        return $row;
+    }
 
   /**
    * Core::cdp_getUsersEmployeedAdmin()
