@@ -163,6 +163,7 @@ if (!empty($row_data->client_id)) {
                         <div class="card">
                             <div class="card-body">
                                 <form class="form-horizontal form-material" id="save_data" name="save_data" method="post">
+                                    <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                     <header><span><?php echo $lang['leftorder302'] ?></span></header> <br><br>
                                     <section>
                                         <div class="row">

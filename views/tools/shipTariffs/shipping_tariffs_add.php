@@ -160,6 +160,7 @@ $ship_modes = $db->cdp_registro();
                                 <div><hr><br></div>
 
                                 <form class="form-horizontal form-material" id="save_data" name="save_data" method="post" autocomplete="off">
+                                    <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                     <section>
                                         <div class="row">
                                             <div class="col-md-12">

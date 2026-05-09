@@ -34,9 +34,9 @@ $(function () {
         if (!country_destiny)        missingFields.push(message_error_form28);
         if (!state_destinystates)    missingFields.push(message_error_form29);
         if (!city_destinycities)     missingFields.push(message_error_form30);
-        if (!ship_mode)              missingFields.push('shipping mode');
-        if (!volumetric_percentage)  missingFields.push('volumetric factor');
-        if (!price_mile)             missingFields.push('price per mile');
+        if (!ship_mode)              missingFields.push('Shipping Mode');
+        if (!volumetric_percentage)  missingFields.push('Volumetric Factor');
+        if (!price_mile)             missingFields.push('Price per Mile');
 
         if (missingFields.length > 0) {
             const alertMessage = message_error_form5 + '\n\n- ' + missingFields.join('\n- ');
