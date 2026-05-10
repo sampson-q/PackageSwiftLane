@@ -986,6 +986,12 @@ $("#invoice_form").on("submit", function (event) {
     data.append("filesMultiple[]", document.getElementById("filesMultiple").files[i]);
   }
 
+  if (typeof capturedImages !== 'undefined' && capturedImages && capturedImages.length > 0) {
+    for (var k = 0; k < capturedImages.length; k++) {
+      data.append("filesMultiple[]", capturedImages[k].file);
+    }
+  }
+
   data.append('_csrf_token', $('input[name="_csrf_token"]').val());
 
   $.ajax({
