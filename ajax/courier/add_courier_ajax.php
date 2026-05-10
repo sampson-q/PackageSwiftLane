@@ -57,8 +57,8 @@ if (empty($_POST['origin_off']))
 if (empty($_POST['order_no']))
     $errors['order_no'] = $lang['validate_field_ajax150'];
 
-if (empty($_POST['order_item_category']))
-    $errors['order_item_category'] = $lang['validate_field_ajax151'];
+// if (empty($_POST['order_item_category']))
+//     $errors['order_item_category'] = $lang['validate_field_ajax151'];
 
 if (empty($_POST['order_package']))
     $errors['order_package'] = $lang['validate_field_ajax152'];
@@ -66,8 +66,8 @@ if (empty($_POST['order_package']))
 if (empty($_POST['order_courier']))
     $errors['order_courier'] = $lang['validate_field_ajax153'];
 
-if (empty($_POST['order_service_options']))
-    $errors['order_service_options'] = $lang['validate_field_ajax154'];
+// if (empty($_POST['order_service_options']))
+//     $errors['order_service_options'] = $lang['validate_field_ajax154'];
 
 if (empty($_POST['order_deli_time']))
     $errors['order_deli_time'] = $lang['validate_field_ajax155'];
