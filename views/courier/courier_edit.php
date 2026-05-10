@@ -546,15 +546,16 @@ $numrows     = $db->cdp_rowCount();
                                             <label class="control-label d-block mb-2" id="selectItem">
                                                 <?php echo $lang['leftorder15']; ?>
                                             </label>
-                                            <input class="custom-file-input" id="filesMultiple"
-                                                   name="filesMultiple[]" multiple="multiple" type="file"
-                                                   style="display: none;"
-                                                   onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
-                                            <button type="button" id="openMultiFile"
-                                                    class="btn btn-default pull-left mb-2">
-                                                <i class='fa fa-paperclip'
-                                                   style="font-size:18px; cursor:pointer;"></i>
+                                            <input class="custom-file-input" id="filesMultiple" name="filesMultiple[]" multiple="multiple" type="file" style="display: none;" onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
+                                            <button type="button" id="openMultiFile" class="btn btn-default pull-left mb-2">
+                                                <i class='fa fa-paperclip' style="font-size:18px; cursor:pointer;"></i>
                                                 <?php echo $lang['leftorder16']; ?>
+                                            </button>
+
+                                            <!-- Camera Capture Button -->
+                                            <button type="button" id="openCameraCapture" class="btn btn-default" data-toggle="modal" data-target="#cameraCaptureModal">
+                                                <i class="fa fa-camera" style="font-size:18px; cursor:pointer;"></i>
+                                                Capture Photo
                                             </button>
                                         </div>
 
@@ -573,6 +574,69 @@ $numrows     = $db->cdp_rowCount();
                                     <div class="row mt-3">
                                         <div class="col-md-12 row" id="image_preview"></div>
                                     </div>
+
+                                    <!-- ATTACHMENTS & CAMERA CAPTURE SECTION -->
+                                    <!-- ============================================
+                                        CAMERA CAPTURE MODAL
+                                        ============================================ -->
+                                    <div class="modal fade" id="cameraCaptureModal" tabindex="-1" role="dialog" aria-labelledby="cameraCaptureModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="cameraCaptureModalLabel">
+                                                        <i class="fa fa-camera"></i> Capture Package Photo
+                                                    </h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <!-- CAMERA STREAM -->
+                                                    <div id="cameraContainer" class="text-center mb-3" style="display:none;">
+                                                        <video id="cameraStream" autoplay playsinline width="100%" style="max-width: 500px; border-radius: 0.5rem; border: 2px solid #007bff;"></video>
+                                                    </div>
+
+                                                    <!-- LOADING MESSAGE -->
+                                                    <div id="cameraLoading" class="alert alert-info text-center">
+                                                        <i class="fa fa-spinner fa-spin"></i> Initializing camera...
+                                                    </div>
+
+                                                    <!-- ERROR MESSAGE -->
+                                                    <div id="cameraError" class="alert alert-danger" style="display:none;">
+                                                        <strong>Camera Error:</strong> <span id="cameraErrorText"></span>
+                                                    </div>
+
+                                                    <!-- PREVIEW OF CAPTURED IMAGE -->
+                                                    <div id="capturedPreview" class="text-center mb-3" style="display:none;">
+                                                        <img id="capturedImage" src="" style="max-width: 100%; max-height: 400px; border-radius: 0.5rem;">
+                                                    </div>
+
+                                                    <!-- CAMERA CONTROLS -->
+                                                    <div id="cameraControls" class="text-center" style="display:none;">
+                                                        <button type="button" id="capturePhotoBtn" class="btn btn-success mr-2">
+                                                            <i class="fa fa-camera"></i> Capture Photo
+                                                        </button>
+                                                        <button type="button" id="clearCapturedBtn" class="btn btn-warning mr-2" style="display:none;">
+                                                            <i class="fa fa-refresh"></i> Clear
+                                                        </button>
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                            Close
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" id="addCapturedPhotoBtn" class="btn btn-primary" style="display:none;">
+                                                        <i class="fa fa-plus"></i> Add Photo to Package
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ============================================
+                                        HIDDEN CANVAS FOR IMAGE CAPTURE
+                                        ============================================ -->
+                                    <canvas id="captureCanvas" style="display:none;"></canvas>
 
                                     <div class="row mt-3">
                                         <div class="resultados_file col-md-4 pull-right"></div>
@@ -1037,5 +1101,6 @@ $numrows     = $db->cdp_rowCount();
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
 
     <script src="dataJs/courier_edit.js"></script>
+    <script src="dataJs/courier_camera.js"></script>
 </body>
 </html>
