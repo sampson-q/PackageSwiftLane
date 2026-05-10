@@ -25,7 +25,7 @@ $infoship = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_category where id= '" . $infoship->logistics_default1 . "'");
 $s_logistics = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_delivery_time where id= '" . $infoship->time_default5 . "'");
+$db->cdp_query("SELECT * FROM cdb_delivery_time where id = 12");
 $delivery_times = $db->cdp_registro();
 
 $db->cdp_query("SELECT * FROM cdb_met_payment where id= '" . $infoship->pay_default6 . "'");
@@ -255,7 +255,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                     <div class="row">
                         <div class="col-lg-12">
                             <div class="card"><div class="card-body">
-                                <h4 class="card-title"><i class="mdi mdi-truck-fast" style="color:#20c997"></i> 1) <?php echo $lang['langs_010']; ?></h4>
+                                <h4 class="card-title"><i class="mdi mdi-truck-fast" style="color:#20c997"></i> 1) <?php echo 'Sender / Recipient Information'; ?></h4>
                                 <hr>
 
                                 <div class="row">
@@ -325,25 +325,19 @@ $categories   = $core->cdp_getCategoriesById(27);
                                         <div class="mb-2 mb-md-0">
                                             <label class="custom-control custom-checkbox m-0">
                                                 <?php echo $lang['messagesform112'] ?>
-                                                <input type="checkbox" class="custom-control-input" name="tariff_mode" id="tariff_mode" value="1">
+                                                <input type="checkbox" checked class="custom-control-input" name="tariff_mode" id="tariff_mode" value="1">
                                                 <span class="custom-control-indicator"></span>
                                             </label>
                                             <a href="shipping_tariffs_add.php" class="btn btn-default btn-sm mt-2">
                                                 <span class="ti-shortcode"></span> <?php echo $lang['leftorder17712'] ?>
                                             </a>
                                         </div>
-
-                                        <div class="text-md-right">
-                                            <button type="button" onclick="addPackage()" name="add_rows" id="add_rows" class="btn btn-outline-dark">
-                                                <span class="fa fa-plus"></span> <?php echo $lang['left231'] ?>
-                                            </button>
-                                        </div>
                                     </div>
 
                                     <!-- Bloque Modo de envío / millas / tiempo / pago -->
                                     <div class="rate-box mb-3">
                                         <div class="form-row">
-                                            <div class="form-group col-md-3">
+                                            <!-- <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label mb-1"><?php echo isset($lang['add-title22']) ? $lang['add-title22'] : 'Modo de envío'; ?></label>
                                                 <select class="select2 form-control custom-select" id="order_service_options" name="order_service_options" required style="width:100%" disabled>
                                                     <option value="<?php echo $s_logistics->id; ?>"><?php echo htmlspecialchars($s_logistics->name_item); ?></option>
@@ -360,15 +354,12 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                 <label class="control-label col-form-label mb-1">Distancia (millas) (opcional)</label>
                                                 <input type="text" class="form-control" id="distance_miles" name="distance_miles"
                                                        value="0" onkeypress="return isNumberKey(event, this)">
-                                            </div>
+                                            </div> -->
 
                                             <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label mb-1"><?php echo $lang['add-title20'] ?></label>
-                                                <select class="select2 form-control custom-select" id="order_deli_time" name="order_deli_time" required style="width:100%">
+                                                <select class="select2 form-control custom-select" id="order_deli_time" name="order_deli_time" required disabled style="width:100%">
                                                     <option value="<?php echo $delivery_times->id; ?>"><?php echo $delivery_times->delitime; ?></option>
-                                                    <?php foreach ($delitimerow as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->delitime; ?></option>
-                                                    <?php endforeach; ?>
                                                 </select>
                                             </div>
 
@@ -381,20 +372,118 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
+
+                                            <!-- Tipo de embalaje -->
+                                            <div class="form-group col-md-3">
+                                                <label class="control-label col-form-label"><?php echo $lang['add-title17'] ?></label>
+                                                <select class="select2 form-control custom-select" id="order_package" name="order_package" required style="width:100%">
+                                                    <option value="<?php echo $packaging_box->id; ?>"><?php echo $packaging_box->name_pack; ?></option>
+                                                    <?php foreach ($packrow as $row): ?>
+                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_pack; ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+
+                                            <!-- Empresa de mensajería -->
+                                            <div class="form-group col-md-3">
+                                                <label class="control-label col-form-label"><?php echo $lang['add-title18'] ?></label>
+                                                <select class="select2 form-control custom-select" id="order_courier" name="order_courier" required style="width:100%">
+                                                    <option value="<?php echo $courier_comp->id; ?>"><?php echo $courier_comp->name_com; ?></option>
+                                                    <?php foreach ($courierrow as $row): ?>
+                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_com; ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+
+                                            <?php if ($userData->userlevel == 3): ?>
+                                                <div class="col-md-3">
+                                                    <label class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
+                                                    <div class="input-group mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
+                                                        </div>
+                                                        <input type="hidden" name="driver_id" id="driver_id" value="<?php echo $_SESSION['userid']; ?>">
+                                                        <select class="custom-select col-12" id="driver_name" name="driver_name">
+                                                            <option value="<?php echo $_SESSION['userid']; ?>"><?php echo $_SESSION['name']; ?></option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            <?php else: ?>
+                                                <div class="form-group col-md-3">
+                                                    <label class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
+                                                    <div class="input-group mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
+                                                        </div>
+                                                        <select class="custom-select col-12" id="driver_id" name="driver_id">
+                                                            <option value="0">--<?php echo $lang['left209'] ?>--</option>
+                                                            <?php foreach ($driverrow as $row): ?>
+                                                                <option value="<?php echo $row->id; ?>"><?php echo $row->fname . ' ' . $row->lname; ?></option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            <?php endif; ?>
+
+                                            <div class="form-group col-md-3">
+                                                <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
+                                                <div class="input-group mb-3">
+                                                    <select class="custom-select col-12" id="status_courier" name="status_courier" required>
+                                                        <option value="<?php echo $styles_status->id; ?>"><?php echo $styles_status->mod_style; ?></option>
+                                                        <?php foreach ($statusrow as $row) : ?>
+                                                            <?php if ($row->id == 8) { ?>
+                                                            <?php } elseif ($row->id == 11) { ?>
+                                                            <?php } elseif ($row->id == 12) { ?>
+                                                            <?php } elseif ($row->id == 14) { ?>
+                                                            <?php } elseif ($row->id == 15) { ?>
+                                                            <?php } elseif ($row->id == 16) { ?>
+                                                            <?php } elseif ($row->id == 13) { ?>
+                                                            <?php } else { ?>
+                                                                <option value="<?php echo $row->id; ?>"><?php echo $row->mod_style; ?></option>
+                                                            <?php } ?>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                            </div>
+    
+                                            <div class="col-md-3" style="display:none">
+                                                <label class="control-label col-form-label"><?php echo $lang['add-title15'] ?></label>
+                                                <div class="input-group">
+                                                    <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
+                                                        <div class="input-group-text"><i style="color:#ff0000" class="fa fa-calendar"></i></div>
+                                                    </div>
+                                                    <input type='text' class="form-control" name="order_date" id="order_date" placeholder="--<?php echo $lang['left206'] ?>--" readonly value="<?php echo date('Y-m-d'); ?>" />
+                                                </div>
+                                            </div>
+    
+                                            <div class="form-group col-md-3">
+                                                <label class="control-label col-form-label"><?php echo '# Tracking' ?></label>
+                                                <input type='text' class="form-control" id="tracking_number" name="tracking_number" style="border: 1px solid red;" placeholder="# Tracking" />
+                                            </div>
+                                            
+                                            <div class="form-group col-md-3">
+                                                <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
+                                                <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" style="border: 1px solid red;" />
+                                            </div>
                                         </div>
                                     </div>
 
                                     <!-- Tabla de paquetes -->
+                                     <div class="text-md-right">
+                                            <button type="button" onclick="addPackage()" name="add_rows" id="add_rows" class="btn btn-outline-dark">
+                                                <span class="fa fa-plus"></span> <?php echo $lang['left231'] ?>
+                                            </button>
+                                        </div>
                                     <div class="table-responsive mt-2">
                                         <table class="table table-sm table-bordered table-hover table-packages mb-0" id="packages_table">
                                             <thead>
                                                 <tr>
                                                     <th style="width:70px;"><?php echo $lang['courier_table_qty']; ?></th>
-                                                    <th><?php echo $lang['courier_table_qty']; ?></th>
+                                                    <th class="text-center" style="min-width:140px;"><?php echo $lang['left213']; ?></th>
+                                                    <th><?php echo 'Real Weight'; ?></th>
                                                     <th class="text-center"><?php echo $lang['left216']; ?></th>
                                                     <th class="text-center"><?php echo $lang['left217']; ?></th>
                                                     <th class="text-center"><?php echo $lang['left218']; ?></th>
-                                                    <th class="text-center" style="min-width:140px;"><?php echo $lang['left213']; ?></th>
                                                     <th style="width:60px;"><?php echo $lang['courier_table_remove']; ?></th>
                                                 </tr>
                                             </thead>
@@ -466,118 +555,6 @@ $categories   = $core->cdp_getCategoriesById(27);
                                             <i class="mdi mdi-clipboard-check-outline" style="color:#20c997"></i>
                                             3) <?php echo $lang['add-section-service-quote']; ?>
                                         </h4>
-
-                                        <!-- Fila: Categoría item / Embalaje / Mensajería (Modo de envío está arriba en rate-box) -->
-                                        <div class="row">
-                                            <!-- Item category -->
-                                            <div class="form-group col-md-3">
-                                                <label class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
-                                                <select class="select2 form-control custom-select" id="order_item_category" name="order_item_category" style="width:100%" disabled>
-                                                    <option value="<?php echo $s_logistics->id; ?>"><?php echo $s_logistics->name_item; ?></option>
-                                                    <?php foreach ($categories as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_item; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-
-                                            <!-- Tipo de embalaje -->
-                                            <div class="form-group col-md-3">
-                                                <label class="control-label col-form-label"><?php echo $lang['add-title17'] ?></label>
-                                                <select class="select2 form-control custom-select" id="order_package" name="order_package" required style="width:100%">
-                                                    <option value="<?php echo $packaging_box->id; ?>"><?php echo $packaging_box->name_pack; ?></option>
-                                                    <?php foreach ($packrow as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_pack; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-
-                                            <!-- Empresa de mensajería -->
-                                            <div class="form-group col-md-3">
-                                                <label class="control-label col-form-label"><?php echo $lang['add-title18'] ?></label>
-                                                <select class="select2 form-control custom-select" id="order_courier" name="order_courier" required style="width:100%">
-                                                    <option value="<?php echo $courier_comp->id; ?>"><?php echo $courier_comp->name_com; ?></option>
-                                                    <?php foreach ($courierrow as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_com; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-
-                                            <?php if ($userData->userlevel == 3): ?>
-                                                <div class="col-md-3">
-                                                    <label class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
-                                                    <div class="input-group mb-3">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
-                                                        </div>
-                                                        <input type="hidden" name="driver_id" id="driver_id" value="<?php echo $_SESSION['userid']; ?>">
-                                                        <select class="custom-select col-12" id="driver_name" name="driver_name">
-                                                            <option value="<?php echo $_SESSION['userid']; ?>"><?php echo $_SESSION['name']; ?></option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            <?php else: ?>
-                                                <div class="form-group col-md-3">
-                                                    <label class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
-                                                    <div class="input-group mb-3">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
-                                                        </div>
-                                                        <select class="custom-select col-12" id="driver_id" name="driver_id">
-                                                            <option value="0">--<?php echo $lang['left209'] ?>--</option>
-                                                            <?php foreach ($driverrow as $row): ?>
-                                                                <option value="<?php echo $row->id; ?>"><?php echo $row->fname . ' ' . $row->lname; ?></option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-
-                                        <!-- Fila: Asignar conductor -->
-                                        <div class="row">
-                                            <div class="form-group col-md-3">
-                                                <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
-                                                <div class="input-group mb-3">
-                                                    <select class="custom-select col-12" id="status_courier" name="status_courier" required>
-                                                        <option value="<?php echo $styles_status->id; ?>"><?php echo $styles_status->mod_style; ?></option>
-                                                        <?php foreach ($statusrow as $row) : ?>
-                                                            <?php if ($row->id == 8) { ?>
-                                                            <?php } elseif ($row->id == 11) { ?>
-                                                            <?php } elseif ($row->id == 12) { ?>
-                                                            <?php } elseif ($row->id == 14) { ?>
-                                                            <?php } elseif ($row->id == 15) { ?>
-                                                            <?php } elseif ($row->id == 16) { ?>
-                                                            <?php } elseif ($row->id == 13) { ?>
-                                                            <?php } else { ?>
-                                                                <option value="<?php echo $row->id; ?>"><?php echo $row->mod_style; ?></option>
-                                                            <?php } ?>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-3" style="display:none">
-                                                <label class="control-label col-form-label"><?php echo $lang['add-title15'] ?></label>
-                                                <div class="input-group">
-                                                    <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
-                                                        <div class="input-group-text"><i style="color:#ff0000" class="fa fa-calendar"></i></div>
-                                                    </div>
-                                                    <input type='text' class="form-control" name="order_date" id="order_date"
-                                                           placeholder="--<?php echo $lang['left206'] ?>--" readonly
-                                                           value="<?php echo date('Y-m-d'); ?>" />
-                                                </div>
-                                            </div>
-
-                                            <div class="form-group col-md-3">
-                                                <label class="control-label col-form-label"><?php echo '# Tracking' ?></label>
-                                                <input type='text' class="form-control" id="tracking_number" name="tracking_number" style="border: 1px solid red;" placeholder="# Tracking" />
-                                            </div>
-                                            
-                                            <div class="form-group col-md-3">
-                                                <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
-                                                <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" style="border: 1px solid red;" />
-                                            </div>
-                                        </div>
 
                                         <!-- INFORMACIÓN DE TARIFA E IMPUESTOS -->
                                         <div class="row mt-4">

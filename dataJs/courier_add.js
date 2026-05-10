@@ -453,18 +453,19 @@ function loadPackages() {
   packagesItems.forEach(function (item, index) {
     var tr = `
       <tr id="row_id_${index}">
-        <td><input type="text" class="form-control form-control-sm qty"    name="qty"    id="qty_${index}"    value="${item.qty}"    onkeypress="return isNumberKey(event,this)"></td>
-        <td><input type="text" class="form-control form-control-sm weight" name="weight" id="weight_${index}" value="${item.weight}" onkeypress="return isNumberKey(event,this)"></td>
-        <td><input type="text" class="form-control form-control-sm length" name="length" id="length_${index}" value="${item.length}" onkeypress="return isNumberKey(event,this)"></td>
-        <td><input type="text" class="form-control form-control-sm width"  name="width"  id="width_${index}"  value="${item.width}"  onkeypress="return isNumberKey(event,this)"></td>
-        <td><input type="text" class="form-control form-control-sm height" name="height" id="height_${index}" value="${item.height}" onkeypress="return isNumberKey(event,this)"></td>
-        <td>
-          <input type="text" class="form-control form-control-sm" name="description" id="description_${index}" value="${item.description || ''}" placeholder="${typeof translate_description!=='undefined'?translate_description:'Descripción'}">
+        <td style="width: 3%;"><input type="text" class="form-control form-control-sm qty"    name="qty"    id="qty_${index}"    value="${item.qty}"    onkeypress="return isNumberKey(event,this)"></td>
+        <td style="width: 75%;">
+          <input type="text" class="form-control form-control-sm" name="description" id="description_${index}" value="${item.description || ''}" placeholder="${typeof translate_description!=='undefined'?translate_description:'Description'}">
           <input type="hidden" name="fixed_value"     id="fixedValue_${index}"     value="${Number(item.fixed_value || 0)}">
           <input type="hidden" name="declared_value"  id="declaredValue_${index}"  value="${Number(item.declared_value || 0)}">
           <input type="hidden" name="weightVol"       id="weightVol_${index}"      value="0">
         </td>
-        <td class="text-center">
+        <td style="width: 7%;"><input type="text" class="form-control form-control-sm weight" name="weight" id="weight_${index}" value="${item.weight}" onkeypress="return isNumberKey(event,this)"></td>
+        <td style="width: 7%;"><input type="text" class="form-control form-control-sm length" name="length" id="length_${index}" value="${item.length}" onkeypress="return isNumberKey(event,this)"></td>
+        <td style="width: 7%;"><input type="text" class="form-control form-control-sm width"  name="width"  id="width_${index}"  value="${item.width}"  onkeypress="return isNumberKey(event,this)"></td>
+        <td style="width: 7%;"><input type="text" class="form-control form-control-sm height" name="height" id="height_${index}" value="${item.height}" onkeypress="return isNumberKey(event,this)"></td>
+        
+        <td style class="text-center">
           ${index > 0 ? `<button type="button" class="btn btn-outline-danger btn-sm" onclick="deletePackage(${index})"><i class="fa fa-trash"></i></button>` : ``}
         </td>
       </tr>`;
