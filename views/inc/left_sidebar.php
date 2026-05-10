@@ -45,7 +45,7 @@
 					<?php } ?>
 
 					<li class="nav-small-cap"> <span class="hide-menu"></span></li>
-                    <li class="sidebar-item">----------------------------------------</li>
+                    
 					<li class="sidebar-item">
 						<a class="sidebar-link waves-effect waves-dark" href="index.php" aria-expanded="false">
 							<iconify-icon icon="solar:widget-4-linear" class="fs-5"></iconify-icon>
@@ -120,15 +120,6 @@
 							</li>
 							<?php } ?>
 
-							<?php if ($user->cdp_hasPermission('add_multiple_packages')) { ?>
-							<li class="sidebar-item">
-								<a href="customer_packages_multiple.php" class="sidebar-link">
-									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-9'] ?> </span>
-								</a>
-							</li>
-							<?php } ?>
-
 							<?php if ($user->cdp_hasPermission('view_package_list')) { ?>
 							<li class="sidebar-item">
 								<a class="sidebar-link waves-effect waves-dark" href="customer_packages_list.php" aria-expanded="false">
@@ -191,14 +182,7 @@
 							</li>
 							<?php } ?>
 
-							<?php if ($user->cdp_hasPermission('add_multiple_shipments')) { ?>
-							<li class="sidebar-item">
-								<a href="courier_add_multiple.php" class="sidebar-link">
-									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-17'] ?> </span>
-								</a>
-							</li>
-							<?php } ?>
+							
 
 							<li class="sidebar-item">
 								<a href="import_excel_add_courier.php" class="sidebar-link">
@@ -992,15 +976,6 @@
 							</li>
 							<?php } ?>
 
-							<?php if ($user->cdp_hasPermission('add_multiple_packages')) { ?>
-							<li class="sidebar-item">
-								<a href="customer_packages_multiple.php" class="sidebar-link">
-									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-9'] ?> </span>
-								</a>
-							</li>
-							<?php } ?>
-
 							<?php if ($user->cdp_hasPermission('view_package_list')) { ?>
 							<li class="sidebar-item">
 								<a class="sidebar-link waves-effect waves-dark" href="customer_packages_list.php" aria-expanded="false">
@@ -1058,15 +1033,6 @@
 								<a href="courier_add.php" class="sidebar-link">
 									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
 									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-15'] ?> </span>
-								</a>
-							</li>
-							<?php } ?>
-
-							<?php if ($user->cdp_hasPermission('add_multiple_shipments')) { ?>
-							<li class="sidebar-item">
-								<a href="courier_add_multiple.php" class="sidebar-link">
-									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-17'] ?> </span>
 								</a>
 							</li>
 							<?php } ?>
