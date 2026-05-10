@@ -480,10 +480,10 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                 <tr>
                                                     <th style="width:70px;"><?php echo $lang['courier_table_qty']; ?></th>
                                                     <th class="text-center" style="min-width:140px;"><?php echo $lang['left213']; ?></th>
-                                                    <th><?php echo 'Real Weight'; ?></th>
-                                                    <th class="text-center"><?php echo $lang['left216']; ?></th>
-                                                    <th class="text-center"><?php echo $lang['left217']; ?></th>
-                                                    <th class="text-center"><?php echo $lang['left218']; ?></th>
+                                                    <th><?php echo 'Weight (TVW)'; ?></th>
+                                                    <th class="text-center"><?php echo $lang['left216'] . ' (TVW)'; ?></th>
+                                                    <th class="text-center"><?php echo $lang['left217'] . ' (TVW)'; ?></th>
+                                                    <th class="text-center"><?php echo $lang['left218'] . ' (TVW)'; ?></th>
                                                     <th style="width:60px;"><?php echo $lang['courier_table_remove']; ?></th>
                                                 </tr>
                                             </thead>
@@ -553,7 +553,7 @@ $categories   = $core->cdp_getCategoriesById(27);
 
                                         <h4 class="card-title mb-3">
                                             <i class="mdi mdi-clipboard-check-outline" style="color:#20c997"></i>
-                                            3) <?php echo $lang['add-section-service-quote']; ?>
+                                            3) <?php echo 'Rate and Taxes'; ?>
                                         </h4>
 
                                         <!-- INFORMACIÓN DE TARIFA E IMPUESTOS -->
