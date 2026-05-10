@@ -37,7 +37,8 @@
         }
 
        
-      include('views/customer_packages/customer_packages_multiple.php');     
+    //   include('views/customer_packages/customer_packages_multiple.php');
+      include('index.php');
            
 
     } else{

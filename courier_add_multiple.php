@@ -37,7 +37,8 @@
         }
 
        
-      include('views/courier/courier_add_multiple.php');     
+    //   include('views/courier/courier_add_multiple.php');
+      include('index.php');
            
 
     } else{
