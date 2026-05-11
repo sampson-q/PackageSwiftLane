@@ -511,25 +511,52 @@ $categories   = $core->cdp_getCategoriesById(27);
 
                                     <!-- Adjuntos -->
                                     <div class="row mt-4">
-                                        <div class="col-md-6">
-                                            <label class="control-label d-block" id="selectItem"><?php echo $lang['leftorder15']; ?></label>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="control-label d-block" id="selectItem"><?php echo $lang['leftorder15']; ?></label>
+    
+                                                <input class="custom-file-input" id="filesMultiple" name="filesMultiple[]" multiple type="file"
+                                                       style="display:none"
+                                                       onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
+    
+                                                <button type="button" id="openMultiFile" class="btn btn-default mb-3">
+                                                    <i class="fa fa-paperclip" style="font-size:18px; cursor:pointer;"></i>
+                                                    <?php echo $lang['leftorder16']; ?>
+                                                </button>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <label class="control-label" id="captureItem"><?php echo $lang['leftorder90']; ?></label>
+    
+                                                <input class="custom-file-input" id="filesCapture" name="filesCapture[]" multiple="multiple" type="file" accept="image/*" capture="environment" style="display:none;" />
+    
+                                                <!-- camera open/capture button — follows visual style of your upload button -->
+                                                <button type="button" id="openCameraButton" class="btn btn-dark mb-3">
+                                                    <i class="fa fa-camera" style="font-size:18px; cursor:pointer;"></i>
+                                                    <?php echo $lang['leftorder90']; ?>
+                                                </button>
 
-                                            <input class="custom-file-input" id="filesMultiple" name="filesMultiple[]" multiple type="file"
-                                                   style="display:none"
-                                                   onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
+                                                <!-- small inline camera UI (hidden until camera opened) -->
+                                                <div class="mt-2 d-flex align-items:flex-start" style="gap:.5rem;">
+                                                    <video id="cameraPreview" autoplay playsinline style="width:220px; height:165px; background:#000; display:none; border-radius:6px; object-fit:cover;"></video>
 
-                                            <button type="button" id="openMultiFile" class="btn btn-default mb-3">
-                                                <i class="fa fa-paperclip" style="font-size:18px; cursor:pointer;"></i>
-                                                <?php echo $lang['leftorder16']; ?>
-                                            </button>
+                                                    <div style="flex:1;">
+                                                        <div style="margin-bottom:.5rem;">
+                                                            <button type="button" id="takeCameraPhoto" class="btn btn-success btn-sm" style="display:none;"><?php echo $lang['left1105']; ?></button>
+                                                            <button type="button" id="stopCamera" class="btn btn-secondary btn-sm" style="display:none;"><?php echo $lang['left1111']; ?></button>
+                                                        </div>
+                                                    
+                                                    </div>
+                                                </div>
+                                            </div>
 
                                             <div class="row" id="image_preview"></div>
 
                                             <div class="mt-2">
                                                 <div id="clean_files" class="hide">
-                                                    <button type="button" id="clean_file_button" class="btn btn-danger">
-                                                        <i class="fa fa-trash" style="font-size:18px; cursor:pointer;"></i>
-                                                        <?php echo $lang['leftorder148']; ?>
+                                                    <button type="button" id="clean_file_button" class="ml-5 btn btn-danger">
+                                                        <i class="fa fa-trash" style="font-size:12px; cursor:pointer;"></i>
+                                                        <?php echo 'Clear Files'; ?>
                                                     </button>
                                                 </div>
                                             </div>
