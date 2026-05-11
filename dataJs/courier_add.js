@@ -768,7 +768,7 @@ function calculateFinalTotal(element) {
   var core_min_cost_tax          = nf($("#core_min_cost_tax").val());
   var core_min_cost_declared_tax = nf($("#core_min_cost_declared_tax").val());
 
-  var isManual                   = $("#tariff_mode").is(":checked");
+  var isManual = $("#tariff_mode").is(":checked");
 
   var sum_weight_real = 0;
   var sum_weight_vol  = 0;
@@ -778,14 +778,72 @@ function calculateFinalTotal(element) {
   (packagesItems || []).forEach(function (item, i) {
     var qty     = Math.max(1, nf(item.qty, 1));
     var weight  = nf(item.weight);
-    var length  = nf(item.length);
-    var width   = nf(item.width);
-    var height  = nf(item.height);
+
+    var $lengthEl = $("#length_" + i);
+    var $widthEl  = $("#width_" + i);
+    var $heightEl = $("#height_" + i);
+
+    var lengthRaw = $.trim($lengthEl.val() || "");
+    var widthRaw  = $.trim($widthEl.val() || "");
+    var heightRaw = $.trim($heightEl.val() || "");
+
+    var length = nf(lengthRaw);
+    var width  = nf(widthRaw);
+    var height = nf(heightRaw);
+
     var fixed   = nf(item.fixed_value);
     var decl    = nf(item.declared_value);
 
+    function isDimensionEmpty(val) {
+        return (
+            val === "" ||
+            val === null ||
+            val === undefined ||
+            val === "0" ||
+            Number(val) === 0
+        );
+    }
+
+    var hasAnyDimension =
+        !isDimensionEmpty(lengthRaw) ||
+        !isDimensionEmpty(widthRaw) ||
+        !isDimensionEmpty(heightRaw);
+
+    if (hasAnyDimension) {
+
+        $lengthEl.css(
+            "border",
+            isDimensionEmpty(lengthRaw)
+                ? "1px solid red"
+                : ""
+        );
+
+        $widthEl.css(
+            "border",
+            isDimensionEmpty(widthRaw)
+                ? "1px solid red"
+                : ""
+        );
+
+        $heightEl.css(
+            "border",
+            isDimensionEmpty(heightRaw)
+                ? "1px solid red"
+                : ""
+        );
+
+    } else {
+
+        $lengthEl.css("border", "");
+        $widthEl.css("border", "");
+        $heightEl.css("border", "");
+    }
+
     var vol_piece = 0;
-    if (core_meter > 0) vol_piece = (length * width * height) / core_meter;
+    if (core_meter > 0 && length > 0 && width > 0 && height > 0) {
+      vol_piece = (length * width * height) / core_meter;
+    }
+
     if ($("#weightVol_" + i).length) $("#weightVol_" + i).val(r2(vol_piece));
 
     sum_weight_real += weight * qty;
