@@ -468,10 +468,10 @@ $lang = array(
 	"translate_graphic_11" => "December",
 
 	"translate_graphic_12" => "Shipments",
-	"translate_graphic_13" => "Registered packages",
+	"translate_graphic_13" => "Registered Packages",
 	"translate_graphic_14" => "Pickups",
 	"translate_graphic_15" => "Consolidated",
-	"translate_graphic_16" => 'account receivable',
+	"translate_graphic_16" => 'Account Receivable',
 
 
 	// GLOBAL UTILS
@@ -646,13 +646,13 @@ $lang = array(
 	"left-menu-sidebar-21" => "Pickup List",
 
 
-	"left-menu-sidebar-22" => "Consolidated",
+	"left-menu-sidebar-22" => "Consolidations",
 	"left-menu-sidebar-2233333310" => "Sea Shipping",
 	"left-menu-sidebar-2233333312" => "Air Shipping",
 	"left-menu-sidebar-87800333" => "Consolidated Air Shipments",
 	"left-menu-sidebar-87800334" => "Consolidated Sea Shipments",
-	"left-menu-sidebar-23" => "Consolidated Control Panel",
-	"left-menu-sidebar-24" => "List of Consolidated",
+	"left-menu-sidebar-23" => "Consolidation Control Panel",
+	"left-menu-sidebar-24" => "List of Consolidations",
 	"left-menu-sidebar-25" => "Packages to Consolidate",
 
 
@@ -771,7 +771,7 @@ $lang = array(
 	"dash-general-18" => "General Summary",
 	"dash-general-19" => "List of shipments",
 	"dash-general-20" => "Pickup List",
-	"dash-general-21" => "List of consolidations",
+	"dash-general-21" => "List of Consolidations",
 	"dash-general-22" => "Pre Alert List",
 	"dash-general-23" => "List of registered packages",
 	"dash-general-24" => "Overview of the last month",
@@ -781,7 +781,7 @@ $lang = array(
 	"dash-general-27" => "Current month's revenue",
 
 	"dash-general-28" => "Pickup List",
-	"dash-general-29" => "List of consolidations",
+	"dash-general-29" => "List of Consolidations",
 	"dash-general-30" => "Accounts Receivable List",
 	"dash-general-31" => "Accounts Receivable Chart",
 	"dash-general-3102" => "Total Accounts",
@@ -3280,7 +3280,7 @@ $lang = array(
 	"count9" => "Consolidated",
 	"count10" => "Customs Blocked",
 	"count11" => "Sales Summary",
-	"count12" => "List of consolidations",
+	"count12" => "List of Consolidations",
 	"count13" => "List of deliveries",
 	"count14" => "Containers",
 	"count15" => "View Map",
