@@ -25,11 +25,11 @@ function cdb_money_format($amount)
 
         $retval = number_format($amount, $dec_digit, $curr_point, $curr_sep);
 
-        // if ($curr_currency == 's') {
-        $retval = $currency_code . ' ' . $retval;
-        // } else {
-        //     $retval .= ' ' . $currency_code;
-        // }
+        if (strlen($curr_symbol) > 1) {
+            $retval = $currency_code . ' ' . $retval;
+        } else {
+            $retval = $currency_code . $retval;
+        }
 
         return $retval;
     } else {
