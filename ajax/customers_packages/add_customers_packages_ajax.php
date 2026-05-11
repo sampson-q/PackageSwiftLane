@@ -64,9 +64,6 @@ if (empty($_POST['origin_off']))
 if (empty($_POST['order_no']))
     $errors['order_no'] = $lang['validate_field_ajax150'];
 
-if (empty($_POST['order_item_category']))
-    $errors['order_item_category'] = $lang['validate_field_ajax151'];
-
 if (empty($_POST['order_package']))
     $errors['order_package'] = $lang['validate_field_ajax152'];
 
