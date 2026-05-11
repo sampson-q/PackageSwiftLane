@@ -126,7 +126,7 @@ $monthName = obtenerNombreMes($currentMonth);
                         <div class="card">
                             <div class="card-body position-relative">
                                 <h5 class="card-title"><?php echo $lang['messagesform84']; ?></h5>
-                                <p class="h4 mb-3"><?php echo $core->currency; ?> <?php echo cdb_money_format($acct_total); ?></p>
+                                <p class="h4 mb-3"><?php echo cdb_money_format($acct_total); ?></p>
                                 <a href="dashboard_admin_account.php" class="btn btn-primary"><?php echo $lang['messagesform83']; ?></a>
                                 <div class="position-absolute" style="right: 1rem; top: 50%; transform: translateY(-50%); opacity: 0.85;">
                                     <iconify-icon icon="solar:wallet-money-linear" class="text-primary" style="font-size: 3.5rem;"></iconify-icon>
@@ -143,19 +143,19 @@ $monthName = obtenerNombreMes($currentMonth);
                                     <div class="col-12 col-md-4 mb-2 mb-md-0">
                                         <div class="d-flex align-items-center">
                                             <div class="m-r-10"><span class="text-info"><iconify-icon icon="solar:clock-circle-linear" class="display-7"></iconify-icon></span></div>
-                                            <p class="mb-0"><?php echo $core->currency; ?> <?php echo cdb_money_format($sum2); ?> <?php echo $lang['dash-general-11']; ?></p>
+                                            <p class="mb-0"><?php echo cdb_money_format($sum2); ?> <?php echo $lang['dash-general-11']; ?></p>
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-4 mb-2 mb-md-0">
                                         <div class="d-flex align-items-center">
                                             <div class="m-r-10"><span class="text-primary"><iconify-icon icon="solar:box-minimalistic-linear" class="display-7"></iconify-icon></span></div>
-                                            <p class="mb-0"><?php echo $core->currency; ?> <?php echo cdb_money_format($sum1); ?> <?php echo $lang['dash-general-10']; ?></p>
+                                            <p class="mb-0"><?php echo cdb_money_format($sum1); ?> <?php echo $lang['dash-general-10']; ?></p>
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-4">
                                         <div class="d-flex align-items-center">
                                             <div class="m-r-10"><span class="text-success"><iconify-icon icon="solar:cart-large-2-linear" class="display-7"></iconify-icon></span></div>
-                                            <p class="mb-0"><?php echo $core->currency; ?> <?php echo cdb_money_format($sum3); ?> <?php echo $lang['messagesform85']; ?></p>
+                                            <p class="mb-0"><?php echo cdb_money_format($sum3); ?> <?php echo $lang['messagesform85']; ?></p>
                                         </div>
                                     </div>
                                 </div>
