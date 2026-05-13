@@ -68,7 +68,7 @@ $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
 
-$sql = "SELECT   a.recipient_type, a.status_invoice, a.total_order, a.consolidate_id, a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options, b.mod_style, b.color FROM cdb_consolidate as a
+$sql = "SELECT a.recipient_type, a.status_invoice, a.total_order, a.consolidate_id, a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options, b.mod_style, b.color FROM cdb_consolidate as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 $sWhere
 			  and a.status_courier!=14
@@ -104,11 +104,12 @@ if ($numrows > 0) { ?>
 					}
 					?>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
-					<th><b><?php echo $lang['left498'] ?></b></th>
-					<th><b><?php echo $lang['left499'] ?></b></th>
-					<th><b><?php echo $lang['lorigin'] ?></b></th>
-					<th><b><?php echo $lang['ldestination'] ?></b></th>
-					<th><b><?php echo $lang['left533020007'] ?></b></th>
+					<th><b><?php echo 'Estimated Time of Arrival' ?></b></th>
+					<!-- <th><b><?php echo $lang['left498'] ?></b></th> -->
+					<!-- <th><b><?php echo $lang['left499'] ?></b></th> -->
+					<!-- <th><b><?php echo $lang['lorigin'] ?></b></th> -->
+					<!-- <th><b><?php echo $lang['ldestination'] ?></b></th> -->
+					<!-- <th><b><?php echo $lang['left533020007'] ?></b></th> -->
 					<th class=""><b><?php echo $lang['ship-all5'] ?></b></th>
 					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
 					<th><b><?php echo $lang['global-3'] ?></b></th>
@@ -117,14 +118,10 @@ if ($numrows > 0) { ?>
 			</thead>
 
 			<tbody id="projects-tbl">
-
-
 				<?php if (!$data) { ?>
 					<tr>
 						<td colspan="6">
-							<?php echo "
-				<i align='center' class='display-3 text-warning d-block'><img src='assets/images/alert/ohh_shipment.png' width='150' /></i>								
-				", false; ?>
+							<?php echo "<i align='center' class='display-3 text-warning d-block'><img src='assets/images/alert/ohh_shipment.png' width='150' /></i>", false; ?>
 						</td>
 					</tr>
 				<?php } else { ?>
@@ -161,6 +158,9 @@ if ($numrows > 0) { ?>
 
 						$db->cdp_query("SELECT * FROM cdb_styles where id= '14'");
 						$status_style_pickup = $db->cdp_registro();
+
+                        $db->cdp_query("SELECT * FROM cdb_package_tracking_number WHERE order_id = '" . $row->consolidate_id . "'");                        
+                        $package_tracking = $db->cdp_registro();
 
 						if ($row->status_invoice == 1) {
 
@@ -199,7 +199,11 @@ if ($numrows > 0) { ?>
 								<?php echo $lang['ddate'] ?>: <b><?php echo $row->c_date; ?></b>
 							</td>
 
-							<td>
+                            <td>
+                                <?php echo $package_tracking->estimated_eta ?: 'N/A'; ?>
+                            </td>
+
+							<!-- <td>
 								<?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?>
 							</td>
 
@@ -215,7 +219,7 @@ if ($numrows > 0) { ?>
 
 								if ($driver_data != null) {
 									echo $driver_data->fname; ?> <?php echo $driver_data->lname;
-																} ?></td>
+																} ?></td> -->
 							<td>
 								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
 							</td>
@@ -241,11 +245,12 @@ if ($numrows > 0) { ?>
 							</td>
 
 
-							<td align='center'>
+							<td align='right'>
 							    <div class="btn-group">
 							        <button class="btn btn-block btn-outline-dark btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 							            <i class="fas fa-ellipsis-v"></i> <!-- Utiliza el icono de puntos suspensivos -->
-							        </button>
+                                        Actions
+                                    </button>
 							        <div class="dropdown-menu" style="overflow-y: auto; max-height: 200px;">
 							            <a class="dropdown-item" href="consolidate_view.php?id=<?php echo $row->consolidate_id; ?>" title="<?php echo $lang['tooledit'] ?>">
 							                <i style="color:#343a40" class="fa fa-search"></i>
