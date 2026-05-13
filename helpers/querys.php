@@ -754,8 +754,8 @@ function cdp_updateConfigTrackInvoicepn8vt($datos)
             code_number =:code_number,
             digit_random =:digit_random,
             prefix_consolidate =:prefix_consolidate,
-            track_consolidate =:track_consolidate                              
-            
+            track_consolidate =:track_consolidate,
+            prefix_online_shopping = :prefix_online_shopping
         ');
 
 
@@ -768,6 +768,7 @@ function cdp_updateConfigTrackInvoicepn8vt($datos)
     $db->bind(':digit_random', $datos['digit_random']);
     $db->bind(':prefix_consolidate', $datos['prefix_consolidate']);
     $db->bind(':track_consolidate', $datos['track_consolidate']);
+    $db->bind(':prefix_online_shopping', $datos['prefix_online_shopping']);
 
 
     return $db->cdp_execute();

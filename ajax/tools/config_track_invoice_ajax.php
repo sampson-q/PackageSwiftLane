@@ -104,7 +104,8 @@ if (CDP_APP_MODE_DEMO === true) {
       'code_number' => intval($_POST['code_number']),
       'digit_random' => cdp_sanitize($_POST['digit_random']),
       'prefix_consolidate' => cdp_sanitize($_POST['prefix_consolidate']),
-      'track_consolidate' => cdp_sanitize($_POST['track_consolidate'])
+      'track_consolidate' => cdp_sanitize($_POST['track_consolidate']),
+      'prefix_online_shopping' => cdp_sanitize($_POST['prefix_online_shopping'])
     );
 
 

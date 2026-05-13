@@ -24,6 +24,7 @@ $(document).ready(function() {
         var digit_random = $('#digit_random').val(); 
         var prefix_consolidate = $('#prefix_consolidate').val();
         var track_consolidate = $('#track_consolidate').val(); 
+        var prefix_online_shopping = $('#prefix_online_shopping').val();
 
 
         // Configurar objeto FormData
