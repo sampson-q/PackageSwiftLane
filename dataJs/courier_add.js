@@ -63,6 +63,7 @@ let autoFetchTimer = null;
     $("#total_item_files").val(0);
     deleted_file_ids = [];
     $("#deleted_file_ids").val("");
+    capturedImages = [];
   });
   $("#filesMultiple").on("change", function () {
     deleted_file_ids = [];
@@ -1067,12 +1068,12 @@ $("#invoice_form").on("submit", function (event) {
   if (deleted_file_ids_val) data.append("deleted_file_ids", deleted_file_ids_val);
 
   // archivos
-    var fileInput = document.getElementById("filesMultiple");
-    if (fileInput && fileInput.files) {
-        for (var j = 0; j < fileInput.files.length; j++) {
-            data.append("filesMultiple[]", fileInput.files[j]);
-        }
+  var fileInput = document.getElementById("filesMultiple");
+  if (fileInput && fileInput.files) {
+    for (var j = 0; j < fileInput.files.length; j++) {
+      data.append("filesMultiple[]", fileInput.files[j]);
     }
+  }
 
     // camera captures
     var captureInput = document.getElementById("filesCapture");
