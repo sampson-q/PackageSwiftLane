@@ -99,9 +99,12 @@ $branchoffices = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_offices where id= '" . $row_order->origin_off . "'");
 $offices = $db->cdp_registro();
 
-
 $db->cdp_query("SELECT * FROM cdb_consolidate_detail WHERE consolidate_id='" . $_GET['id'] . "'");
 $order_items = $db->cdp_registros();
+
+$db->cdp_query("SELECT estimated_eta FROM cdb_package_tracking_number WHERE order_id = :id");
+$db->bind(':id', $_GET['id']);
+$estimated_eta = $db->cdp_registro();
 
 
 $dias_ = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
@@ -359,18 +362,16 @@ if ($row_order->status_invoice == 1) {
 
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
-                                            <h5> &nbsp;<b><?php echo $lang['tools-courier1'] ?></b></h5>
+                                            <h5> &nbsp;<b><?php echo 'Estimated Time of Arrival' ?></b></h5>
 
-                                            <p class="text-muted  m-l-5"><?php if ($courier_com != null) {
-                                                                                echo $courier_com->name_com;
+                                            <p class="text-muted  m-l-5"><?php if ($estimated_eta !== null) {
+                                                                                echo $estimated_eta->estimated_eta;
                                                                             } else {
                                                                                 echo 'N/A';
                                                                             } ?></p>
                                             <h5> &nbsp;<b><?php echo $lang['tools-shipmode1'] ?></b></h5>
                                             <p class="text-muted  m-l-5"><?php if ($order_service_options != null) {
                                                                                 echo $order_service_options->ship_mode;
-                                                                            } else {
-                                                                                echo 'N/A';
                                                                             } ?></p>
                                         </div>
                                     </div>
