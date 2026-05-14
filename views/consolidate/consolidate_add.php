@@ -246,6 +246,8 @@ if (isset($_POST["create_invoice"])) {
 
 
     $order_id = $db->dbh->lastInsertId();
+    
+    cdp_insertPackageTracking($order_id, $_SESSION['userid'], '', cdp_sanitize($_POST['estimated_eta']));
 
     for ($count = 0; $count < $_POST["total_item"]; $count++) {
 
@@ -764,62 +766,62 @@ if (isset($_POST["create_invoice"])) {
 
 
 
-    // $db->cdp_query("
-    //                 INSERT INTO cdb_address_shipments
-    //                 (
-    //                     order_id,
-    //                     order_track,
-    //                     sender_country,
-    //                     sender_state,
-    //                     sender_city,
-    //                     sender_zip_code,
-    //                     sender_address,
-    //                     recipient_country,
-    //                     recipient_state,
-    //                     recipient_city,
-    //                     recipient_zip_code,
-    //                     recipient_address
-    //                 )
-    //                 VALUES
-    //                     (
-    //                     :order_id,    
-    //                     :order_track,
-    //                     :sender_country,
-    //                     :sender_state,
-    //                     :sender_city,
-    //                     :sender_zip_code,
-    //                     :sender_address,
-    //                     :recipient_country,
-    //                     :recipient_state,
-    //                     :recipient_city,
-    //                     :recipient_zip_code,                
-    //                     :recipient_address
-    //                     )
-    //             ");
+    $db->cdp_query("
+                    INSERT INTO cdb_address_shipments
+                    (
+                        order_id,
+                        order_track,
+                        sender_country,
+                        sender_state,
+                        sender_city,
+                        sender_zip_code,
+                        sender_address,
+                        recipient_country,
+                        recipient_state,
+                        recipient_city,
+                        recipient_zip_code,
+                        recipient_address
+                    )
+                    VALUES
+                        (
+                        :order_id,    
+                        :order_track,
+                        :sender_country,
+                        :sender_state,
+                        :sender_city,
+                        :sender_zip_code,
+                        :sender_address,
+                        :recipient_country,
+                        :recipient_state,
+                        :recipient_city,
+                        :recipient_zip_code,                
+                        :recipient_address
+                        )
+                ");
 
-    // $db->bind(':order_id', $order_id);
-    // $db->bind(':order_track',   $order_track);
-    // $db->bind(':sender_country',   $final_sender_country->name);
-    // $db->bind(':sender_state',   $final_sender_state->name);
-    // $db->bind(':sender_city',   $final_sender_city->name);
-    // $db->bind(':sender_zip_code',   $sender_zip_code);
-    // $db->bind(':sender_address',   $sender_address);
-    // $db->bind(':recipient_country',   $final_recipient_country->name);
-    // $db->bind(':recipient_state',   $final_recipient_state->name);
-    // $db->bind(':recipient_city',   $final_recipient_city->name);
-    // $db->bind(':recipient_zip_code',   $recipient_zip_code);
-    // $db->bind(':recipient_address',   $recipient_address);
+    $db->bind(':order_id', $order_id);
+    $db->bind(':order_track',   $order_track);
+    $db->bind(':sender_country',   $final_sender_country->name);
+    $db->bind(':sender_state',   $final_sender_state->name);
+    $db->bind(':sender_city',   $final_sender_city->name);
+    $db->bind(':sender_zip_code',   $sender_zip_code);
+    $db->bind(':sender_address',   $sender_address);
+    $db->bind(':recipient_country',   $final_recipient_country->name);
+    $db->bind(':recipient_state',   $final_recipient_state->name);
+    $db->bind(':recipient_city',   $final_recipient_city->name);
+    $db->bind(':recipient_zip_code',   $recipient_zip_code);
+    $db->bind(':recipient_address',   $recipient_address);
 
-    // if ($db->cdp_execute()) {
-    //     // Éxito al insertar en la base de datos
-    //     $order_id = $db->dbh->lastInsertId();
-    //     $message = "Data has been saved successfully";
-    //     $success_script = 'swal("¡Success!", "' . $message . '", "success").then(function() { window.location.href = "consolidate_view.php?id=' . $order_id . '"; });';
-    // } else {
-    //     // Error al insertar en la base de datos
-    //     $message = "There was an error processing the data";
-    //     $error_script = 'swal("Error", "' . $message . '", "error");';
-    // }
+    if ($db->cdp_execute()) {
+        // Éxito al insertar en la base de datos
+        $order_id = $db->dbh->lastInsertId();
+        $message = "Data has been saved successfully";
+        $success_script = 'swal("¡Success!", "' . $message . '", "success").then(function() { window.location.href = "consolidate_view.php?id=' . $order_id . '"; });';
+    } else {
+        // Error al insertar en la base de datos
+        $message = "There was an error processing the data";
+        $error_script = 'swal("Error", "' . $message . '", "error");';
+    }
 
 }
 ?>
@@ -1147,6 +1149,11 @@ if (isset($_POST["create_invoice"])) {
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
+                                        </div>
+
+                                        <div class="form-group col-md-3">
+                                            <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
+                                            <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" />
                                         </div>
                                     </div>
                                     <!--/row-->
