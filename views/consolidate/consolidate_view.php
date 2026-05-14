@@ -363,10 +363,14 @@ if ($row_order->status_invoice == 1) {
 
                                             <p class="text-muted  m-l-5"><?php if ($courier_com != null) {
                                                                                 echo $courier_com->name_com;
+                                                                            } else {
+                                                                                echo 'N/A';
                                                                             } ?></p>
                                             <h5> &nbsp;<b><?php echo $lang['tools-shipmode1'] ?></b></h5>
                                             <p class="text-muted  m-l-5"><?php if ($order_service_options != null) {
                                                                                 echo $order_service_options->ship_mode;
+                                                                            } else {
+                                                                                echo 'N/A';
                                                                             } ?></p>
                                         </div>
                                     </div>
@@ -1119,7 +1123,7 @@ if ($row_order->status_invoice == 1) {
 
 
                 <!-- Row -->
-                <div class="row">
+                <!-- <div class="row">
                     <div class="col-lg-12 col-xl-12 col-md-12">
                         <div class="card">
                             <div class="card-body">
@@ -1182,10 +1186,10 @@ if ($row_order->status_invoice == 1) {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
                 <!-- Row -->
 
-                <div class="row">
+                <!-- <div class="row">
                     <div class="col-lg-12 col-xl-12 col-md-12">
                         <div class="card">
                             <div class="card-body">
@@ -1246,7 +1250,7 @@ if ($row_order->status_invoice == 1) {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
             <?php include('views/modals/modal_send_email.php'); ?>
 
