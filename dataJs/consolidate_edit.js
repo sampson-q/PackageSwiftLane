@@ -485,47 +485,47 @@ $(function () {
       return false;
     }
 
-    if ($.trim($("#recipient_id").val()).length == 0) {
-      Swal.fire({
-        title: "Oops...",
-        text: message_error_form86,
-        icon: "error",
-        confirmButtonColor: "#336aea",
-      });
-      return false;
-    }
+    // if ($.trim($("#recipient_id").val()).length == 0) {
+    //   Swal.fire({
+    //     title: "Oops...",
+    //     text: message_error_form86,
+    //     icon: "error",
+    //     confirmButtonColor: "#336aea",
+    //   });
+    //   return false;
+    // }
 
-    if ($.trim($("#recipient_address_id").val()).length == 0) {
-      Swal.fire({
-        title: "Oops...",
-        text: message_error_form87,
-        icon: "error",
-        confirmButtonColor: "#336aea",
-      });
-      return false;
-    }
+    // if ($.trim($("#recipient_address_id").val()).length == 0) {
+    //   Swal.fire({
+    //     title: "Oops...",
+    //     text: message_error_form87,
+    //     icon: "error",
+    //     confirmButtonColor: "#336aea",
+    //   });
+    //   return false;
+    // }
 
-    //data sender
+    // //data sender
 
-    if ($.trim($("#sender_id").val()).length == 0) {
-      Swal.fire({
-        title: "Oops...",
-        text: message_error_form88,
-        icon: "error",
-        confirmButtonColor: "#336aea",
-      });
-      return false;
-    }
+    // if ($.trim($("#sender_id").val()).length == 0) {
+    //   Swal.fire({
+    //     title: "Oops...",
+    //     text: message_error_form88,
+    //     icon: "error",
+    //     confirmButtonColor: "#336aea",
+    //   });
+    //   return false;
+    // }
 
-    if ($.trim($("#sender_address_id").val()).length == 0) {
-      Swal.fire({
-        title: "Oops...",
-        text: message_error_form89,
-        icon: "error",
-        confirmButtonColor: "#336aea",
-      });
-      return false;
-    }
+    // if ($.trim($("#sender_address_id").val()).length == 0) {
+    //   Swal.fire({
+    //     title: "Oops...",
+    //     text: message_error_form89,
+    //     icon: "error",
+    //     confirmButtonColor: "#336aea",
+    //   });
+    //   return false;
+    // }
 
     if ($.trim($("#driver_id").val()) == 0) {
       Swal.fire({
