@@ -43,7 +43,8 @@ if (empty($_POST['color']))
 
     $errors['color'] =  $lang['validate_field_ajax109'];
 
-
+if (empty($_POST['status_type']))
+    $errors['status_type'] = 'Please provide a status type.';
 
 
     $response = array();
@@ -66,7 +67,8 @@ if (empty($_POST['color']))
         $data = array(
             'mod_style' => cdp_sanitize($_POST['mod_style']),
             'detail' => cdp_sanitize($_POST['detail']),
-            'color' => cdp_sanitize($_POST['color'])
+            'color' => cdp_sanitize($_POST['color']),
+            'status_type' => cdp_sanitize($_POST['status_type']),
         );
 
         $update = cdp_insertStatusCourier($data);
