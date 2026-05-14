@@ -127,6 +127,7 @@ $userData = $user->cdp_getUserData();
                                 <div><hr><br></div>
 
                                 <form class="form-horizontal form-material" id="save_data" name="save_data" method="post">
+                                    <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
                                     <section>
                                         <div class="row">
@@ -149,6 +150,18 @@ $userData = $user->cdp_getUserData();
                                                 <div class="form-group">
                                                     <label for="lastName1"><?php echo $lang['tools-statuscourier10'] ?></label>
                                                     <input type="text" id="color" name="color" id="position-top-right" class="form-control demo" data-position="top right" value="#0088cc">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="status_type"><?php echo 'Status Type' ?></label>
+                                                    <select class="form-control" id="status_type" name="status_type">
+                                                        <option value=""><?php echo 'Select Status Type' ?></option>
+                                                        <option value="3"><?php echo 'Both' ?></option>
+                                                        <option value="2"><?php echo 'Package' ?></option>
+                                                        <option value="1"><?php echo 'Consolidation' ?></option>
+                                                    </select>
                                                 </div>
                                             </div>
                                         </div>
