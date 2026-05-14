@@ -49,7 +49,7 @@ $row = $data['data'];
 
 
 $office = $core->cdp_getOffices();
-$statusrow = $core->cdp_getStatus();
+$statusrow = $core->cdp_getStatusByType(2);
 
 $driverrow = $user->cdp_userAllDriver();
 

@@ -51,7 +51,7 @@ $db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row->receiver_id . 
 $receiver_data = $db->cdp_registro();
 
 $office = $core->cdp_getOffices();
-$statusrow = $core->cdp_getStatus();
+$statusrow = $core->cdp_getStatusByType(1);
 
 $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
 $sender_data = $db->cdp_registro();

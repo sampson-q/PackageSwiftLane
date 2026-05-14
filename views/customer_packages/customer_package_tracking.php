@@ -48,7 +48,7 @@ $row = $data['data'];
 
 
 $office = $core->cdp_getOffices();
-$statusrow = $core->cdp_getStatus();
+$statusrow = $core->cdp_getStatusByType(2);
 ?>
 <!DOCTYPE html>
 <html dir="<?php echo $direction_layout; ?>" lang="en">

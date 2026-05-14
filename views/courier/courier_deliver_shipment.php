@@ -47,7 +47,7 @@ if (isset($userData->userlevel) && (int)$userData->userlevel === 6) {
 $row = $data['data'];
 
 $office = $core->cdp_getOffices();
-$statusrow = $core->cdp_getStatus();
+$statusrow = $core->cdp_getStatusByType(2);
 $driverrow = $user->cdp_userAllDriver();
 
 

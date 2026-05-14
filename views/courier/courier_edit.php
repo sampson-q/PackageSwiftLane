@@ -66,7 +66,7 @@ $office        = $core->cdp_getOffices();
 $agencyrow     = $core->cdp_getBranchoffices();
 $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel === 6) ? (int) cdp_getAgencyBranchIdForUser($userData->name_off ?? '') : 0;
 $courierrow    = $core->cdp_getCouriercom();
-$statusrow     = $core->cdp_getStatus();
+$statusrow     = $core->cdp_getStatusByType(2);
 $packrow       = $core->cdp_getPack();
 $payrow        = $core->cdp_getPayment();
 $paymethodrow  = $core->cdp_getPaymentMethod();

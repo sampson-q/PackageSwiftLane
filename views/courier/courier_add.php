@@ -59,7 +59,7 @@ $lockerauto   = $core->cdp_virtual_locker();
 
 $office       = $core->cdp_getOffices();
 $agencyrow    = $core->cdp_getBranchoffices();
-$statusrow    = $core->cdp_getStatus();
+$statusrow    = $core->cdp_getStatusByType(2);
 $payrow       = $core->cdp_getPayment();
 $paymethodrow = $core->cdp_getPaymentMethod();
 $itemrow      = $core->cdp_getItem();

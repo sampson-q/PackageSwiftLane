@@ -538,7 +538,7 @@ if (isset($_POST["total_item"])) {
         if (!function_exists('cdp_getAgencyBranchIdForUser')) { require_once(__DIR__ . '/../../helpers/querys.php'); }
         $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel === 6) ? (int) cdp_getAgencyBranchIdForUser($userData->name_off ?? '') : 0; ?>
         <?php $courierrow = $core->cdp_getCouriercom(); ?>
-        <?php $statusrow = $core->cdp_getStatus(); ?>
+        <?php $statusrow = $core->cdp_getStatusByType(1); ?>
         <?php $packrow = $core->cdp_getPack(); ?>
         <?php $payrow = $core->cdp_getPayment(); ?>
         <?php $itemrow = $core->cdp_getItem(); ?>
