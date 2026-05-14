@@ -70,12 +70,12 @@ $lang = array(
 	"messageerrorform22" 		=> "This field is required.",
 	"messageerrorform23" 		=> "The new Payment Method is already in use.",
 	"messageerrorform24" 		=> "Payment method updated successfully",
-	"messageerrorform25" 		=> "Enter country iso code",
-	"messageerrorform26" 		=> "Enter country phone code",
-	"messageerrorform27" 		=> "Enter country capital",
-	"messageerrorform28" 		=> "Enter country region",
-	"messageerrorform29" 		=> "Enter state iso code",
-	"messageerrorform30" 		=> "Rate & Taxes information",
+	"messageerrorform25" 		=> "Enter Country ISO Code",
+	"messageerrorform26" 		=> "Enter Country Phone Code",
+	"messageerrorform27" 		=> "Enter Country Capital",
+	"messageerrorform28" 		=> "Enter Country Region",
+	"messageerrorform29" 		=> "Enter State ISO Code",
+	"messageerrorform30" 		=> "Rate & Taxes Information",
 	"messageerrorform31" 		=> "Activate manual rate for shipping",
 	"messagesform32" 			=> "Package pickup created.",
 	"messagesform33" 			=> "There is a new Package Pickup, please verify!.",
@@ -3019,7 +3019,7 @@ $lang = array(
 	/** Update 3.2.6.1 **/
 
 	/** Add Consolidated **/
-	"langs_01" => "Consolidation process",
+	"langs_01" => "Consolidation Process",
 	"langs_02" => "Consolidation",
 	"langs_03" => "Consolidation Process",
 	"langs_04" => "Product code or name",
