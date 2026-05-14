@@ -139,7 +139,7 @@ $row_off = $data['data'];
 
 								<div id="msgholder"></div>
 								<form class="form-horizontal form-material" id="update_data" name="update_data" method="post">
-
+                                    <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 									<section>
 										<div class="row">
 											<div class="col-md-6">
@@ -163,6 +163,18 @@ $row_off = $data['data'];
 													<input type="text" id="position-top-right" class="form-control demo" data-position="top right" name="color" id="color" value="<?php echo $row_off->color; ?>" placeholder="<?php echo $lang['tools-statuscourier4'] ?>">
 												</div>
 											</div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="status_type"><?php echo 'Status Type' ?></label>
+                                                    <select class="form-control" id="status_type" name="status_type">
+                                                        <option value=""><?php echo 'Select Status Type' ?></option>        
+                                                        <option value="3" <?php echo ($row_off->status_type == 3) ? 'selected' : ''; ?>><?php echo 'Both' ?></option>        
+                                                        <option value="2" <?php echo ($row_off->status_type == 2) ? 'selected' : ''; ?>><?php echo 'Package' ?></option>        
+                                                        <option value="1" <?php echo ($row_off->status_type == 1) ? 'selected' : ''; ?>><?php echo 'Consolidate' ?></option>        
+                                                    </select>
+                                                </div>
+                                            </div>
 										</div>
 									</section>
 									<br><br>
