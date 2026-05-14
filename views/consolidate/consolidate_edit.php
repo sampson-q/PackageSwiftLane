@@ -143,8 +143,6 @@ if (isset($_POST["total_item"])) {
 
     $order_id = $row_order->consolidate_id;
 
-    cdp_insertPackageTracking($order_id, $_SESSION['userid'], '', cdp_sanitize($_POST['estimated_eta']));
-
     $db->cdp_query("UPDATE cdb_package_tracking_number SET estimated_eta = :estimated_eta WHERE order_id = :order_id");
     $db->bind(':estimated_eta', cdp_sanitize($_POST["estimated_eta"]));
     $db->bind(':order_id', $order_id);
