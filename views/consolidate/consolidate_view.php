@@ -1013,7 +1013,7 @@ if ($row_order->status_invoice == 1) {
                                                 // $sumador_volumetric = $sumador_volumetric;
                                                 $total_envio = cdb_money_format($total_envio);
                                                 $total_seguro = cdb_money_format_bar($total_seguro);
-                                                $total_peso = $total_peso;
+                                                // $total_peso = $total_peso;
                                                 $total_impuesto_aduanero = cdb_money_format_bar($total_impuesto_aduanero);
                                                 $total_impuesto = cdb_money_format_bar($total_impuesto);
                                                 $total_descuento = cdb_money_format_bar($total_descuento);
