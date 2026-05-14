@@ -164,7 +164,7 @@ if ($row_order->status_invoice == 1) {
     <meta property="og:image" content="<?php echo htmlspecialchars($core->og_image, ENT_QUOTES, 'UTF-8'); ?>">
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
-    <title><?php echo $lang['langs_020'] ?><?php echo $row_order->c_prefix . $row_order->c_no; ?> | <?php echo $core->site_name ?></title>
+    <title><?php echo $lang['langs_020'] ?><?php echo ' ' . $row_order->c_prefix . $row_order->c_no; ?> | <?php echo $core->site_name ?></title>
     <?php include 'views/inc/head_scripts.php'; ?>
 
 </head>
@@ -214,7 +214,7 @@ if ($row_order->status_invoice == 1) {
                                 <div class="mb-3" id="resultados_ajax"></div>
                                 <div class="row">
                                     <div class=" col-sm-12 col-md-6 mb-2">
-                                        <h4 class=" pull-left"><b class="text-danger"><?php echo $lang['langs_020'] ?></b><span><?php echo $row_order->c_prefix . $row_order->c_no; ?></span></h4>
+                                        <h4 class=" pull-left"><b class="text-danger"><?php echo $lang['langs_020'] ?></b><span><?php echo ' ' . $row_order->c_prefix . $row_order->c_no; ?></span></h4>
                                     </div>
 
                                     <div class="col-sm-12 col-md-12 mb-2">
@@ -1009,8 +1009,8 @@ if ($row_order->status_invoice == 1) {
                                                 $total_envio = ($sumador_total - $total_descuento) + $total_impuesto + $total_seguro + $total_impuesto_aduanero + $row_order->total_reexp;
 
                                                 $sumador_total = cdb_money_format_bar($sumador_total);
-                                                $sumador_libras = $sumador_libras;
-                                                $sumador_volumetric = $sumador_volumetric;
+                                                // $sumador_libras = $sumador_libras;
+                                                // $sumador_volumetric = $sumador_volumetric;
                                                 $total_envio = cdb_money_format($total_envio);
                                                 $total_seguro = cdb_money_format_bar($total_seguro);
                                                 $total_peso = $total_peso;
