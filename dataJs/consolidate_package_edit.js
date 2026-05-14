@@ -464,29 +464,29 @@ $(function () {
   $("#create_invoice").on("click", function () {
     // data receiver
 
-    if ($.trim($("#recipient_id").val()).length == 0) {
-      alert("Please select recipient customer");
-      return false;
-    }
+    // if ($.trim($("#recipient_id").val()).length == 0) {
+    //   alert("Please select recipient customer");
+    //   return false;
+    // }
 
-    if ($.trim($("#recipient_address_id").val()).length == 0) {
-      alert("Please select recipient customer address");
-      return false;
-    }
+    // if ($.trim($("#recipient_address_id").val()).length == 0) {
+    //   alert("Please select recipient customer address");
+    //   return false;
+    // }
 
-    //data sender
+    // //data sender
 
-    if ($.trim($("#sender_id").val()).length == 0) {
-      alert("Please select sender customer");
+    // if ($.trim($("#sender_id").val()).length == 0) {
+    //   alert("Please select sender customer");
 
-      return false;
-    }
+    //   return false;
+    // }
 
-    if ($.trim($("#sender_address_id").val()).length == 0) {
-      alert("Please select sender customer address");
+    // if ($.trim($("#sender_address_id").val()).length == 0) {
+    //   alert("Please select sender customer address");
 
-      return false;
-    }
+    //   return false;
+    // }
 
     if ($.trim($("#total_item").val()) <= 1) {
       alert("You must select at least 2 packages to consolidate");
@@ -498,35 +498,35 @@ $(function () {
       return false;
     }
 
-    if ($.trim($("#agency").val()) == 0) {
-      alert("Please Select Agency");
-      return false;
-    }
+    // if ($.trim($("#agency").val()) == 0) {
+    //   alert("Please Select Agency");
+    //   return false;
+    // }
 
-    if ($.trim($("#order_package").val()) == 0) {
-      alert("Please Select package name");
-      return false;
-    }
+    // if ($.trim($("#order_package").val()) == 0) {
+    //   alert("Please Select package name");
+    //   return false;
+    // }
 
-    if ($.trim($("#order_item_category").val()) == 0) {
-      alert("Please Select mode shipping");
-      return false;
-    }
+    // if ($.trim($("#order_item_category").val()) == 0) {
+    //   alert("Please Select mode shipping");
+    //   return false;
+    // }
 
-    if ($.trim($("#order_courier").val()) == 0) {
-      alert("Please Select courier company");
-      return false;
-    }
+    // if ($.trim($("#order_courier").val()) == 0) {
+    //   alert("Please Select courier company");
+    //   return false;
+    // }
 
-    if ($.trim($("#order_service_options").val()) == 0) {
-      alert("Please Select services options");
-      return false;
-    }
+    // if ($.trim($("#order_service_options").val()) == 0) {
+    //   alert("Please Select services options");
+    //   return false;
+    // }
 
-    if ($.trim($("#order_deli_time").val()) == 0) {
-      alert("Please Select time delivery");
-      return false;
-    }
+    // if ($.trim($("#order_deli_time").val()) == 0) {
+    //   alert("Please Select time delivery");
+    //   return false;
+    // }
 
     if ($.trim($("#order_pay_mode").val()) == 0) {
       alert("Please Enter method payment");
