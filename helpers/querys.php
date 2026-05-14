@@ -2124,15 +2124,16 @@ function cdp_insertStatusCourier($datos)
     $db->cdp_query('INSERT INTO cdb_styles
         (
             mod_style,
-            detail,          
-            color          
+            detail,
+            color,
+            status_type
         )
 
         VALUES (
-
             :mod_style,
             :detail,
-            :color            
+            :color,
+            :status_type
         )');
 
 
@@ -2140,21 +2141,20 @@ function cdp_insertStatusCourier($datos)
     $db->bind(':detail', $datos['detail']);
     $db->bind(':mod_style', $datos['mod_style']);
     $db->bind(':color', $datos['color']);
+    $db->bind(':status_type', $datos['status_type']);
 
     return $db->cdp_execute();
 }
 
 
-function cdp_updateStatusCourier($datos)
-{
-
+function cdp_updateStatusCourier($datos) {
     $db = new Conexion;
 
-    $db->cdp_query('UPDATE cdb_styles SET    
-                     
+    $db->cdp_query('UPDATE cdb_styles SET
             detail =:detail,
-            mod_style =:mod_style,        
-            color =:color   
+            mod_style =:mod_style,
+            color = :color,
+            status_type = :status_type
 
             where  id=:id      
         ');
@@ -2163,6 +2163,7 @@ function cdp_updateStatusCourier($datos)
     $db->bind(':detail', $datos['detail']);
     $db->bind(':mod_style', $datos['mod_style']);
     $db->bind(':color', $datos['color']);
+    $db->bind(':status_type', $datos['status_type']);
     $db->bind(':id', $datos['id']);
 
     return $db->cdp_execute();
