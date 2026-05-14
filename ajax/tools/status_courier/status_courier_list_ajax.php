@@ -70,6 +70,7 @@ if ($numrows > 0) { ?>
 				<th data-sort-initial="true" data-toggle="true"><b><?php echo $lang['tools-statuscourier13'] ?></b></th>
 				<th data-hide="Description"><b><?php echo $lang['tools-statuscourier14'] ?></b></th>
 				<th data-hide="Button"><b><?php echo $lang['tools-statuscourier15'] ?></b></th>
+                <th data-hide="Type"><b><?php echo "Status Type" ?></b></th>
 				<th data-sort-ignore="true" class="text-center"><b><?php echo $lang['tools-statuscourier16'] ?></b></th>
 			</tr>
 		</thead>
@@ -89,6 +90,17 @@ if ($numrows > 0) { ?>
 					<td><?php echo $row->mod_style; ?></td>
 					<td><?php echo $row->detail; ?></td>
 					<td><span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->color; ?></span></td>
+                    <td>
+						<?php 
+							if ($row->status_type == 1) {
+								echo "Package";
+							} elseif ($row->status_type == 2) {
+								echo "Consolidate";
+							} else {
+								echo "Both";
+							}
+						?>
+					</td>
 					<td class="text-center">
 						<?php if ($row->mod_style == 'Pending') { ?>
 						<?php } else if ($row->mod_style == 'Delivered') { ?>
