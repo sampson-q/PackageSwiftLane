@@ -953,7 +953,7 @@ if (isset($_POST["total_item"])) {
                                                         }
 
                                                         $precio_total = $calculate_weight * $row_order->value_weight;
-                                                        $precio_total = $precio_total; //Precio total formateado
+                                                        // $precio_total = $precio_total; //Precio total formateado
 
                                                         $sumador_total += $precio_total;
 
@@ -1016,11 +1016,11 @@ if (isset($_POST["total_item"])) {
                                                     }
 
                                                     $sumador_total = cdb_money_format_bar($sumador_total);
-                                                    $sumador_libras = $sumador_libras;
-                                                    $sumador_volumetric = $sumador_volumetric;
+                                                    // $sumador_libras = $sumador_libras;
+                                                    // $sumador_volumetric = $sumador_volumetric;
                                                     $total_envio = cdb_money_format($total_envio);
                                                     $total_seguro = cdb_money_format_bar($total_seguro);
-                                                    $total_peso = $total_peso;
+                                                    // $total_peso = $total_peso;
                                                     $total_impuesto_aduanero = cdb_money_format_bar($total_impuesto_aduanero);
                                                     $total_impuesto = cdb_money_format_bar($total_impuesto);
                                                     $total_descuento = cdb_money_format_bar($total_descuento);
