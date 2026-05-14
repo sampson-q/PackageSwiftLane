@@ -336,6 +336,16 @@ class Core
 
     return $row;
   }
+  
+  public function cdp_getStatusByType($type) {
+    $sql = "SELECT * FROM cdb_styles WHERE status_type = :status_type ORDER BY id ASC";
+    $this->db->cdp_query($sql);
+    $this->db->bind(':status_type', $type);
+    $this->db->cdp_execute();
+    $row = $this->db->cdp_registros();
+
+    return $row;
+  }
 
 
   /**
