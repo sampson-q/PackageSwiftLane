@@ -101,6 +101,9 @@ $offices = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_consolidate_packages_detail WHERE consolidate_id='" . $_GET['id'] . "'");
 $order_items = $db->cdp_registros();
 
+$db->cdp_query("SELECT estimated_eta FROM cdb_package_tracking_number WHERE order_id = :id");
+$db->bind(':id', $_GET['id']);
+$estimated_eta = $db->cdp_registro();
 
 $dias_ = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
 $meses_ = array(
@@ -342,19 +345,17 @@ if ($row_order->status_invoice == 1) {
 
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
-                                            <h5> &nbsp;<b><?php echo $lang['tools-courier1'] ?></b></h5>
-                                            <p class="text-muted  m-l-5">
-                                                <?php if ($courier_com != null) {
-                                                    echo $courier_com->name_com;
-                                                } ?>
-                                            </p>
-                                            
+                                            <h5> &nbsp;<b><?php echo 'Estimated Time of Arrival' ?></b></h5>
+
+                                            <p class="text-muted  m-l-5"><?php if ($estimated_eta !== null) {
+                                                                                echo $estimated_eta->estimated_eta;
+                                                                            } else {
+                                                                                echo 'N/A';
+                                                                            } ?></p>
                                             <h5> &nbsp;<b><?php echo $lang['tools-shipmode1'] ?></b></h5>
-                                            <p class="text-muted  m-l-5">
-                                                <?php if ($order_service_options != null) {
-                                                    echo $order_service_options->ship_mode;
-                                                } ?>
-                                            </p>
+                                            <p class="text-muted  m-l-5"><?php if ($order_service_options != null) {
+                                                                                echo $order_service_options->ship_mode;
+                                                                            } ?></p>
                                         </div>
                                     </div>
                                 </div>
@@ -971,11 +972,11 @@ if ($row_order->status_invoice == 1) {
                                                 $total_envio = ($sumador_total - $total_descuento) + $total_impuesto + $total_seguro + $total_impuesto_aduanero + $row_order->total_reexp;
 
                                                 $sumador_total = cdb_money_format_bar($sumador_total);
-                                                $sumador_libras = $sumador_libras;
-                                                $sumador_volumetric = $sumador_volumetric;
+                                                // $sumador_libras = $sumador_libras;
+                                                // $sumador_volumetric = $sumador_volumetric;
                                                 $total_envio = cdb_money_format($total_envio);
                                                 $total_seguro = cdb_money_format_bar($total_seguro);
-                                                $total_peso = $total_peso;
+                                                // $total_peso = $total_peso;
                                                 $total_impuesto_aduanero = cdb_money_format_bar($total_impuesto_aduanero);
                                                 $total_impuesto = cdb_money_format_bar($total_impuesto);
                                                 $total_descuento = cdb_money_format_bar($total_descuento);
@@ -1078,7 +1079,7 @@ if ($row_order->status_invoice == 1) {
                 <!-- Row -->
 
 
-                <!-- Row -->
+                <!-- Row
                 <div class="row">
                     <div class="col-lg-12 col-xl-12 col-md-12">
                         <div class="card">
@@ -1142,7 +1143,7 @@ if ($row_order->status_invoice == 1) {
                         </div>
                     </div>
                 </div>
-                <!-- Row -->
+                
 
                 <div class="row">
                     <div class="col-lg-12 col-xl-12 col-md-12">
@@ -1205,7 +1206,7 @@ if ($row_order->status_invoice == 1) {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
             <?php include('views/modals/modal_send_email.php'); ?>
 
