@@ -338,7 +338,7 @@ class Core
   }
   
   public function cdp_getStatusByType($type) {
-    $sql = "SELECT * FROM cdb_styles WHERE status_type = :status_type ORDER BY id ASC";
+    $sql = "SELECT * FROM cdb_styles WHERE status_type = :status_type OR status_type = 3 ORDER BY id ASC";
     $this->db->cdp_query($sql);
     $this->db->bind(':status_type', $type);
     $this->db->cdp_execute();
