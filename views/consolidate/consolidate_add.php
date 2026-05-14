@@ -209,10 +209,10 @@ if (isset($_POST["create_invoice"])) {
     $db->bind(':order_prefix',  $code_prefix);
     $db->bind(':order_no',  $_POST["order_no"]);
     $db->bind(':order_datetime',  trim($date));
-    $db->bind(':sender_id',  cdp_sanitize($_POST["sender_id"]));
-    $db->bind(':receiver_id',  cdp_sanitize($_POST["recipient_id"]));
-    $db->bind(':sender_address_id',  cdp_sanitize($_POST["sender_address_id"]));
-    $db->bind(':receiver_address_id',  cdp_sanitize($_POST["recipient_address_id"]));
+    $db->bind(':sender_id',  101);
+    $db->bind(':receiver_id',  102);
+    $db->bind(':sender_address_id',  100);
+    $db->bind(':receiver_address_id',  101);
     $db->bind(':tax_value', floatval($_POST["tax_value"]));
     $db->bind(':tax_insurance_value', floatval($_POST["insurance_value"]));
     $db->bind(':total_insured_value', floatval($_POST["insured_value"]));
@@ -229,13 +229,13 @@ if (isset($_POST["create_invoice"])) {
     $db->bind(':total_order',  floatval($_POST["total_envio_input"]));
     $db->bind(':total_weight',  floatval($_POST["total_weight_input"]));
     $db->bind(':order_date',  date("Y-m-d H:i:s"));
-    $db->bind(':agency',  cdp_sanitize($_POST["agency"]));
-    $db->bind(':origin_off',  cdp_sanitize($_POST["origin_off"]));
-    $db->bind(':order_package',  cdp_sanitize($_POST["order_package"]));
-    $db->bind(':order_item_category',  cdp_sanitize($_POST["order_item_category"]));
+    $db->bind(':agency',  4);
+    $db->bind(':origin_off',  86);
+    $db->bind(':order_package',  29);
+    $db->bind(':order_item_category',  26);
     $db->bind(':order_courier',  cdp_sanitize($_POST["order_courier"]));
-    $db->bind(':order_service_options',  cdp_sanitize($_POST["order_service_options"]));
-    $db->bind(':order_deli_time',  cdp_sanitize($_POST["order_deli_time"]));
+    $db->bind(':order_service_options',  8);
+    $db->bind(':order_deli_time',  14);
     $db->bind(':order_pay_mode',  cdp_sanitize($_POST["order_pay_mode"]));
     $db->bind(':status_courier',  cdp_sanitize($_POST["status_courier"]));
     $db->bind(':driver_id',  cdp_sanitize($_POST["driver_id"]));
@@ -699,127 +699,127 @@ if (isset($_POST["create_invoice"])) {
 
     //NOTIFICATION TO CUSTOMER
 
-    cdp_insertNotificationsUsers($notification_id, $_POST['sender_id']);
+    cdp_insertNotificationsUsers($notification_id, 101);
 
 
-    $db->cdp_query("SELECT * FROM cdb_senders_addresses where id_addresses= '" . intval($_POST["sender_address_id"]) . "'");
+    // $db->cdp_query("SELECT * FROM cdb_senders_addresses where id_addresses= '" . intval($_POST["sender_address_id"]) . "'");
 
-    $sender_address_data = $db->cdp_registro();
+    // $sender_address_data = $db->cdp_registro();
 
-    if (!$sender_address_data) {
-        error_log('ERROR: Sender address not found. ID: ' . intval($_POST["sender_address_id"]));
-        die('Error: Sender address not found. Please refresh and try again.');
-    }
+    // if (!$sender_address_data) {
+    //     error_log('ERROR: Sender address not found. ID: ' . intval($_POST["sender_address_id"]));
+    //     die('Error: Sender address not found. Please refresh and try again.');
+    // }
 
-    $sender_country = $sender_address_data->country;
-    $sender_state = $sender_address_data->state;
-    $sender_city = $sender_address_data->city;
-    $sender_zip_code = $sender_address_data->zip_code;
-    $sender_address = $sender_address_data->address;
+    // $sender_country = $sender_address_data->country;
+    // $sender_state = $sender_address_data->state;
+    // $sender_city = $sender_address_data->city;
+    // $sender_zip_code = $sender_address_data->zip_code;
+    // $sender_address = $sender_address_data->address;
 
-    $_sender_country = cdp_getCountry($sender_country);
-    $final_sender_country = $_sender_country['data'];
+    // $_sender_country = cdp_getCountry($sender_country);
+    // $final_sender_country = $_sender_country['data'];
 
-    $_sender_state = cdp_getState($sender_state);
-    $final_sender_state = $_sender_state['data'];
+    // $_sender_state = cdp_getState($sender_state);
+    // $final_sender_state = $_sender_state['data'];
 
-    $sender_city = cdp_getCity($sender_city);
-    $final_sender_city = $sender_city['data'];
+    // $sender_city = cdp_getCity($sender_city);
+    // $final_sender_city = $sender_city['data'];
 
 
-    $recipient_type = isset($_POST["recipient_type"]) ? cdp_sanitize($_POST["recipient_type"]) : 'recipient';
-    if ($recipient_type === 'user') {
-        // Query sender addresses (when recipient IS the sender)
-        $db->cdp_query("SELECT * FROM cdb_senders_addresses where id_addresses= '" . intval($_POST["recipient_address_id"]) . "'");
-    } else {
-        // Query recipient addresses (custom recipients)
-        $db->cdp_query("SELECT * FROM cdb_recipients_addresses where id_addresses= '" . intval($_POST["recipient_address_id"]) . "'");
-    }
+    // $recipient_type = isset($_POST["recipient_type"]) ? cdp_sanitize($_POST["recipient_type"]) : 'recipient';
+    // if ($recipient_type === 'user') {
+    //     // Query sender addresses (when recipient IS the sender)
+    //     $db->cdp_query("SELECT * FROM cdb_senders_addresses where id_addresses= '" . intval($_POST["recipient_address_id"]) . "'");
+    // } else {
+    //     // Query recipient addresses (custom recipients)
+    //     $db->cdp_query("SELECT * FROM cdb_recipients_addresses where id_addresses= '" . intval($_POST["recipient_address_id"]) . "'");
+    // }
 
-    $recipient_address_data = $db->cdp_registro();
+    // $recipient_address_data = $db->cdp_registro();
 
-    // If address was in SELECT2 dropdown, it WILL exist here. If not, something went wrong.
-    if (!$recipient_address_data) {
-        error_log('ERROR: Recipient address not found. Type: ' . $recipient_type . ', ID: ' . intval($_POST["recipient_address_id"]));
-        die('Error: Recipient address not found. Please refresh and try again.');
-    }
+    // // If address was in SELECT2 dropdown, it WILL exist here. If not, something went wrong.
+    // if (!$recipient_address_data) {
+    //     error_log('ERROR: Recipient address not found. Type: ' . $recipient_type . ', ID: ' . intval($_POST["recipient_address_id"]));
+    //     die('Error: Recipient address not found. Please refresh and try again.');
+    // }
 
-    $recipient_address = $recipient_address_data->address;
-    $recipient_country = $recipient_address_data->country;
-    $recipient_city = $recipient_address_data->city;
-    $recipient_state = $recipient_address_data->state;
-    $recipient_zip_code = $recipient_address_data->zip_code;
+    // $recipient_address = $recipient_address_data->address;
+    // $recipient_country = $recipient_address_data->country;
+    // $recipient_city = $recipient_address_data->city;
+    // $recipient_state = $recipient_address_data->state;
+    // $recipient_zip_code = $recipient_address_data->zip_code;
 
-    $_recipient_country = cdp_getCountry($recipient_country);
-    $final_recipient_country = $_recipient_country['data'];
+    // $_recipient_country = cdp_getCountry($recipient_country);
+    // $final_recipient_country = $_recipient_country['data'];
 
-    $_recipient_state = cdp_getState($recipient_state);
-    $final_recipient_state = $_recipient_state['data'];
+    // $_recipient_state = cdp_getState($recipient_state);
+    // $final_recipient_state = $_recipient_state['data'];
 
-    $recipient_city = cdp_getCity($recipient_city);
-    $final_recipient_city = $recipient_city['data'];
+    // $recipient_city = cdp_getCity($recipient_city);
+    // $final_recipient_city = $recipient_city['data'];
 
 
     // SAVE ADDRESS FOR Shipments
 
 
 
-    $db->cdp_query("
-                    INSERT INTO cdb_address_shipments
-                    (
-                        order_id,
-                        order_track,
-                        sender_country,
-                        sender_state,
-                        sender_city,
-                        sender_zip_code,
-                        sender_address,
-                        recipient_country,
-                        recipient_state,
-                        recipient_city,
-                        recipient_zip_code,
-                        recipient_address
-                    )
-                    VALUES
-                        (
-                        :order_id,    
-                        :order_track,
-                        :sender_country,
-                        :sender_state,
-                        :sender_city,
-                        :sender_zip_code,
-                        :sender_address,
-                        :recipient_country,
-                        :recipient_state,
-                        :recipient_city,
-                        :recipient_zip_code,                
-                        :recipient_address
-                        )
-                ");
+    // $db->cdp_query("
+    //                 INSERT INTO cdb_address_shipments
+    //                 (
+    //                     order_id,
+    //                     order_track,
+    //                     sender_country,
+    //                     sender_state,
+    //                     sender_city,
+    //                     sender_zip_code,
+    //                     sender_address,
+    //                     recipient_country,
+    //                     recipient_state,
+    //                     recipient_city,
+    //                     recipient_zip_code,
+    //                     recipient_address
+    //                 )
+    //                 VALUES
+    //                     (
+    //                     :order_id,    
+    //                     :order_track,
+    //                     :sender_country,
+    //                     :sender_state,
+    //                     :sender_city,
+    //                     :sender_zip_code,
+    //                     :sender_address,
+    //                     :recipient_country,
+    //                     :recipient_state,
+    //                     :recipient_city,
+    //                     :recipient_zip_code,                
+    //                     :recipient_address
+    //                     )
+    //             ");
 
-    $db->bind(':order_id', $order_id);
-    $db->bind(':order_track',   $order_track);
-    $db->bind(':sender_country',   $final_sender_country->name);
-    $db->bind(':sender_state',   $final_sender_state->name);
-    $db->bind(':sender_city',   $final_sender_city->name);
-    $db->bind(':sender_zip_code',   $sender_zip_code);
-    $db->bind(':sender_address',   $sender_address);
-    $db->bind(':recipient_country',   $final_recipient_country->name);
-    $db->bind(':recipient_state',   $final_recipient_state->name);
-    $db->bind(':recipient_city',   $final_recipient_city->name);
-    $db->bind(':recipient_zip_code',   $recipient_zip_code);
-    $db->bind(':recipient_address',   $recipient_address);
+    // $db->bind(':order_id', $order_id);
+    // $db->bind(':order_track',   $order_track);
+    // $db->bind(':sender_country',   $final_sender_country->name);
+    // $db->bind(':sender_state',   $final_sender_state->name);
+    // $db->bind(':sender_city',   $final_sender_city->name);
+    // $db->bind(':sender_zip_code',   $sender_zip_code);
+    // $db->bind(':sender_address',   $sender_address);
+    // $db->bind(':recipient_country',   $final_recipient_country->name);
+    // $db->bind(':recipient_state',   $final_recipient_state->name);
+    // $db->bind(':recipient_city',   $final_recipient_city->name);
+    // $db->bind(':recipient_zip_code',   $recipient_zip_code);
+    // $db->bind(':recipient_address',   $recipient_address);
 
-    if ($db->cdp_execute()) {
-        // Éxito al insertar en la base de datos
-        $order_id = $db->dbh->lastInsertId();
-        $message = "Data has been saved successfully";
-        $success_script = 'swal("¡Success!", "' . $message . '", "success").then(function() { window.location.href = "consolidate_view.php?id=' . $order_id . '"; });';
-    } else {
-        // Error al insertar en la base de datos
-        $message = "There was an error processing the data";
-        $error_script = 'swal("Error", "' . $message . '", "error");';
-    }
+    // if ($db->cdp_execute()) {
+    //     // Éxito al insertar en la base de datos
+    //     $order_id = $db->dbh->lastInsertId();
+    //     $message = "Data has been saved successfully";
+    //     $success_script = 'swal("¡Success!", "' . $message . '", "success").then(function() { window.location.href = "consolidate_view.php?id=' . $order_id . '"; });';
+    // } else {
+    //     // Error al insertar en la base de datos
+    //     $message = "There was an error processing the data";
+    //     $error_script = 'swal("Error", "' . $message . '", "error");';
+    // }
 
 }
 ?>
@@ -961,7 +961,7 @@ if (isset($_POST["create_invoice"])) {
 
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-lg-6">
+                        <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-body">
                                     <div class="form-row">
@@ -974,7 +974,7 @@ if (isset($_POST["create_invoice"])) {
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
                                                     <div class="input-group-text">
-                                                        <div class="form-check form-check-inline">
+                                                        <div class="form-check" style="width: 10%;">
                                                             <input class="form-check-input" type="checkbox" name="prefix_check" id="prefix_check" value="1">
                                                             <label class="form-check-label" for="prefix_check">
                                                                 <?php echo $lang['leftorder13'] ?>
@@ -1031,7 +1031,7 @@ if (isset($_POST["create_invoice"])) {
                             </div>
                         </div>
 
-                        <div class="col-lg-6">
+                        <!-- <div class="col-lg-6">
                             <div class="card">
                                 <div class="card-body">
                                     <div class="form-row">
@@ -1076,139 +1076,7 @@ if (isset($_POST["create_invoice"])) {
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <!-- Row -->
-
-
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-information-outline" style="color:#20c997"></i><?php echo $lang['langs_010']; ?></h4>
-                                    <hr>
-
-                                    <div class="resultados_ajax_add_user_modal_sender"></div>
-                                    <br>
-
-                                    <?php
-                                    if ($core->active_sms == 1) {
-                                    ?>
-                                        <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
-                                            <input type="checkbox" class="custom-control-input" name="notify_sms_sender" id="notify_sms_sender" value="1">
-                                            <b><?php echo $lang['leftorder14444']; ?> <i class="fa fa-envelope" style="font-size: 22px; color:#07bc4c;"></i></b>
-                                            <span class="custom-control-indicator"></span>
-                                        </label>
-                                    <?php } ?>
-
-                                    <div class="row">
-                                        <div class="col-md-12 ">
-                                            <label class="control-label col-form-label"><?php echo $lang['sender_search_title'] ?></label>
-                                            <div class="row">
-                                                <div class="col-md-10">
-                                                    <div class="input-group">
-                                                        <select class="select2 form-control custom-select" id="sender_id" name="sender_id">
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-2">
-                                                    <div class="input-group-append input-sm">
-                                                        <button type="button" class="btn btn-default" data-type_user="user_customer" data-toggle="modal" data-target="#myModalAddUser"><i class="fa fa-plus"></i></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-
-                                        <div class="col-md-12 ">
-
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['sender_search_address_title'] ?></label>
-
-                                            <div class="row">
-                                                <div class="col-md-10">
-                                                    <div class="input-group">
-                                                        <select class="select2 form-control" id="sender_address_id" name="sender_address_id" disabled="">
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-2">
-                                                    <div class="input-group-append input-sm">
-                                                        <button disabled id="add_address_sender" data-type_user="user_customer" data-toggle="modal" data-target="#myModalAddUserAddresses" type="button" class="btn btn-default"><i class="fa fa-plus"></i></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-information-outline" style="color:#20c997"></i><?php echo $lang['left334']; ?></h4>
-                                    <hr>
-                                    <div class="resultados_ajax_add_user_modal_recipient"></div>
-
-                                    <br>
-
-                                    <?php
-                                    if ($core->active_sms == 1) {
-                                    ?>
-                                        <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
-                                            <input type="checkbox" class="custom-control-input" name="notify_sms_receiver" id="notify_sms_receiver" value="1">
-                                            <b>Notify by SMS <i class="fa fa-envelope" style="font-size: 22px; color:#07bc4c;"></i></b>
-                                            <span class="custom-control-indicator"></span>
-                                        </label>
-                                    <?php } ?>
-                                    <div class="row">
-
-                                        <div class="col-md-12">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['recipient_search_title'] ?></label>
-
-                                            <div class="row">
-                                                <div class="col-md-10">
-                                                    <div class="input-group">
-                                                        <select class="select2 form-control custom-select" id="recipient_id" name="recipient_id" disabled>
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-2">
-                                                    <div class="input-group-append input-sm">
-                                                        <button disabled id="add_recipient" type="button" data-type_user="user_recipient" data-toggle="modal" data-target="#myModalAddRecipient" class="btn btn-default"><i class="fa fa-plus"></i></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-12">
-
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['recipient_search_address_title'] ?></label>
-
-                                            <div class="row">
-                                                <div class="col-md-10">
-                                                    <div class="input-group">
-                                                        <select class="select2 form-control" id="recipient_address_id" name="recipient_address_id" disabled="">
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-2">
-                                                    <div class="input-group-append input-sm">
-                                                        <button disabled id="add_address_recipient" type="button" data-type_user="user_recipient" data-toggle="modal" data-target="#myModalAddRecipientAddresses" class="btn btn-default"><i class="fa fa-plus"></i></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <input type="hidden" id="recipient_type" name="recipient_type" value="recipient">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        </div> -->
                     </div>
                     <!-- Row -->
 
@@ -1220,59 +1088,6 @@ if (isset($_POST["create_invoice"])) {
                                     <h4 class="card-title"><i class="mdi mdi-book-multiple" style="color:#20c997"></i> <?php echo $lang['add-title13'] ?></h4>
                                     <br>
                                     <div class="row">
-
-                                        <div class="form-group col-md-3">
-
-                                            <label for="inputlname" class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
-                                            <div class="input-group">
-                                                <select class="select2 form-control custom-select" id="order_item_category" name="order_item_category" required style="width: 100%;">
-                                                    <option value="<?php echo $s_logistics->id; ?>"><?php echo $s_logistics->name_item; ?></option>
-                                                    <?php foreach ($categories as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_item; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group col-md-3">
-                                            <label for="inputlname" class="control-label col-form-label"><?php echo $lang['add-title17'] ?></label>
-                                            <div class="input-group">
-                                                <select class="select2 form-control custom-select" id="order_package" name="order_package" required style="width: 100%;">
-                                                    <option value="<?php echo $packaging_box->id; ?>"><?php echo $packaging_box->name_pack; ?></option>
-                                                    <?php foreach ($packrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_pack; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-
-
-                                        <div class="form-group col-md-3">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title18'] ?></label>
-                                            <div class="input-group">
-                                                <select class="select2 form-control custom-select" id="order_courier" name="order_courier" required style="width: 100%;">
-                                                    <option value="<?php echo $courier_comp->id; ?>"><?php echo $courier_comp->name_com; ?></option>
-                                                    <?php foreach ($courierrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_com; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group col-md-3">
-                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title22'] ?></label>
-                                            <div class="input-group">
-                                                <select class="select2 form-control custom-select" id="order_service_options" name="order_service_options" required style="width: 100%;">
-                                                    <option value="<?php echo $ship_modes->id; ?>"><?php echo $ship_modes->ship_mode; ?></option>
-                                                    <?php foreach ($moderow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->ship_mode; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
                                         <div class="col-md-3" style="display:none">
                                             <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title15'] ?></i></label>
                                             <div class="input-group">
@@ -1283,17 +1098,7 @@ if (isset($_POST["create_invoice"])) {
                                             </div>
                                         </div>
                                         <!--/span-->
-                                        <div class="form-group col-md-3">
-                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title20'] ?></label>
-                                            <div class="input-group">
-                                                <select class="select2 form-control custom-select" id="order_deli_time" name="order_deli_time" required style="width: 100%;">
-                                                    <option value="<?php echo $delivery_times->id; ?>"><?php echo $delivery_times->delitime; ?></option>
-                                                    <?php foreach ($delitimerow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->delitime; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
+                                        
                                         <!--/span-->
 
                                         <div class="form-group col-md-3">
@@ -1309,7 +1114,7 @@ if (isset($_POST["create_invoice"])) {
                                         <!--/span-->
 
                                         <div class="form-group col-md-3">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
+                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title49'] ?> <i style="color:#ff0000" class="fas fa-box"></i></label>
                                             <div class="input-group">
                                                 <select class="custom-select col-12" id="status_courier" name="status_courier" required>
                                                     <option value="<?php echo $styles_status->id; ?>"><?php echo $styles_status->mod_style; ?></option>
