@@ -92,9 +92,9 @@ if ($numrows > 0) { ?>
 					<td><span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->color; ?></span></td>
                     <td>
 						<?php 
-							if ($row->status_type == 1) {
+							if ($row->status_type == 2) {
 								echo "Package";
-							} elseif ($row->status_type == 2) {
+							} elseif ($row->status_type == 1) {
 								echo "Consolidate";
 							} else {
 								echo "Both";
