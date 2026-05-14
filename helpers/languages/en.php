@@ -647,7 +647,7 @@ $lang = array(
 
 
 	"left-menu-sidebar-22" => "Consolidations",
-	"left-menu-sidebar-2233333310" => "Sea Shipping",
+	"left-menu-sidebar-2233333310" => "Sea Container",
 	"left-menu-sidebar-2233333312" => "Air Shipping",
 	"left-menu-sidebar-87800333" => "Consolidated Air Shipments",
 	"left-menu-sidebar-87800334" => "Consolidated Sea Shipments",
