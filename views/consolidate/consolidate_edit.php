@@ -58,6 +58,9 @@ $order_items = $db->cdp_registros();
 $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->sender_id . "'");
 $sender_data = $db->cdp_registro();
 
+$db->cdp_query("SELECT estimated_eta FROM cdb_package_tracking_number WHERE order_id='" . $row_order->consolidate_id . "'");
+$package_tracking_data = $db->cdp_registro();
+
 if ($row_order->recipient_type == 'user') {
     $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->receiver_id . "'");
 } else {
@@ -139,6 +142,13 @@ if (isset($_POST["total_item"])) {
     $db->cdp_execute();
 
     $order_id = $row_order->consolidate_id;
+
+    cdp_insertPackageTracking($order_id, $_SESSION['userid'], '', cdp_sanitize($_POST['estimated_eta']));
+
+    $db->cdp_query("UPDATE cdb_package_tracking_number SET estimated_eta = :estimated_eta WHERE order_id = :order_id");
+    $db->bind(':estimated_eta', cdp_sanitize($_POST["estimated_eta"]));
+    $db->bind(':order_id', $order_id);
+    $db->cdp_execute();
 
     $db->cdp_query("DELETE FROM  cdb_consolidate_detail WHERE consolidate_id='" . $order_id . "'");
     $db->cdp_execute();
@@ -576,42 +586,6 @@ if (isset($_POST["total_item"])) {
 
                                         </div>
 
-                                        <div class="form-group col-md-3">
-                                            <label for="inputlname" class="control-label col-form-label"><?php echo $lang['left201'] ?> </label>
-                                            <div class="input-group mb-3">
-                                                <?php if ($agency_default_id > 0) { ?><input type="hidden" name="agency" id="agency" value="<?php echo $agency_default_id; ?>"><?php } ?>
-                                                <select class="custom-select col-12" id="<?php echo ($agency_default_id > 0) ? 'agency_select' : 'agency'; ?>" name="<?php echo ($agency_default_id > 0) ? '' : 'agency'; ?>" <?php echo ($agency_default_id > 0) ? 'disabled style="pointer-events:none;background:#e9ecef;"' : ''; ?>>
-                                                    <option value="0">--<?php echo $lang['left202'] ?>--</option>
-                                                    <?php foreach ($agencyrow as $row) : ?>
-                                                        <option value="<?php echo (int)$row->id; ?>" <?php echo (($agency_default_id > 0 && (int)$row->id === $agency_default_id) || ($agency_default_id === 0 && $row_order->agency == $row->id)) ? 'selected' : ''; ?>><?php echo htmlspecialchars($row->name_branch ?? ''); ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-
-
-
-
-                                        <?php if ($userData->userlevel == 9) { ?>
-
-                                            <div class="form-group col-md-3">
-                                                <label for="inputname" class="control-label col-form-label"><?php echo $lang['add-title14'] ?></label>
-                                                <div class="input-group mb-3">
-                                                    <select class="custom-select col-12" id="exampleFormControlSelect1" name="origin_off">
-                                                        <option value="0">--<?php echo $lang['left343'] ?>--</option>
-
-                                                        <?php foreach ($office as $row) : ?>
-                                                            <option value="<?php echo $row->id; ?>" <?php if ($row_order->origin_off == $row->id) {
-                                                                                                        echo 'selected';
-                                                                                                    } ?>><?php echo $row->name_off; ?></option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-
-                                        <?php } ?>
-
                                         <div class="col-md-3">
                                             <div class="form-group">
                                                 <label for="field-2" class="control-label col-form-label"><?php echo $lang['langs_021'] ?></label>
@@ -626,224 +600,14 @@ if (isset($_POST["total_item"])) {
                     </div>
                     <!-- Row -->
 
-
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-information-outline" style="color:#20c997"></i><?php echo $lang['langs_010']; ?></h4>
-                                    <hr>
-
-                                    <div class="resultados_ajax_add_user_modal_sender"></div>
-
-                                    <div class="row">
-
-                                        <div class="col-md-12 ">
-
-                                            <label class="control-label col-form-label"><?php echo $lang['sender_search_title'] ?></label>
-
-                                            <div class="row">
-                                                <div class="col-md-10">
-                                                    <div class="input-group">
-                                                        <select class="select2 form-control custom-select" id="sender_id" name="sender_id">
-                                                            <option value="<?php echo $sender_data->id; ?>"><?php echo $sender_data->fname . " " . $sender_data->lname; ?></option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-2">
-                                                    <div class="input-group-append input-sm">
-                                                        <button type="button" class="btn btn-default" data-type_user="user_customer" data-toggle="modal" data-target="#myModalAddUser"><i class="fa fa-plus"></i></button>
-                                                    </div>
-                                                </div>
-
-                                            </div>
-                                        </div>
-
-
-                                        <div class="col-md-12 ">
-
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['sender_search_address_title'] ?></label>
-
-                                            <div class="row">
-                                                <div class="col-md-10">
-                                                    <div class="input-group">
-                                                        <select class="select2 form-control" id="sender_address_id" name="sender_address_id">
-                                                            <option value="<?php echo $row_order->sender_address_id; ?>"><?php echo $address_order->sender_address; ?></option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-
-                                                <div class="col-md-2">
-                                                    <div class="input-group-append input-sm">
-                                                        <button id="add_address_sender" data-type_user="user_customer" data-toggle="modal" data-target="#myModalAddUserAddresses" type="button" class="btn btn-default"><i class="fa fa-plus"></i></button>
-                                                    </div>
-                                                </div>
-
-                                            </div>
-                                        </div>
-
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-information-outline" style="color:#20c997"></i><?php echo $lang['left334']; ?></h4>
-                                    <hr>
-                                    <div class="resultados_ajax_add_user_modal_recipient"></div>
-
-
-
-                                    <div class="row">
-
-                                        <div class="col-md-12">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['recipient_search_title'] ?></label>
-
-                                            <div class="row">
-                                                <div class="col-md-10">
-                                                    <div class="input-group">
-                                                        <select class="select2 form-control custom-select" id="recipient_id" name="recipient_id">
-                                                            <option value="<?php echo $receiver_data->id; ?>"><?php echo $receiver_data->fname . " " . $receiver_data->lname; ?></option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-2">
-                                                    <div class="input-group-append input-sm">
-                                                        <button id="add_recipient" type="button" data-type_user="user_recipient" data-toggle="modal" data-target="#myModalAddRecipient" class="btn btn-default"><i class="fa fa-plus"></i></button>
-                                                    </div>
-                                                </div>
-
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-12">
-
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['recipient_search_address_title'] ?></label>
-
-                                            <div class="row">
-                                                <div class="col-md-10">
-                                                    <div class="input-group">
-                                                        <select class="select2 form-control" id="recipient_address_id" name="recipient_address_id">
-                                                            <option value="<?php echo $row_order->receiver_address_id; ?>"><?php echo $address_order->recipient_address; ?></option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-2">
-                                                    <div class="input-group-append input-sm">
-                                                        <button id="add_address_recipient" type="button" data-type_user="user_recipient" data-toggle="modal" data-target="#myModalAddRecipientAddresses" class="btn btn-default"><i class="fa fa-plus"></i></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Row -->
-
-
-
                     <div class="row">
                         <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-body">
                                     <h4 class="card-title"><i class="mdi mdi-book-multiple" style="color:#20c997"></i> <?php echo $lang['add-title13'] ?></h4>
                                     <br>
-                                    <div class="row">
-
-                                        <div class="col-md-3">
-                                            <label for="emailAddress1"><?php echo $lang['itemcategory'] ?></label>
-                                            <div class="input-group">
-                                                <select class="custom-select col-12" id="order_item_category" name="order_item_category" required>
-                                                    <?php foreach ($categories as $row) :
-
-                                                    ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->order_item_category == $row->id) {
-                                                                                                    echo 'selected';
-                                                                                                }  ?>><?php echo $row->name_item; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group col-md-3">
-                                            <label for="inputlname" class="control-label col-form-label"><?php echo $lang['add-title17'] ?></label>
-                                            <div class="input-group">
-                                                <select class="custom-select col-12" id="order_package" name="order_package">
-                                                    <option value="0">--<?php echo $lang['left203'] ?>--</option>
-                                                    <?php foreach ($packrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->order_package == $row->id) {
-                                                                                                    echo 'selected';
-                                                                                                } ?>><?php echo $row->name_pack; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-
-
-                                        <div class="form-group col-md-3">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title18'] ?></label>
-                                            <div class="input-group">
-                                                <select class="custom-select col-12" id="order_courier" name="order_courier">
-                                                    <option value="0">--<?php echo $lang['left204'] ?>--</option>
-                                                    <?php foreach ($courierrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->order_courier == $row->id) {
-                                                                                                    echo 'selected';
-                                                                                                } ?>><?php echo $row->name_com; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group col-md-3">
-                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title22'] ?></label>
-                                            <div class="input-group">
-                                                <select class="custom-select col-12" id="order_service_options" name="order_service_options">
-                                                    <option value="0">--<?php echo $lang['left205'] ?>--</option>
-                                                    <?php foreach ($moderow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->order_service_options == $row->id) {
-                                                                                                    echo 'selected';
-                                                                                                } ?>><?php echo $row->ship_mode; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
 
                                     <div class="row">
-                                        <div class="col-md-3">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title15'] ?></i></label>
-                                            <div class="input-group">
-                                                <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
-                                                    <div class="input-group-text"><i style="color:#ff0000" class="fa fa-calendar"></i></div>
-                                                </div>
-                                                <input type='text' class="form-control" name="order_date" id="order_date" placeholder="--<?php echo $lang['left206'] ?>--" data-toggle="tooltip" data-placement="bottom" title="<?php echo $lang['add-title16'] ?>" value="<?php echo date("Y/m/d", strtotime($row_order->order_datetime)); ?>" readonly />
-                                            </div>
-                                        </div>
-                                        <!--/span-->
-                                        <div class="form-group col-md-3">
-                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title20'] ?></label>
-                                            <div class="input-group">
-                                                <select class="custom-select col-12" id="order_deli_time" name="order_deli_time">
-                                                    <option value="0">--<?php echo $lang['left207'] ?>--</option>
-                                                    <?php foreach ($delitimerow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->order_deli_time == $row->id) {
-                                                                                                    echo 'selected';
-                                                                                                } ?>><?php echo $row->delitime; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <!--/span-->
-
                                         <div class="form-group col-md-3">
                                             <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title23'] ?> <i style="color:#ff0000" class="fas fa-donate"></i></label>
                                             <div class="input-group">
@@ -851,8 +615,8 @@ if (isset($_POST["total_item"])) {
                                                     <option value="0">--<?php echo $lang['left243'] ?>--</option>
                                                     <?php foreach ($payrow as $row) : ?>
                                                         <option value="<?php echo $row->id; ?>" <?php if ($row_order->order_pay_mode == $row->id) {
-                                                                                                    echo 'selected';
-                                                                                                } ?>><?php echo $row->name_pay; ?></option>
+                                                                                                    echo 'selected'; } ?>>
+                                                                                                    <?php echo $row->met_payment; ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -865,13 +629,34 @@ if (isset($_POST["total_item"])) {
                                                     <option value="0">--<?php echo $lang['left210'] ?>--</option>
                                                     <?php foreach ($statusrow as $row) : ?>
 
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->status_courier == $row->id) {
-                                                                                                    echo 'selected';
-                                                                                                } ?>><?php echo $row->mod_style; ?></option>
+                                                        <option value="<?php echo $row->id; ?>"
+                                                            <?php if ($row_order->status_courier == $row->id) { echo 'selected'; } ?>><?php echo $row->mod_style; ?>
+                                                        </option>
 
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label for="inputname" class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
+                                            <div class="input-group mb-3">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
+                                                </div>
+                                                <select class="custom-select col-12" id="driver_id" name="driver_id">
+                                                    <option value="0">--<?php echo $lang['left209'] ?>--</option>
+                                                    <?php foreach ($driverrow as $row) : ?>
+                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->driver_id == $row->id) {
+                                                                                                    echo 'selected';
+                                                                                                } ?>><?php echo $row->fname . ' ' . $row->lname; ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group col-md-3">
+                                            <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
+                                            <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" value="<?php echo isset($package_tracking_data->estimated_eta) ? $package_tracking_data->estimated_eta : ''; ?>" />
                                         </div>
                                     </div>
                                     <!--/row-->
@@ -1202,29 +987,10 @@ if (isset($_POST["total_item"])) {
                                     </div>
 
                                     <div class="row">
-
-                                        <div class="form-group col-md-6">
-                                            <label for="inputname" class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
-                                            <div class="input-group mb-3">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
-                                                </div>
-                                                <select class="custom-select col-12" id="driver_id" name="driver_id">
-                                                    <option value="0">--<?php echo $lang['left209'] ?>--</option>
-                                                    <?php foreach ($driverrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->driver_id == $row->id) {
-                                                                                                    echo 'selected';
-                                                                                                } ?>><?php echo $row->fname . ' ' . $row->lname; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6">
+                                        <div class="col-md-12">
                                             <div class="form-actions">
                                                 <div class="card-body">
                                                     <div class="text-right">
-
                                                         <input type="hidden" name="subtotal_input" id="subtotal_input" />
                                                         <input type="hidden" name="impuesto_input" id="impuesto_input" />
                                                         <input type="hidden" name="discount_input" id="discount_input" />
