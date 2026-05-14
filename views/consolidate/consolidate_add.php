@@ -232,10 +232,10 @@ if (isset($_POST["create_invoice"])) {
     $db->bind(':agency',  4);
     $db->bind(':origin_off',  86);
     $db->bind(':order_package',  29);
-    $db->bind(':order_item_category',  26);
+    $db->bind(':order_item_category',  27);
     $db->bind(':order_courier',  cdp_sanitize($_POST["order_courier"]));
     $db->bind(':order_service_options',  8);
-    $db->bind(':order_deli_time',  14);
+    $db->bind(':order_deli_time',  12);
     $db->bind(':order_pay_mode',  cdp_sanitize($_POST["order_pay_mode"]));
     $db->bind(':status_courier',  cdp_sanitize($_POST["status_courier"]));
     $db->bind(':driver_id',  cdp_sanitize($_POST["driver_id"]));
