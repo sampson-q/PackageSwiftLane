@@ -490,14 +490,37 @@ $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel =
                                     </div>
 
                                     <div class="row">
-                                        <div class="col-md-4">
-
+                                        <div class="col-md-2">
                                             <div>
-                                                <label class="control-label" id="selectItem"> <?php echo $lang['leftorder15']; ?></label>
+                                                <label class="control-label" id="selectItem"><?php echo $lang['leftorder15']; ?></label>
                                             </div>
 
                                             <input class="custom-file-input" id="filesMultiple" name="filesMultiple[]" multiple="multiple" type="file" style="display: none;" onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
-                                            <button type="button" id="openMultiFile" class="btn btn-default  pull-left  mb-4"> <i class='fa fa-paperclip' id="openMultiFile" style="font-size:18px; cursor:pointer;"></i> <?php echo $lang['leftorder16']; ?> </button>
+                                            <button type="button" id="openMultiFile" class="btn btn-default pull-left mb-4"> <i class='fa fa-paperclip' style="font-size:18px; cursor:pointer;"></i> <?php echo $lang['leftorder16']; ?> </button>
+                                        </div>
+
+                                        <div class="col-md-2">
+                                            <div>
+                                                <label class="control-label" id="captureItem"><?php echo $lang['leftorder90']; ?></label>
+                                            </div>
+
+                                            <button type="button" id="openCameraButton" class="btn btn-dark pull-left mb-4">
+                                                <i class="fa fa-camera" style="font-size:18px; cursor:pointer;"></i>
+                                                <?php echo $lang['leftorder90']; ?>
+                                            </button>
+
+                                            <div class="mt-2 d-flex align-items-start" style="gap:.5rem;">
+                                                <video id="cameraPreview" autoplay playsinline style="width:220px; height:165px; background:#000; display:none; border-radius:6px; object-fit:cover;"></video>
+
+                                                <div style="flex:1;">
+                                                    <div style="margin-bottom:.5rem;">
+                                                        <button type="button" id="takeCameraPhoto" class="btn btn-success btn-sm" style="display:none;"><?php echo $lang['left1105']; ?></button>
+                                                        <button type="button" id="stopCamera" class="btn btn-secondary btn-sm" style="display:none;"><?php echo $lang['left1111']; ?></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <input class="custom-file-input" id="filesCapture" name="filesCapture[]" multiple="multiple" type="file" accept="image/*" capture="environment" style="display:none;" />
                                         </div>
                                     </div>
 

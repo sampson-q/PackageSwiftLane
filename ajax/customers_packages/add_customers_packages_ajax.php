@@ -275,6 +275,34 @@ if (empty($errors)) {
                 }
             }
         }
+        
+        if (isset($_FILES['filesCapture']) && count($_FILES['filesCapture']['name']) > 0 && $_FILES['filesCapture']['tmp_name'][0] != '') {
+
+            $target_dir = "../../order_files/";
+            $deleted_file_ids = array();
+
+            if (isset($_POST['deleted_file_ids']) && !empty($_POST['deleted_file_ids'])) {
+                $deleted_file_ids = explode(",", $_POST['deleted_file_ids']);
+            }
+
+            foreach ($_FILES["filesCapture"]['tmp_name'] as $key => $tmp_name) {
+
+                if (!in_array($key, $deleted_file_ids)) {
+                    $image_name = $order_track .  date("Y-m-d") . "_" . basename($_FILES["filesCapture"]["name"][$key]);
+                    $target_file = $target_dir . $image_name;
+                    $imageFileType = pathinfo($target_file, PATHINFO_EXTENSION);
+                    $imageFileZise = $_FILES["filesCapture"]["size"][$key];
+
+                    if ($imageFileZise > 0) {
+                        move_uploaded_file($_FILES["filesCapture"]["tmp_name"][$key], $target_file);
+                        $imagen = basename($_FILES["filesCapture"]["name"][$key]);
+                    }
+
+                    $target_file_db = "order_files/" . $image_name;
+                    cdp_insertCustomerPackagesFiles($shipment_id, $target_file_db, $image_name, date("Y-m-d H:i:s"), $imageFileType);
+                }
+            }
+        }
 
         $dataTrack = array(
             'user_id' =>  $_SESSION['userid'],

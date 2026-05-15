@@ -1,6 +1,7 @@
 "use strict";
 
 var deleted_file_ids = [];
+var deleted_camera_ids = [];
 
 var packagesItems = [
   {
@@ -145,8 +146,6 @@ function cdp_load_cities(modal) {
 }
 
 function cdp_preview_images() {
-  $("#image_preview").html("");
-
   var total_file = document.getElementById("filesMultiple").files.length;
 
   for (var i = 0; i < total_file; i++) {
@@ -159,7 +158,9 @@ function cdp_preview_images() {
     }
 
     $("#image_preview").append(
-      '<div class="col-md-3" id="image_' +
+      '<div class="col-md-3" id="image_upload_' +
+        i +
+        '" data-type="upload" data-index="' +
         i +
         '">' +
         '<img style="width: 180px; height: 180px;" class="img-thumbnail" src="' +
@@ -176,7 +177,7 @@ function cdp_preview_images() {
         '<div class="  mb-2">' +
         '<button type="button" class="btn btn-danger btn-sm pull-left" onclick="cdp_deletePreviewImage(' +
         i +
-        ');"><i class="fa fa-trash"></i></button>' +
+        ', \'upload\');"><i class="fa fa-trash"></i></button>' +
         "</div>" +
         "</div>" +
         "</div>"
@@ -184,25 +185,53 @@ function cdp_preview_images() {
   }
 }
 
-function cdp_deletePreviewImage(index) {
-  deleted_file_ids.push(index);
-  $("#deleted_file_ids").val(deleted_file_ids);
-  $("#image_" + index).remove();
+function cdp_deletePreviewImage(index, type) {
+  type = type || 'upload';
 
-  var count_files = $("#total_item_files").val();
+  if (type === 'upload') {
+    deleted_file_ids.push(index);
+    $("#deleted_file_ids").val(deleted_file_ids);
+    $("#image_upload_" + index).remove();
 
-  count_files--;
+    var count_files = $("#total_item_files").val();
+    count_files--;
+    $("#total_item_files").val(count_files);
 
-  $("#total_item_files").val(count_files);
+    if (count_files > 0) {
+      $("#clean_files").removeClass("hide");
+    } else {
+      $("#clean_files").addClass("hide");
+    }
 
-  if (count_files > 0) {
+    $("#selectItem").html("attached files (" + count_files + ")");
+  } else if (type === 'camera') {
+    deleted_camera_ids.push(index);
+    $("#image_camera_" + index).remove();
+
+    var count_camera = $('[data-type="camera"]').length;
+
+    if (count_camera > 0) {
+      $("#clean_files").removeClass("hide");
+    } else if ($("#total_item_files").val() == 0) {
+      $("#clean_files").addClass("hide");
+    }
+
+    $("#captureItem").html("camera captures (" + count_camera + ")");
+  }
+
+  updateTotalFiles();
+}
+
+function updateTotalFiles() {
+  var uploadCount = $("#total_item_files").val() || 0;
+  var cameraCount = $('[data-type="camera"]').length;
+  var totalCount = parseInt(uploadCount) + parseInt(cameraCount);
+
+  if (totalCount > 0) {
     $("#clean_files").removeClass("hide");
   } else {
     $("#clean_files").addClass("hide");
   }
-
-  $("#selectItem").html("attached files (" + count_files + ")");
-  var deleted_file = $("#deleted_file_ids").val();
 }
 
 function cdp_validateZiseFiles() {
@@ -258,14 +287,17 @@ $("#openMultiFile").on("click", function () {
 
 $("#clean_file_button").on("click", function () {
   $("#filesMultiple").val("");
+  $("#filesCapture").val("");
   $("#selectItem").html("Attach files");
+  $("#captureItem").html("Camera captures");
   $("#clean_files").addClass("hide");
   $("#image_preview").html("");
+  deleted_file_ids = [];
+  deleted_camera_ids = [];
+  $("#total_item_files").val(0);
 });
 
 $("input[type=file]").on("change", function () {
-  deleted_file_ids = [];
-
   var inputFile = document.getElementById("filesMultiple");
   var file = inputFile.files;
   var contador = 0;
@@ -276,11 +308,7 @@ $("input[type=file]").on("change", function () {
 
   var count_files = $("#total_item_files").val();
 
-  if (count_files > 0) {
-    $("#clean_files").removeClass("hide");
-  } else {
-    $("#clean_files").addClass("hide");
-  }
+  updateTotalFiles();
 
   $("#selectItem").html("attached files (" + count_files + ")");
 });
@@ -470,6 +498,7 @@ function loadPackages() {
     $("#data_items").append(html_code);
   });
 }
+
 function addPackage() {
   packagesItems.push({
     qty: 1,
@@ -535,6 +564,7 @@ function changePackage(e) {
   });
   calculateFinalTotal();
 }
+
 function calculateFinalTotal(element = null) {
   if (element) {
     if (!element.value) {
@@ -642,15 +672,11 @@ function calculateFinalTotal(element = null) {
   }
 
   $("#subtotal").html(sumador_total.toFixed(2));
-  // $('#total_declared').html(sumador_valor_declarado);
   $("#discount").html(total_descuento.toFixed(2));
   $("#impuesto").html(total_impuesto.toFixed(2));
   $("#declared_value_label").html(total_valor_declarado.toFixed(2));
   $("#fixed_value_label").html(max_fixed_charge.toFixed(2));
   $("#insurance").html(total_seguro.toFixed(2));
-  // $('#total_libras').html(sumador_libras);
-  // $('#total_volumetrico').html(sumador_volumetric);
-  // $('#total_peso').html(total_peso);
   $("#total_impuesto_aduanero").html(total_impuesto_aduanero.toFixed(2));
   $("#total_envio").html(total_envio.toFixed(2));
   $("#total_weight").html(sumador_libras.toFixed(2));
@@ -880,15 +906,18 @@ $("#invoice_form").on("submit", function (event) {
     data.append("notify_sms_sender", notify_sms_sender);
   }
 
+  // Append uploaded files (filesMultiple)
   var total_file = document.getElementById("filesMultiple").files.length;
-
   for (var i = 0; i < total_file; i++) {
     data.append("filesMultiple[]", document.getElementById("filesMultiple").files[i]);
   }
 
+  // Append captured files (filesCapture)
+  appendAllFilesToFormData(data);
+
   data.append('_csrf_token', $('input[name="_csrf_token"]').val());
 
-$.ajax({
+  $.ajax({
     type: "POST",
     url: "ajax/customers_packages/add_customers_packages_ajax.php",
     data: data,
@@ -896,32 +925,31 @@ $.ajax({
     dataType: "json",
     cache: false,
     processData: false,
-    timeout: 60000, // 60 segundos
+    timeout: 60000,
     beforeSend: function (objeto) {
-        $("#create_invoice").attr("disabled", true);
-        Swal.fire({
-            title: message_loading,
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            },
-        });
+      $("#create_invoice").attr("disabled", true);
+      Swal.fire({
+        title: message_loading,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
     },
     success: function (data) {
-        $("#create_invoice").attr("disabled", false);
-        console.log(data);
-        if (data.success) {
-            cdp_showSuccess(data.messages, data.shipment_id);
-        } else {
-            cdp_showError(data.errors);
-        }
+      $("#create_invoice").attr("disabled", false);
+      console.log(data);
+      if (data.success) {
+        cdp_showSuccess(data.messages, data.shipment_id);
+      } else {
+        cdp_showError(data.errors);
+      }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-        console.log('AJAX error:', textStatus, errorThrown);
+      console.log('AJAX error:', textStatus, errorThrown);
+      $("#create_invoice").attr("disabled", false);
     }
-});
-
-
+  });
 
   event.preventDefault();
 });
@@ -976,7 +1004,7 @@ function cdp_select2_init_sender() {
         delay: 250,
         data: function (params) {
           return {
-            q: params.term, // search term
+            q: params.term,
           };
         },
         processResults: function (data) {
@@ -1013,7 +1041,7 @@ function cdp_select2_init_sender_address() {
       delay: 250,
       data: function (params) {
         return {
-          q: params.term, // search term
+          q: params.term,
         };
       },
       processResults: function (data) {
@@ -1026,11 +1054,9 @@ function cdp_select2_init_sender_address() {
 
     escapeMarkup: function (markup) {
       return markup;
-    }, // let our custom formatter work
-    // minimumInputLength: 1,
-    templateResult: cdp_formatAdress, // omitted for brevity, see the source of this page
-    templateSelection: cdp_formatAdressSelection, // omitted for brevity, see the source of this page
-    // minimumInputLength: 2,
+    },
+    templateResult: cdp_formatAdress,
+    templateSelection: cdp_formatAdressSelection,
     placeholder: search_sender_address,
     allowClear: true,
   });
@@ -1073,10 +1099,10 @@ function cdp_formatAdressSelection(repo) {
   return repo.text;
 }
 
-// modal guardar cliente remitente formulario de envo, si activas el check adicionas contraseña al cliente
+// modal guardar cliente remitente
 
 $("#add_user_from_modal_shipments").on("submit", function (event) {
-  event.preventDefault(); // Evitar el envío del formulario por defecto
+  event.preventDefault();
 
   if ($.trim($("#fname").val()).length == 0) {
     Swal.fire({
@@ -1102,7 +1128,6 @@ $("#add_user_from_modal_shipments").on("submit", function (event) {
     return false;
   }
 
-  // Validación del correo electrónico en el lado del cliente
   var email = $.trim($("#email").val());
   if (email.length == 0) {
     Swal.fire({
@@ -1115,7 +1140,6 @@ $("#add_user_from_modal_shipments").on("submit", function (event) {
     $("#email").focus();
     return false;
   } else if (!isValidEmailAddress(email)) {
-    // Función para validar el formato del correo electrónico
     Swal.fire({
       type: "warning",
       title: "Oops...",
@@ -1127,7 +1151,6 @@ $("#add_user_from_modal_shipments").on("submit", function (event) {
     return false;
   }
 
-  // Función para validar el formato del correo electrónico
   function isValidEmailAddress(email) {
     var pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return pattern.test(email);
@@ -1216,7 +1239,6 @@ $("#add_user_from_modal_shipments").on("submit", function (event) {
             $("#save_data_user").attr("disabled", false);
             $("#myModalAddUser").modal("hide");
 
-            // Obtener la información del cliente y la dirección del cliente de la respuesta
             var data = {
               id: response.customer_data.id,
               text: response.customer_data.fname + " " + response.customer_data.lname,
@@ -1236,11 +1258,6 @@ $("#add_user_from_modal_shipments").on("submit", function (event) {
 
             $("#sender_address_id").append(newOptionAddress).trigger("change");
             $("#sender_address_id").val(data_address.id).trigger("change");
-
-            $("#recipient_address_id").attr("disabled", true);
-            $("#add_address_recipient").attr("disabled", true);
-            $("#recipient_id").val(null).trigger("change");
-            $("#recipient_address_id").val(null).trigger("change");
 
             window.setTimeout(function () {
               $(".alert")
@@ -1275,15 +1292,15 @@ $("#add_user_from_modal_shipments").on("submit", function (event) {
   } else {
     input.classList.add("error");
     var errorCode = iti.getValidationError();
-    errorMsgSender.innerHTML = errorMap[errorCode];
-    errorMsgSender.classList.remove("hide");
+    errorMsg.innerHTML = errorMap[errorCode];
+    errorMsg.classList.remove("hide");
   }
 });
 
 // modal guardar direccion cliente remitente
 
 $("#add_address_users_from_modal_shipments").on("submit", function (event) {
-  event.preventDefault(); // Evitar el envío del formulario por defecto
+  event.preventDefault();
 
   if ($.trim($("#country_modal_user_address").val()).length == 0) {
     Swal.fire({
@@ -1411,7 +1428,6 @@ $("#add_address_users_from_modal_shipments").on("submit", function (event) {
 var errorMsg = document.querySelector("#error-msg-sender");
 var validMsg = document.querySelector("#valid-msg-sender");
 
-// here, the index maps to the error code returned from getValidationError - see readme
 var errorMap = [
   "Invalid number",
   "Invalid country code",
@@ -1430,7 +1446,6 @@ var iti = window.intlTelInput(input, {
   },
   initialCountry: "auto",
   nationalMode: true,
-
   separateDialCode: true,
   utilsScript: "assets/template/assets/libs/intlTelInput/utils.js",
 });
@@ -1442,13 +1457,11 @@ var reset = function () {
   validMsg.classList.add("hide");
 };
 
-// on blur: validate
 input.addEventListener("blur", function () {
   reset();
   if (input.value.trim()) {
     if (iti.isValidNumber()) {
       $("#phone").val(iti.getNumber());
-
       validMsg.classList.remove("hide");
     } else {
       input.classList.add("error");
@@ -1459,7 +1472,6 @@ input.addEventListener("blur", function () {
   }
 });
 
-// on keyup / change flag: reset
 input.addEventListener("change", reset);
 input.addEventListener("keyup", reset);
 
@@ -1483,13 +1495,12 @@ function cdp_validateTrackNumber(value, trackDigits) {
 
 function cdp_convertStrPad(value, dbDigits) {
   var pad = value.padStart(dbDigits, "0");
-
   $("#order_no").val(pad);
 }
 
-var input = document.getElementById("order_no");
+var inputOrderNo = document.getElementById("order_no");
 
-input.addEventListener("keypress", function (event) {
+inputOrderNo.addEventListener("keypress", function (event) {
   if (event.charCode < 48 || event.charCode > 57) {
     event.preventDefault();
   }
@@ -1505,7 +1516,6 @@ function cdp_showError(errors) {
     html_code += errors[error];
     html_code += "</li>";
   }
-  ("</ul >");
 
   Swal.fire({
     title: message_error,
@@ -1532,8 +1542,6 @@ function cdp_showSuccess(messages, shipment_id) {
 }
 
 $("#calculate_invoice").on("click", function (event) {
-  var recipient_id = $("#recipient_id").val();
-  var recipient_address_id = $("#recipient_address_id").val();
   var sender_id = $("#sender_id").val();
   var sender_address_id = $("#sender_address_id").val();
   var packages = JSON.stringify(packagesItems);
@@ -1569,8 +1577,8 @@ $("#calculate_invoice").on("click", function (event) {
     type: "POST",
     data: data,
     headers: {
-    'X-CSRF-TOKEN': $('input[name="_csrf_token"]').val()
-},
+      'X-CSRF-TOKEN': $('input[name="_csrf_token"]').val()
+    },
     url: "ajax/courier/get_price_range_weight_tariffs_pickup_ajax.php",
     dataType: "json",
     beforeSend: function (objeto) {},
@@ -1594,3 +1602,310 @@ $("#calculate_invoice").on("click", function (event) {
   });
   event.preventDefault();
 });
+
+// ========== CAMERA FEATURE INTEGRATION ==========
+
+(() => {
+  'use strict';
+  const MAX_BYTES = 1024 * 1024; // 1MB
+
+  const openBtn = document.getElementById('openCameraButton');
+  const cameraPreview = document.getElementById('cameraPreview');
+  const takeBtn = document.getElementById('takeCameraPhoto');
+  const stopBtn = document.getElementById('stopCamera');
+  const filesCaptureInput = document.getElementById('filesCapture');
+  const previewWrap = document.getElementById('image_preview');
+
+  window.__capturedFilesFallback = window.__capturedFilesFallback || [];
+
+  let stream = null;
+
+  function log(...args) { console.log('[capture]', ...args); }
+  function warn(...args) { console.warn('[capture]', ...args); }
+  function fail(msg, e) { console.error('[capture]', msg, e); alert(msg + (e && e.message ? '\n' + e.message : '')); }
+
+  // Canvas to blob conversion with fallback
+  function canvasToBlob(canvas, mime = 'image/jpeg', quality = 0.92) {
+    return new Promise((resolve, reject) => {
+      try {
+        if (canvas.toBlob) {
+          canvas.toBlob(b => {
+            if (b) resolve(b);
+            else {
+              try {
+                const dataUrl = canvas.toDataURL(mime, quality);
+                const parts = dataUrl.split(';base64,');
+                const binary = atob(parts[1]);
+                const len = binary.length;
+                const u8 = new Uint8Array(len);
+                for (let i = 0; i < len; i++) u8[i] = binary.charCodeAt(i);
+                resolve(new Blob([u8], { type: mime }));
+              } catch (e2) { reject(e2); }
+            }
+          }, mime, quality);
+        } else {
+          const dataUrl = canvas.toDataURL(mime, quality);
+          const parts = dataUrl.split(';base64,');
+          const binary = atob(parts[1]);
+          const len = binary.length;
+          const u8 = new Uint8Array(len);
+          for (let i = 0; i < len; i++) u8[i] = binary.charCodeAt(i);
+          resolve(new Blob([u8], { type: mime }));
+        }
+      } catch (e) { reject(e); }
+    });
+  }
+
+  // Iterative compression
+  async function compressBlobToLimit(blob, maxBytes = MAX_BYTES) {
+    try {
+      if (!blob) throw new Error('No blob provided');
+      if (blob.size <= maxBytes) return blob;
+
+      const img = await new Promise((res, rej) => {
+        const url = URL.createObjectURL(blob);
+        const i = new Image();
+        i.onload = () => { URL.revokeObjectURL(url); res(i); };
+        i.onerror = e => { URL.revokeObjectURL(url); rej(e); };
+        i.src = url;
+      });
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      let w = img.width, h = img.height;
+      canvas.width = w;
+      canvas.height = h;
+      ctx.drawImage(img, 0, 0, w, h);
+
+      let quality = 0.92;
+      let out = await canvasToBlob(canvas, 'image/jpeg', quality);
+
+      while (out.size > maxBytes && quality > 0.08) {
+        quality = Math.max(0.08, quality - 0.07);
+        out = await canvasToBlob(canvas, 'image/jpeg', quality);
+      }
+
+      while (out.size > maxBytes && Math.min(w, h) > 200) {
+        w = Math.floor(w * 0.92);
+        h = Math.floor(h * 0.92);
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+        quality = 0.85;
+        out = await canvasToBlob(canvas, 'image/jpeg', quality);
+        while (out.size > maxBytes && quality > 0.08) {
+          quality = Math.max(0.08, quality - 0.07);
+          out = await canvasToBlob(canvas, 'image/jpeg', quality);
+        }
+      }
+
+      return out;
+    } catch (e) {
+      warn('compressBlobToLimit failed — returning original blob', e);
+      return blob;
+    }
+  }
+
+  // Add thumbnail with remove button
+  function addThumbnail(blob, filename) {
+    if (!previewWrap) return;
+    const url = URL.createObjectURL(blob);
+    const container = document.createElement('div');
+    container.className = 'col-md-3';
+    container.id = 'image_camera_' + Date.now();
+    container.setAttribute('data-type', 'camera');
+    container.setAttribute('data-filename', filename);
+    container.innerHTML = `
+      <img style="width: 180px; height: 180px;" class="img-thumbnail" src="${url}">
+      <div class="row">
+        <div class="col-md-12 mt-2 mb-2">
+          <span>${filename}</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="mb-2">
+          <button type="button" class="btn btn-danger btn-sm pull-left" onclick="cdp_deletePreviewImage(this.parentElement.parentElement.parentElement.id.replace('image_camera_', ''), 'camera');"><i class="fa fa-trash"></i></button>
+        </div>
+      </div>
+      <div style="font-size:11px;margin-top:4px;text-align:center;">${Math.round((blob.size || 0) / 1024)} KB</div>
+    `;
+    previewWrap.prepend(container);
+
+    setTimeout(() => URL.revokeObjectURL(url), 60 * 1000);
+  }
+
+  // Append file to input using DataTransfer
+  function appendFileToInput(inputEl, file) {
+    if (!inputEl) {
+      window.__capturedFilesFallback.push(file);
+      log('No input element; saved in fallback array');
+      return false;
+    }
+    try {
+      const dt = new DataTransfer();
+      Array.from(inputEl.files || []).forEach(f => dt.items.add(f));
+      dt.items.add(file);
+      inputEl.files = dt.files;
+      log('Appended file to input.files', file.name);
+      return true;
+    } catch (e) {
+      warn('Could not append to input.files; storing in fallback', e);
+      window.__capturedFilesFallback.push(file);
+      return false;
+    }
+  }
+
+  // Remove file from input by name
+  function removeFileFromInputByName(inputEl, filename) {
+    if (!inputEl) return;
+    try {
+      const dt = new DataTransfer();
+      Array.from(inputEl.files || []).forEach(f => {
+        if (f.name !== filename) dt.items.add(f);
+      });
+      inputEl.files = dt.files;
+      log('Removed', filename, 'from input.files (if existed)');
+    } catch (e) { warn('removeFileFromInputByName failed', e); }
+  }
+
+  // Wait for video to be ready
+  function waitForVideoReady(videoEl, timeout = 3000) {
+    return new Promise((resolve, reject) => {
+      if (videoEl.videoWidth && videoEl.videoHeight) return resolve();
+      let elapsed = 0;
+      const iv = 100;
+      const t = setInterval(() => {
+        elapsed += iv;
+        if (videoEl.videoWidth && videoEl.videoHeight) {
+          clearInterval(t);
+          resolve();
+        }
+        else if (elapsed >= timeout) {
+          clearInterval(t);
+          reject(new Error('Video not ready (timed out)'));
+        }
+      }, iv);
+    });
+  }
+
+  // Start camera
+  async function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Camera not supported by this browser.');
+      return;
+    }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false
+      });
+      cameraPreview.srcObject = stream;
+      cameraPreview.style.display = 'block';
+      if (takeBtn) takeBtn.style.display = 'inline-block';
+      if (stopBtn) stopBtn.style.display = 'inline-block';
+      if (openBtn) openBtn.style.display = 'none';
+    } catch (e) {
+      fail('Unable to open camera', e);
+    }
+  }
+
+  // Stop camera
+  function stopCamera() {
+    try {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      cameraPreview.style.display = 'none';
+      if (takeBtn) takeBtn.style.display = 'none';
+      if (stopBtn) stopBtn.style.display = 'none';
+      if (openBtn) openBtn.style.display = 'inline-block';
+    } catch (e) { warn('stopCamera error', e); }
+  }
+
+  // Capture and attach
+  async function captureOnlyAttach() {
+    try {
+      if (!cameraPreview) throw new Error('cameraPreview element missing');
+      await waitForVideoReady(cameraPreview).catch(e => warn('video readiness wait failed (continuing):', e));
+
+      if (!cameraPreview.videoWidth || !cameraPreview.videoHeight) {
+        throw new Error('Camera frame not available yet - try waiting a second after opening camera.');
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = cameraPreview.videoWidth || 1280;
+      canvas.height = cameraPreview.videoHeight || 720;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get canvas 2D context');
+
+      ctx.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+
+      let blob = await canvasToBlob(canvas, 'image/jpeg', 0.92);
+      if (!blob) throw new Error('canvasToBlob returned null');
+
+      blob = await compressBlobToLimit(blob, MAX_BYTES);
+
+      const filename = 'capture_' + Date.now() + '.jpg';
+      let file;
+      try {
+        file = new File([blob], filename, { type: blob.type });
+      } catch (e) {
+        file = blob;
+        file.name = filename;
+        warn('File() constructor not supported — using blob with .name');
+      }
+
+      addThumbnail(blob, filename);
+      appendFileToInput(filesCaptureInput, file);
+
+      var cameraCount = $('[data-type="camera"]').length;
+      $("#captureItem").html("camera captures (" + cameraCount + ")");
+      updateTotalFiles();
+
+      Swal.fire({
+        position: "top",
+        icon: "success",
+        title: "Capture saved!",
+        showConfirmButton: false,
+        timer: 460
+      });
+
+    } catch (e) {
+      fail('Capture failed', e);
+    }
+  }
+
+  // Wire events
+  if (openBtn) openBtn.addEventListener('click', startCamera);
+  else warn('openCameraButton not found');
+
+  if (stopBtn) stopBtn.addEventListener('click', stopCamera);
+  else warn('stopCamera not found');
+
+  if (takeBtn) takeBtn.addEventListener('click', captureOnlyAttach);
+  else warn('takeCameraPhoto button not found');
+
+  // Cleanup on unload
+  window.addEventListener('beforeunload', () => {
+    if (stream) stopCamera();
+  });
+
+})();
+
+// Helper function to append captured files to FormData
+function appendAllFilesToFormData(fd) {
+  const filesCaptureInput = document.getElementById('filesCapture');
+  if (filesCaptureInput && filesCaptureInput.files && filesCaptureInput.files.length) {
+    Array.from(filesCaptureInput.files).forEach(function (f) {
+      fd.append('filesCapture[]', f, f.name || ('capture_' + Date.now() + '.jpg'));
+    });
+  }
+
+  if (window.__capturedFilesFallback && window.__capturedFilesFallback.length) {
+    window.__capturedFilesFallback.forEach(function (f, idx) {
+      const name = f.name || ('capture_fallback_' + Date.now() + '_' + idx + '.jpg');
+      fd.append('filesCapture[]', f, name);
+    });
+  }
+}
