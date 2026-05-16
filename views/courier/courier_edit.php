@@ -574,7 +574,8 @@ $numrows     = $db->cdp_rowCount();
                                     <div class="row mt-3">
                                         <div class="col-md-12 row" id="image_preview"></div>
                                     </div>
-
+                                    <div>
+                                        <div>
                                             <div class="row" id="image_preview"></div>
 
                                             <div class="mt-2">
