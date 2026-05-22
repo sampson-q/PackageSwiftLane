@@ -5,6 +5,7 @@
    ========================================================================= */
 
 var deleted_file_ids = [];
+var deleted_camera_ids = [];
 
 // Estado de paquetes en memoria
 var packagesItems = [
@@ -52,29 +53,6 @@ let autoFetchTimer = null;
   cdp_select2_init_sender_address();
   cdp_select2_init_recipient();
   cdp_select2_init_recipient_address();
-
-  // Archivos adjuntos
-  $("#openMultiFile").on("click", function () { $("#filesMultiple").trigger("click"); });
-  $("#clean_file_button").on("click", function () {
-    $("#filesMultiple").val("");
-    $("#selectItem").html(typeof translate_attach_files !== "undefined" ? translate_attach_files : "Attach files");
-    $("#clean_files").addClass("hide");
-    $("#image_preview").html("");
-    $("#total_item_files").val(0);
-    deleted_file_ids = [];
-    $("#deleted_file_ids").val("");
-    capturedImages = [];
-  });
-  $("#filesMultiple").on("change", function () {
-    deleted_file_ids = [];
-    const files = this.files || [];
-    $("#total_item_files").val(files.length);
-    if (files.length > 0) $("#clean_files").removeClass("hide"); else $("#clean_files").addClass("hide");
-    var countLabel = typeof translate_attached_files_count !== "undefined" ? translate_attached_files_count : "attached files";
-    $("#selectItem").html(countLabel + " (" + files.length + ")");
-    if (cdp_validateZiseFiles()) return;
-    cdp_preview_images();
-  });
 
   // Prefijo teléfono remitente
   $("#code_prefix2").hide();
@@ -372,13 +350,12 @@ function cdp_select2_init_recipient() {
                 $("#add_address_recipient").prop("disabled", false);
             }
 
-            // re-init with correct type
             cdp_select2_init_recipient_address();
             scheduleAutoFetch();
         })
         .on("change", function () {
             if (!$(this).val()) {
-                window.recipient_type = 'recipient'; // reset on clear
+                window.recipient_type = 'recipient';
                 $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
                 $("#add_address_recipient").prop("disabled", true);
                 cdp_select2_init_recipient_address();
@@ -390,7 +367,6 @@ function cdp_select2_init_recipient() {
 function cdp_select2_init_recipient_address() {
     var recipient_id = $("#recipient_id").val();
 
-    // get type (default fallback = recipient)
     var recipient_type = window.recipient_type || 'recipient';
 
     $("#recipient_address_id")
@@ -473,7 +449,6 @@ function loadPackages() {
     $tbody.append(tr);
   });
 
-  // Botón agregar fila (id antiguo y nuevo)
   $("#add_rows, #add_row")
     .off("click.addPkg")
     .on("click.addPkg", function (e) {
@@ -519,240 +494,534 @@ function changePackage(el) {
 }
 
 /* ==========================
-   Adjuntos
+   FILE ATTACHMENT AND CAMERA CAPTURE (FROM OLD VERSION)
    ========================== */
-// Replace existing cdp_preview_images() with this
+
 function cdp_preview_images() {
-  const previewWrap = document.getElementById("image_preview");
+  var input = document.getElementById("filesMultiple");
+  if (!input) return;
+
+  var files = Array.from(input.files || []);
+  var previewWrap = document.getElementById("image_preview");
   if (!previewWrap) return;
 
   previewWrap.innerHTML = "";
 
-  // Add uploaded files
-  const fileInput = document.getElementById("filesMultiple");
-  if (fileInput && fileInput.files) {
-    Array.from(fileInput.files).forEach((file, index) => {
-      const mimeRoot = (file.type || "").split("/")[0];
-      const isImage = mimeRoot === "image";
-      const src = isImage ? URL.createObjectURL(file) : "assets/images/no-preview.jpeg";
+  files.forEach(function(file) {
+    var mimeRoot = (file.type || "").split("/")[0];
+    var previewBlob;
 
-      const container = document.createElement("div");
-      container.className = "file-thumb";
-
-      container.innerHTML = `
-        <div class="file-thumb-image-wrapper">
-          <img class="file-thumb-image" src="${src}" alt="${file.name}">
-          <button type="button" class="file-thumb-remove-btn" onclick="removeFileByIndex(${index})">×</button>
-        </div>
-        <div class="file-thumb-filename" title="${file.name}">${file.name}</div>
-        <div class="file-thumb-size">${Math.round((file.size || 0) / 1024)} KB</div>
-      `;
-
-      previewWrap.appendChild(container);
-      if (isImage && src.startsWith("blob:")) {
-        setTimeout(() => URL.revokeObjectURL(src), 60000);
-      }
-    });
-  }
-
-  // Add captured images
-  if (window.capturedImages && Array.isArray(window.capturedImages)) {
-    window.capturedImages.forEach((captured, index) => {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const container = document.createElement("div");
-        container.className = "file-thumb";
-
-        container.innerHTML = `
-          <div class="file-thumb-image-wrapper">
-            <img class="file-thumb-image" src="${e.target.result}" alt="${captured.file.name}">
-            <span class="file-thumb-badge">📷</span>
-            <button type="button" class="file-thumb-remove-btn" onclick="cdp_deleteCapturedImage(${index})">×</button>
-          </div>
-          <div class="file-thumb-filename" title="${captured.file.name}">${captured.file.name}</div>
-          <div class="file-thumb-size">${Math.round((captured.blob.size || 0) / 1024)} KB</div>
-        `;
-
-        previewWrap.appendChild(container);
-      };
-      reader.readAsDataURL(captured.blob);
-    });
-  }
-
-  updateFileCounter();
-}
-
-// Add this function
-function removeFileByIndex(index) {
-  const fileInput = document.getElementById("filesMultiple");
-  if (!fileInput) return;
-
-  try {
-    const dt = new DataTransfer();
-    Array.from(fileInput.files || []).forEach((f, i) => {
-      if (i !== index) dt.items.add(f);
-    });
-    fileInput.files = dt.files;
-    cdp_preview_images();
-  } catch (e) {
-    console.error("Error removing file:", e);
-    alert("Could not remove file. Please try again.");
-  }
-}
-
-
-function addUnifiedThumbnail(blob, filename, originalFile = null) {
-
-    const previewWrap = document.getElementById("image_preview");
-    if (!previewWrap) return;
-
-    const isRealImage = !blob.previewFallback;
-
-    const url = isRealImage
-        ? URL.createObjectURL(blob)
-        : blob.previewFallback;
-
-    const container = document.createElement("div");
-
-    container.className = "file-thumb";
-
-    container.dataset.filename = filename;
-
-    container.style = `
-        display:inline-block;
-        margin:6px;
-        position:relative;
-        width:130px;
-        vertical-align:top;
-    `;
-
-    container.innerHTML = `
-        <div style="
-            position:relative;
-            border-radius:10px;
-            overflow:hidden;
-            border:1px solid #ddd;
-            background:#fff;
-        ">
-            <img
-                src="${url}"
-                alt="${filename}"
-                style="
-                    width:130px;
-                    height:100px;
-                    object-fit:cover;
-                    display:block;
-                "
-            >
-
-            <button
-                type="button"
-                class="remove-preview-btn"
-                style="
-                    position:absolute;
-                    top:6px;
-                    right:6px;
-                    width:24px;
-                    height:24px;
-                    border:none;
-                    border-radius:50%;
-                    background:rgba(0,0,0,.65);
-                    color:#fff;
-                    cursor:pointer;
-                    font-size:14px;
-                    line-height:24px;
-                "
-            >
-                ×
-            </button>
-        </div>
-
-        <div style="
-            font-size:11px;
-            margin-top:5px;
-            text-align:center;
-            word-break:break-word;
-        ">
-            ${filename}
-        </div>
-
-        <div style="
-            font-size:10px;
-            color:#666;
-            text-align:center;
-        ">
-            ${Math.round((originalFile?.size || blob.size || 0) / 1024)} KB
-        </div>
-    `;
-
-    previewWrap.prepend(container);
-
-    const removeBtn = container.querySelector(".remove-preview-btn");
-
-    removeBtn.addEventListener("click", () => {
-
-        container.remove();
-
-        removeFileFromInputByName(
-            document.getElementById("filesMultiple"),
-            filename
-        );
-
-        removeFileFromInputByName(
-            document.getElementById("filesCapture"),
-            filename
-        );
-
-        if (
-            window.__capturedFilesFallback &&
-            window.__capturedFilesFallback.length
-        ) {
-            window.__capturedFilesFallback =
-                window.__capturedFilesFallback.filter(
-                    f => f.name !== filename
-                );
-        }
-
-        const total =
-            document.querySelectorAll(".file-thumb").length;
-
-        $("#total_item_files").val(total);
-
-        $("#selectItem").html(
-            "attached files (" + total + ")"
-        );
-
-        if (total <= 0) {
-            $("#clean_files").addClass("hide");
-        }
-    });
-
-    if (isRealImage) {
-        setTimeout(() => URL.revokeObjectURL(url), 60000);
+    if (mimeRoot === "image") {
+      previewBlob = file;
+    } else {
+      previewBlob = new Blob([], { type: "image/jpeg" });
+      previewBlob.previewFallback = "assets/images/no-preview.jpeg";
     }
+
+    addUnifiedThumbnail(previewBlob, file.name, file, 'upload');
+  });
+
+  var totalCount = files.length;
+  $("#total_item_files").val(totalCount);
+
+  if (totalCount > 0) {
+    $("#clean_files").removeClass("hide");
+  } else {
+    $("#clean_files").addClass("hide");
+  }
+
+  updateFileLabels();
 }
 
-/* ==========================
-   Utilidades/Totales
-   ========================== */
+function addUnifiedThumbnail(blob, filename, originalFile = null, fileType = 'upload') {
+  var previewWrap = document.getElementById("image_preview");
+  if (!previewWrap) return;
+
+  var isRealImage = !blob.previewFallback;
+  var url = isRealImage
+    ? URL.createObjectURL(blob)
+    : blob.previewFallback;
+
+  var container = document.createElement("div");
+  container.className = "file-thumb";
+  container.dataset.filename = filename;
+  container.dataset.type = fileType;
+
+  container.style.cssText = "display:inline-block;margin:6px;position:relative;width:130px;vertical-align:top;";
+
+  var sizeKB = Math.round((originalFile?.size || blob.size || 0) / 1024);
+
+  container.innerHTML = `
+    <div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid #ddd;background:#fff;">
+      <img
+        src="${url}"
+        alt="${filename}"
+        style="width:130px;height:100px;object-fit:cover;display:block;"
+      >
+      <button
+        type="button"
+        class="remove-preview-btn"
+        style="position:absolute;top:6px;right:6px;width:24px;height:24px;border:none;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;cursor:pointer;font-size:14px;line-height:24px;"
+      >
+        ×
+      </button>
+    </div>
+    <div style="font-size:11px;margin-top:5px;text-align:center;word-break:break-word;">${filename}</div>
+    <div style="font-size:10px;color:#666;text-align:center;">${sizeKB} KB</div>
+  `;
+
+  previewWrap.prepend(container);
+
+  var removeBtn = container.querySelector(".remove-preview-btn");
+  removeBtn.addEventListener("click", function() {
+    container.remove();
+    removeFileFromInputByName(document.getElementById("filesMultiple"), filename);
+    removeFileFromInputByName(document.getElementById("filesCapture"), filename);
+
+    if (window.__capturedFilesFallback && window.__capturedFilesFallback.length) {
+      window.__capturedFilesFallback = window.__capturedFilesFallback.filter(function(f) {
+        return f.name !== filename;
+      });
+    }
+
+    var total = document.querySelectorAll(".file-thumb").length;
+    $("#total_item_files").val(total);
+
+    updateFileLabels();
+
+    if (total <= 0) {
+      $("#clean_files").addClass("hide");
+    }
+  });
+
+  if (isRealImage) {
+    setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+  }
+}
+
+function updateFileLabels() {
+  var uploadCount = document.querySelectorAll('.file-thumb[data-type="upload"]').length;
+  var cameraCount = document.querySelectorAll('.file-thumb[data-type="camera"]').length;
+
+  if (uploadCount > 0) {
+    $("#selectItem").html("attached files (" + uploadCount + ")");
+  } else {
+    $("#selectItem").html("attached files");
+  }
+
+  if (cameraCount > 0) {
+    $("#captureItem").html("camera captures (" + cameraCount + ")");
+  } else {
+    $("#captureItem").html("camera captures");
+  }
+}
+
+function removeFileFromInputByName(inputEl, filename) {
+  if (!inputEl) return;
+  try {
+    var dt = new DataTransfer();
+    Array.from(inputEl.files || []).forEach(function(f) {
+      if (f.name !== filename) dt.items.add(f);
+    });
+    inputEl.files = dt.files;
+  } catch (e) { console.warn('removeFileFromInputByName failed', e); }
+}
+
 function cdp_validateZiseFiles() {
-  const input = document.getElementById("filesMultiple");
-  if (!input) return false;
-  const files = input.files || [];
-  let totalSize = 0;
-  for (let i = 0; i < files.length; i++) totalSize += files[i].size;
-  if (totalSize > 5242880) {
-    $(".resultados_file").html("<div class='alert alert-danger'><button type='button' class='close' data-dismiss='alert'>&times;</button><strong>" + (typeof validation_files_size !== "undefined" ? validation_files_size : "El tamaño total de los archivos excede el límite (5 MB).") + "</strong></div>");
+  var inputFile = document.getElementById("filesMultiple");
+  var file = inputFile.files;
+  var size = 0;
+
+  for (var i = 0; i < file.length; i++) {
+    var filesSize = file[i].size;
+    if (size > 5242880) {
+      $(".resultados_file").html(
+        "<div class='alert alert-danger'>" +
+          "<button type='button' class='close' data-dismiss='alert'>&times;</button>" +
+          "<strong>" +
+          validation_files_size +
+          " </strong>" +
+          "</div>"
+      );
+
+      $("#filesMultiple").val("");
+      $("#clean_files").addClass("hide");
+      $("#image_preview").html("");
+    } else {
+      $(".resultados_file").html("");
+    }
+
+    size += filesSize;
+  }
+
+  if (size > 5242880) {
+    $(".resultados_file").html(
+      "<div class='alert alert-danger'>" +
+        "<button type='button' class='close' data-dismiss='alert'>&times;</button>" +
+        "<strong>" +
+        validation_files_size +
+        " </strong>" +
+        "</div>"
+    );
+
     $("#filesMultiple").val("");
     $("#clean_files").addClass("hide");
     $("#image_preview").html("");
-    $("#total_item_files").val(0);
     return true;
   } else {
     $(".resultados_file").html("");
     return false;
   }
 }
+
+$("#openMultiFile").on("click", function () {
+  $("#filesMultiple").click();
+});
+
+$("#clean_file_button").on("click", function () {
+  $("#filesMultiple").val("");
+  $("#filesCapture").val("");
+  $("#selectItem").html("Attach files");
+  $("#captureItem").html("Camera captures");
+  $("#clean_files").addClass("hide");
+  $("#image_preview").html("");
+  deleted_file_ids = [];
+  deleted_camera_ids = [];
+  $("#total_item_files").val(0);
+});
+
+$("input[type=file]").on("change", function () {
+  var inputFile = document.getElementById("filesMultiple");
+  var file = inputFile.files;
+  var contador = 0;
+  for (var i = 0; i < file.length; i++) {
+    contador++;
+  }
+  $("#total_item_files").val(contador);
+
+  var count_files = $("#total_item_files").val();
+
+  $("#selectItem").html("attached files (" + count_files + ")");
+});
+
+// ========== CAMERA FEATURE INTEGRATION ==========
+
+(() => {
+  'use strict';
+  const MAX_BYTES = 1024 * 1024; // 1MB
+
+  const openBtn = document.getElementById('openCameraButton');
+  const cameraPreview = document.getElementById('cameraPreview');
+  const takeBtn = document.getElementById('takeCameraPhoto');
+  const stopBtn = document.getElementById('stopCamera');
+  const filesCaptureInput = document.getElementById('filesCapture');
+  const previewWrap = document.getElementById('image_preview');
+
+  window.__capturedFilesFallback = window.__capturedFilesFallback || [];
+
+  let stream = null;
+
+  function log(...args) { console.log('[capture]', ...args); }
+  function warn(...args) { console.warn('[capture]', ...args); }
+  function fail(msg, e) { console.error('[capture]', msg, e); alert(msg + (e && e.message ? '\n' + e.message : '')); }
+
+  // Canvas to blob conversion with fallback
+  function canvasToBlob(canvas, mime = 'image/jpeg', quality = 0.92) {
+    return new Promise((resolve, reject) => {
+      try {
+        if (canvas.toBlob) {
+          canvas.toBlob(b => {
+            if (b) resolve(b);
+            else {
+              try {
+                const dataUrl = canvas.toDataURL(mime, quality);
+                const parts = dataUrl.split(';base64,');
+                const binary = atob(parts[1]);
+                const len = binary.length;
+                const u8 = new Uint8Array(len);
+                for (let i = 0; i < len; i++) u8[i] = binary.charCodeAt(i);
+                resolve(new Blob([u8], { type: mime }));
+              } catch (e2) { reject(e2); }
+            }
+          }, mime, quality);
+        } else {
+          const dataUrl = canvas.toDataURL(mime, quality);
+          const parts = dataUrl.split(';base64,');
+          const binary = atob(parts[1]);
+          const len = binary.length;
+          const u8 = new Uint8Array(len);
+          for (let i = 0; i < len; i++) u8[i] = binary.charCodeAt(i);
+          resolve(new Blob([u8], { type: mime }));
+        }
+      } catch (e) { reject(e); }
+    });
+  }
+
+  // Iterative compression
+  async function compressBlobToLimit(blob, maxBytes = MAX_BYTES) {
+    try {
+      if (!blob) throw new Error('No blob provided');
+      if (blob.size <= maxBytes) return blob;
+
+      const img = await new Promise((res, rej) => {
+        const url = URL.createObjectURL(blob);
+        const i = new Image();
+        i.onload = () => { URL.revokeObjectURL(url); res(i); };
+        i.onerror = e => { URL.revokeObjectURL(url); rej(e); };
+        i.src = url;
+      });
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      let w = img.width, h = img.height;
+      canvas.width = w;
+      canvas.height = h;
+      ctx.drawImage(img, 0, 0, w, h);
+
+      let quality = 0.92;
+      let out = await canvasToBlob(canvas, 'image/jpeg', quality);
+
+      while (out.size > maxBytes && quality > 0.08) {
+        quality = Math.max(0.08, quality - 0.07);
+        out = await canvasToBlob(canvas, 'image/jpeg', quality);
+      }
+
+      while (out.size > maxBytes && Math.min(w, h) > 200) {
+        w = Math.floor(w * 0.92);
+        h = Math.floor(h * 0.92);
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+        quality = 0.85;
+        out = await canvasToBlob(canvas, 'image/jpeg', quality);
+        while (out.size > maxBytes && quality > 0.08) {
+          quality = Math.max(0.08, quality - 0.07);
+          out = await canvasToBlob(canvas, 'image/jpeg', quality);
+        }
+      }
+
+      return out;
+    } catch (e) {
+      warn('compressBlobToLimit failed — returning original blob', e);
+      return blob;
+    }
+  }
+
+  // Add thumbnail with remove button
+  function addThumbnail(blob, filename) {
+    if (!previewWrap) return;
+    const url = URL.createObjectURL(blob);
+
+    var container = document.createElement('div');
+    container.className = 'file-thumb';
+    container.dataset.filename = filename;
+    container.dataset.type = 'camera';
+
+    container.style.cssText = "display:inline-block;margin:6px;position:relative;width:130px;vertical-align:top;";
+
+    var sizeKB = Math.round((blob.size || 0) / 1024);
+
+    container.innerHTML = `
+      <div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid #ddd;background:#fff;">
+        <img
+          src="${url}"
+          alt="${filename}"
+          style="width:130px;height:100px;object-fit:cover;display:block;"
+        >
+        <button
+          type="button"
+          class="remove-preview-btn"
+          style="position:absolute;top:6px;right:6px;width:24px;height:24px;border:none;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;cursor:pointer;font-size:14px;line-height:24px;"
+        >
+          ×
+        </button>
+      </div>
+      <div style="font-size:11px;margin-top:5px;text-align:center;word-break:break-word;">${filename}</div>
+      <div style="font-size:10px;color:#666;text-align:center;">${sizeKB} KB</div>
+    `;
+
+    previewWrap.prepend(container);
+
+    const removeBtn = container.querySelector('.remove-preview-btn');
+    removeBtn.addEventListener('click', () => {
+      container.remove();
+      removeFileFromInputByName(filesCaptureInput, filename);
+
+      var total = document.querySelectorAll(".file-thumb").length;
+      updateFileLabels();
+
+      if (total <= 0) {
+        $("#clean_files").addClass("hide");
+      }
+    });
+
+    setTimeout(() => URL.revokeObjectURL(url), 60 * 1000);
+  }
+
+  // Append file to input using DataTransfer
+  function appendFileToInput(inputEl, file) {
+    if (!inputEl) {
+      window.__capturedFilesFallback.push(file);
+      log('No input element; saved in fallback array');
+      return false;
+    }
+    try {
+      const dt = new DataTransfer();
+      Array.from(inputEl.files || []).forEach(f => dt.items.add(f));
+      dt.items.add(file);
+      inputEl.files = dt.files;
+      log('Appended file to input.files', file.name);
+      return true;
+    } catch (e) {
+      warn('Could not append to input.files; storing in fallback', e);
+      window.__capturedFilesFallback.push(file);
+      return false;
+    }
+  }
+
+  // Wait for video to be ready
+  function waitForVideoReady(videoEl, timeout = 3000) {
+    return new Promise((resolve, reject) => {
+      if (videoEl.videoWidth && videoEl.videoHeight) return resolve();
+      let elapsed = 0;
+      const iv = 100;
+      const t = setInterval(() => {
+        elapsed += iv;
+        if (videoEl.videoWidth && videoEl.videoHeight) {
+          clearInterval(t);
+          resolve();
+        }
+        else if (elapsed >= timeout) {
+          clearInterval(t);
+          reject(new Error('Video not ready (timed out)'));
+        }
+      }, iv);
+    });
+  }
+
+  // Start camera
+  async function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Camera not supported by this browser.');
+      return;
+    }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false
+      });
+      cameraPreview.srcObject = stream;
+      cameraPreview.style.display = 'block';
+      if (takeBtn) takeBtn.style.display = 'inline-block';
+      if (stopBtn) stopBtn.style.display = 'inline-block';
+      if (openBtn) openBtn.style.display = 'none';
+    } catch (e) {
+      fail('Unable to open camera', e);
+    }
+  }
+
+  // Stop camera
+  function stopCamera() {
+    try {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      cameraPreview.style.display = 'none';
+      if (takeBtn) takeBtn.style.display = 'none';
+      if (stopBtn) stopBtn.style.display = 'none';
+      if (openBtn) openBtn.style.display = 'inline-block';
+    } catch (e) { warn('stopCamera error', e); }
+  }
+
+  // Capture and attach
+  async function captureOnlyAttach() {
+    try {
+      if (!cameraPreview) throw new Error('cameraPreview element missing');
+      await waitForVideoReady(cameraPreview).catch(e => warn('video readiness wait failed (continuing):', e));
+
+      if (!cameraPreview.videoWidth || !cameraPreview.videoHeight) {
+        throw new Error('Camera frame not available yet - try waiting a second after opening camera.');
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = cameraPreview.videoWidth || 1280;
+      canvas.height = cameraPreview.videoHeight || 720;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get canvas 2D context');
+
+      ctx.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+
+      let blob = await canvasToBlob(canvas, 'image/jpeg', 0.92);
+      if (!blob) throw new Error('canvasToBlob returned null');
+
+      blob = await compressBlobToLimit(blob, MAX_BYTES);
+
+      const filename = 'capture_' + Date.now() + '.jpg';
+      let file;
+      try {
+        file = new File([blob], filename, { type: blob.type });
+      } catch (e) {
+        file = blob;
+        file.name = filename;
+        warn('File() constructor not supported — using blob with .name');
+      }
+
+      addThumbnail(blob, filename);
+      appendFileToInput(filesCaptureInput, file);
+
+      updateFileLabels();
+
+      Swal.fire({
+        position: "top",
+        icon: "success",
+        title: "Capture saved!",
+        showConfirmButton: false,
+        timer: 460
+      });
+
+    } catch (e) {
+      fail('Capture failed', e);
+    }
+  }
+
+  // Wire events
+  if (openBtn) openBtn.addEventListener('click', startCamera);
+  else warn('openCameraButton not found');
+
+  if (stopBtn) stopBtn.addEventListener('click', stopCamera);
+  else warn('stopCamera not found');
+
+  if (takeBtn) takeBtn.addEventListener('click', captureOnlyAttach);
+  else warn('takeCameraPhoto button not found');
+
+  // Cleanup on unload
+  window.addEventListener('beforeunload', () => {
+    if (stream) stopCamera();
+  });
+
+})();
+
+// Helper function to append captured files to FormData
+function appendAllFilesToFormData(fd) {
+  const filesCaptureInput = document.getElementById('filesCapture');
+  if (filesCaptureInput && filesCaptureInput.files && filesCaptureInput.files.length) {
+    Array.from(filesCaptureInput.files).forEach(function (f) {
+      fd.append('filesCapture[]', f, f.name || ('capture_' + Date.now() + '.jpg'));
+    });
+  }
+
+  if (window.__capturedFilesFallback && window.__capturedFilesFallback.length) {
+    window.__capturedFilesFallback.forEach(function (f, idx) {
+      const name = f.name || ('capture_fallback_' + Date.now() + '_' + idx + '.jpg');
+      fd.append('filesCapture[]', f, name);
+    });
+  }
+}
+
+/* ==========================
+   Utilidades/Totales
+   ========================== */
 function isNumberKey(evt, element) {
   var charCode = evt.which ? evt.which : evt.keyCode;
   if (charCode > 31 && (charCode < 48 || charCode > 57) && !(charCode === 46 || charCode === 8)) return false;
@@ -948,7 +1217,6 @@ function calculateFinalTotal(element) {
   if ($("#total_declared").length) $("#total_declared").html(r2(sum_declared));
 }
 
-
 /* ==========================
    Submit — Crear envío
    ========================== */
@@ -1004,9 +1272,6 @@ $("#invoice_form").on("submit", function (event) {
     }
   }
 
-    var tracking_number = $("#tracking_number").val();
-    var estimated_eta = $("#estimated_eta").val();
-
   // ====== Campos de cabecera ======
   var prefix_check = $("#prefix_check").val();
   var code_prefix = $("#code_prefix").val();
@@ -1050,16 +1315,13 @@ $("#invoice_form").on("submit", function (event) {
 
   var deleted_file_ids_val = $("#deleted_file_ids").val();
 
-  // motor de tarifas
   var rate_provider  = $("#rate_provider").val() || "internal";
   var distance_miles = $("#distance_miles").val() || 0;
 
   var data = new FormData();
 
-  // paquetes en JSON
   data.append("packages", JSON.stringify(packagesItems));
 
-  // Datos de cabecera
   if (prefix_check)         data.append("prefix_check", prefix_check);
   if (code_prefix)          data.append("code_prefix", code_prefix);
   if (code_prefix2)         data.append("code_prefix2", code_prefix2);
@@ -1076,9 +1338,9 @@ $("#invoice_form").on("submit", function (event) {
   if (order_package)        data.append("order_package", order_package);
   if (order_date)           data.append("order_date", order_date);
   if (order_deli_time)      data.append("order_deli_time", order_deli_time);
-  if (provider_purchase)     data.append("provider_purchase", provider_purchase);
-  if (price_purchase)        data.append("price_purchase", price_purchase);
-  if (tracking_purchase)     data.append("tracking_purchase", tracking_purchase);
+  if (provider_purchase)    data.append("provider_purchase", provider_purchase);
+  if (price_purchase)       data.append("price_purchase", price_purchase);
+  if (tracking_purchase)    data.append("tracking_purchase", tracking_purchase);
   if (order_pay_mode)       data.append("order_pay_mode", order_pay_mode);
   if (order_payment_method) data.append("order_payment_method", order_payment_method);
   if (status_courier)       data.append("status_courier", status_courier);
@@ -1091,15 +1353,10 @@ $("#invoice_form").on("submit", function (event) {
   if (declared_value_tax)   data.append("declared_value_tax", declared_value_tax);
   if (tariffs_value)        data.append("tariffs_value", tariffs_value);
   if (insurance_value)      data.append("insurance_value", insurance_value);
-    if (tracking_number)    data.append("tracking_number", tracking_number);
-    if (estimated_eta)      data.append("estimated_eta", estimated_eta);
-  
 
-  // motor tarifas (siempre enviar para que el backend calcule cuando manual_tariff=0)
   data.append("rate_provider", rate_provider || "internal");
   data.append("distance_miles", distance_miles);
 
-  // notificaciones
   if (notify_whatsapp_sender)   data.append("notify_whatsapp_sender", notify_whatsapp_sender);
   if (notify_whatsapp_receiver) data.append("notify_whatsapp_receiver", notify_whatsapp_receiver);
   if (notify_sms_sender)        data.append("notify_sms_sender", notify_sms_sender);
@@ -1108,7 +1365,6 @@ $("#invoice_form").on("submit", function (event) {
 
   if (deleted_file_ids_val) data.append("deleted_file_ids", deleted_file_ids_val);
 
-  // archivos
   var fileInput = document.getElementById("filesMultiple");
   if (fileInput && fileInput.files) {
     for (var j = 0; j < fileInput.files.length; j++) {
@@ -1116,20 +1372,7 @@ $("#invoice_form").on("submit", function (event) {
     }
   }
 
-    // camera captures
-    var captureInput = document.getElementById("filesCapture");
-    if (captureInput && captureInput.files) {
-        for (var k = 0; k < captureInput.files.length; k++) {
-            data.append("filesMultiple[]", captureInput.files[k]);
-        }
-    }
-
-    // fallback support
-    if (window.__capturedFilesFallback && window.__capturedFilesFallback.length) {
-        window.__capturedFilesFallback.forEach(function(file){
-            data.append("filesMultiple[]", file);
-        });
-    }
+  appendAllFilesToFormData(data);
 
   data.append('_csrf_token', $('input[name="_csrf_token"]').val());
   data.append('recipient_type', window.recipient_type || 'recipient');
@@ -1153,7 +1396,6 @@ $("#invoice_form").on("submit", function (event) {
     },
 
     success: function (resp) {
-      // cerrar loader
       try { Swal.close(); } catch (e) {}
 
       $("#create_invoice").attr("disabled", false);
@@ -1162,7 +1404,6 @@ $("#invoice_form").on("submit", function (event) {
       var shipment_id = null;
       var msg = "";
 
-      // detectar éxito con varias formas típicas
       if (resp) {
         if (resp.success === true || resp.success === "true") {
           ok = true;
@@ -1183,7 +1424,6 @@ $("#invoice_form").on("submit", function (event) {
     },
 
     error: function (xhr, textStatus) {
-      // cerrar loader
       try { Swal.close(); } catch (e) {}
 
       $("#create_invoice").attr("disabled", false);
@@ -1203,13 +1443,10 @@ $("#invoice_form").on("submit", function (event) {
 
       cdp_showError(errs);
     }
-
-    // OJO: SIN 'complete' que cierre el SweetAlert final
   });
 
   return false;
 });
-
 
 /* ==========================
    SweetAlert helpers
@@ -1371,284 +1608,3 @@ function cdp_convertStrPad(value, dbDigits) {
   var pad = value.padStart(dbDigits, "0");
   $("#order_no").val(pad);
 }
-
-(() => {
-    'use strict';
-    const MAX_BYTES = 1024 * 1024; // 1MB
-
-    // Elements (IDs must match your HTML)
-    const openBtn = document.getElementById('openCameraButton');
-    const cameraPreview = document.getElementById('cameraPreview');
-    const takeBtn = document.getElementById('takeCameraPhoto');
-    const stopBtn = document.getElementById('stopCamera');
-    const filesCaptureInput = document.getElementById('filesCapture'); // hidden input
-    const previewWrap = document.getElementById('image_preview');
-
-    // fallback array if DataTransfer not supported or setting input.files fails
-    window.__capturedFilesFallback = window.__capturedFilesFallback || [];
-
-    let stream = null;
-
-    function log(...args){ console.log('[capture]', ...args); }
-    function warn(...args){ console.warn('[capture]', ...args); }
-    function fail(msg, e){ console.error('[capture]', msg, e); alert(msg + (e && e.message ? '\n' + e.message : '')); }
-
-    // canvas.toBlob wrapper with DataURL fallback (very defensive)
-    function canvasToBlob(canvas, mime='image/jpeg', quality=0.92){
-        return new Promise((resolve, reject) => {
-        try {
-            if (canvas.toBlob) {
-            canvas.toBlob(b => {
-                if (b) resolve(b);
-                else {
-                // fallback
-                try {
-                    const dataUrl = canvas.toDataURL(mime, quality);
-                    const parts = dataUrl.split(';base64,');
-                    const binary = atob(parts[1]);
-                    const len = binary.length;
-                    const u8 = new Uint8Array(len);
-                    for (let i=0;i<len;i++) u8[i] = binary.charCodeAt(i);
-                    resolve(new Blob([u8], { type: mime }));
-                } catch (e2) { reject(e2); }
-                }
-            }, mime, quality);
-            } else {
-            const dataUrl = canvas.toDataURL(mime, quality);
-            const parts = dataUrl.split(';base64,');
-            const binary = atob(parts[1]);
-            const len = binary.length;
-            const u8 = new Uint8Array(len);
-            for (let i=0;i<len;i++) u8[i] = binary.charCodeAt(i);
-            resolve(new Blob([u8], { type: mime }));
-            }
-        } catch (e) { reject(e); }
-        });
-    }
-
-    // iterative compression: reduce quality, then downscale until under limit
-    async function compressBlobToLimit(blob, maxBytes = MAX_BYTES) {
-        try {
-        if (!blob) throw new Error('No blob provided');
-        if (blob.size <= maxBytes) return blob;
-
-        const img = await new Promise((res, rej) => {
-            const url = URL.createObjectURL(blob);
-            const i = new Image();
-            i.onload = () => { URL.revokeObjectURL(url); res(i); };
-            i.onerror = e => { URL.revokeObjectURL(url); rej(e); };
-            i.src = url;
-        });
-
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        let w = img.width, h = img.height;
-        canvas.width = w; canvas.height = h;
-        ctx.drawImage(img, 0, 0, w, h);
-
-        let quality = 0.92;
-        let out = await canvasToBlob(canvas, 'image/jpeg', quality);
-
-        while (out.size > maxBytes && quality > 0.08) {
-            quality = Math.max(0.08, quality - 0.07);
-            out = await canvasToBlob(canvas, 'image/jpeg', quality);
-        }
-
-        while (out.size > maxBytes && Math.min(w,h) > 200) {
-            w = Math.floor(w * 0.92);
-            h = Math.floor(h * 0.92);
-            canvas.width = w; canvas.height = h;
-            ctx.drawImage(img, 0, 0, w, h);
-            quality = 0.85;
-            out = await canvasToBlob(canvas, 'image/jpeg', quality);
-            while (out.size > maxBytes && quality > 0.08) {
-            quality = Math.max(0.08, quality - 0.07);
-            out = await canvasToBlob(canvas, 'image/jpeg', quality);
-            }
-        }
-
-        return out;
-        } catch (e) {
-        warn('compressBlobToLimit failed — returning original blob', e);
-        return blob;
-        }
-    }
-
-    // create a thumbnail in #image_preview and add a remove button
-    function addThumbnail(blob, filename) {
-        if (!previewWrap) return;
-        const url = URL.createObjectURL(blob);
-        const container = document.createElement('div');
-        container.className = 'thumb';
-        container.style = 'display:inline-block;margin:6px;position:relative;';
-        container.dataset.filename = filename;
-        container.innerHTML = `
-        <img src="${url}" alt="${filename}" style="width:120px;height:90px;object-fit:cover;border-radius:6px;border:1px solid #ddd;">
-        <div class="remove-btn" title="Remove" style="position:absolute;right:6px;top:6px;background:rgba(0,0,0,0.6);color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;cursor:pointer;font-size:12px;">&times;</div>
-        <div style="font-size:11px;margin-top:4px;text-align:center;">${Math.round((blob.size||0)/1024)} KB</div>
-        `;
-        previewWrap.prepend(container);
-
-        const removeEl = container.querySelector('.remove-btn');
-        removeEl.addEventListener('click', () => {
-        // remove from DOM
-        container.remove();
-        // remove from filesCapture input (if present)
-        if (filesCaptureInput) removeFileFromInputByName(filesCaptureInput, filename);
-        // also remove from fallback store if present
-        if (window.__capturedFilesFallback && window.__capturedFilesFallback.length) {
-            window.__capturedFilesFallback = window.__capturedFilesFallback.filter(f => f.name !== filename);
-        }
-        });
-
-        // revoke blob url eventually
-        setTimeout(() => URL.revokeObjectURL(url), 60 * 1000);
-    }
-
-    // append a File object to an input[type=file] using DataTransfer; returns true if worked.
-    function appendFileToInput(inputEl, file) {
-        if (!inputEl) {
-            // store in fallback
-            window.__capturedFilesFallback.push(file);
-            log('No input element; saved in fallback array');
-            return false;
-        }
-        try {
-            const dt = new DataTransfer();
-            // copy existing files
-            Array.from(inputEl.files || []).forEach(f => dt.items.add(f));
-            dt.items.add(file);
-            inputEl.files = dt.files;
-            log('Appended file to input.files', file.name);
-            return true;
-        } catch (e) {
-            warn('Could not append to input.files; storing in fallback', e);
-            window.__capturedFilesFallback.push(file);
-            return false;
-        }
-    }
-
-    // remove file from input's FileList by matching filename
-    function removeFileFromInputByName(inputEl, filename) {
-        if (!inputEl) return;
-        try {
-        const dt = new DataTransfer();
-        Array.from(inputEl.files || []).forEach(f => { if (f.name !== filename) dt.items.add(f); });
-        inputEl.files = dt.files;
-        log('Removed', filename, 'from input.files (if existed)');
-        } catch (e) { warn('removeFileFromInputByName failed', e); }
-    }
-
-    // small helper: wait until video has size
-    function waitForVideoReady(videoEl, timeout = 3000) {
-        return new Promise((resolve, reject) => {
-        if (videoEl.videoWidth && videoEl.videoHeight) return resolve();
-        let elapsed = 0;
-        const iv = 100;
-        const t = setInterval(() => {
-            elapsed += iv;
-            if (videoEl.videoWidth && videoEl.videoHeight) { clearInterval(t); resolve(); }
-            else if (elapsed >= timeout) { clearInterval(t); reject(new Error('Video not ready (timed out)')); }
-        }, iv);
-        });
-    }
-
-    // --- camera controls ---
-    async function startCamera() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('Camera not supported by this browser.');
-        return;
-        }
-        try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-        cameraPreview.srcObject = stream;
-        cameraPreview.style.display = 'block';
-        if (takeBtn) takeBtn.style.display = 'inline-block';
-        if (stopBtn) stopBtn.style.display = 'inline-block';
-        if (openBtn) openBtn.style.display = 'none';
-        } catch (e) {
-        fail('Unable to open camera', e);
-        }
-    }
-
-    function stopCamera() {
-        try {
-        if (stream) {
-            stream.getTracks().forEach(t => t.stop());
-            stream = null;
-        }
-        cameraPreview.style.display = 'none';
-        if (takeBtn) takeBtn.style.display = 'none';
-        if (stopBtn) stopBtn.style.display = 'none';
-        if (openBtn) openBtn.style.display = 'inline-block';
-        } catch (e) { warn('stopCamera error', e); }
-    }
-
-    // capture frame, compress, and attach to filesCapture input (no upload)
-    async function captureOnlyAttach() {
-        try {
-            if (!cameraPreview) throw new Error('cameraPreview element missing');
-            await waitForVideoReady(cameraPreview).catch(e => warn('video readiness wait failed (continuing):', e));
-
-            if (!cameraPreview.videoWidth || !cameraPreview.videoHeight) {
-                throw new Error('Camera frame not available yet - try waiting a second after opening camera.');
-            }
-
-            const canvas = document.createElement('canvas');
-            canvas.width = cameraPreview.videoWidth || 1280;
-            canvas.height = cameraPreview.videoHeight || 720;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) throw new Error('Could not get canvas 2D context');
-
-            ctx.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
-
-            let blob = await canvasToBlob(canvas, 'image/jpeg', 0.92);
-            if (!blob) throw new Error('canvasToBlob returned null');
-
-            blob = await compressBlobToLimit(blob, MAX_BYTES);
-
-            const filename = 'capture_' + Date.now() + '.jpg';
-            let file;
-            try {
-                file = new File([blob], filename, { type: blob.type });
-            } catch (e) {
-                // very old browsers may not support File constructor
-                file = blob;
-                file.name = filename;
-                warn('File() constructor not supported — using blob with .name');
-            }
-
-            // show thumb
-            addUnifiedThumbnail(blob, filename, file);
-
-            // attempt to add to input.files
-            appendFileToInput(filesCaptureInput, file);
-
-
-            Swal.fire({
-                position: "top",
-                icon: "success",
-                title: "Capture saved!",
-                showConfirmButton: false,
-                timer: 460
-            });
-
-        } catch (e) {
-            fail('Capture failed', e);
-        }
-    }
-
-    // wire events (defensive)
-    if (openBtn) openBtn.addEventListener('click', startCamera);
-    else warn('openCameraButton not found');
-
-    if (stopBtn) stopBtn.addEventListener('click', stopCamera);
-    else warn('stopCamera not found');
-
-    if (takeBtn) takeBtn.addEventListener('click', captureOnlyAttach);
-    else warn('takeCameraPhoto button not found');
-
-    // cleanup on unload
-    window.addEventListener('beforeunload', () => { if (stream) stopCamera(); });
-
-})();

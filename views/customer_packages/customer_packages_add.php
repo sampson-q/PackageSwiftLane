@@ -529,112 +529,53 @@ $categories   = $core->cdp_getCategoriesById(27);
                                         </div>
                                     </div>
 
-                                    <!-- ATTACHMENTS & CAMERA CAPTURE SECTION -->
+                                    <!-- FILE ATTACHMENT AND CAMERA CAPTURE SECTION (FROM OLD VERSION) -->
                                     <div class="row mt-4">
-                                        <div class="col-md-6">
-                                            <label class="control-label d-block" id="selectItem"><?php echo $lang['leftorder15']; ?></label>
-
-                                            <!-- FILE UPLOAD INPUT (hidden) -->
-                                            <input class="custom-file-input" id="filesMultiple" name="filesMultiple[]" multiple type="file"
-                                                style="display:none"
-                                                onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
-
-                                            <!-- BUTTONS ROW -->
-                                            <div class="btn-group mb-3" role="group">
-                                                <!-- Attach Files Button -->
-                                                <button type="button" id="openMultiFile" class="btn btn-default">
-                                                    <i class="fa fa-paperclip" style="font-size:18px; cursor:pointer;"></i>
-                                                    <?php echo $lang['leftorder16']; ?>
-                                                </button>
-
-                                                <!-- Camera Capture Button -->
-                                                <button type="button" id="openCameraCapture" class="btn btn-default ml-5" data-toggle="modal" data-target="#cameraCaptureModal">
-                                                    <i class="fa fa-camera" style="font-size:18px; cursor:pointer;"></i>
-                                                    Capture Photo
-                                                </button>
+                                        <div class="col-md-2">
+                                            <div>
+                                                <label class="control-label" id="selectItem"><?php echo $lang['leftorder15']; ?></label>
                                             </div>
 
-                                            <!-- IMAGE PREVIEW GRID -->
-                                            <div class="row" id="image_preview"></div>
+                                            <input class="custom-file-input" id="filesMultiple" name="filesMultiple[]" multiple="multiple" type="file" style="display: none;" onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
+                                            <button type="button" id="openMultiFile" class="btn btn-default pull-left mb-4"> <i class='fa fa-paperclip' style="font-size:18px; cursor:pointer;"></i> <?php echo $lang['leftorder16']; ?> </button>
+                                        </div>
 
-                                            <!-- CLEAR ALL FILES BUTTON -->
-                                            <div class="mt-2">
-                                                <div id="clean_files" class="hide">
-                                                    <button type="button" id="clean_file_button" class="ml-5 btn btn-danger">
-                                                        <i class="fa fa-trash" style="font-size:12px; cursor:pointer;"></i>
-                                                        <?php echo 'Clear Files'; ?>
-                                                    </button>
+                                        <div class="col-md-2">
+                                            <div>
+                                                <label class="control-label" id="captureItem"><?php echo $lang['leftorder90']; ?></label>
+                                            </div>
+
+                                            <button type="button" id="openCameraButton" class="btn btn-dark pull-left mb-4">
+                                                <i class="fa fa-camera" style="font-size:18px; cursor:pointer;"></i>
+                                                <?php echo $lang['leftorder90']; ?>
+                                            </button>
+
+                                            <div class="mt-2 d-flex align-items-start" style="gap:.5rem;">
+                                                <video id="cameraPreview" autoplay playsinline style="width:220px; height:165px; background:#000; display:none; border-radius:6px; object-fit:cover;"></video>
+
+                                                <div style="flex:1;">
+                                                    <div style="margin-bottom:.5rem;">
+                                                        <button type="button" id="takeCameraPhoto" class="btn btn-success btn-sm" style="display:none;"><?php echo $lang['left1105']; ?></button>
+                                                        <button type="button" id="stopCamera" class="btn btn-secondary btn-sm" style="display:none;"><?php echo $lang['left1111']; ?></button>
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <!-- FILE UPLOAD RESULTS -->
-                                            <div class="row">
-                                                <div class="resultados_file col-md-12 mt-3"></div>
-                                            </div>
+                                            <input class="custom-file-input" id="filesCapture" name="filesCapture[]" multiple="multiple" type="file" accept="image/*" capture="environment" style="display:none;" />
                                         </div>
                                     </div>
 
-                                    <!-- ============================================
-                                        CAMERA CAPTURE MODAL
-                                        ============================================ -->
-                                    <div class="modal fade" id="cameraCaptureModal" tabindex="-1" role="dialog" aria-labelledby="cameraCaptureModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog modal-lg" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="cameraCaptureModalLabel">
-                                                        <i class="fa fa-camera"></i> Capture Package Photo
-                                                    </h5>
-                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <!-- CAMERA STREAM -->
-                                                    <div id="cameraContainer" class="text-center mb-3" style="display:none;">
-                                                        <video id="cameraStream" autoplay playsinline width="100%" style="max-width: 500px; border-radius: 0.5rem; border: 2px solid #007bff;"></video>
-                                                    </div>
+                                    <div class="col-md-12 row" id="image_preview"></div>
 
-                                                    <!-- LOADING MESSAGE -->
-                                                    <div id="cameraLoading" class="alert alert-info text-center">
-                                                        <i class="fa fa-spinner fa-spin"></i> Initializing camera...
-                                                    </div>
-
-                                                    <!-- ERROR MESSAGE -->
-                                                    <div id="cameraError" class="alert alert-danger" style="display:none;">
-                                                        <strong>Camera Error:</strong> <span id="cameraErrorText"></span>
-                                                    </div>
-
-                                                    <!-- PREVIEW OF CAPTURED IMAGE -->
-                                                    <div id="capturedPreview" class="text-center mb-3" style="display:none;">
-                                                        <img id="capturedImage" src="" style="max-width: 100%; max-height: 400px; border-radius: 0.5rem;">
-                                                    </div>
-
-                                                    <!-- CAMERA CONTROLS -->
-                                                    <div id="cameraControls" class="text-center" style="display:none;">
-                                                        <button type="button" id="capturePhotoBtn" class="btn btn-success mr-2">
-                                                            <i class="fa fa-camera"></i> Capture Photo
-                                                        </button>
-                                                        <button type="button" id="clearCapturedBtn" class="btn btn-warning mr-2" style="display:none;">
-                                                            <i class="fa fa-refresh"></i> Clear
-                                                        </button>
-                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                                                            Close
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" id="addCapturedPhotoBtn" class="btn btn-primary" style="display:none;">
-                                                        <i class="fa fa-plus"></i> Add Photo to Package
-                                                    </button>
-                                                </div>
-                                            </div>
+                                    <div class="col-md-4 mt-4">
+                                        <div id="clean_files" class="hide">
+                                            <button type="button" id="clean_file_button" class="btn btn-danger ml-3"> <i class='fa fa-trash' style="font-size:18px; cursor:pointer;"></i> <?php echo $lang['leftorder17']; ?> </button>
                                         </div>
                                     </div>
 
-                                    <!-- ============================================
-                                        HIDDEN CANVAS FOR IMAGE CAPTURE
-                                        ============================================ -->
-                                    <canvas id="captureCanvas" style="display:none;"></canvas>
+                                    <div class="row">
+                                        <div class="resultados_file col-md-4 pull-right mt-4"></div>
+                                    </div>
 
                                 </div><!-- card-body -->
                             </div><!-- card -->
@@ -841,10 +782,6 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                     <!-- Botones -->
                                                     <div class="row mt-3">
                                                         <div class="col-12 text-right">
-                                                            <!-- <button type="button" name="calculate_invoice" id="calculate_invoice" class="btn btn-info">
-                                                                <i class="fas fa-calculator"></i>
-                                                                <span class="ml-1"><?php echo $lang['leftorder17714']; ?></span>
-                                                            </button> -->
                                                             <button type="submit" name="create_invoice" id="create_invoice" class="btn btn-danger">
                                                                 <i class="fas fa-save"></i>
                                                                 <span class="ml-1"><?php echo $lang['left1103'] ?></span>
@@ -896,7 +833,5 @@ $categories   = $core->cdp_getCategoriesById(27);
 
     <!-- Tu automatización -->
     <script src="dataJs/customers_packages_add.js"></script>
-    <!-- Camera Capture Module -->
-    <script src="dataJs/courier_camera.js"></script>
 </body>
 </html>
