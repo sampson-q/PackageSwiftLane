@@ -82,7 +82,7 @@ $address_order = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_courier_com where id= '" . $row_order->order_courier . "'");
 $courier_com = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_category where id= '" . $row_order->order_item_category . "'");
+$db->cdp_query("SELECT * FROM cdb_category where id = 27");
 $category = $db->cdp_registro();
 
 // $db->cdp_query("SELECT * FROM cdb_shipping_mode where id= '" . $row_order->order_service_options . "'");

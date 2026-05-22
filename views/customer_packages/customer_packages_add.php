@@ -51,7 +51,7 @@ $sql = "SELECT * FROM cdb_settings";
 $db->cdp_query($sql);
 $db->cdp_execute();
 $settings = $db->cdp_registro();
-$order_prefix = $settings->prefix;
+$order_prefix = $settings->prefix_online_shopping;
 
 // Catálogos
 $verifylocker = $core->cdp_verifylockers();
@@ -347,7 +347,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                     <!-- Bloque Modo de envío / millas / tiempo / pago -->
                                     <div class="rate-box mb-3">
                                         <div class="form-row">
-                                            <!-- <div class="form-group col-md-3">
+                                        <div class="form-group col-md-3" style="display: none;">
                                                 <label class="control-label col-form-label mb-1"><?php echo isset($lang['add-title22']) ? $lang['add-title22'] : 'Modo de envío'; ?></label>
                                                 <select class="select2 form-control custom-select" id="order_service_options" name="order_service_options" required style="width:100%" disabled>
                                                     <option value="<?php echo $s_logistics->id; ?>"><?php echo htmlspecialchars($s_logistics->name_item); ?></option>
@@ -360,7 +360,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                 <input type="hidden" id="rate_provider" name="rate_provider" value="internal">
                                             </div>
 
-                                            <div class="form-group col-md-3">
+                                            <!--<div class="form-group col-md-3">
                                                 <label class="control-label col-form-label mb-1">Distancia (millas) (opcional)</label>
                                                 <input type="text" class="form-control" id="distance_miles" name="distance_miles"
                                                        value="0" onkeypress="return isNumberKey(event, this)">
@@ -468,15 +468,25 @@ $categories   = $core->cdp_getCategoriesById(27);
     
                                             <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label"><?php echo '# Tracking' ?></label>
-                                                <input type='text' class="form-control" id="tracking_number" name="tracking_number" placeholder="# Tracking" />
+                                                <input type='text' class="form-control" id="tracking_purchase" name="tracking_purchase" placeholder="# Tracking" />
                                             </div>
                                             
                                             <div class="form-group col-md-3">
-                                                <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
-                                                <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" />
+                                                <label class="control-label col-form-label"><?php echo $lang['left64'] ?></label>
+                                                <input type="text" class="form-control" name="provider_purchase" id="provider_purchase" placeholder="<?php echo $lang['left65'] ?>">
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label for="sum2"><?php echo $lang['left66']; ?></label>
+                                                    <input onkeypress="return isNumberKey(event, this)" type="text" class="form-control" name="price_purchase" id="price_purchase" placeholder="<?php echo $lang['left67'] ?>">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+
 
                                     <!-- Tabla de paquetes -->
                                      <div class="text-md-right">
@@ -538,7 +548,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                 </button>
 
                                                 <!-- Camera Capture Button -->
-                                                <button type="button" id="openCameraCapture" class="btn btn-default" data-toggle="modal" data-target="#cameraCaptureModal">
+                                                <button type="button" id="openCameraCapture" class="btn btn-default ml-5" data-toggle="modal" data-target="#cameraCaptureModal">
                                                     <i class="fa fa-camera" style="font-size:18px; cursor:pointer;"></i>
                                                     Capture Photo
                                                 </button>

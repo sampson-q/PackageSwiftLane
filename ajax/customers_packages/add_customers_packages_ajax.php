@@ -141,12 +141,12 @@ if (empty($errors)) {
         'is_prealert' =>  $is_prealert,
         'volumetric_percentage' =>  $meter,
 
-        'recipient_id'          => (int)($_POST['recipient_id'] ?? 0),
-        'recipient_address_id'  => (int)($_POST['recipient_address_id'] ?? 0),
-        'order_payment_method'  => (int)($_POST['order_payment_method'] ?? 0),
-        'tracking_number'       => sanitize($_POST['tracking_number'] ?? ''),
-        'estimated_eta'         => sanitize($_POST['estimated_eta'] ?? null),
-        'notify_whatsapp_sender' => (int)($_POST['notify_whatsapp_sender'] ?? 0),
+        'recipient_id'          => (int)(cdp_sanitize($_POST['recipient_id'] ?? 0)),
+        'recipient_address_id'  => (int)(cdp_sanitize($_POST['recipient_address_id'] ?? 0)),
+        'order_payment_method'  => (int)(cdp_sanitize($_POST['order_payment_method'] ?? 0)),
+        'tracking_number'       => cdp_sanitize($_POST['tracking_number'] ?? ''),
+        'estimated_eta'         => cdp_sanitize($_POST['estimated_eta'] ?? null),
+        'notify_whatsapp_sender' => (int)(cdp_sanitize($_POST['notify_whatsapp_sender'] ?? 0)),
     );
 
     $shipment_id = cdp_insertCustomerPackages($dataShipment);

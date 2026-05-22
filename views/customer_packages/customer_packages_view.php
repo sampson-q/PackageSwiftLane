@@ -73,10 +73,10 @@ $db->cdp_query("SELECT * FROM cdb_courier_com where id= '" . $row_order->order_c
 $courier_com = $db->cdp_registro();
 
 
-$db->cdp_query("SELECT * FROM cdb_category where id= '" . $row_order->order_item_category . "'");
+$db->cdp_query("SELECT * FROM cdb_category where id = 26");
 $category = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_shipping_mode where id= '" . $row_order->order_service_options . "'");
+$db->cdp_query("SELECT * FROM cdb_shipping_mode where id = 8");
 $order_service_options = $db->cdp_registro();
 
 $db->cdp_query("SELECT * FROM cdb_packaging where id= '" . $row_order->order_package . "'");
@@ -349,8 +349,6 @@ if ($row_order->status_invoice == 1) {
                                             <p class="text-muted  m-l-5"><?php if ($branchoffices != null) {
                                                                                 echo $branchoffices->name_branch;
                                                                             } ?></p>
-
-
                                         </div>
 
                                     </div>
@@ -382,10 +380,6 @@ if ($row_order->status_invoice == 1) {
 
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
-                                            <h5> &nbsp;<b><?php echo $lang['track-shipment19'] ?></b></h5>
-
-                                            <p class="text-muted  m-l-5"><?php echo $meses_[$mes] . ' ' . $dia . ', ' . $anio; ?></p>
-
                                             <h5> &nbsp;<b><?php echo $lang['langs_034'] ?></b></h5>
 
                                             <p class="text-muted  m-l-5"><?php if ($delivery_time != null) {
@@ -399,10 +393,7 @@ if ($row_order->status_invoice == 1) {
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['leftorder37'] ?></b></h5>
                                             <p class="text-muted  m-l-5"><?php echo $packaging->name_pack; ?></p>
-                                            <h5> &nbsp;<b><?php echo $lang['leftorder48'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php if ($order_service_options != null) {
-                                                                                echo $order_service_options->ship_mode;
-                                                                            } ?></p>
+                                            
                                         </div>
 
                                     </div>

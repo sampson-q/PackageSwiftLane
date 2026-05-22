@@ -1031,6 +1031,9 @@ $("#invoice_form").on("submit", function (event) {
   var order_package       = $("#order_package").val();
   var order_date          = $("#order_date").val();
   var order_deli_time     = $("#order_deli_time").val();
+  var provider_purchase = $("#provider_purchase").val();
+  var price_purchase = $("#price_purchase").val();
+  var tracking_purchase = $("#tracking_purchase").val();
   var order_pay_mode      = $("#order_pay_mode").val();
   var order_payment_method= $("#order_payment_method").val();
   var status_courier      = $("#status_courier").val();
@@ -1073,6 +1076,9 @@ $("#invoice_form").on("submit", function (event) {
   if (order_package)        data.append("order_package", order_package);
   if (order_date)           data.append("order_date", order_date);
   if (order_deli_time)      data.append("order_deli_time", order_deli_time);
+  if (provider_purchase)     data.append("provider_purchase", provider_purchase);
+  if (price_purchase)        data.append("price_purchase", price_purchase);
+  if (tracking_purchase)     data.append("tracking_purchase", tracking_purchase);
   if (order_pay_mode)       data.append("order_pay_mode", order_pay_mode);
   if (order_payment_method) data.append("order_payment_method", order_payment_method);
   if (status_courier)       data.append("status_courier", status_courier);
@@ -1130,7 +1136,7 @@ $("#invoice_form").on("submit", function (event) {
 
   $.ajax({
     type: "POST",
-    url: "ajax/courier/add_courier_ajax.php",
+    url: "ajax/customers_packages/add_customers_packages_ajax.php",
     data: data,
     contentType: false,
     dataType: "json",
@@ -1250,7 +1256,7 @@ function cdp_showSuccess(message, shipment_id) {
   }).then(function (result) {
     if (result.isConfirmed) {
       setTimeout(function () {
-        window.location = "courier_view.php?id=" + shipment_id;
+        window.location = "customer_packages_view.php?id=" + shipment_id;
       }, 2000);
     }
   });
@@ -1341,6 +1347,29 @@ function resetPhones() {
     errorMsgRecipient.classList.add("hide");
   }
   if (validMsgRecipient) validMsgRecipient.classList.add("hide");
+}
+
+function cdp_validateTrackNumber(value, trackDigits) {
+  cdp_convertStrPad(value, trackDigits);
+
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    url: "./ajax/validate_track_number_customer_package.php?track=" + value,
+    success: function (data) {
+      var main = $("#order_no_main").val();
+
+      if (data) {
+        alert(message_error_exist_tracking);
+        $("#order_no").val(main);
+      }
+    },
+  });
+}
+
+function cdp_convertStrPad(value, dbDigits) {
+  var pad = value.padStart(dbDigits, "0");
+  $("#order_no").val(pad);
 }
 
 (() => {
