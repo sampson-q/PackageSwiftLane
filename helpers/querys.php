@@ -6627,6 +6627,8 @@ function cdp_insertCustomerPackages($datos)
         order_date,
         sender_id,
         sender_address_id,
+        recipient_id,
+        recipient_address_id,
         volumetric_percentage,
         order_datetime,
         agency,
@@ -6640,8 +6642,12 @@ function cdp_insertCustomerPackages($datos)
         driver_id,
         status_invoice,
         tracking_purchase,
+        tracking_number,
+        estimated_eta,
         provider_purchase,
         price_purchase,
+        order_payment_method,
+        notify_whatsapp_sender,
         is_prealert
         )
     VALUES
@@ -6652,6 +6658,8 @@ function cdp_insertCustomerPackages($datos)
         :order_date,
         :sender_id,
         :sender_address_id,
+        :recipient_id,
+        :recipient_address_id,
         :volumetric_percentage,
         :order_datetime,
         :agency,
@@ -6665,21 +6673,27 @@ function cdp_insertCustomerPackages($datos)
         :driver_id,
         :status_invoice,
         :tracking_purchase,
+        :tracking_number,
+        :estimated_eta,
         :provider_purchase,
         :price_purchase,
+        :order_payment_method,
+        :notify_whatsapp_sender,
         :is_prealert
         )
 ");
 
+    // wxisting bindings
+    $db->bind(':user_id',  $datos['user_id']);
     $db->bind(':order_prefix',  $datos['order_prefix']);
     $db->bind(':order_no', $datos["order_no"]);
     $db->bind(':agency',  $datos["agency"]);
     $db->bind(':origin_off',  $datos["origin_off"]);
     $db->bind(':sender_id',  $datos["sender_id"]);
     $db->bind(':sender_address_id',  $datos["sender_address_id"]);
-    $db->bind(':tracking_purchase',  $datos["tracking_purchase"]);
-    $db->bind(':provider_purchase',  $datos["provider_purchase"]);
-    $db->bind(':price_purchase',  $datos["price_purchase"]);
+    $db->bind(':tracking_purchase',  $datos["tracking_purchase"] ?? null);
+    $db->bind(':provider_purchase',  $datos["provider_purchase"] ?? null);
+    $db->bind(':price_purchase',  $datos["price_purchase"] ?? null);
     $db->bind(':order_item_category',  $datos["order_item_category"]);
     $db->bind(':order_courier',  $datos["order_courier"]);
     $db->bind(':order_service_options',  $datos["order_service_options"]);
@@ -6691,8 +6705,15 @@ function cdp_insertCustomerPackages($datos)
     $db->bind(':order_package',  $datos["order_package"]);
     $db->bind(':status_invoice',   $datos["status_invoice"]);
     $db->bind(':volumetric_percentage',   $datos["volumetric_percentage"]);
-    $db->bind(':user_id',  $datos['user_id']);
-    $db->bind(':is_prealert',  $datos['is_prealert']);
+    $db->bind(':is_prealert',  $datos['is_prealert'] ?? 0);
+
+    // new bindings for recipient and tracking details
+    $db->bind(':recipient_id',  $datos["recipient_id"] ?? null);
+    $db->bind(':recipient_address_id',  $datos["recipient_address_id"] ?? null);
+    $db->bind(':order_payment_method',  $datos["order_payment_method"] ?? null);
+    $db->bind(':tracking_number',  $datos["tracking_number"] ?? null);
+    $db->bind(':estimated_eta',  $datos["estimated_eta"] ?? null);
+    $db->bind(':notify_whatsapp_sender',  $datos["notify_whatsapp_sender"] ?? 0);
 
     $db->cdp_execute();
     return $db->dbh->lastInsertId();
