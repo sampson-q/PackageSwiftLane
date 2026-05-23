@@ -1,8 +1,10 @@
 "use strict";
 
 var deleted_file_ids = [];
-
 var packagesItems = [];
+
+// Recipient type state (must mirror add flow)
+window.recipient_type = window.recipient_type || "recipient";
 
 function getShipment() {
   var order_id = $("#order_id").val();
@@ -11,7 +13,7 @@ function getShipment() {
     url: "ajax/customers_packages/get_data_customers_packages_edit_ajax.php?id=" + order_id,
     dataType: "json",
     success: function (datos) {
-      packagesItems = datos;
+      packagesItems = datos || [];
       loadPackages();
       calculateFinalTotal();
     },
@@ -20,21 +22,24 @@ function getShipment() {
 
 $(function () {
   getShipment();
+
+  // Unified preload of existing DB files
   preloadExistingFilesFromDom();
 
-  $("#order_date").datepicker({
-    format: "yyyy-mm-dd",
-    autoclose: true,
-  });
+  // Datepicker (if present)
+  if ($("#order_date").length && typeof $("#order_date").datepicker === "function") {
+    $("#order_date").datepicker({
+      format: "yyyy-mm-dd",
+      autoclose: true,
+    });
+  }
 
   $("#register_customer_to_user").click(function () {
-    if ($(this).is(":checked")) {
-      $("#show_hide_user_inputs").removeClass("d-none");
-    } else {
-      $("#show_hide_user_inputs").addClass("d-none");
-    }
+    if ($(this).is(":checked")) $("#show_hide_user_inputs").removeClass("d-none");
+    else $("#show_hide_user_inputs").addClass("d-none");
   });
 
+  // Sender modal selects
   cdp_load_countries("_modal_user");
   cdp_load_states("_modal_user");
   cdp_load_cities("_modal_user");
@@ -43,42 +48,55 @@ $(function () {
   cdp_load_states("_modal_user_address");
   cdp_load_cities("_modal_user_address");
 
+  // Recipient modal selects (mirror add)
+  cdp_load_countries("_modal_recipient");
+  cdp_load_states("_modal_recipient");
+  cdp_load_cities("_modal_recipient");
+
+  cdp_load_countries("_modal_recipient_address");
+  cdp_load_states("_modal_recipient_address");
+  cdp_load_cities("_modal_recipient_address");
+
+  // Init Select2 (mirror add: sender + sender address + recipient + recipient address)
   cdp_select2_init_sender();
   cdp_select2_init_sender_address();
+  cdp_select2_init_recipient();
+  cdp_select2_init_recipient_address();
+
+  // Prefill from hidden inputs without disabling/invisibility issues
+  prefillSenderRecipientFromHiddenInputs();
+
+  // Make sure attach label state is correct
+  updateFileLabels();
+  checkShowCleanButton();
 });
 
+/* ==========================
+   Country/State/City Select2
+   ========================== */
 function cdp_load_countries(modal) {
   $("#country" + modal)
     .select2({
       ajax: {
         url: "ajax/select2_countries.php",
         dataType: "json",
-
         delay: 250,
         data: function (params) {
-          return {
-            q: params.term, // search term
-          };
+          return { q: params.term };
         },
         processResults: function (data) {
-          return {
-            results: data,
-          };
+          return { results: data };
         },
         cache: true,
       },
       placeholder: translate_search_country,
       allowClear: true,
     })
-    .on("change", function (e) {
+    .on("change", function () {
       var country = $("#country" + modal).val();
 
-      $("#state" + modal).attr("disabled", true);
-      $("#state" + modal).val(null);
-
-      if (country != null) {
-        $("#state" + modal).attr("disabled", false);
-      }
+      $("#state" + modal).attr("disabled", true).val(null).trigger("change");
+      if (country != null) $("#state" + modal).attr("disabled", false);
 
       cdp_load_states(modal);
     });
@@ -92,32 +110,23 @@ function cdp_load_states(modal) {
       ajax: {
         url: "ajax/select2_states.php?id=" + country,
         dataType: "json",
-
         delay: 250,
         data: function (params) {
-          return {
-            q: params.term, // search term
-          };
+          return { q: params.term };
         },
         processResults: function (data) {
-          return {
-            results: data,
-          };
+          return { results: data };
         },
         cache: true,
       },
       placeholder: translate_search_state,
       allowClear: true,
     })
-    .on("change", function (e) {
+    .on("change", function () {
       var state = $("#state" + modal).val();
 
-      $("#city" + modal).attr("disabled", true);
-      $("#city" + modal).val(null);
-
-      if (state != null) {
-        $("#city" + modal).attr("disabled", false);
-      }
+      $("#city" + modal).attr("disabled", true).val(null).trigger("change");
+      if (state != null) $("#city" + modal).attr("disabled", false);
 
       cdp_load_cities(modal);
     });
@@ -132,14 +141,10 @@ function cdp_load_cities(modal) {
       dataType: "json",
       delay: 250,
       data: function (params) {
-        return {
-          q: params.term, // search term
-        };
+        return { q: params.term };
       },
       processResults: function (data) {
-        return {
-          results: data,
-        };
+        return { results: data };
       },
       cache: true,
     },
@@ -148,14 +153,24 @@ function cdp_load_cities(modal) {
   });
 }
 
+/* ==========================
+   Existing DB files deletion
+   ========================== */
 function cdp_deleteImgAttached(id) {
   // EDIT MODE: do NOT delete immediately on the server.
-  // Mirror add flow behavior: mark for deletion, remove from UI, submit will delete transactionally.
+  // Mark for deletion, remove from UI, and submit will delete transactionally.
   id = parseInt(id, 10);
   if (!id) return;
 
   var current = ($("#deleted_db_file_ids").val() || "").trim();
-  var ids = current ? current.split(",").map(function (x) { return parseInt(x, 10); }).filter(Boolean) : [];
+  var ids = current
+    ? current
+        .split(",")
+        .map(function (x) {
+          return parseInt(x, 10);
+        })
+        .filter(Boolean)
+    : [];
 
   if (ids.indexOf(id) === -1) ids.push(id);
 
@@ -169,6 +184,9 @@ function cdp_deleteImgAttached(id) {
   checkShowCleanButton();
 }
 
+/* ==========================
+   Unified previews
+   ========================== */
 function cdp_preview_images() {
   var input = document.getElementById("filesMultiple");
   if (!input) return;
@@ -177,9 +195,11 @@ function cdp_preview_images() {
   var previewWrap = document.getElementById("image_preview");
   if (!previewWrap) return;
 
-  // Remove only previously uploaded thumbnails, not captured ones and not preloaded existing ones
+  // Remove only new upload thumbnails, not captured and not existing preloaded
   var existingUploads = previewWrap.querySelectorAll('.file-thumb[data-type="upload"]');
-  existingUploads.forEach(function (el) { el.remove(); });
+  existingUploads.forEach(function (el) {
+    el.remove();
+  });
 
   files.forEach(function (file) {
     var mimeRoot = (file.type || "").split("/")[0];
@@ -211,18 +231,27 @@ function addUnifiedThumbnail(blob, filename, originalFile, fileType) {
   container.dataset.filename = filename;
   container.dataset.type = fileType;
 
-  container.style.cssText = "display:inline-block;margin:6px;position:relative;width:130px;vertical-align:top;";
+  container.style.cssText =
+    "display:inline-block;margin:6px;position:relative;width:130px;vertical-align:top;";
 
   var sizeKB = Math.round(((originalFile && originalFile.size) || blob.size || 0) / 1024);
 
   container.innerHTML =
     '<div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid #ddd;background:#fff;">' +
-    '  <img src="' + url + '" alt="' + filename + '" style="width:130px;height:100px;object-fit:cover;display:block;">' +
+    '  <img src="' +
+    url +
+    '" alt="' +
+    filename +
+    '" style="width:130px;height:100px;object-fit:cover;display:block;">' +
     '  <button type="button" class="remove-preview-btn" ' +
     '    style="position:absolute;top:6px;right:6px;width:24px;height:24px;border:none;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;cursor:pointer;font-size:14px;line-height:24px;">×</button>' +
     "</div>" +
-    '<div style="font-size:11px;margin-top:5px;text-align:center;word-break:break-word;">' + filename + "</div>" +
-    '<div style="font-size:10px;color:#666;text-align:center;">' + sizeKB + " KB</div>";
+    '<div style="font-size:11px;margin-top:5px;text-align:center;word-break:break-word;">' +
+    filename +
+    "</div>" +
+    '<div style="font-size:10px;color:#666;text-align:center;">' +
+    sizeKB +
+    " KB</div>";
 
   previewWrap.prepend(container);
 
@@ -253,7 +282,9 @@ function addUnifiedThumbnail(blob, filename, originalFile, fileType) {
   });
 
   if (isRealImage) {
-    setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+    setTimeout(function () {
+      URL.revokeObjectURL(url);
+    }, 60000);
   }
 }
 
@@ -267,8 +298,10 @@ function updateFileLabels() {
   if (totalAttach > 0) $("#selectItem").html("attached files (" + totalAttach + ")");
   else $("#selectItem").html("attached files");
 
-  if (cameraCount > 0) $("#captureItem").html("camera captures (" + cameraCount + ")");
-  else $("#captureItem").html("camera captures");
+  if ($("#captureItem").length) {
+    if (cameraCount > 0) $("#captureItem").html("camera captures (" + cameraCount + ")");
+    else $("#captureItem").html("camera captures");
+  }
 }
 
 function checkShowCleanButton() {
@@ -290,182 +323,117 @@ function removeFileFromInputByName(inputEl, filename) {
   }
 }
 
-function cdp_deletePreviewImage(index) {
-  deleted_file_ids.push(index);
-
-  $("#deleted_file_ids").val(deleted_file_ids);
-
-  $("#image_" + index).remove();
-
-  var count_files = $("#total_item_files").val();
-
-  count_files--;
-
-  $("#total_item_files").val(count_files);
-
-  if (count_files > 0) {
-    $("#clean_files").removeClass("hide");
-  } else {
-    $("#clean_files").addClass("hide");
-  }
-
-  $("#selectItem").html("attached files (" + count_files + ")");
-
-  var deleted_file = $("#deleted_file_ids").val();
-}
-
-function cdp_validateZiseFiles() {
-  var inputFile = document.getElementById("filesMultiple");
-  var file = inputFile.files;
-
-  var size = 0;
-
-  for (var i = 0; i < file.length; i++) {
-    var filesSize = file[i].size;
-
-    if (size > 5242880) {
-      $(".resultados_file").html(
-        "<div class='alert alert-danger'>" +
-          "<button type='button' class='close' data-dismiss='alert'>&times;</button>" +
-          "<strong>" +
-          validation_files_size +
-          " </strong>" +
-          "</div>"
-      );
-
-      $("#filesMultiple").val("");
-      $("#clean_files").addClass("hide");
-      $("#image_preview").html("");
-    } else {
-      $(".resultados_file").html("");
-    }
-
-    size += filesSize;
-  }
-
-  if (size > 5242880) {
-    $(".resultados_file").html(
-      "<div class='alert alert-danger'>" +
-        "<button type='button' class='close' data-dismiss='alert'>&times;</button>" +
-        "<strong>" +
-        validation_files_size +
-        " </strong>" +
-        "</div>"
-    );
-
-    $("#filesMultiple").val("");
-    $("#clean_files").addClass("hide");
-    $("#image_preview").html("");
-    return true;
-  } else {
-    $(".resultados_file").html("");
-
-    return false;
-  }
-}
-
+/* ==========================
+   File input controls
+   ========================== */
 $("#openMultiFile").on("click", function () {
   $("#filesMultiple").click();
 });
 
 $("#clean_file_button").on("click", function () {
   $("#filesMultiple").val("");
+  $("#filesCapture").val("");
 
   $("#selectItem").html("Attach files");
+  if ($("#captureItem").length) $("#captureItem").html("camera captures");
 
   $("#clean_files").addClass("hide");
   $("#image_preview").html("");
   $(".resultados_file").html("");
+
+  deleted_file_ids = [];
+  $("#deleted_file_ids").val("");
+  $("#deleted_db_file_ids").val("");
+
+  updateFileLabels();
+  checkShowCleanButton();
 });
 
 $("input[type=file]").on("change", function () {
   deleted_file_ids = [];
 
   var inputFile = document.getElementById("filesMultiple");
-  var file = inputFile.files;
-  console.log(file);
+  var file = inputFile ? inputFile.files : [];
   var contador = 0;
-  for (var i = 0; i < file.length; i++) {
-    contador++;
-  }
+
+  for (var i = 0; i < (file ? file.length : 0); i++) contador++;
+
   $("#total_item_files").val(contador);
 
   var count_files = $("#total_item_files").val();
-
-  if (count_files > 0) {
-    $("#clean_files").removeClass("hide");
-  } else {
-    $("#clean_files").addClass("hide");
-  }
+  if (count_files > 0) $("#clean_files").removeClass("hide");
+  else $("#clean_files").addClass("hide");
 
   $("#selectItem").html("attached files (" + count_files + ")");
+
+  // update preview thumbnails
+  cdp_preview_images();
 });
 
+/* ==========================
+   Packages UI
+   ========================== */
 function loadPackages() {
   $("#data_items").html("");
-  packagesItems.forEach(function (item, index) {
+
+  (packagesItems || []).forEach(function (item, index) {
     var html_code = "";
-    html_code += '<div  class= "card-hover" id="row_id_' + index + '">';
+    html_code += '<div class="card-hover" id="row_id_' + index + '">';
     html_code += "<hr>";
     html_code += '<div class="row"> ';
+
     html_code +=
       '<div class="col-sm-12 col-md-6 col-lg-1">' +
       '<div class="form-group">' +
-      '<label for="emailAddress1"> ' +
+      "<label> " +
       translate_quantity +
       "</label>" +
       '<div class="input-group">' +
       '<input type="text" onchange="changePackage(this)" value="' +
       item.qty +
-      '" onkeypress="return isNumberKey(event, this)"  name="qty" id="qty_' +
+      '" onkeypress="return isNumberKey(event, this)" name="qty" id="qty_' +
       index +
-      '" class="form-control input-sm" data-toggle="tooltip" data-placement="bottom" title="' +
+      '" class="form-control input-sm" title="' +
       translate_quantity +
-      '"  value="1"  />' +
-      "</div>" +
-      "</div>" +
-      "</div>";
+      '" />' +
+      "</div></div></div>";
 
     html_code +=
       '<div class="col-sm-12 col-md-6 col-lg-3">' +
       '<div class="form-group">' +
-      '<label for="emailAddress1"> ' +
+      "<label> " +
       translate_description +
       "</label>" +
       '<div class="input-group">' +
       '<input type="text" onchange="changePackage(this)" value="' +
-      item.description +
+      (item.description || "") +
       '" name="description" id="description_' +
       index +
-      '" class="form-control input-sm" data-toggle="tooltip" data-placement="bottom" placeholder=" ' +
+      '" class="form-control input-sm" placeholder="' +
       translate_description +
-      '" >' +
-      "</div>" +
-      "</div>" +
-      "</div>";
+      '">' +
+      "</div></div></div>";
 
     html_code +=
       '<div class="col-sm-12 col-md-6 col-lg-1">' +
       '<div class="form-group">' +
-      '<label for="emailAddress1"> ' +
+      "<label> " +
       translate_weight +
       "</label>" +
       '<div class="input-group">' +
       '<input type="text" onchange="changePackage(this)" value="' +
       item.weight +
-      '" onkeypress="return isNumberKey(event, this)"  name="weight" id="weight_' +
+      '" onkeypress="return isNumberKey(event, this)" name="weight" id="weight_' +
       index +
-      '" class="form-control input-sm" style="border: 1px solid red;" data-toggle="tooltip" data-placement="bottom" title="' +
+      '" class="form-control input-sm" style="border: 1px solid red;" title="' +
       translate_weight +
       '"/>' +
-      "</div>" +
-      "</div>" +
-      "</div>";
+      "</div></div></div>";
 
     html_code +=
       '<div class="col-sm-12 col-md-6 col-lg-1">' +
       '<div class="form-group">' +
-      '<label for="emailAddress1"> ' +
+      "<label> " +
       translate_length +
       "</label>" +
       '<div class="input-group">' +
@@ -473,16 +441,15 @@ function loadPackages() {
       item.length +
       '" onkeypress="return isNumberKey(event, this)" name="length" id="length_' +
       index +
-      '" class="form-control input-sm text_only" data-toggle="tooltip" data-placement="bottom" title="' +
+      '" class="form-control input-sm" title="' +
       translate_length +
       '"/>' +
-      "</div>" +
-      "</div>" +
-      "</div>";
+      "</div></div></div>";
+
     html_code +=
       '<div class="col-sm-12 col-md-6 col-lg-1">' +
       '<div class="form-group">' +
-      '<label for="emailAddress1"> ' +
+      "<label> " +
       translate_width +
       "</label>" +
       '<div class="input-group">' +
@@ -490,98 +457,84 @@ function loadPackages() {
       item.width +
       '" onkeypress="return isNumberKey(event, this)" name="width" id="width_' +
       index +
-      '" class="form-control input-sm text_only" data-toggle="tooltip" data-placement="bottom" title="' +
+      '" class="form-control input-sm" title="' +
       translate_width +
       '"/>' +
-      "</div>" +
-      "</div>" +
-      "</div>";
+      "</div></div></div>";
 
     html_code +=
       '<div class="col-sm-12 col-md-6 col-lg-1">' +
       '<div class="form-group">' +
-      '<label for="emailAddress1"> ' +
+      "<label> " +
       translate_height +
       "</label>" +
       '<div class="input-group">' +
       '<input type="text" onchange="changePackage(this)" value="' +
       item.height +
-      '" onkeypress="return isNumberKey(event, this)"  name="height" id="height_' +
+      '" onkeypress="return isNumberKey(event, this)" name="height" id="height_' +
       index +
-      '" class="form-control input-sm number_only" data-toggle="tooltip" data-placement="bottom" title="' +
+      '" class="form-control input-sm" title="' +
       translate_height +
       '" />' +
-      "</div>" +
-      "</div>" +
-      "</div>";
+      "</div></div></div>";
 
     html_code +=
       '<div class="col-sm-12 col-md-6 col-lg-1">' +
       '<div class="form-group">' +
-      '<label for="emailAddress1"> ' +
+      "<label> " +
       translate_volweight +
       "</label>" +
       '<div class="input-group">' +
-      '<input type="text" readonly value="0" onkeypress="return isNumberKey(event, this)"  name="weightVol" id="weightVol_' +
+      '<input type="text" readonly value="0" name="weightVol" id="weightVol_' +
       index +
-      '" class="form-control input-sm number_only" data-toggle="tooltip" data-placement="bottom" title="' +
+      '" class="form-control input-sm" title="' +
       translate_volweight +
       '" />' +
-      "</div>" +
-      "</div>" +
-      "</div>";
+      "</div></div></div>";
 
     html_code +=
       '<div class="col-sm-12 col-md-6 col-lg-1">' +
       '<div class="form-group">' +
-      '<label for="emailAddress1"> ' +
+      "<label> " +
       translate_charge +
       "</label>" +
       '<div class="input-group">' +
       '<input type="text" onchange="changePackage(this)" value="' +
       item.fixed_value +
-      '" onkeypress="return isNumberKey(event, this)"  name="fixed_value" id="fixedValue_' +
+      '" onkeypress="return isNumberKey(event, this)" name="fixed_value" id="fixedValue_' +
       index +
-      '" class="form-control input-sm number_only" data-toggle="tooltip" data-placement="bottom" title="' +
+      '" class="form-control input-sm" title="' +
       translate_charge +
       '"/>' +
-      "</div>" +
-      "</div>" +
-      "</div>";
+      "</div></div></div>";
 
     html_code +=
       '<div class="col-sm-12 col-md-6 col-lg-1">' +
       '<div class="form-group">' +
-      '<label for="emailAddress1"> ' +
+      "<label> " +
       translate_declared +
       "</label>" +
       '<div class="input-group">' +
       '<input type="text" onchange="changePackage(this)" value="' +
       item.declared_value +
-      '" onkeypress="return isNumberKey(event, this)"  name="declared_value" id="declaredValue_' +
+      '" onkeypress="return isNumberKey(event, this)" name="declared_value" id="declaredValue_' +
       index +
-      '" class="form-control input-sm number_only" data-toggle="tooltip" data-placement="bottom" title="' +
+      '" class="form-control input-sm" title="' +
       translate_declared +
       '"/>' +
-      "</div>" +
-      "</div>" +
-      "</div>";
+      "</div></div></div>";
 
     if (index > 0) {
       html_code +=
         '<div class="col-sm-12 col-md-6 col-lg-1">' +
-        '<div class="form-group  mt-4">' +
-        '<button type="button"  onclick="deletePackage(' +
+        '<div class="form-group mt-4">' +
+        '<button type="button" onclick="deletePackage(' +
         index +
-        ')"  name="remove_rows"  class="btn btn-outline-danger "><i class="fa fa-trash"></i>   </button>' +
-        "</div>" +
-        "</div>";
+        ')" class="btn btn-outline-danger"><i class="fa fa-trash"></i></button>' +
+        "</div></div>";
     }
-    html_code += "</div>";
 
-    html_code += "<hr>";
-
-    html_code += "</div>";
+    html_code += "</div><hr></div>";
 
     $("#data_items").append(html_code);
   });
@@ -604,12 +557,7 @@ function addPackage() {
   loadPackages();
   calculateFinalTotal();
 
-  $("#row_id_" + index).animate(
-    {
-      backgroundColor: "#18BC9C",
-    },
-    400
-  );
+  $("#row_id_" + index).animate({ backgroundColor: "#18BC9C" }, 400);
 
   $("#add_row").attr("disabled", true);
 
@@ -620,13 +568,11 @@ function addPackage() {
 }
 
 function deletePackage(index) {
-  packagesItems = packagesItems.filter((item, i) => index !== i);
-  $("#row_id_" + index).animate(
-    {
-      backgroundColor: "#FFBFBF",
-    },
-    400
-  );
+  packagesItems = packagesItems.filter(function (item, i) {
+    return index !== i;
+  });
+
+  $("#row_id_" + index).animate({ backgroundColor: "#FFBFBF" }, 400);
 
   $("#row_id_" + index).fadeOut(400, function () {
     $("#row_id_" + index).remove();
@@ -638,7 +584,7 @@ function deletePackage(index) {
 function changePackage(e) {
   var field = e.id.split("_");
   packagesItems = packagesItems.map(function (item, index) {
-    if (index === parseInt(field[1])) {
+    if (index === parseInt(field[1], 10)) {
       item[e.name] = e.value;
     }
 
@@ -650,14 +596,15 @@ function changePackage(e) {
     }
     return item;
   });
+
   calculateFinalTotal();
 }
-function calculateFinalTotal(element = null) {
-  if (element) {
-    if (!element.value) {
-      $(element).val(0);
-    }
-  }
+
+/* ==========================
+   Totals
+   ========================== */
+function calculateFinalTotal(element) {
+  if (element && !element.value) $(element).val(0);
 
   var sumador_total = 0;
   var sumador_valor_declarado = 0;
@@ -665,7 +612,6 @@ function calculateFinalTotal(element = null) {
   var sumador_libras = 0;
   var sumador_volumetric = 0;
 
-  var precio_total = 0;
   var total_impuesto = 0;
   var total_descuento = 0;
   var total_seguro = 0;
@@ -673,46 +619,36 @@ function calculateFinalTotal(element = null) {
   var total_impuesto_aduanero = 0;
   var total_valor_declarado = 0;
 
-  var tariffs_value = $("#tariffs_value").val();
-  var declared_value_tax = $("#declared_value_tax").val();
-  var insurance_value = $("#insurance_value").val();
-  var tax_value = $("#tax_value").val();
-  var discount_value = $("#discount_value").val();
-  var reexpedicion_value = $("#reexpedicion_value").val();
-  var price_lb = $("#price_lb").val();
-  var insured_value = $("#insured_value").val();
-
-  reexpedicion_value = parseFloat(reexpedicion_value);
-  insured_value = parseFloat(insured_value);
-  price_lb = parseFloat(price_lb);
+  var tariffs_value = parseFloat($("#tariffs_value").val() || 0);
+  var declared_value_tax = parseFloat($("#declared_value_tax").val() || 0);
+  var insurance_value = parseFloat($("#insurance_value").val() || 0);
+  var tax_value = parseFloat($("#tax_value").val() || 0);
+  var discount_value = parseFloat($("#discount_value").val() || 0);
+  var reexpedicion_value = parseFloat($("#reexpedicion_value").val() || 0);
+  var price_lb = parseFloat($("#price_lb").val() || 0);
+  var insured_value = parseFloat($("#insured_value").val() || 0);
 
   packagesItems.forEach(function (item, i) {
-    var quantity = parseFloat(item.qty);
-    var description = parseFloat(item.description);
-    var weight = parseFloat(item.weight);
-    var length = parseFloat(item.length);
-    var width = parseFloat(item.width);
-    var height = parseFloat(item.height);
-    var fixed_value = parseFloat(item.fixed_value);
-    var declared_value = parseFloat(item.declared_value);
+    var weight = parseFloat(item.weight || 0);
+    var length = parseFloat(item.length || 0);
+    var width = parseFloat(item.width || 0);
+    var height = parseFloat(item.height || 0);
+    var fixed_value = parseFloat(item.fixed_value || 0);
+    var declared_value = parseFloat(item.declared_value || 0);
 
-    var core_meter = $("#core_meter").val();
-    var core_min_cost_tax = $("#core_min_cost_tax").val();
-    var core_min_cost_declared_tax = $("#core_min_cost_declared_tax").val();
+    var core_meter = parseFloat($("#core_meter").val() || 1);
+    var core_min_cost_tax = parseFloat($("#core_min_cost_tax").val() || 0);
+    var core_min_cost_declared_tax = parseFloat($("#core_min_cost_declared_tax").val() || 0);
 
     var total_metric = (length * width * height) / core_meter;
-    total_metric = parseFloat(total_metric);
+    total_metric = parseFloat(total_metric || 0);
 
     $("#weightVol_" + i).val(total_metric.toFixed(2));
 
     sumador_libras += weight;
     sumador_volumetric += total_metric;
 
-    if (sumador_libras > sumador_volumetric) {
-      var calculate_weight = sumador_libras;
-    } else {
-      var calculate_weight = sumador_volumetric;
-    }
+    var calculate_weight = sumador_libras > sumador_volumetric ? sumador_libras : sumador_volumetric;
 
     sumador_total = calculate_weight * price_lb;
     sumador_valor_declarado += declared_value;
@@ -732,6 +668,7 @@ function calculateFinalTotal(element = null) {
 
   total_seguro = (insured_value * insurance_value) / 100;
   total_impuesto_aduanero = (total_peso * tariffs_value) / 100;
+
   var total_envio =
     sumador_total -
     total_descuento +
@@ -753,15 +690,11 @@ function calculateFinalTotal(element = null) {
   }
 
   $("#subtotal").html(sumador_total.toFixed(2));
-  // $('#total_declared').html(sumador_valor_declarado);
   $("#discount").html(total_descuento.toFixed(2));
   $("#impuesto").html(total_impuesto.toFixed(2));
   $("#declared_value_label").html(total_valor_declarado.toFixed(2));
   $("#fixed_value_label").html(max_fixed_charge.toFixed(2));
   $("#insurance").html(total_seguro.toFixed(2));
-  // $('#total_libras').html(sumador_libras);
-  // $('#total_volumetrico').html(sumador_volumetric);
-  // $('#total_peso').html(total_peso);
   $("#total_impuesto_aduanero").html(total_impuesto_aduanero.toFixed(2));
   $("#total_envio").html(total_envio.toFixed(2));
   $("#total_weight").html(sumador_libras.toFixed(2));
@@ -770,48 +703,54 @@ function calculateFinalTotal(element = null) {
   $("#total_declared").html(sumador_valor_declarado.toFixed(2));
 }
 
+/* ==========================
+   Submit (mirror add: include recipient fields)
+   ========================== */
 $("#invoice_form").on("submit", function (event) {
-  if (cdp_validateZiseFiles() == true) {
+  event.preventDefault();
+
+  if (cdp_validateZiseFiles() === true) {
     alert("error files");
     return false;
   }
-  for (let [i, val] of packagesItems.entries()) {
-    if ($.trim($("#description_" + i).val()).length == 0) {
+
+  for (let [i] of packagesItems.entries()) {
+    if ($.trim($("#description_" + i).val()).length === 0) {
       alert(validation_description);
       $("#description_" + i).focus();
       return false;
     }
-    if ($.trim($("#qty_" + i).val()).length == 0) {
+    if ($.trim($("#qty_" + i).val()).length === 0) {
       alert(validation_quantity);
       $("#qty_" + i).focus();
       return false;
     }
-    if ($.trim($("#weight_" + i).val()).length == 0) {
+    if ($.trim($("#weight_" + i).val()).length === 0) {
       alert(validation_weight);
       $("#weight_" + i).focus();
       return false;
     }
-    if ($.trim($("#length_" + i).val()).length == 0) {
+    if ($.trim($("#length_" + i).val()).length === 0) {
       alert(validation_length);
       $("#length_" + i).focus();
       return false;
     }
-    if ($.trim($("#width_" + i).val()).length == 0) {
+    if ($.trim($("#width_" + i).val()).length === 0) {
       alert(validation_width);
       $("#width_" + i).focus();
       return false;
     }
-    if ($.trim($("#height_" + i).val()).length == 0) {
+    if ($.trim($("#height_" + i).val()).length === 0) {
       alert(validation_height);
       $("#height_" + i).focus();
       return false;
     }
-    if ($.trim($("#fixedValue_" + i).val()).length == 0) {
+    if ($.trim($("#fixedValue_" + i).val()).length === 0) {
       alert(validation_charge);
       $("#fixedValue_" + i).focus();
       return false;
     }
-    if ($.trim($("#declaredValue_" + i).val()).length == 0) {
+    if ($.trim($("#declaredValue_" + i).val()).length === 0) {
       alert(validation_declared);
       $("#declaredValue_" + i).focus();
       return false;
@@ -819,16 +758,23 @@ $("#invoice_form").on("submit", function (event) {
   }
 
   var notify_sms_sender = $("input:checkbox[name=notify_sms_sender]:checked").val();
+
   var agency = $("#agency").val();
   var origin_off = $("#origin_off").val();
+
   var sender_id = $("#sender_id").val();
   var sender_address_id = $("#sender_address_id").val();
+
+  var recipient_id = $("#recipient_id").val();
+  var recipient_address_id = $("#recipient_address_id").val();
+
   var order_item_category = $("#order_item_category").val();
   var order_courier = $("#order_courier").val();
   var order_service_options = $("#order_service_options").val();
   var order_package = $("#order_package").val();
   var order_date = $("#order_date").val();
   var order_deli_time = $("#order_deli_time").val();
+
   var provider_purchase = $("#provider_purchase").val();
   var price_purchase = $("#price_purchase").val();
   var tracking_purchase = $("#tracking_purchase").val();
@@ -840,115 +786,69 @@ $("#invoice_form").on("submit", function (event) {
   var price_lb = $("#price_lb").val();
   var insured_value = $("#insured_value").val();
   var insurance_value = $("#insurance_value").val();
-  var reexpedicion_value = $("#reexpedicion_value ").val();
+  var reexpedicion_value = $("#reexpedicion_value").val();
   var discount_value = $("#discount_value").val();
   var tax_value = $("#tax_value").val();
   var declared_value_tax = $("#declared_value_tax").val();
   var tariffs_value = $("#tariffs_value").val();
 
-  var deleted_file_ids = $("#deleted_file_ids").val();
+  var deleted_file_ids_val = $("#deleted_file_ids").val();
+  var deletedDbIds = $("#deleted_db_file_ids").val();
 
   var data = new FormData();
-
   data.append("packages", JSON.stringify(packagesItems));
+  data.append("_csrf_token", $('input[name="_csrf_token"]').val());
 
-  data.append('_csrf_token', $('input[name="_csrf_token"]').val());
+  if (order_id) data.append("order_id", order_id);
+  if (tracking_purchase) data.append("tracking_purchase", tracking_purchase);
+  if (status_courier) data.append("status_courier", status_courier);
+  if (provider_purchase) data.append("provider_purchase", provider_purchase);
+  if (price_purchase) data.append("price_purchase", price_purchase);
 
-  if (order_id) {
-    data.append("order_id", order_id);
-  }
-  if (tracking_purchase) {
-    data.append("tracking_purchase", tracking_purchase);
-  }
-  if (status_courier) {
-    data.append("status_courier", status_courier);
-  }
-  if (provider_purchase) {
-    data.append("provider_purchase", provider_purchase);
-  }
-  if (price_purchase) {
-    data.append("price_purchase", price_purchase);
-  }
-  if (agency) {
-    data.append("agency", agency);
-  }
-  if (origin_off) {
-    data.append("origin_off", origin_off);
-  }
-  if (sender_id) {
-    data.append("sender_id", sender_id);
-  }
-  if (sender_address_id) {
-    data.append("sender_address_id", sender_address_id);
-  }
-  if (order_item_category) {
-    data.append("order_item_category", order_item_category);
-  }
-  if (order_courier) {
-    data.append("order_courier", order_courier);
-  }
-  if (order_service_options) {
-    data.append("order_service_options", order_service_options);
-  }
-  if (order_package) {
-    data.append("order_package", order_package);
-  }
-  if (order_date) {
-    data.append("order_date", order_date);
-  }
-  if (order_deli_time) {
-    data.append("order_deli_time", order_deli_time);
-  }
-  if (driver_id) {
-    data.append("driver_id", driver_id);
-  }
-  if (price_lb) {
-    data.append("price_lb", price_lb);
-  }
-  if (insured_value) {
-    data.append("insured_value", insured_value);
-  }
-  if (reexpedicion_value) {
-    data.append("reexpedicion_value", reexpedicion_value);
-  }
-  if (discount_value) {
-    data.append("discount_value", discount_value);
-  }
-  if (tax_value) {
-    data.append("tax_value", tax_value);
-  }
-  if (declared_value_tax) {
-    data.append("declared_value_tax", declared_value_tax);
-  }
-  if (tariffs_value) {
-    data.append("tariffs_value", tariffs_value);
-  }
-  if (insurance_value) {
-    data.append("insurance_value", insurance_value);
-  }
-  if (notify_sms_sender) {
-    data.append("notify_sms_sender", notify_sms_sender);
+  if (agency) data.append("agency", agency);
+  if (origin_off) data.append("origin_off", origin_off);
+
+  if (sender_id) data.append("sender_id", sender_id);
+  if (sender_address_id) data.append("sender_address_id", sender_address_id);
+
+  // Recipient fields (the missing piece)
+  if (recipient_id) data.append("recipient_id", recipient_id);
+  if (recipient_address_id) data.append("recipient_address_id", recipient_address_id);
+  data.append("recipient_type", window.recipient_type || "recipient");
+
+  if (order_item_category) data.append("order_item_category", order_item_category);
+  if (order_courier) data.append("order_courier", order_courier);
+  if (order_service_options) data.append("order_service_options", order_service_options);
+  if (order_package) data.append("order_package", order_package);
+  if (order_date) data.append("order_date", order_date);
+  if (order_deli_time) data.append("order_deli_time", order_deli_time);
+
+  if (driver_id) data.append("driver_id", driver_id);
+
+  if (price_lb) data.append("price_lb", price_lb);
+  if (insured_value) data.append("insured_value", insured_value);
+  if (reexpedicion_value) data.append("reexpedicion_value", reexpedicion_value);
+  if (discount_value) data.append("discount_value", discount_value);
+  if (tax_value) data.append("tax_value", tax_value);
+  if (declared_value_tax) data.append("declared_value_tax", declared_value_tax);
+  if (tariffs_value) data.append("tariffs_value", tariffs_value);
+  if (insurance_value) data.append("insurance_value", insurance_value);
+
+  if (notify_sms_sender) data.append("notify_sms_sender", notify_sms_sender);
+
+  if (deleted_file_ids_val) data.append("deleted_file_ids", deleted_file_ids_val);
+  if (deletedDbIds) data.append("deleted_db_file_ids", deletedDbIds);
+
+  // New uploads
+  var inputMulti = document.getElementById("filesMultiple");
+  if (inputMulti && inputMulti.files) {
+    for (var i = 0; i < inputMulti.files.length; i++) {
+      data.append("filesMultiple[]", inputMulti.files[i]);
+    }
   }
 
-  if (deleted_file_ids) {
-    data.append("deleted_file_ids", deleted_file_ids);
-  }
-
-  var total_file = document.getElementById("filesMultiple").files.length;
-
-  for (var i = 0; i < total_file; i++) {
-    data.append("filesMultiple[]", document.getElementById("filesMultiple").files[i]);
-  }
-
-  // Existing DB files to delete (transactional delete on submit)
-    var deletedDbIds = $("#deleted_db_file_ids").val();
-    if (deletedDbIds) data.append("deleted_db_file_ids", deletedDbIds);
-
-    // Camera captured files (same as add)
-    appendAllFilesToFormData(data);
-
-    // Keep parity with add
-    data.append("recipient_type", window.recipient_type || "recipient");
+  // Camera captures
+  appendAllFilesToFormData(data);
 
   $.ajax({
     type: "POST",
@@ -958,104 +858,81 @@ $("#invoice_form").on("submit", function (event) {
     dataType: "json",
     cache: false,
     processData: false,
-    beforeSend: function (objeto) {
+    beforeSend: function () {
       $("#create_invoice").attr("disabled", true);
       Swal.fire({
         title: message_loading,
         allowOutsideClick: false,
-        didOpen: () => {
+        didOpen: function () {
           Swal.showLoading();
         },
       });
     },
-    success: function (data) {
+    success: function (resp) {
       $("#create_invoice").attr("disabled", false);
-      if (data.success) {
-        cdp_showSuccess(data.messages, data.shipment_id);
+      if (resp && resp.success) {
+        cdp_showSuccess(resp.messages, resp.shipment_id);
       } else {
-        cdp_showError(data.errors);
+        cdp_showError(resp && resp.errors ? resp.errors : { error: message_error });
       }
+    },
+    error: function () {
+      $("#create_invoice").attr("disabled", false);
+      cdp_showError({ error: message_error });
     },
   });
 
-  event.preventDefault();
+  return false;
 });
 
-$(function () {
-  $("#code_prefix2").hide();
-  $("#prefix_check").on("change", function (event) {
-    if ($("#prefix_check").is(":checked")) {
-      $("#code_prefix").hide();
-      $("#code_prefix").attr("disabled", true);
-      $("#prefix_check").val(1);
-      $("#code_prefix2").show();
-      $("#code_prefix2").attr("disabled", false);
-      $("#code_prefix2").attr("required", "true");
-    } else {
-      $("#prefix_check").val(0);
-      $("#code_prefix2").hide();
-      $("#code_prefix2").attr("disabled", true);
-      $("#code_prefix").show();
-      $("#code_prefix").attr("disabled", false);
-      $("#code_prefix2").attr("required", "false");
-    }
-  });
-});
-
-function isNumberKey(evt, element) {
-  var charCode = evt.which ? evt.which : event.keyCode;
-  if (charCode > 31 && (charCode < 48 || charCode > 57) && !(charCode == 46 || charCode == 8)) return false;
-  else {
-    var len = $(element).val().length;
-    var index = $(element).val().indexOf(".");
-    if (index > 0 && charCode == 46) {
-      return false;
-    }
-    if (index > 0) {
-      var CharAfterdot = len + 1 - index;
-      if (CharAfterdot > 4) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
+/* ==========================
+   Select2 sender/recipient (mirror add patterns)
+   ========================== */
 function cdp_select2_init_sender() {
   $("#sender_id")
     .select2({
       ajax: {
         url: "ajax/select2_sender.php",
         dataType: "json",
-
         delay: 250,
         data: function (params) {
-          return {
-            q: params.term, // search term
-          };
+          return { q: params.term };
         },
         processResults: function (data) {
-          return {
-            results: data,
-          };
+          return { results: data };
         },
         cache: true,
       },
-
       minimumInputLength: 2,
       placeholder: search_sender,
       allowClear: true,
     })
-    .on("change", function (e) {
+    .on("change", function () {
+      // Mirror add flow behavior: clear dependent selects and enable properly
+      window.recipient_type = "recipient";
+
       var sender_id = $("#sender_id").val();
-      $("#sender_address_id").attr("disabled", true);
-      $("#add_address_sender").attr("disabled", true);
-      $("#sender_address_id").val(null);
+
+      $("#sender_address_id").prop("disabled", true).val(null).trigger("change");
+      $("#add_address_sender").prop("disabled", true);
+
+      $("#recipient_id").prop("disabled", true).val(null).trigger("change");
+      $("#add_recipient").prop("disabled", true);
+
+      $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
+      $("#add_address_recipient").prop("disabled", true);
+
       if (sender_id != null) {
-        $("#add_address_sender").attr("disabled", false);
-        $("#sender_address_id").attr("disabled", false);
+        $("#sender_address_id").prop("disabled", false);
+        $("#add_address_sender").prop("disabled", false);
+
+        $("#recipient_id").prop("disabled", false);
+        $("#add_recipient").prop("disabled", false);
       }
+
       cdp_select2_init_sender_address();
+      cdp_select2_init_recipient();
+      cdp_select2_init_recipient_address();
     });
 }
 
@@ -1067,26 +944,97 @@ function cdp_select2_init_sender_address() {
       dataType: "json",
       delay: 250,
       data: function (params) {
-        return {
-          q: params.term, // search term
-        };
+        return { q: params.term };
       },
       processResults: function (data) {
-        return {
-          results: data,
-        };
+        return { results: data };
       },
       cache: true,
     },
-
     escapeMarkup: function (markup) {
       return markup;
-    }, // let our custom formatter work
-    // minimumInputLength: 1,
-    templateResult: cdp_formatAdress, // omitted for brevity, see the source of this page
-    templateSelection: cdp_formatAdressSelection, // omitted for brevity, see the source of this page
-    // minimumInputLength: 2,
+    },
+    templateResult: cdp_formatAdress,
+    templateSelection: cdp_formatAdressSelection,
     placeholder: search_sender_address,
+    allowClear: true,
+  });
+}
+
+function cdp_select2_init_recipient() {
+  var sender_id = $("#sender_id").val();
+
+  $("#recipient_id")
+    .select2({
+      ajax: {
+        url: "ajax/select2_recipient.php?id=" + sender_id,
+        dataType: "json",
+        delay: 250,
+        data: function (params) {
+          return { q: params.term };
+        },
+        processResults: function (data) {
+          return { results: data };
+        },
+        cache: true,
+      },
+      placeholder: typeof search_recipient !== "undefined" ? search_recipient : translate_search_recipient,
+      allowClear: true,
+    })
+    .on("select2:select", function (e) {
+      var data = e.params.data || {};
+      window.recipient_type = data.type || "recipient";
+
+      $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
+      $("#add_address_recipient").prop("disabled", true);
+
+      if ($("#recipient_id").val()) {
+        $("#recipient_address_id").prop("disabled", false);
+        $("#add_address_recipient").prop("disabled", false);
+      }
+
+      cdp_select2_init_recipient_address();
+    })
+    .on("change", function () {
+      if (!$("#recipient_id").val()) {
+        window.recipient_type = "recipient";
+        $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
+        $("#add_address_recipient").prop("disabled", true);
+        cdp_select2_init_recipient_address();
+      }
+    });
+}
+
+function cdp_select2_init_recipient_address() {
+  var recipient_id = $("#recipient_id").val();
+  var recipient_type = window.recipient_type || "recipient";
+
+  $("#recipient_address_id").select2({
+    ajax: {
+      url: "ajax/select2_recipient_addresses.php",
+      dataType: "json",
+      delay: 250,
+      data: function (params) {
+        return {
+          id: recipient_id,
+          type: recipient_type,
+          q: params.term,
+        };
+      },
+      processResults: function (data) {
+        return { results: data };
+      },
+      cache: true,
+    },
+    escapeMarkup: function (markup) {
+      return markup;
+    },
+    templateResult: cdp_formatAdress,
+    templateSelection: cdp_formatAdressSelection,
+    placeholder:
+      typeof search_recipient_address !== "undefined"
+        ? search_recipient_address
+        : translate_search_recipient_address,
     allowClear: true,
   });
 }
@@ -1094,7 +1042,6 @@ function cdp_select2_init_sender_address() {
 function cdp_formatAdress(item) {
   if (item.loading) return item.text;
   var markup = "<div class='select2-result-repository clearfix'>";
-
   markup +=
     "<div class='select2-result-repository__statistics'>" +
     "<div class='select2-result-repository__forks'><i class='la la-code-fork mr-0'></i> <b> " +
@@ -1104,23 +1051,20 @@ function cdp_formatAdress(item) {
     " | <b>" +
     translate_search_address_country +
     ": </b>" +
-    item.country +
+    (item.country || "") +
     " | <b>" +
     translate_search_address_state +
     ": </b>" +
-    item.state +
+    (item.state || "") +
     " | <b>" +
     translate_search_address_city +
     ": </b>" +
-    item.city +
+    (item.city || "") +
     " | <b>" +
     translate_search_address_zip +
     ": </b>" +
-    item.zip_code +
-    " </div>" +
-    "</div>" +
-    "</div></div>";
-
+    (item.zip_code || "") +
+    " </div></div></div>";
   return markup;
 }
 
@@ -1128,407 +1072,123 @@ function cdp_formatAdressSelection(repo) {
   return repo.text;
 }
 
-// modal guardar cliente remitente formulario de envo, si activas el check adicionas contraseña al cliente
+/* ==========================
+   Prefill select2 from hidden inputs
+   ========================== */
+function prefillSenderRecipientFromHiddenInputs() {
+  // sender already has an <option> in the HTML, but keep behavior consistent
+  var senderId = $("#prefill_sender_id").val();
+  var senderAddrId = $("#prefill_sender_address_id").val();
+  var recipId = $("#prefill_recipient_id").val();
+  var recipAddrId = $("#prefill_recipient_address_id").val();
 
-$("#add_user_from_modal_shipments").on("submit", function (event) {
-  event.preventDefault(); // Evitar el envío del formulario por defecto
+  // ensure dependent buttons are enabled when ids exist
+  if (senderId && parseInt(senderId, 10) > 0) {
+    $("#sender_address_id").prop("disabled", false);
+    $("#add_address_sender").prop("disabled", false);
 
-  if ($.trim($("#fname").val()).length == 0) {
-    Swal.fire({
-      type: "Error!",
-      title: "Oops...",
-      text: message_error_form81,
-      icon: "error",
-      confirmButtonColor: "#336aea",
-    });
-    $("#fname").focus();
-    return false;
+    $("#recipient_id").prop("disabled", false);
+    $("#add_recipient").prop("disabled", false);
   }
 
-  if ($.trim($("#lname").val()).length == 0) {
-    Swal.fire({
-      type: "Error!",
-      title: "Oops...",
-      text: message_error_form82,
-      icon: "error",
-      confirmButtonColor: "#336aea",
-    });
-    $("#lname").focus();
-    return false;
+  if (senderAddrId && parseInt(senderAddrId, 10) > 0) {
+    $("#sender_address_id").prop("disabled", false);
+    $("#add_address_sender").prop("disabled", false);
   }
 
-  // Validación del correo electrónico en el lado del cliente
-  var email = $.trim($("#email").val());
-  if (email.length == 0) {
-    Swal.fire({
-      type: "error",
-      title: "Oops...",
-      text: message_error_form83,
-      icon: "error",
-      confirmButtonColor: "#336aea",
-    });
-    $("#email").focus();
-    return false;
-  } else if (!isValidEmailAddress(email)) {
-    // Función para validar el formato del correo electrónico
-    Swal.fire({
-      type: "warning",
-      title: "Oops...",
-      text: message_error_form84,
-      icon: "warning",
-      confirmButtonColor: "#336aea",
-    });
-    $("#email").focus();
-    return false;
-  }
+  if (recipId && parseInt(recipId, 10) > 0) {
+    $("#recipient_id").prop("disabled", false);
+    $("#add_recipient").prop("disabled", false);
 
-  // Función para validar el formato del correo electrónico
-  function isValidEmailAddress(email) {
-    var pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return pattern.test(email);
-  }
+    $("#recipient_address_id").prop("disabled", false);
+    $("#add_address_recipient").prop("disabled", false);
 
-  if ($.trim($("#country_modal_user").val()).length == 0) {
-    Swal.fire({
-      type: "Error!",
-      title: "Oops...",
-      text: validation_country,
-      icon: "error",
-      confirmButtonColor: "#336aea",
-    });
-    $("#country_modal_user").focus();
-    return false;
-  }
+    // Select2 may need option injection to keep selection stable
+    if ($("#recipient_id option[value='" + recipId + "']").length === 0) {
+      $("#recipient_id").append(new Option("...", recipId, true, true)).trigger("change");
+    }
 
-  if ($.trim($("#state_modal_user").val()).length == 0) {
-    Swal.fire({
-      type: "error",
-      title: "Oops...",
-      text: validation_state,
-      icon: "error",
-      confirmButtonColor: "#336aea",
-    });
-    $("#state_modal_user").focus();
-    return false;
-  }
+    // trigger init address
+    cdp_select2_init_recipient_address();
 
-  if ($.trim($("#city_modal_user").val()).length == 0) {
-    Swal.fire({
-      type: "error",
-      title: "Oops...",
-      text: validation_city,
-      icon: "error",
-      confirmButtonColor: "#336aea",
-    });
-    $("#city_modal_user").focus();
-    return false;
-  }
-
-  if ($.trim($("#postal_modal_user").val()).length == 0) {
-    Swal.fire({
-      type: "error",
-      title: "Oops...",
-      text: validation_zip,
-      icon: "error",
-      confirmButtonColor: "#336aea",
-    });
-    $("#postal_modal_user").focus();
-    return false;
-  }
-
-  if ($.trim($("#address_modal_user").val()).length == 0) {
-    Swal.fire({
-      type: "error",
-      title: "Oops...",
-      text: validation_address,
-      icon: "error",
-      confirmButtonColor: "#336aea",
-    });
-    $("#address_modal_user").focus();
-    return false;
-  }
-
-  if (iti.isValidNumber()) {
-    var sender_id = $("#sender_id").val();
-    $("#save_data_user").attr("disabled", true);
-    var parametros = $(this).serialize();
-
-    $.ajax({
-      type: "POST",
-      url: "ajax/courier/add_users_ajax.php?sender=" + sender_id,
-      data: parametros,
-      success: function (response) {
-        if (response.status === "success") {
-          Swal.fire({
-            type: "success",
-            title: message_error_form80,
-            icon: "success",
-            showConfirmButton: false,
-            timer: 1500,
-          }).then(() => {
-            cdp_select2_init_sender();
-            $(".resultados_ajax_add_user_modal_sender").html(response.data);
-            $("#save_data_user").attr("disabled", false);
-            $("#myModalAddUser").modal("hide");
-
-            // Obtener la información del cliente y la dirección del cliente de la respuesta
-            var data = {
-              id: response.customer_data.id,
-              text: response.customer_data.fname + " " + response.customer_data.lname,
-            };
-
-            var newOption = new Option(data.text, data.id, false, false);
-
-            $("#sender_id").append(newOption).trigger("change");
-            $("#sender_id").val(data.id).trigger("change");
-
-            var data_address = {
-              id: response.customer_address.id_addresses,
-              text: response.customer_address.address,
-            };
-
-            var newOptionAddress = new Option(data_address.text, data_address.id, false, false);
-
-            $("#sender_address_id").append(newOptionAddress).trigger("change");
-            $("#sender_address_id").val(data_address.id).trigger("change");
-
-            $("#recipient_address_id").attr("disabled", true);
-            $("#add_address_recipient").attr("disabled", true);
-            $("#recipient_id").val(null).trigger("change");
-            $("#recipient_address_id").val(null).trigger("change");
-
-            window.setTimeout(function () {
-              $(".alert")
-                .fadeTo(500, 0)
-                .slideUp(500, function () {
-                  $(this).remove();
-                });
-            }, 5000);
-          });
-        } else {
-          Swal.fire({
-            type: "error",
-            title: "Oops...",
-            text: response.message,
-            icon: "error",
-            confirmButtonColor: "#336aea",
-          });
-          $("#save_data_user").attr("disabled", false);
-        }
-      },
-      error: function () {
-        Swal.fire({
-          type: "error",
-          title: "Oops...",
-          text: message_error_form19,
-          icon: "error",
-          confirmButtonColor: "#336aea",
-        });
-        $("#save_data_user").attr("disabled", false);
-      },
-    });
-  } else {
-    input.classList.add("error");
-    var errorCode = iti.getValidationError();
-    errorMsgSender.innerHTML = errorMap[errorCode];
-    errorMsgSender.classList.remove("hide");
-  }
-});
-
-// modal guardar direccion cliente remitente
-
-$("#add_address_users_from_modal_shipments").on("submit", function (event) {
-  event.preventDefault(); // Evitar el envío del formulario por defecto
-
-  if ($.trim($("#country_modal_user_address").val()).length == 0) {
-    Swal.fire({
-      type: "Error!",
-      title: "Oops...",
-      text: validation_country,
-      icon: "error",
-      confirmButtonColor: "#336aea",
-    });
-    $("#country_modal_user_address").focus();
-    return false;
-  }
-
-  if ($.trim($("#state_modal_user_address").val()).length == 0) {
-    Swal.fire({
-      type: "error",
-      title: "Oops...",
-      text: validation_state,
-      icon: "error",
-      confirmButtonColor: "#336aea",
-    });
-    $("#state_modal_user_address").focus();
-    return false;
-  }
-
-  if ($.trim($("#city_modal_user_address").val()).length == 0) {
-    Swal.fire({
-      type: "error",
-      title: "Oops...",
-      text: validation_city,
-      icon: "error",
-      confirmButtonColor: "#336aea",
-    });
-    $("#city_modal_user_address").focus();
-    return false;
-  }
-
-  if ($.trim($("#postal_modal_user_address").val()).length == 0) {
-    Swal.fire({
-      type: "error",
-      title: "Oops...",
-      text: validation_zip,
-      icon: "error",
-      confirmButtonColor: "#336aea",
-    });
-    $("#postal_modal_user_address").focus();
-    return false;
-  }
-
-  if ($.trim($("#address_modal_user_address").val()).length == 0) {
-    Swal.fire({
-      type: "error",
-      title: "Oops...",
-      text: validation_address,
-      icon: "error",
-      confirmButtonColor: "#336aea",
-    });
-    $("#address_modal_user_address").focus();
-    return false;
-  }
-
-  var sender_id = $("#sender_id").val();
-  $("#save_data_address_users").attr("disabled", true);
-  var parametros = $(this).serialize();
-
-  $.ajax({
-    type: "POST",
-    url: "ajax/courier/add_address_users_ajax.php?sender=" + sender_id,
-    data: parametros,
-    success: function (response) {
-      if (response.status === "success") {
-        Swal.fire({
-          type: "success",
-          title: message_error_form80,
-          icon: "success",
-          showConfirmButton: false,
-          timer: 1500,
-        }).then(() => {
-          $("#save_data_address_users").attr("disabled", false);
-          $(".resultados_ajax_add_user_modal_sender").html(response.data);
-          $("#myModalAddUserAddresses").modal("hide");
-
-          var data_address = {
-            id: response.customer_address.id_addresses,
-            text: response.customer_address.address,
-          };
-
-          var newOptionAddress = new Option(data_address.text, data_address.id, false, false);
-
-          $("#sender_address_id").append(newOptionAddress).trigger("change");
-          $("#sender_address_id").val(data_address.id).trigger("change");
-
-          window.setTimeout(function () {
-            $(".alert")
-              .fadeTo(500, 0)
-              .slideUp(500, function () {
-                $(this).remove();
-              });
-          }, 5000);
-        });
-      } else {
-        Swal.fire({
-          type: "error",
-          title: "Oops...",
-          text: response.message,
-          icon: "error",
-          confirmButtonColor: "#336aea",
-        });
-        $("#save_data_address_users").attr("disabled", false);
+    if (recipAddrId && parseInt(recipAddrId, 10) > 0) {
+      if ($("#recipient_address_id option[value='" + recipAddrId + "']").length === 0) {
+        $("#recipient_address_id").append(new Option("...", recipAddrId, true, true)).trigger("change");
       }
-    },
-    error: function () {
-      Swal.fire({
-        type: "error",
-        title: "Oops...",
-        text: message_error_form19,
-        icon: "error",
-        confirmButtonColor: "#336aea",
-      });
-      $("#save_data_address_users").attr("disabled", false);
-    },
-  });
-});
+    }
+  } else {
+    // if no recipient, keep address disabled
+    $("#recipient_address_id").prop("disabled", true);
+    $("#add_address_recipient").prop("disabled", true);
+  }
+}
 
-var errorMsg = document.querySelector("#error-msg-sender");
-var validMsg = document.querySelector("#valid-msg-sender");
+/* ==========================
+   Validation helpers
+   ========================== */
+function cdp_validateZiseFiles() {
+  var inputFile = document.getElementById("filesMultiple");
+  if (!inputFile) return false;
 
-// here, the index maps to the error code returned from getValidationError - see readme
-var errorMap = [
-  "Invalid number",
-  "Invalid country code",
-  "Mobile number too short",
-  "Mobile number too long",
-  "Invalid mobile number",
-];
+  var file = inputFile.files;
+  var size = 0;
 
-var input = document.querySelector("#phone_custom");
-var iti = window.intlTelInput(input, {
-  geoIpLookup: function (callback) {
-    $.get("http://ipinfo.io", function () {}, "jsonp").always(function (resp) {
-      var countryCode = resp && resp.country ? resp.country : "";
-      callback(countryCode);
-    });
-  },
-  initialCountry: "auto",
-  nationalMode: true,
+  for (var i = 0; i < file.length; i++) {
+    var filesSize = file[i].size;
+    size += filesSize;
+  }
 
-  separateDialCode: true,
-  utilsScript: "assets/template/assets/libs/intlTelInput/utils.js",
-});
+  if (size > 5242880) {
+    $(".resultados_file").html(
+      "<div class='alert alert-danger'>" +
+        "<button type='button' class='close' data-dismiss='alert'>&times;</button>" +
+        "<strong>" +
+        validation_files_size +
+        " </strong>" +
+        "</div>"
+    );
 
-var reset = function () {
-  input.classList.remove("error");
-  errorMsg.innerHTML = "";
-  errorMsg.classList.add("hide");
-  validMsg.classList.add("hide");
-};
+    $("#filesMultiple").val("");
+    $("#clean_files").addClass("hide");
+    $("#image_preview").html("");
+    return true;
+  } else {
+    $(".resultados_file").html("");
+    return false;
+  }
+}
 
-// on blur: validate
-input.addEventListener("blur", function () {
-  reset();
-  if (input.value.trim()) {
-    if (iti.isValidNumber()) {
-      $("#phone").val(iti.getNumber());
-
-      validMsg.classList.remove("hide");
-    } else {
-      input.classList.add("error");
-      var errorCode = iti.getValidationError();
-      errorMsg.innerHTML = errorMap[errorCode];
-      errorMsg.classList.remove("hide");
+function isNumberKey(evt, element) {
+  var charCode = evt.which ? evt.which : event.keyCode;
+  if (charCode > 31 && (charCode < 48 || charCode > 57) && !(charCode == 46 || charCode == 8)) return false;
+  else {
+    var len = $(element).val().length;
+    var index = $(element).val().indexOf(".");
+    if (index > 0 && charCode == 46) return false;
+    if (index > 0) {
+      var CharAfterdot = len + 1 - index;
+      if (CharAfterdot > 4) return false;
     }
   }
-});
+  return true;
+}
 
-// on keyup / change flag: reset
-input.addEventListener("change", reset);
-input.addEventListener("keyup", reset);
-
+/* ==========================
+   SweetAlert helpers
+   ========================== */
 function cdp_showError(errors) {
   var html_code = "";
-  html_code += '<ul class="error" > ';
+  html_code += '<ul class="error">';
 
-  for (var error in errors) {
-    html_code += '<li class="text-left">';
-    html_code += '<i class="icon-double-angle-right"></i>';
-    html_code += errors[error];
-    html_code += "</li>";
+  if (typeof errors === "string") {
+    html_code += '<li class="text-left"><i class="icon-double-angle-right"></i>' + errors + "</li>";
+  } else {
+    for (var error in errors) {
+      html_code += '<li class="text-left"><i class="icon-double-angle-right"></i>' + errors[error] + "</li>";
+    }
   }
-  ("</ul >");
+
+  html_code += "</ul>";
 
   Swal.fire({
     title: message_error,
@@ -1554,8 +1214,9 @@ function cdp_showSuccess(messages, shipment_id) {
   });
 }
 
-
-// ========== CAMERA FEATURE INTEGRATION (MATCH ADD FLOW) ==========
+/* ==========================
+   Camera capture integration
+   ========================== */
 (() => {
   "use strict";
   const MAX_BYTES = 1024 * 1024; // 1MB
@@ -1565,14 +1226,21 @@ function cdp_showSuccess(messages, shipment_id) {
   const takeBtn = document.getElementById("takeCameraPhoto");
   const stopBtn = document.getElementById("stopCamera");
   const filesCaptureInput = document.getElementById("filesCapture");
-  const previewWrap = document.getElementById("image_preview");
 
   window.__capturedFilesFallback = window.__capturedFilesFallback || [];
 
   let stream = null;
 
-  function warn() { try { console.warn.apply(console, arguments); } catch (e) {} }
-  function fail(msg, e) { console.error(msg, e); alert(msg + (e && e.message ? "\n" + e.message : "")); }
+  function warn() {
+    try {
+      console.warn.apply(console, arguments);
+    } catch (e) {}
+  }
+
+  function fail(msg, e) {
+    console.error(msg, e);
+    alert(msg + (e && e.message ? "\n" + e.message : ""));
+  }
 
   function canvasToBlob(canvas, mime, quality) {
     mime = mime || "image/jpeg";
@@ -1581,10 +1249,14 @@ function cdp_showSuccess(messages, shipment_id) {
     return new Promise((resolve, reject) => {
       try {
         if (canvas.toBlob) {
-          canvas.toBlob((b) => {
-            if (b) resolve(b);
-            else reject(new Error("toBlob returned null"));
-          }, mime, quality);
+          canvas.toBlob(
+            (b) => {
+              if (b) resolve(b);
+              else reject(new Error("toBlob returned null"));
+            },
+            mime,
+            quality
+          );
         } else {
           const dataUrl = canvas.toDataURL(mime, quality);
           const parts = dataUrl.split(";base64,");
@@ -1594,7 +1266,9 @@ function cdp_showSuccess(messages, shipment_id) {
           for (let i = 0; i < len; i++) u8[i] = binary.charCodeAt(i);
           resolve(new Blob([u8], { type: mime }));
         }
-      } catch (e) { reject(e); }
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 
@@ -1606,15 +1280,24 @@ function cdp_showSuccess(messages, shipment_id) {
       const img = await new Promise((res, rej) => {
         const url = URL.createObjectURL(blob);
         const i = new Image();
-        i.onload = () => { URL.revokeObjectURL(url); res(i); };
-        i.onerror = (e) => { URL.revokeObjectURL(url); rej(e); };
+        i.onload = () => {
+          URL.revokeObjectURL(url);
+          res(i);
+        };
+        i.onerror = (e) => {
+          URL.revokeObjectURL(url);
+          rej(e);
+        };
         i.src = url;
       });
 
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
-      let w = img.width, h = img.height;
-      canvas.width = w; canvas.height = h;
+      let w = img.width,
+        h = img.height;
+
+      canvas.width = w;
+      canvas.height = h;
       ctx.drawImage(img, 0, 0, w, h);
 
       let quality = 0.92;
@@ -1631,12 +1314,9 @@ function cdp_showSuccess(messages, shipment_id) {
         canvas.width = w;
         canvas.height = h;
         ctx.drawImage(img, 0, 0, w, h);
+
         quality = 0.85;
         out = await canvasToBlob(canvas, "image/jpeg", quality);
-        while (out.size > maxBytes && quality > 0.08) {
-          quality = Math.max(0.08, quality - 0.07);
-          out = await canvasToBlob(canvas, "image/jpeg", quality);
-        }
       }
 
       return out;
@@ -1670,9 +1350,14 @@ function cdp_showSuccess(messages, shipment_id) {
       return;
     }
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-      cameraPreview.srcObject = stream;
-      cameraPreview.style.display = "block";
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
+      if (cameraPreview) {
+        cameraPreview.srcObject = stream;
+        cameraPreview.style.display = "block";
+      }
       if (takeBtn) takeBtn.style.display = "inline-block";
       if (stopBtn) stopBtn.style.display = "inline-block";
       if (openBtn) openBtn.style.display = "none";
@@ -1687,11 +1372,13 @@ function cdp_showSuccess(messages, shipment_id) {
         stream.getTracks().forEach((t) => t.stop());
         stream = null;
       }
-      cameraPreview.style.display = "none";
+      if (cameraPreview) cameraPreview.style.display = "none";
       if (takeBtn) takeBtn.style.display = "none";
       if (stopBtn) stopBtn.style.display = "none";
       if (openBtn) openBtn.style.display = "inline-block";
-    } catch (e) { warn("stopCamera error", e); }
+    } catch (e) {
+      warn("stopCamera error", e);
+    }
   }
 
   async function captureOnlyAttach() {
@@ -1718,7 +1405,6 @@ function cdp_showSuccess(messages, shipment_id) {
         file.name = filename;
       }
 
-      // Use unified thumbnail system
       addUnifiedThumbnail(blob, filename, file, "camera");
       appendFileToInput(filesCaptureInput, file);
 
@@ -1733,59 +1419,70 @@ function cdp_showSuccess(messages, shipment_id) {
   if (stopBtn) stopBtn.addEventListener("click", stopCamera);
   if (takeBtn) takeBtn.addEventListener("click", captureOnlyAttach);
 
-  window.addEventListener("beforeunload", () => { if (stream) stopCamera(); });
+  window.addEventListener("beforeunload", function () {
+    if (stream) stopCamera();
+  });
 })();
 
 function appendAllFilesToFormData(fd) {
   const filesCaptureInput = document.getElementById("filesCapture");
   if (filesCaptureInput && filesCaptureInput.files && filesCaptureInput.files.length) {
     Array.from(filesCaptureInput.files).forEach(function (f) {
-      fd.append("filesCapture[]", f, f.name || ("capture_" + Date.now() + ".jpg"));
+      fd.append("filesCapture[]", f, f.name || "capture_" + Date.now() + ".jpg");
     });
   }
 
   if (window.__capturedFilesFallback && window.__capturedFilesFallback.length) {
     window.__capturedFilesFallback.forEach(function (f, idx) {
-      const name = f.name || ("capture_fallback_" + Date.now() + "_" + idx + ".jpg");
+      const name = f.name || "capture_fallback_" + Date.now() + "_" + idx + ".jpg";
       fd.append("filesCapture[]", f, name);
     });
   }
 }
 
+/* ==========================
+   Existing files preload from view payload
+   ========================== */
 function preloadExistingFilesFromDom() {
-  // The edit view used to render existing attachments separately.
-  // After we remove that block, we still need a source of existing files.
-  // So we require the view to output a JSON payload in a script tag OR data attributes.
-  // If you implement the view change below (A4), this function will preload correctly.
-
   if (!window.__existing_customer_package_files || !Array.isArray(window.__existing_customer_package_files)) return;
 
   window.__existing_customer_package_files.forEach(function (f) {
     if (!f || !f.id || !f.url) return;
 
-    // Avoid duplication if already present
+    // Avoid duplication
     if (document.querySelector('.file-thumb[data-existing-id="' + f.id + '"]')) return;
 
-    var filename = f.name || ("file_" + f.id);
+    var filename = f.name || "file_" + f.id;
     var container = document.createElement("div");
+
     container.className = "file-thumb";
     container.dataset.type = "existing";
     container.dataset.filename = filename;
     container.setAttribute("data-existing-id", f.id);
 
-    container.style.cssText = "display:inline-block;margin:6px;position:relative;width:130px;vertical-align:top;";
+    container.style.cssText =
+      "display:inline-block;margin:6px;position:relative;width:130px;vertical-align:top;";
 
     var src = f.is_image ? f.url : "assets/images/no-preview.jpeg";
 
     container.innerHTML =
       '<div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid #ddd;background:#fff;">' +
-      '  <img src="' + src + '" alt="' + filename + '" style="width:130px;height:100px;object-fit:cover;display:block;">' +
+      '  <img src="' +
+      src +
+      '" alt="' +
+      filename +
+      '" style="width:130px;height:100px;object-fit:cover;display:block;">' +
       '  <button type="button" class="remove-preview-btn" ' +
       '    style="position:absolute;top:6px;right:6px;width:24px;height:24px;border:none;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;cursor:pointer;font-size:14px;line-height:24px;">×</button>' +
       "</div>" +
-      '<div style="font-size:11px;margin-top:5px;text-align:center;word-break:break-word;">' + filename + "</div>";
+      '<div style="font-size:11px;margin-top:5px;text-align:center;word-break:break-word;">' +
+      filename +
+      "</div>";
 
-    document.getElementById("image_preview").prepend(container);
+    var previewWrap = document.getElementById("image_preview");
+    if (!previewWrap) return;
+
+    previewWrap.prepend(container);
 
     container.querySelector(".remove-preview-btn").addEventListener("click", function () {
       cdp_deleteImgAttached(f.id);
