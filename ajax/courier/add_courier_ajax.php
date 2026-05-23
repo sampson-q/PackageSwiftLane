@@ -613,7 +613,7 @@ if (empty($errors)) {
 
         cdp_insertCourierShipmentAddresses($dataAddressesShip);
 
-        if (!empty($sender_data->phone)) {
+        if (!empty($sender_data->phone) && (!empty($_POST['notify_whatsapp_sender']))) {
             try {
                 // Get template 4 for package registration
                 $tpl = getTemplateWhatsApp(4);
