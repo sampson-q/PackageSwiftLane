@@ -144,8 +144,6 @@ if (empty($errors)) {
         'recipient_id'          => (int)(cdp_sanitize($_POST['recipient_id'] ?? 0)),
         'recipient_address_id'  => (int)(cdp_sanitize($_POST['recipient_address_id'] ?? 0)),
         'order_payment_method'  => (int)(cdp_sanitize($_POST['order_payment_method'] ?? 0)),
-        'tracking_number'       => cdp_sanitize($_POST['tracking_number'] ?? ''),
-        'estimated_eta'         => cdp_sanitize($_POST['estimated_eta'] ?? null),
         'notify_whatsapp_sender' => (int)(cdp_sanitize($_POST['notify_whatsapp_sender'] ?? 0)),
     );
 

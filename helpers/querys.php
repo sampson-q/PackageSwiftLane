@@ -6614,109 +6614,166 @@ function cdp_updateCustomerPackagesTotals($datos)
 }
 
 
-function cdp_insertCustomerPackages($datos)
-{
+function cdp_insertCustomerPackages($datos) {
     $db = new Conexion;
-
-    $db->cdp_query("
-    INSERT INTO cdb_customers_packages 
-    (
-        user_id,
-        order_prefix,
-        order_no,
-        order_date,
-        sender_id,
-        sender_address_id,
-        recipient_id,
-        recipient_address_id,
-        volumetric_percentage,
-        order_datetime,
-        agency,
-        origin_off,
-        order_item_category, 
-        order_package,
-        order_courier,
-        order_service_options,
-        order_deli_time,                   
-        status_courier,
-        driver_id,
-        status_invoice,
-        tracking_purchase,
-        tracking_number,
-        estimated_eta,
-        provider_purchase,
-        price_purchase,
-        order_payment_method,
-        notify_whatsapp_sender,
-        is_prealert
-        )
-    VALUES
-        (
-        :user_id,
-        :order_prefix,
-        :order_no,
-        :order_date,
-        :sender_id,
-        :sender_address_id,
-        :recipient_id,
-        :recipient_address_id,
-        :volumetric_percentage,
-        :order_datetime,
-        :agency,
-        :origin_off,
-        :order_item_category, 
-        :order_package,
-        :order_courier,
-        :order_service_options,
-        :order_deli_time,                   
-        :status_courier,
-        :driver_id,
-        :status_invoice,
-        :tracking_purchase,
-        :tracking_number,
-        :estimated_eta,
-        :provider_purchase,
-        :price_purchase,
-        :order_payment_method,
-        :notify_whatsapp_sender,
-        :is_prealert
-        )
-");
-
-    // wxisting bindings
-    $db->bind(':user_id',  $datos['user_id']);
-    $db->bind(':order_prefix',  $datos['order_prefix']);
-    $db->bind(':order_no', $datos["order_no"]);
-    $db->bind(':agency',  $datos["agency"]);
-    $db->bind(':origin_off',  $datos["origin_off"]);
-    $db->bind(':sender_id',  $datos["sender_id"]);
-    $db->bind(':sender_address_id',  $datos["sender_address_id"]);
-    $db->bind(':tracking_purchase',  $datos["tracking_purchase"] ?? null);
-    $db->bind(':provider_purchase',  $datos["provider_purchase"] ?? null);
-    $db->bind(':price_purchase',  $datos["price_purchase"] ?? null);
-    $db->bind(':order_item_category',  $datos["order_item_category"]);
-    $db->bind(':order_courier',  $datos["order_courier"]);
-    $db->bind(':order_service_options',  $datos["order_service_options"]);
-    $db->bind(':order_deli_time',  $datos["order_deli_time"]);
-    $db->bind(':status_courier',  $datos["status_courier"]);
-    $db->bind(':driver_id',  $datos["driver_id"]);
-    $db->bind(':order_datetime',  $datos['order_datetime']);
-    $db->bind(':order_date',  $datos['order_date']);
-    $db->bind(':order_package',  $datos["order_package"]);
-    $db->bind(':status_invoice',   $datos["status_invoice"]);
-    $db->bind(':volumetric_percentage',   $datos["volumetric_percentage"]);
-    $db->bind(':is_prealert',  $datos['is_prealert'] ?? 0);
-
-    // new bindings for recipient and tracking details
-    $db->bind(':recipient_id',  $datos["recipient_id"] ?? null);
-    $db->bind(':recipient_address_id',  $datos["recipient_address_id"] ?? null);
-    $db->bind(':order_payment_method',  $datos["order_payment_method"] ?? null);
-    $db->bind(':tracking_number',  $datos["tracking_number"] ?? null);
-    $db->bind(':estimated_eta',  $datos["estimated_eta"] ?? null);
-    $db->bind(':notify_whatsapp_sender',  $datos["notify_whatsapp_sender"] ?? 0);
-
-    $db->cdp_execute();
-    return $db->dbh->lastInsertId();
+ 
+    // ===== VALIDATION: Ensure required fields exist =====
+    $required_fields = [
+        'user_id', 'order_prefix', 'order_no', 'agency', 'origin_off',
+        'sender_id', 'sender_address_id', 'order_package', 'order_courier',
+        'order_service_options', 'order_deli_time', 'status_courier',
+        'order_date', 'order_datetime', 'status_invoice', 'driver_id', 'volumetric_percentage'
+    ];
+ 
+    foreach ($required_fields as $field) {
+        if (!isset($datos[$field])) {
+            error_log("ERROR: Missing required field in cdp_insertCustomerPackages: {$field}");
+            return null;
+        }
+    }
+ 
+    try {
+        // ===== PREPARE INSERT STATEMENT =====
+        // CRITICAL FIX: Use correct column names from actual table schema
+        // - receiver_id (NOT recipient_id)
+        // - receiver_address_id (NOT recipient_address_id)
+        // - order_pay_mode (was missing)
+        // - Include ALL columns that exist: tracking_purchase, provider_purchase, price_purchase, etc.
+        
+        $db->cdp_query("
+            INSERT INTO cdb_customers_packages 
+            (
+                user_id,
+                order_prefix,
+                order_no,
+                order_date,
+                sender_id,
+                sender_address_id,
+                receiver_id,
+                receiver_address_id,
+                volumetric_percentage,
+                order_datetime,
+                agency,
+                origin_off,
+                order_item_category, 
+                order_package,
+                order_courier,
+                order_service_options,
+                order_deli_time,
+                order_pay_mode,
+                order_payment_method,
+                status_courier,
+                driver_id,
+                status_invoice,
+                tracking_purchase,
+                provider_purchase,
+                price_purchase,
+                notify_whatsapp_sender,
+                is_prealert
+            )
+            VALUES
+            (
+                :user_id,
+                :order_prefix,
+                :order_no,
+                :order_date,
+                :sender_id,
+                :sender_address_id,
+                :receiver_id,
+                :receiver_address_id,
+                :volumetric_percentage,
+                :order_datetime,
+                :agency,
+                :origin_off,
+                :order_item_category, 
+                :order_package,
+                :order_courier,
+                :order_service_options,
+                :order_deli_time,
+                :order_pay_mode,
+                :order_payment_method,
+                :status_courier,
+                :driver_id,
+                :status_invoice,
+                :tracking_purchase,
+                :provider_purchase,
+                :price_purchase,
+                :notify_whatsapp_sender,
+                :is_prealert
+            )
+        ");
+ 
+        // ===== BIND ALL PARAMETERS =====
+        $db->bind(':user_id',  $datos['user_id']);
+        $db->bind(':order_prefix',  $datos['order_prefix']);
+        $db->bind(':order_no', $datos["order_no"]);
+        $db->bind(':agency',  $datos["agency"]);
+        $db->bind(':origin_off',  $datos["origin_off"]);
+        $db->bind(':sender_id',  $datos["sender_id"]);
+        $db->bind(':sender_address_id',  $datos["sender_address_id"]);
+        // CRITICAL FIX: Map recipient_id from POST to receiver_id in database
+        $db->bind(':receiver_id',  $datos["recipient_id"] ?? 0);
+        $db->bind(':receiver_address_id',  $datos["recipient_address_id"] ?? 0);
+        $db->bind(':order_item_category',  $datos["order_item_category"] ?? 0);
+        $db->bind(':order_courier',  $datos["order_courier"]);
+        $db->bind(':order_service_options',  $datos["order_service_options"]);
+        $db->bind(':order_deli_time',  $datos["order_deli_time"]);
+        $db->bind(':order_pay_mode',  $datos["order_payment_method"] ?? 0);
+        $db->bind(':order_payment_method',  $datos["order_payment_method"] ?? 0);
+        $db->bind(':status_courier',  $datos["status_courier"]);
+        $db->bind(':driver_id',  $datos["driver_id"]);
+        $db->bind(':order_datetime',  $datos['order_datetime']);
+        $db->bind(':order_date',  $datos['order_date']);
+        $db->bind(':order_package',  $datos["order_package"]);
+        $db->bind(':status_invoice',   $datos["status_invoice"]);
+        $db->bind(':volumetric_percentage',   $datos["volumetric_percentage"]);
+        $db->bind(':tracking_purchase',  $datos["tracking_purchase"] ?? null);
+        $db->bind(':provider_purchase',  $datos["provider_purchase"] ?? null);
+        $db->bind(':price_purchase',  $datos["price_purchase"] ?? null);
+        $db->bind(':notify_whatsapp_sender',  $datos["notify_whatsapp_sender"] ?? 0);
+        $db->bind(':is_prealert',  $datos['is_prealert'] ?? 0);
+ 
+        // ===== EXECUTE INSERT =====
+        $execute_result = $db->cdp_execute();
+ 
+        if (!$execute_result) {
+            error_log("ERROR: cdp_execute() failed for INSERT cdb_customers_packages");
+            error_log("Data: " . json_encode($datos));
+            return null;
+        }
+ 
+        // ===== GET LAST INSERT ID =====
+        $lastId = $db->dbh->lastInsertId();
+        
+        if (!$lastId || $lastId === 0 || $lastId === '0') {
+            error_log("ERROR: lastInsertId() returned invalid value: " . var_export($lastId, true));
+            error_log("Data: " . json_encode($datos));
+            return null;
+        }
+ 
+        // ===== VERIFY RECORD WAS ACTUALLY INSERTED =====
+        // CRITICAL FIX: Primary key is 'order_id' (NOT 'id')
+        $verify_db = new Conexion;
+        $verify_db->cdp_query("SELECT order_id FROM cdb_customers_packages WHERE order_id = :id LIMIT 1");
+        $verify_db->bind(':id', $lastId);
+        $verify_db->cdp_execute();
+        $verify_row = $verify_db->cdp_registro();
+ 
+        if (!$verify_row) {
+            error_log("CRITICAL ERROR: Insert returned ID {$lastId} but record not found in cdb_customers_packages!");
+            error_log("Data: " . json_encode($datos));
+            return null;
+        }
+ 
+        error_log("SUCCESS: Shipment created with ID: {$lastId}");
+        return $lastId;
+ 
+    } catch (Exception $e) {
+        error_log("EXCEPTION in cdp_insertCustomerPackages: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        error_log("Data: " . json_encode($datos));
+        return null;
+    }
 }
 
 function cdp_getCustomerPackage($id)
