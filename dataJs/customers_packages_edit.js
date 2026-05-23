@@ -801,6 +801,8 @@ $("#invoice_form").on("submit", function (event) {
 
   data.append("packages", JSON.stringify(packagesItems));
 
+  data.append('_csrf_token', $('input[name="_csrf_token"]').val());
+
   if (order_id) {
     data.append("order_id", order_id);
   }
