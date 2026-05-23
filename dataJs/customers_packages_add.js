@@ -505,7 +505,9 @@ function cdp_preview_images() {
   var previewWrap = document.getElementById("image_preview");
   if (!previewWrap) return;
 
-  previewWrap.innerHTML = "";
+  // Remove only previously uploaded thumbnails, not captured ones
+  var existingUploads = previewWrap.querySelectorAll('.file-thumb[data-type="upload"]');
+  existingUploads.forEach(function(el) { el.remove(); });
 
   files.forEach(function(file) {
     var mimeRoot = (file.type || "").split("/")[0];
@@ -521,16 +523,8 @@ function cdp_preview_images() {
     addUnifiedThumbnail(previewBlob, file.name, file, 'upload');
   });
 
-  var totalCount = files.length;
-  $("#total_item_files").val(totalCount);
-
-  if (totalCount > 0) {
-    $("#clean_files").removeClass("hide");
-  } else {
-    $("#clean_files").addClass("hide");
-  }
-
   updateFileLabels();
+  checkShowCleanButton();
 }
 
 function addUnifiedThumbnail(blob, filename, originalFile = null, fileType = 'upload') {
@@ -584,14 +578,8 @@ function addUnifiedThumbnail(blob, filename, originalFile = null, fileType = 'up
       });
     }
 
-    var total = document.querySelectorAll(".file-thumb").length;
-    $("#total_item_files").val(total);
-
     updateFileLabels();
-
-    if (total <= 0) {
-      $("#clean_files").addClass("hide");
-    }
+    checkShowCleanButton();
   });
 
   if (isRealImage) {
@@ -613,6 +601,15 @@ function updateFileLabels() {
     $("#captureItem").html("camera captures (" + cameraCount + ")");
   } else {
     $("#captureItem").html("camera captures");
+  }
+}
+
+function checkShowCleanButton() {
+  var totalThumbs = document.querySelectorAll(".file-thumb").length;
+  if (totalThumbs > 0) {
+    $("#clean_files").removeClass("hide");
+  } else {
+    $("#clean_files").addClass("hide");
   }
 }
 
@@ -847,12 +844,8 @@ $("input[type=file]").on("change", function () {
       container.remove();
       removeFileFromInputByName(filesCaptureInput, filename);
 
-      var total = document.querySelectorAll(".file-thumb").length;
       updateFileLabels();
-
-      if (total <= 0) {
-        $("#clean_files").addClass("hide");
-      }
+      checkShowCleanButton();
     });
 
     setTimeout(() => URL.revokeObjectURL(url), 60 * 1000);
@@ -971,9 +964,10 @@ $("input[type=file]").on("change", function () {
       appendFileToInput(filesCaptureInput, file);
 
       updateFileLabels();
+      checkShowCleanButton();
 
       Swal.fire({
-        position: "top",
+        position: "top-end",
         icon: "success",
         title: "Capture saved!",
         showConfirmButton: false,
