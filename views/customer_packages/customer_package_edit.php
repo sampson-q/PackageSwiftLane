@@ -438,19 +438,80 @@ $address_order = $db->cdp_registro();
                                     </div>
 
 
-                                    <div class="row">
-
-                                        <div class="col-md-4">
-
+                                    <!-- FILE ATTACHMENT AND CAMERA CAPTURE SECTION (MATCH ADD FLOW) -->
+                                    <div class="row mt-4">
+                                        <div class="col-md-2">
                                             <div>
-                                                <label class="control-label" id="selectItem"> <?php echo $lang['leftorder15']; ?></label>
+                                                <label class="control-label" id="selectItem"><?php echo $lang['leftorder15']; ?></label>
                                             </div>
-                                            <input class="custom-file-input" id="filesMultiple" name="filesMultiple[]" multiple="multiple" type="file" style="display: none;" onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
-                                            <button type="button" id="openMultiFile" class="btn btn-default  pull-left  mb-4"> <i class='fa fa-paperclip' id="openMultiFile" style="font-size:18px; cursor:pointer;"></i><?php echo $lang['leftorder16']; ?> </button>
 
+                                            <input class="custom-file-input"
+                                                id="filesMultiple"
+                                                name="filesMultiple[]"
+                                                multiple="multiple"
+                                                type="file"
+                                                style="display: none;"
+                                                onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
 
-
+                                            <button type="button" id="openMultiFile" class="btn btn-default pull-left mb-4">
+                                                <i class='fa fa-paperclip' style="font-size:18px; cursor:pointer;"></i>
+                                                <?php echo $lang['leftorder16']; ?>
+                                            </button>
                                         </div>
+
+                                        <div class="col-md-2">
+                                            <div>
+                                                <label class="control-label" id="captureItem"><?php echo $lang['leftorder90']; ?></label>
+                                            </div>
+
+                                            <button type="button" id="openCameraButton" class="btn btn-dark pull-left mb-4">
+                                                <i class="fa fa-camera" style="font-size:18px; cursor:pointer;"></i>
+                                                <?php echo $lang['leftorder90']; ?>
+                                            </button>
+
+                                            <div class="mt-2 d-flex align-items-start" style="gap:.5rem;">
+                                                <video id="cameraPreview"
+                                                    autoplay
+                                                    playsinline
+                                                    style="width:220px; height:165px; background:#000; display:none; border-radius:6px; object-fit:cover;">
+                                                </video>
+
+                                                <div style="flex:1;">
+                                                    <div style="margin-bottom:.5rem;">
+                                                        <button type="button" id="takeCameraPhoto" class="btn btn-success btn-sm" style="display:none;">
+                                                            <?php echo $lang['left1105']; ?>
+                                                        </button>
+                                                        <button type="button" id="stopCamera" class="btn btn-secondary btn-sm" style="display:none;">
+                                                            <?php echo $lang['left1111']; ?>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <input class="custom-file-input"
+                                                id="filesCapture"
+                                                name="filesCapture[]"
+                                                multiple="multiple"
+                                                type="file"
+                                                accept="image/*"
+                                                capture="environment"
+                                                style="display:none;" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12 row" id="image_preview"></div>
+
+                                    <div class="col-md-4 mt-4">
+                                        <div id="clean_files" class="hide">
+                                            <button type="button" id="clean_file_button" class="btn btn-danger ml-3">
+                                                <i class='fa fa-trash' style="font-size:18px; cursor:pointer;"></i>
+                                                <?php echo $lang['leftorder17']; ?>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="resultados_file col-md-4 pull-right mt-4"></div>
                                     </div>
 
                                     <div class="col-md-12 row" id="image_preview"></div>
@@ -477,74 +538,26 @@ $address_order = $db->cdp_registro();
                     </div>
 
                     <?php
-
                     $db->cdp_query("SELECT * FROM cdb_customer_package_files where order_id='" . $_GET['id'] . "' ORDER BY date_file");
                     $files_order = $db->cdp_registros();
-                    $numrows = $db->cdp_rowCount();
 
-
-                    if ($numrows > 0) {
+                    $existing_files_payload = [];
+                    if (!empty($files_order)) {
+                        foreach ($files_order as $f) {
+                            $ext = strtolower($f->file_type ?? '');
+                            $is_img = in_array($ext, ['jpg','jpeg','png','ico']);
+                            $existing_files_payload[] = [
+                                'id' => (int)$f->id,
+                                'url' => $f->url,
+                                'name' => $f->name,
+                                'is_image' => $is_img
+                            ];
+                        }
+                    }
                     ?>
-                        <div class="row">
-                            <div class="col-lg-12">
-
-                                <div id="resultados_ajax_delete_file"></div>
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h5 class="card-title"><i class="fa fa-paperclip"></i> <?php echo $lang['leftorder16']; ?></h5>
-                                        <hr>
-                                        <div class="col-md-12 row">
-
-                                            <?php
-                                            $count = 0;
-                                            $count_hr = 0;
-
-                                            foreach ($files_order as $file) {
-
-                                                $date_add = date("Y-m-d h:i A", strtotime($file->date_file));
-
-                                                $src = 'assets/images/no-preview.jpeg';
-
-                                                if (
-                                                    $file->file_type == 'jpg' ||
-                                                    $file->file_type == 'jpeg' ||
-                                                    $file->file_type == 'png' ||
-                                                    $file->file_type == 'ico'
-                                                ) {
-
-                                                    $src = $file->url;
-                                                }
-
-                                                $count++;
-                                            ?>
-
-                                                <div class="col-md-3" id="file_delete_item_<?php echo $file->id; ?>">
-
-                                                    <img style="width: 180px; height: 180px;" class="img-thumbnail" src="<?php echo $src; ?>">
-
-                                                    <div class="row ">
-                                                        <div class=" col-md-12 mb-3 mt-2">
-                                                            <p class="text-justify"><a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></p>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                    <div class="row">
-                                                        <div class="mb-2">
-                                                            <button type="button" class="btn btn-danger btn-sm" onclick="cdp_deleteImgAttached('<?php echo $file->id; ?>');"><i class="fa fa-trash"></i></button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            <?php
-                                            } ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    <?php
-                    } ?>
+                    <script>
+                        window.__existing_customer_package_files = <?php echo json_encode($existing_files_payload); ?>;
+                    </script>
 
                     <div class="row">
                         <div class="col-lg-12">
@@ -799,7 +812,10 @@ $address_order = $db->cdp_registro();
                                                 <div class="card-body">
                                                     <div class="text-right">
                                                         <input type="hidden" name="total_item_files" id="total_item_files" value="0" />
+                                                        <!-- deleted_file_ids: keeps legacy meaning (skip indices from newly selected files) -->
                                                         <input type="hidden" name="deleted_file_ids" id="deleted_file_ids" />
+                                                        <!-- deleted_db_file_ids: NEW meaning (DB ids of existing files to delete on submit) -->
+                                                        <input type="hidden" name="deleted_db_file_ids" id="deleted_db_file_ids" value="" />
 
                                                         <button type="submit" name="create_invoice" id="create_invoice" class="btn btn-danger">
                                                             <i class="fas fa-save"></i>

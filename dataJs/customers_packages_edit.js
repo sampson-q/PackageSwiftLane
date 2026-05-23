@@ -20,6 +20,7 @@ function getShipment() {
 
 $(function () {
   getShipment();
+  preloadExistingFilesFromDom();
 
   $("#order_date").datepicker({
     format: "yyyy-mm-dd",
@@ -148,94 +149,144 @@ function cdp_load_cities(modal) {
 }
 
 function cdp_deleteImgAttached(id) {
-  var parent = $("#file_delete_item_" + id);
-  var name = $(this).attr("data-rel");
-  new Messi(
-    '<p class="messi-warning"><i class="icon-warning-sign icon-3x pull-left"></i>' +
-      message_delete_confirm +
-      "<br /><strong>" +
-      message_delete_confirm2 +
-      "</strong></p>",
-    {
-      title: "Delete file",
-      titleClass: "",
-      modal: true,
-      closeButton: true,
-      buttons: [
-        {
-          id: 0,
-          label: message_delete_confirm1,
-          class: "",
-          val: "Y",
-        },
-      ],
-      callback: function (val) {
-        if (val === "Y") {
-          $.ajax({
-            type: "post",
-            url: "./ajax/customers_packages/customer_packages_files_uploads_delete_ajax.php",
-            data: {
-              id: id,
-            },
-            beforeSend: function () {
-              parent.animate(
-                {
-                  backgroundColor: "#FFBFBF",
-                },
-                400
-              );
+  // EDIT MODE: do NOT delete immediately on the server.
+  // Mirror add flow behavior: mark for deletion, remove from UI, submit will delete transactionally.
+  id = parseInt(id, 10);
+  if (!id) return;
 
-              parent.remove();
-            },
-            success: function (data) {
-              $("#resultados_ajax_delete_file").html(data);
-            },
-          });
-        }
-      },
+  var current = ($("#deleted_db_file_ids").val() || "").trim();
+  var ids = current ? current.split(",").map(function (x) { return parseInt(x, 10); }).filter(Boolean) : [];
 
-      // });
-    }
-  );
+  if (ids.indexOf(id) === -1) ids.push(id);
+
+  $("#deleted_db_file_ids").val(ids.join(","));
+
+  // Remove from unified preview if present
+  var el = document.querySelector('.file-thumb[data-existing-id="' + id + '"]');
+  if (el) el.remove();
+
+  updateFileLabels();
+  checkShowCleanButton();
 }
 
 function cdp_preview_images() {
-  $("#image_preview").html("");
+  var input = document.getElementById("filesMultiple");
+  if (!input) return;
 
-  var total_file = document.getElementById("filesMultiple").files.length;
+  var files = Array.from(input.files || []);
+  var previewWrap = document.getElementById("image_preview");
+  if (!previewWrap) return;
 
-  for (var i = 0; i < total_file; i++) {
-    var mime_type = event.target.files[i].type.split("/");
-    var src = "";
-    if (mime_type[0] == "image") {
-      src = URL.createObjectURL(event.target.files[i]);
+  // Remove only previously uploaded thumbnails, not captured ones and not preloaded existing ones
+  var existingUploads = previewWrap.querySelectorAll('.file-thumb[data-type="upload"]');
+  existingUploads.forEach(function (el) { el.remove(); });
+
+  files.forEach(function (file) {
+    var mimeRoot = (file.type || "").split("/")[0];
+    var previewBlob;
+
+    if (mimeRoot === "image") {
+      previewBlob = file;
     } else {
-      src = "assets/images/no-preview.jpeg";
+      previewBlob = new Blob([], { type: "image/jpeg" });
+      previewBlob.previewFallback = "assets/images/no-preview.jpeg";
     }
 
-    $("#image_preview").append(
-      '<div class="col-md-3" id="image_' +
-        i +
-        '">' +
-        '<img style="width: 180px; height: 180px;" class="img-thumbnail" src="' +
-        src +
-        '">' +
-        '<div class="row">' +
-        '<div class=" col-md-12 mt-2 mb-2">' +
-        "<span>" +
-        event.target.files[i].name +
-        "</span>" +
-        "</div>" +
-        "</div>" +
-        '<div class="row">' +
-        '<div class="  mb-2">' +
-        '<button type="button" class="btn btn-danger btn-sm pull-left" onclick="cdp_deletePreviewImage(' +
-        i +
-        ');"><i class="fa fa-trash"></i></button>' +
-        "</div>" +
-        "</div>" +
-        "</div>"
-    );
+    addUnifiedThumbnail(previewBlob, file.name, file, "upload");
+  });
+
+  updateFileLabels();
+  checkShowCleanButton();
+}
+
+function addUnifiedThumbnail(blob, filename, originalFile, fileType) {
+  var previewWrap = document.getElementById("image_preview");
+  if (!previewWrap) return;
+
+  var isRealImage = !blob.previewFallback;
+  var url = isRealImage ? URL.createObjectURL(blob) : blob.previewFallback;
+
+  var container = document.createElement("div");
+  container.className = "file-thumb";
+  container.dataset.filename = filename;
+  container.dataset.type = fileType;
+
+  container.style.cssText = "display:inline-block;margin:6px;position:relative;width:130px;vertical-align:top;";
+
+  var sizeKB = Math.round(((originalFile && originalFile.size) || blob.size || 0) / 1024);
+
+  container.innerHTML =
+    '<div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid #ddd;background:#fff;">' +
+    '  <img src="' + url + '" alt="' + filename + '" style="width:130px;height:100px;object-fit:cover;display:block;">' +
+    '  <button type="button" class="remove-preview-btn" ' +
+    '    style="position:absolute;top:6px;right:6px;width:24px;height:24px;border:none;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;cursor:pointer;font-size:14px;line-height:24px;">×</button>' +
+    "</div>" +
+    '<div style="font-size:11px;margin-top:5px;text-align:center;word-break:break-word;">' + filename + "</div>" +
+    '<div style="font-size:10px;color:#666;text-align:center;">' + sizeKB + " KB</div>";
+
+  previewWrap.prepend(container);
+
+  var removeBtn = container.querySelector(".remove-preview-btn");
+  removeBtn.addEventListener("click", function () {
+    container.remove();
+
+    // Remove from new-upload input(s)
+    removeFileFromInputByName(document.getElementById("filesMultiple"), filename);
+    removeFileFromInputByName(document.getElementById("filesCapture"), filename);
+
+    // Remove from fallback captured list if any
+    if (window.__capturedFilesFallback && window.__capturedFilesFallback.length) {
+      window.__capturedFilesFallback = window.__capturedFilesFallback.filter(function (f) {
+        return f && f.name !== filename;
+      });
+    }
+
+    // If this thumbnail represents an existing DB file, mark it for deletion
+    var existingId = container.getAttribute("data-existing-id");
+    if (existingId) {
+      cdp_deleteImgAttached(existingId);
+      return;
+    }
+
+    updateFileLabels();
+    checkShowCleanButton();
+  });
+
+  if (isRealImage) {
+    setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+  }
+}
+
+function updateFileLabels() {
+  var uploadCount = document.querySelectorAll('.file-thumb[data-type="upload"]').length;
+  var cameraCount = document.querySelectorAll('.file-thumb[data-type="camera"]').length;
+  var existingCount = document.querySelectorAll('.file-thumb[data-type="existing"]').length;
+
+  var totalAttach = uploadCount + existingCount;
+
+  if (totalAttach > 0) $("#selectItem").html("attached files (" + totalAttach + ")");
+  else $("#selectItem").html("attached files");
+
+  if (cameraCount > 0) $("#captureItem").html("camera captures (" + cameraCount + ")");
+  else $("#captureItem").html("camera captures");
+}
+
+function checkShowCleanButton() {
+  var totalThumbs = document.querySelectorAll(".file-thumb").length;
+  if (totalThumbs > 0) $("#clean_files").removeClass("hide");
+  else $("#clean_files").addClass("hide");
+}
+
+function removeFileFromInputByName(inputEl, filename) {
+  if (!inputEl) return;
+  try {
+    var dt = new DataTransfer();
+    Array.from(inputEl.files || []).forEach(function (f) {
+      if (f.name !== filename) dt.items.add(f);
+    });
+    inputEl.files = dt.files;
+  } catch (e) {
+    console.warn("removeFileFromInputByName failed", e);
   }
 }
 
@@ -889,6 +940,16 @@ $("#invoice_form").on("submit", function (event) {
     data.append("filesMultiple[]", document.getElementById("filesMultiple").files[i]);
   }
 
+  // Existing DB files to delete (transactional delete on submit)
+    var deletedDbIds = $("#deleted_db_file_ids").val();
+    if (deletedDbIds) data.append("deleted_db_file_ids", deletedDbIds);
+
+    // Camera captured files (same as add)
+    appendAllFilesToFormData(data);
+
+    // Keep parity with add
+    data.append("recipient_type", window.recipient_type || "recipient");
+
   $.ajax({
     type: "POST",
     url: "ajax/customers_packages/edit_customers_packages_ajax.php",
@@ -1491,4 +1552,246 @@ function cdp_showSuccess(messages, shipment_id) {
       }, 2000);
     }
   });
+}
+
+
+// ========== CAMERA FEATURE INTEGRATION (MATCH ADD FLOW) ==========
+(() => {
+  "use strict";
+  const MAX_BYTES = 1024 * 1024; // 1MB
+
+  const openBtn = document.getElementById("openCameraButton");
+  const cameraPreview = document.getElementById("cameraPreview");
+  const takeBtn = document.getElementById("takeCameraPhoto");
+  const stopBtn = document.getElementById("stopCamera");
+  const filesCaptureInput = document.getElementById("filesCapture");
+  const previewWrap = document.getElementById("image_preview");
+
+  window.__capturedFilesFallback = window.__capturedFilesFallback || [];
+
+  let stream = null;
+
+  function warn() { try { console.warn.apply(console, arguments); } catch (e) {} }
+  function fail(msg, e) { console.error(msg, e); alert(msg + (e && e.message ? "\n" + e.message : "")); }
+
+  function canvasToBlob(canvas, mime, quality) {
+    mime = mime || "image/jpeg";
+    if (typeof quality === "undefined") quality = 0.92;
+
+    return new Promise((resolve, reject) => {
+      try {
+        if (canvas.toBlob) {
+          canvas.toBlob((b) => {
+            if (b) resolve(b);
+            else reject(new Error("toBlob returned null"));
+          }, mime, quality);
+        } else {
+          const dataUrl = canvas.toDataURL(mime, quality);
+          const parts = dataUrl.split(";base64,");
+          const binary = atob(parts[1]);
+          const len = binary.length;
+          const u8 = new Uint8Array(len);
+          for (let i = 0; i < len; i++) u8[i] = binary.charCodeAt(i);
+          resolve(new Blob([u8], { type: mime }));
+        }
+      } catch (e) { reject(e); }
+    });
+  }
+
+  async function compressBlobToLimit(blob, maxBytes) {
+    maxBytes = maxBytes || MAX_BYTES;
+    try {
+      if (!blob || blob.size <= maxBytes) return blob;
+
+      const img = await new Promise((res, rej) => {
+        const url = URL.createObjectURL(blob);
+        const i = new Image();
+        i.onload = () => { URL.revokeObjectURL(url); res(i); };
+        i.onerror = (e) => { URL.revokeObjectURL(url); rej(e); };
+        i.src = url;
+      });
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      let w = img.width, h = img.height;
+      canvas.width = w; canvas.height = h;
+      ctx.drawImage(img, 0, 0, w, h);
+
+      let quality = 0.92;
+      let out = await canvasToBlob(canvas, "image/jpeg", quality);
+
+      while (out.size > maxBytes && quality > 0.08) {
+        quality = Math.max(0.08, quality - 0.07);
+        out = await canvasToBlob(canvas, "image/jpeg", quality);
+      }
+
+      while (out.size > maxBytes && Math.min(w, h) > 200) {
+        w = Math.floor(w * 0.92);
+        h = Math.floor(h * 0.92);
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+        quality = 0.85;
+        out = await canvasToBlob(canvas, "image/jpeg", quality);
+        while (out.size > maxBytes && quality > 0.08) {
+          quality = Math.max(0.08, quality - 0.07);
+          out = await canvasToBlob(canvas, "image/jpeg", quality);
+        }
+      }
+
+      return out;
+    } catch (e) {
+      warn("compressBlobToLimit failed; returning original blob", e);
+      return blob;
+    }
+  }
+
+  function appendFileToInput(inputEl, file) {
+    if (!inputEl) {
+      window.__capturedFilesFallback.push(file);
+      return false;
+    }
+    try {
+      const dt = new DataTransfer();
+      Array.from(inputEl.files || []).forEach((f) => dt.items.add(f));
+      dt.items.add(file);
+      inputEl.files = dt.files;
+      return true;
+    } catch (e) {
+      warn("appendFileToInput failed; using fallback", e);
+      window.__capturedFilesFallback.push(file);
+      return false;
+    }
+  }
+
+  async function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Camera not supported by this browser.");
+      return;
+    }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+      cameraPreview.srcObject = stream;
+      cameraPreview.style.display = "block";
+      if (takeBtn) takeBtn.style.display = "inline-block";
+      if (stopBtn) stopBtn.style.display = "inline-block";
+      if (openBtn) openBtn.style.display = "none";
+    } catch (e) {
+      fail("Unable to open camera", e);
+    }
+  }
+
+  function stopCamera() {
+    try {
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+        stream = null;
+      }
+      cameraPreview.style.display = "none";
+      if (takeBtn) takeBtn.style.display = "none";
+      if (stopBtn) stopBtn.style.display = "none";
+      if (openBtn) openBtn.style.display = "inline-block";
+    } catch (e) { warn("stopCamera error", e); }
+  }
+
+  async function captureOnlyAttach() {
+    try {
+      if (!cameraPreview || !cameraPreview.videoWidth || !cameraPreview.videoHeight) {
+        throw new Error("Camera frame not ready yet.");
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = cameraPreview.videoWidth;
+      canvas.height = cameraPreview.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+
+      let blob = await canvasToBlob(canvas, "image/jpeg", 0.92);
+      blob = await compressBlobToLimit(blob, MAX_BYTES);
+
+      const filename = "capture_" + Date.now() + ".jpg";
+      let file;
+      try {
+        file = new File([blob], filename, { type: blob.type });
+      } catch (e) {
+        file = blob;
+        file.name = filename;
+      }
+
+      // Use unified thumbnail system
+      addUnifiedThumbnail(blob, filename, file, "camera");
+      appendFileToInput(filesCaptureInput, file);
+
+      updateFileLabels();
+      checkShowCleanButton();
+    } catch (e) {
+      fail("Capture failed", e);
+    }
+  }
+
+  if (openBtn) openBtn.addEventListener("click", startCamera);
+  if (stopBtn) stopBtn.addEventListener("click", stopCamera);
+  if (takeBtn) takeBtn.addEventListener("click", captureOnlyAttach);
+
+  window.addEventListener("beforeunload", () => { if (stream) stopCamera(); });
+})();
+
+function appendAllFilesToFormData(fd) {
+  const filesCaptureInput = document.getElementById("filesCapture");
+  if (filesCaptureInput && filesCaptureInput.files && filesCaptureInput.files.length) {
+    Array.from(filesCaptureInput.files).forEach(function (f) {
+      fd.append("filesCapture[]", f, f.name || ("capture_" + Date.now() + ".jpg"));
+    });
+  }
+
+  if (window.__capturedFilesFallback && window.__capturedFilesFallback.length) {
+    window.__capturedFilesFallback.forEach(function (f, idx) {
+      const name = f.name || ("capture_fallback_" + Date.now() + "_" + idx + ".jpg");
+      fd.append("filesCapture[]", f, name);
+    });
+  }
+}
+
+function preloadExistingFilesFromDom() {
+  // The edit view used to render existing attachments separately.
+  // After we remove that block, we still need a source of existing files.
+  // So we require the view to output a JSON payload in a script tag OR data attributes.
+  // If you implement the view change below (A4), this function will preload correctly.
+
+  if (!window.__existing_customer_package_files || !Array.isArray(window.__existing_customer_package_files)) return;
+
+  window.__existing_customer_package_files.forEach(function (f) {
+    if (!f || !f.id || !f.url) return;
+
+    // Avoid duplication if already present
+    if (document.querySelector('.file-thumb[data-existing-id="' + f.id + '"]')) return;
+
+    var filename = f.name || ("file_" + f.id);
+    var container = document.createElement("div");
+    container.className = "file-thumb";
+    container.dataset.type = "existing";
+    container.dataset.filename = filename;
+    container.setAttribute("data-existing-id", f.id);
+
+    container.style.cssText = "display:inline-block;margin:6px;position:relative;width:130px;vertical-align:top;";
+
+    var src = f.is_image ? f.url : "assets/images/no-preview.jpeg";
+
+    container.innerHTML =
+      '<div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid #ddd;background:#fff;">' +
+      '  <img src="' + src + '" alt="' + filename + '" style="width:130px;height:100px;object-fit:cover;display:block;">' +
+      '  <button type="button" class="remove-preview-btn" ' +
+      '    style="position:absolute;top:6px;right:6px;width:24px;height:24px;border:none;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;cursor:pointer;font-size:14px;line-height:24px;">×</button>' +
+      "</div>" +
+      '<div style="font-size:11px;margin-top:5px;text-align:center;word-break:break-word;">' + filename + "</div>";
+
+    document.getElementById("image_preview").prepend(container);
+
+    container.querySelector(".remove-preview-btn").addEventListener("click", function () {
+      cdp_deleteImgAttached(f.id);
+    });
+  });
+
+  updateFileLabels();
+  checkShowCleanButton();
 }
