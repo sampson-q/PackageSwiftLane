@@ -6633,13 +6633,6 @@ function cdp_insertCustomerPackages($datos) {
     }
  
     try {
-        // ===== PREPARE INSERT STATEMENT =====
-        // CRITICAL FIX: Use correct column names from actual table schema
-        // - receiver_id (NOT recipient_id)
-        // - receiver_address_id (NOT recipient_address_id)
-        // - order_pay_mode (was missing)
-        // - Include ALL columns that exist: tracking_purchase, provider_purchase, price_purchase, etc.
-        
         $db->cdp_query("
             INSERT INTO cdb_customers_packages 
             (
@@ -6669,6 +6662,7 @@ function cdp_insertCustomerPackages($datos) {
                 provider_purchase,
                 price_purchase,
                 notify_whatsapp_sender,
+                recipient_type,
                 is_prealert
             )
             VALUES
@@ -6699,6 +6693,7 @@ function cdp_insertCustomerPackages($datos) {
                 :provider_purchase,
                 :price_purchase,
                 :notify_whatsapp_sender,
+                :recipient_type,
                 :is_prealert
             )
         ");
@@ -6731,6 +6726,8 @@ function cdp_insertCustomerPackages($datos) {
         $db->bind(':provider_purchase',  $datos["provider_purchase"] ?? null);
         $db->bind(':price_purchase',  $datos["price_purchase"] ?? null);
         $db->bind(':notify_whatsapp_sender',  $datos["notify_whatsapp_sender"] ?? 0);
+        // CRITICAL FIX: Bind recipient_type (NOT NULL column)
+        $db->bind(':recipient_type',  $datos["recipient_type"] ?? 'recipient');
         $db->bind(':is_prealert',  $datos['is_prealert'] ?? 0);
  
         // ===== EXECUTE INSERT =====

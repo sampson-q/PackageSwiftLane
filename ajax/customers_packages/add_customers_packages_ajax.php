@@ -43,6 +43,12 @@ if (empty($_POST['sender_id']))
 if (empty($_POST['sender_address_id']))
     $errors['sender_address_id'] = $lang['validate_field_ajax145'];
 
+if (empty($_POST['recipient_id']))
+    $errors['recipient_id'] = $lang['validate_field_ajax151'];
+
+if (empty($_POST['recipient_address_id']))
+    $errors['recipient_address_id'] = $lang['validate_field_ajax146'];
+
 if (empty($_POST['tracking_purchase']))
 
     $errors['tracking_purchase'] = $lang['validate_field_ajax170'];
@@ -143,6 +149,7 @@ if (empty($errors)) {
 
         'recipient_id'          => (int)(cdp_sanitize($_POST['recipient_id'] ?? 0)),
         'recipient_address_id'  => (int)(cdp_sanitize($_POST['recipient_address_id'] ?? 0)),
+        'recipient_type'        => cdp_sanitize($_POST['recipient_type'] ?? 'recipient'),
         'order_payment_method'  => (int)(cdp_sanitize($_POST['order_payment_method'] ?? 0)),
         'notify_whatsapp_sender' => (int)(cdp_sanitize($_POST['notify_whatsapp_sender'] ?? 0)),
     );
@@ -480,6 +487,53 @@ if (empty($errors)) {
         $sender_city = cdp_getCity($sender_city);
         $final_sender_city = $sender_city['data'];
 
+        // Recipient address lookup with recipient_type discriminator
+        $recipient_country = '';
+        $recipient_state = '';
+        $recipient_city = '';
+        $recipient_zip_code = '';
+        $recipient_address = '';
+
+        if (!empty($_POST['recipient_address_id'])) {
+            $recipient_type = isset($_POST["recipient_type"]) ? cdp_sanitize($_POST["recipient_type"]) : 'recipient';
+
+            if ($recipient_type === 'user') {
+                // Fetch from sender's addresses (contacts)
+                $db->cdp_query("SELECT * FROM cdb_senders_addresses WHERE id_addresses = :id LIMIT 1");
+                $db->bind(':id', intval($_POST["recipient_address_id"]));
+                $db->cdp_execute();
+                $recip_addr = $db->cdp_registro();
+            } else {
+                // Fetch from recipients addresses (default/external)
+                $db->cdp_query("SELECT * FROM cdb_recipients_addresses WHERE id_addresses = :id LIMIT 1");
+                $db->bind(':id', intval($_POST["recipient_address_id"]));
+                $db->cdp_execute();
+                $recip_addr = $db->cdp_registro();
+            }
+
+            if ($recip_addr) {
+                $recipient_country = $recip_addr->country ?? '';
+                $recipient_state = $recip_addr->state ?? '';
+                $recipient_city = $recip_addr->city ?? '';
+                $recipient_zip_code = $recip_addr->zip_code ?? '';
+                $recipient_address = $recip_addr->address ?? '';
+
+                // Resolve country/state/city IDs to names
+                if (!empty($recipient_country)) {
+                    $_recip_country = cdp_getCountry($recipient_country);
+                    $recipient_country = $_recip_country['data']->name ?? '';
+                }
+                if (!empty($recipient_state)) {
+                    $_recip_state = cdp_getState($recipient_state);
+                    $recipient_state = $_recip_state['data']->name ?? '';
+                }
+                if (!empty($recipient_city)) {
+                    $_recip_city = cdp_getCity($recipient_city);
+                    $recipient_city = $_recip_city['data']->name ?? '';
+                }
+            }
+        }
+
 
         // SAVE ADDRESS FOR Shipments
         $dataAddresses = array(
@@ -490,11 +544,11 @@ if (empty($errors)) {
             'sender_city' =>   $final_sender_city->name,
             'sender_zip_code' =>   $sender_zip_code,
             'sender_address' =>   $sender_address,
-            'recipient_country' =>   '',
-            'recipient_state' =>   '',
-            'recipient_city' =>  '',
-            'recipient_zip_code' =>   '',
-            'recipient_address' =>   '',
+            'recipient_country' =>   $recipient_country,
+            'recipient_state' =>   $recipient_state,
+            'recipient_city' =>  $recipient_city,
+            'recipient_zip_code' =>   $recipient_zip_code,
+            'recipient_address' =>   $recipient_address,
         );
 
         cdp_insertCourierShipmentAddresses($dataAddresses);
