@@ -36,26 +36,32 @@ $order_items = $db->cdp_registros();
 $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->sender_id . "'");
 $sender_data = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_category where id= '" . $row_order->order_item_category . "'");
+$db->cdp_query("SELECT * FROM cdb_category where id = 26");
 $category = $db->cdp_registro();
+
+$db->cdp_query("SELECT * FROM cdb_delivery_time where id = 14");
+$delivery_times = $db->cdp_registro();
+
+$db->cdp_query("SELECT * FROM cdb_shipping_mode where id = 8");
+$ship_modes = $db->cdp_registro();
 
 $db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row_order->order_prefix . $row_order->order_no . "'");
 $address_order = $db->cdp_registro();
 
 // recipient (may be null on older records)
-$recipient_data = null;
+$receiver_data = null;
 $recipient_address_text = '';
-if (!empty($row_order->recipient_id)) {
+if (!empty($row_order->receiver_id)) {
     if ($row_order->recipient_type == 'user') {
-        $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->recipient_id . "'");
+        $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->receiver_id . "'");
     } else {
-        $db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row_order->recipient_id . "'");
+        $db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row_order->receiver_id . "'");
     }
 
-    $recipient_data = $db->cdp_registro();
+    $receiver_data = $db->cdp_registro();
 }
 
-if (!empty($row_order->recipient_address_id)) {
+if (!empty($row_order->receiver_address_id)) {
     // we don't know if this is recipient/customer address table; address text is optional
     // leave prefill to JS with hidden ids; select2 will resolve.
     $recipient_address_text = '';
@@ -139,12 +145,12 @@ if (!empty($files_order)) {
         $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel === 6) ? (int) cdp_getAgencyBranchIdForUser($userData->name_off ?? '') : 0;
 
         $courierrow = $core->cdp_getCouriercom();
-        $statusrow = $core->cdp_getStatusByType(2);
+        $statusrow = $core->cdp_getStatusByType(1);
         $packrow = $core->cdp_getPack();
         $moderow = $core->cdp_getShipmode();
         $driverrow = $user->cdp_userAllDriver();
         $delitimerow = $core->cdp_getDelitime();
-        $categories = $core->cdp_getCategories();
+        $categories = $core->cdp_getCategoriesById(26);
         ?>
 
         <div class="page-wrapper">
@@ -164,8 +170,8 @@ if (!empty($files_order)) {
                 <!-- Prefill plumbing for edit JS (recipient/sender preselect without disabling/invisibility) -->
                 <input type="hidden" id="prefill_sender_id" value="<?php echo (int)$row_order->sender_id; ?>">
                 <input type="hidden" id="prefill_sender_address_id" value="<?php echo (int)$row_order->sender_address_id; ?>">
-                <input type="hidden" id="prefill_recipient_id" value="<?php echo (int)($row_order->recipient_id ?? 0); ?>">
-                <input type="hidden" id="prefill_recipient_address_id" value="<?php echo (int)($row_order->recipient_address_id ?? 0); ?>">
+                <input type="hidden" id="prefill_recipient_id" value="<?php echo (int)($row_order->receiver_id ?? 0); ?>">
+                <input type="hidden" id="prefill_recipient_address_id" value="<?php echo (int)($row_order->receiver_address_id ?? 0); ?>">
 
                 <!-- Existing DB files deletion list -->
                 <input type="hidden" name="deleted_db_file_ids" id="deleted_db_file_ids" value="">
@@ -230,113 +236,96 @@ if (!empty($files_order)) {
 
                     <!-- Sender/Recipient -->
                     <div class="row">
-                        <div class="col-lg-12">
+                        <!-- Remitente -->
+                        <div class="col-lg-6">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-information-outline" style="color:#20c997"></i><?php echo $lang['langs_010']; ?></h4>
+
+                                    <h4 class="card-title">
+                                        <i class="mdi mdi-information-outline" style="color:#20c997"></i>
+                                        <?php echo $lang['langs_010']; ?>
+                                    </h4>
                                     <hr>
 
-                                    <div class="resultados_ajax_add_user_modal_sender"></div>
-
-                                    <?php if ($core->active_sms == 1) { ?>
-                                        <br>
+                                    <?php
+                                    if ($core->active_whatsapp == 1) {
+                                    ?>
                                         <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
-                                            <input type="checkbox" class="custom-control-input" name="notify_sms_sender" id="notify_sms_sender" value="1">
+                                            <input type="checkbox" class="custom-control-input" name="notify_whatsapp_sender" id="notify_whatsapp_sender" value="1">
+                                            <?php echo $lang['leftorder14443']; ?> <i class="mdi mdi-whatsapp" style="font-size: 22px; color:#07bc4c;"></i>
+                                            <span class="custom-control-indicator"></span>
+                                        </label>
+
+                                    <?php } ?>
+
+                                    <div class="resultados_ajax_add_user_modal_sender"></div>
+                                    
+
+                                    <?php if ($core->active_sms == 1): ?>
+                                        <label class="custom-control custom-checkbox"
+                                               style="font-size: 18px; padding-left: 0px">
+                                            <input type="checkbox" class="custom-control-input" name="notify_sms_sender"
+                                                   id="notify_sms_sender" value="1">
                                             <b>
                                                 <?php echo $lang['leftorder14444']; ?>
-                                                <i class="fa fa-envelope" style="font-size: 22px; color:#07bc4c;"></i>
+                                                <i class="fa fa-envelope"
+                                                   style="font-size: 22px; color:#07bc4c;"></i>
                                             </b>
                                             <span class="custom-control-indicator"></span>
                                         </label>
-                                    <?php } ?>
+                                    <?php endif; ?>
 
                                     <div class="row">
-
-                                        <!-- Sender -->
-                                        <div class="col-md-6">
-                                            <label class="control-label col-form-label"><?php echo $lang['sender_search_title'] ?></label>
+                                        <div class="col-md-12">
+                                            <label class="control-label col-form-label">
+                                                <?php echo $lang['sender_search_title'] ?>
+                                            </label>
                                             <div class="row">
                                                 <div class="col-md-10">
                                                     <div class="input-group">
-                                                        <select class="select2 form-control custom-select" id="sender_id" name="sender_id">
-                                                            <option value="<?php echo (int)$sender_data->id; ?>"><?php echo $sender_data->fname . " " . $sender_data->lname; ?></option>
+                                                        <select class="select2 form-control custom-select" id="sender_id"
+                                                                name="sender_id">
+                                                            <option value="<?php echo $sender_data->id; ?>">
+                                                                <?php echo $sender_data->fname . " " . $sender_data->lname; ?>
+                                                            </option>
                                                         </select>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-2">
                                                     <div class="input-group-append input-sm">
-                                                        <button type="button" class="btn btn-default" data-type_user="user_customer" data-toggle="modal" data-target="#myModalAddUser">
-                                                            <i class="fa fa-user-plus"></i>
+                                                        <button type="button" class="btn btn-default"
+                                                                data-type_user="user_customer"
+                                                                data-toggle="modal"
+                                                                data-target="#myModalAddUser">
+                                                            <i class="fa fa-plus"></i>
                                                         </button>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- Sender address -->
-                                        <div class="col-md-6">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['sender_search_address_title'] ?></label>
+                                        <div class="col-md-12">
+                                            <label class="control-label col-form-label">
+                                                <?php echo $lang['sender_search_address_title'] ?>
+                                            </label>
                                             <div class="row">
                                                 <div class="col-md-10">
                                                     <div class="input-group">
-                                                        <select class="select2 form-control" id="sender_address_id" name="sender_address_id">
-                                                            <option value="<?php echo (int)$row_order->sender_address_id; ?>"><?php echo $address_order->sender_address; ?></option>
+                                                        <select class="select2 form-control" id="sender_address_id"
+                                                                name="sender_address_id">
+                                                            <option value="<?php echo $row_order->sender_address_id; ?>">
+                                                                <?php echo $address_order->sender_address; ?>
+                                                            </option>
                                                         </select>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-2">
                                                     <div class="input-group-append input-sm">
-                                                        <button id="add_address_sender" data-type_user="user_customer" data-toggle="modal" data-target="#myModalAddUserAddresses" type="button" class="btn btn-default">
-                                                            <i class="fa fa-map-marker"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                    </div>
-
-                                    <!-- Recipient section (MIRROR ADD: must exist in edit) -->
-                                    <div class="row mt-3">
-
-                                        <div class="col-md-6">
-                                            <label class="control-label col-form-label"><?php echo $lang['recipient_search_title'] ?? $lang['modal-text2']; ?></label>
-                                            <div class="row">
-                                                <div class="col-md-10">
-                                                    <div class="input-group">
-                                                        <select class="select2 form-control custom-select" id="recipient_id" name="recipient_id">
-                                                            <?php if (!empty($row_order->recipient_id) && $recipient_data) { ?>
-                                                                <option value="<?php echo (int)$row_order->recipient_id; ?>" selected><?php echo $recipient_data->fname . " " . $recipient_data->lname; ?></option>
-                                                            <?php } ?>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <div class="input-group-append input-sm">
-                                                        <button type="button" class="btn btn-default" id="add_recipient" data-type_user="recipient" data-toggle="modal" data-target="#myModalAddRecipient">
-                                                            <i class="fa fa-user-plus"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label class="control-label col-form-label"><?php echo $lang['recipient_search_address_title'] ?? $lang['modal-text4']; ?></label>
-                                            <div class="row">
-                                                <div class="col-md-10">
-                                                    <div class="input-group">
-                                                        <select class="select2 form-control" id="recipient_address_id" name="recipient_address_id">
-                                                            <?php if (!empty($row_order->recipient_address_id)) { ?>
-                                                                <option value="<?php echo (int)$row_order->recipient_address_id; ?>" selected><?php echo htmlspecialchars($recipient_address_text, ENT_QUOTES, 'UTF-8'); ?></option>
-                                                            <?php } ?>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <div class="input-group-append input-sm">
-                                                        <button id="add_address_recipient" data-type_user="recipient" data-toggle="modal" data-target="#myModalAddRecipientAddresses" type="button" class="btn btn-default">
-                                                            <i class="fa fa-map-marker"></i>
+                                                        <button id="add_address_sender" data-type_user="user_customer"
+                                                                data-toggle="modal"
+                                                                data-target="#myModalAddUserAddresses" type="button"
+                                                                class="btn btn-default">
+                                                            <i class="fa fa-plus"></i>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -346,9 +335,105 @@ if (!empty($files_order)) {
                                     </div>
 
                                 </div>
-
                             </div>
                         </div>
+
+                        <!-- Destinatario -->
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-body">
+
+                                    <h4 class="card-title">
+                                        <i class="mdi mdi-information-outline" style="color:#20c997"></i>
+                                        <?php echo $lang['left334']; ?>
+                                    </h4>
+                                    <hr>
+
+                                    <div class="resultados_ajax_add_user_modal_recipient"></div>
+                                    <br>
+                                    <br>
+
+                                    <?php if ($core->active_sms == 1): ?>
+                                        <label class="custom-control custom-checkbox"
+                                               style="font-size: 18px; padding-left: 0px">
+                                            <input type="checkbox" class="custom-control-input"
+                                                   name="notify_sms_receiver"
+                                                   id="notify_sms_receiver" value="1">
+                                            <b>
+                                                <?php echo $lang['leftorder14444']; ?>
+                                                <i class="fa fa-envelope"
+                                                   style="font-size: 22px; color:#07bc4c;"></i>
+                                            </b>
+                                            <span class="custom-control-indicator"></span>
+                                        </label>
+                                    <?php endif; ?>
+
+                                    <div class="row">
+
+                                        <div class="col-md-12">
+                                            <label class="control-label col-form-label">
+                                                <?php echo $lang['recipient_search_title'] ?>
+                                            </label>
+                                            <div class="row">
+                                                <div class="col-md-10">
+                                                    <div class="input-group">
+                                                        <select class="select2 form-control custom-select"
+                                                                id="recipient_id" name="recipient_id">
+                                                            <option value="<?php echo $receiver_data->id; ?>">
+                                                                <?php echo $receiver_data->fname . " " . $receiver_data->lname; ?>
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div class="input-group-append input-sm">
+                                                        <button id="add_recipient" type="button"
+                                                                data-type_user="user_recipient"
+                                                                data-toggle="modal"
+                                                                data-target="#myModalAddRecipient"
+                                                                class="btn btn-default">
+                                                            <i class="fa fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <label class="control-label col-form-label">
+                                                <?php echo $lang['recipient_search_address_title'] ?>
+                                            </label>
+                                            <div class="row">
+                                                <div class="col-md-10">
+                                                    <div class="input-group">
+                                                        <select class="select2 form-control" id="recipient_address_id"
+                                                                name="recipient_address_id">
+                                                            <option value="<?php echo $row_order->receiver_address_id; ?>">
+                                                                <?php echo $address_order->recipient_address; ?>
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div class="input-group-append input-sm">
+                                                        <button id="add_address_recipient" type="button"
+                                                                data-type_user="user_recipient"
+                                                                data-toggle="modal"
+                                                                data-target="#myModalAddRecipientAddresses"
+                                                                class="btn btn-default">
+                                                            <i class="fa fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- Shipment details -->
@@ -387,12 +472,10 @@ if (!empty($files_order)) {
                                         <div class="form-group col-md-4">
                                             <label for="inputlname" class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
                                             <div class="input-group mb-3">
-                                                <select class="custom-select col-12" id="order_item_category" name="order_item_category" required>
-                                                    <?php foreach ($categories as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php echo ((int)$row_order->order_item_category === (int)$row->id) ? 'selected' : ''; ?>>
-                                                            <?php echo $row->name_item; ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
+                                                <select class="custom-select col-12" id="order_item_category" name="order_item_category" disabled>
+                                                    <option value="<?php echo $categories->id; ?>">
+                                                        <?php echo $categories->name_item; ?>
+                                                    </option>
                                                 </select>
                                             </div>
                                         </div>
@@ -427,13 +510,8 @@ if (!empty($files_order)) {
                                         <div class="form-group col-md-4">
                                             <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title22'] ?></label>
                                             <div class="input-group mb-3">
-                                                <select class="custom-select col-12" id="order_service_options" name="order_service_options">
-                                                    <option value="0">--<?php echo $lang['left205'] ?>--</option>
-                                                    <?php foreach ($moderow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php echo ((int)$row_order->order_service_options === (int)$row->id) ? 'selected' : ''; ?>>
-                                                            <?php echo $row->ship_mode; ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
+                                                <select class="custom-select col-12" id="order_service_options" name="order_service_options" disabled>
+                                                    <option value="<?php echo $ship_modes->id; ?>"><?php echo $ship_modes->ship_mode; ?></option>
                                                 </select>
                                             </div>
                                         </div>
@@ -441,13 +519,8 @@ if (!empty($files_order)) {
                                         <div class="form-group col-md-4">
                                             <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title20'] ?></label>
                                             <div class="input-group mb-3">
-                                                <select class="custom-select col-12" id="order_deli_time" name="order_deli_time">
-                                                    <option value="0">--<?php echo $lang['left207'] ?>--</option>
-                                                    <?php foreach ($delitimerow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php echo ((int)$row_order->order_deli_time === (int)$row->id) ? 'selected' : ''; ?>>
-                                                            <?php echo $row->delitime; ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
+                                                <select class="custom-select col-12" id="order_deli_time" name="order_deli_time" disabled>
+                                                    <option value="<?php echo $delivery_times->id; ?>"><?php echo $delivery_times->delitime; ?></option>
                                                 </select>
                                             </div>
                                         </div>
