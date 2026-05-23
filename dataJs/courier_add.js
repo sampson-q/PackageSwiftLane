@@ -522,179 +522,94 @@ function changePackage(el) {
    Adjuntos
    ========================== */
 function cdp_preview_images() {
+  var input = document.getElementById("filesMultiple");
+  if (!input) return;
 
-    const input = document.getElementById("filesMultiple");
-    if (!input) return;
+  var files = Array.from(input.files || []);
+  var previewWrap = document.getElementById("image_preview");
+  if (!previewWrap) return;
 
-    const files = Array.from(input.files || []);
-    const previewWrap = document.getElementById("image_preview");
+  // Remove only previously uploaded thumbnails, not captured ones
+  var existingUploads = previewWrap.querySelectorAll('.file-thumb[data-type="upload"]');
+  existingUploads.forEach(function(el) { el.remove(); });
 
-    if (!previewWrap) return;
+  files.forEach(function(file) {
+    var mimeRoot = (file.type || "").split("/")[0];
+    var previewBlob;
 
-    // clear previous previews
-    previewWrap.innerHTML = "";
-
-    files.forEach((file) => {
-
-        const mimeRoot = (file.type || "").split("/")[0];
-
-        let previewBlob;
-
-        if (mimeRoot === "image") {
-            previewBlob = file;
-        } else {
-
-            // fake blob for non-images
-            previewBlob = new Blob([], { type: "image/jpeg" });
-
-            previewBlob.previewFallback =
-                "assets/images/no-preview.jpeg";
-        }
-
-        addUnifiedThumbnail(previewBlob, file.name, file);
-    });
-
-    $("#total_item_files").val(files.length);
-
-    if (files.length > 0) {
-        $("#clean_files").removeClass("hide");
+    if (mimeRoot === "image") {
+      previewBlob = file;
     } else {
-        $("#clean_files").addClass("hide");
+      previewBlob = new Blob([], { type: "image/jpeg" });
+      previewBlob.previewFallback = "assets/images/no-preview.jpeg";
     }
 
-    $("#selectItem").html("attached files (" + files.length + ")");
+    addUnifiedThumbnail(previewBlob, file.name, file, 'upload');
+  });
+
+  updateFileLabels();
+  checkShowCleanButton();
 }
 
 
-function addUnifiedThumbnail(blob, filename, originalFile = null) {
+function addUnifiedThumbnail(blob, filename, originalFile = null, fileType = 'upload') {
+  var previewWrap = document.getElementById("image_preview");
+  if (!previewWrap) return;
 
-    const previewWrap = document.getElementById("image_preview");
-    if (!previewWrap) return;
+  var isRealImage = !blob.previewFallback;
+  var url = isRealImage
+    ? URL.createObjectURL(blob)
+    : blob.previewFallback;
 
-    const isRealImage = !blob.previewFallback;
+  var container = document.createElement("div");
+  container.className = "file-thumb";
+  container.dataset.filename = filename;
+  container.dataset.type = fileType;
 
-    const url = isRealImage
-        ? URL.createObjectURL(blob)
-        : blob.previewFallback;
+  container.style.cssText = "display:inline-block;margin:6px;position:relative;width:130px;vertical-align:top;";
 
-    const container = document.createElement("div");
+  var sizeKB = Math.round((originalFile?.size || blob.size || 0) / 1024);
 
-    container.className = "file-thumb";
+  container.innerHTML = `
+    <div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid #ddd;background:#fff;">
+      <img
+        src="${url}"
+        alt="${filename}"
+        style="width:130px;height:100px;object-fit:cover;display:block;"
+      >
+      <button
+        type="button"
+        class="remove-preview-btn"
+        style="position:absolute;top:6px;right:6px;width:24px;height:24px;border:none;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;cursor:pointer;font-size:14px;line-height:24px;"
+      >
+        ×
+      </button>
+    </div>
+    <div style="font-size:11px;margin-top:5px;text-align:center;word-break:break-word;">${filename}</div>
+    <div style="font-size:10px;color:#666;text-align:center;">${sizeKB} KB</div>
+  `;
 
-    container.dataset.filename = filename;
+  previewWrap.prepend(container);
 
-    container.style = `
-        display:inline-block;
-        margin:6px;
-        position:relative;
-        width:130px;
-        vertical-align:top;
-    `;
+  var removeBtn = container.querySelector(".remove-preview-btn");
+  removeBtn.addEventListener("click", function() {
+    container.remove();
+    removeFileFromInputByName(document.getElementById("filesMultiple"), filename);
+    removeFileFromInputByName(document.getElementById("filesCapture"), filename);
 
-    container.innerHTML = `
-        <div style="
-            position:relative;
-            border-radius:10px;
-            overflow:hidden;
-            border:1px solid #ddd;
-            background:#fff;
-        ">
-            <img
-                src="${url}"
-                alt="${filename}"
-                style="
-                    width:130px;
-                    height:100px;
-                    object-fit:cover;
-                    display:block;
-                "
-            >
-
-            <button
-                type="button"
-                class="remove-preview-btn"
-                style="
-                    position:absolute;
-                    top:6px;
-                    right:6px;
-                    width:24px;
-                    height:24px;
-                    border:none;
-                    border-radius:50%;
-                    background:rgba(0,0,0,.65);
-                    color:#fff;
-                    cursor:pointer;
-                    font-size:14px;
-                    line-height:24px;
-                "
-            >
-                ×
-            </button>
-        </div>
-
-        <div style="
-            font-size:11px;
-            margin-top:5px;
-            text-align:center;
-            word-break:break-word;
-        ">
-            ${filename}
-        </div>
-
-        <div style="
-            font-size:10px;
-            color:#666;
-            text-align:center;
-        ">
-            ${Math.round((originalFile?.size || blob.size || 0) / 1024)} KB
-        </div>
-    `;
-
-    previewWrap.prepend(container);
-
-    const removeBtn = container.querySelector(".remove-preview-btn");
-
-    removeBtn.addEventListener("click", () => {
-
-        container.remove();
-
-        removeFileFromInputByName(
-            document.getElementById("filesMultiple"),
-            filename
-        );
-
-        removeFileFromInputByName(
-            document.getElementById("filesCapture"),
-            filename
-        );
-
-        if (
-            window.__capturedFilesFallback &&
-            window.__capturedFilesFallback.length
-        ) {
-            window.__capturedFilesFallback =
-                window.__capturedFilesFallback.filter(
-                    f => f.name !== filename
-                );
-        }
-
-        const total =
-            document.querySelectorAll(".file-thumb").length;
-
-        $("#total_item_files").val(total);
-
-        $("#selectItem").html(
-            "attached files (" + total + ")"
-        );
-
-        if (total <= 0) {
-            $("#clean_files").addClass("hide");
-        }
-    });
-
-    if (isRealImage) {
-        setTimeout(() => URL.revokeObjectURL(url), 60000);
+    if (window.__capturedFilesFallback && window.__capturedFilesFallback.length) {
+      window.__capturedFilesFallback = window.__capturedFilesFallback.filter(function(f) {
+        return f.name !== filename;
+      });
     }
+
+    updateFileLabels();
+    checkShowCleanButton();
+  });
+
+  if (isRealImage) {
+    setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+  }
 }
 
 /* ==========================
@@ -1309,282 +1224,348 @@ function resetPhones() {
 }
 
 (() => {
-    'use strict';
-    const MAX_BYTES = 1024 * 1024; // 1MB
+  'use strict';
+  const MAX_BYTES = 1024 * 1024; // 1MB
 
-    // Elements (IDs must match your HTML)
-    const openBtn = document.getElementById('openCameraButton');
-    const cameraPreview = document.getElementById('cameraPreview');
-    const takeBtn = document.getElementById('takeCameraPhoto');
-    const stopBtn = document.getElementById('stopCamera');
-    const filesCaptureInput = document.getElementById('filesCapture'); // hidden input
-    const previewWrap = document.getElementById('image_preview');
+  const openBtn = document.getElementById('openCameraButton');
+  const cameraPreview = document.getElementById('cameraPreview');
+  const takeBtn = document.getElementById('takeCameraPhoto');
+  const stopBtn = document.getElementById('stopCamera');
+  const filesCaptureInput = document.getElementById('filesCapture');
+  const previewWrap = document.getElementById('image_preview');
 
-    // fallback array if DataTransfer not supported or setting input.files fails
-    window.__capturedFilesFallback = window.__capturedFilesFallback || [];
+  window.__capturedFilesFallback = window.__capturedFilesFallback || [];
 
-    let stream = null;
+  let stream = null;
 
-    function log(...args){ console.log('[capture]', ...args); }
-    function warn(...args){ console.warn('[capture]', ...args); }
-    function fail(msg, e){ console.error('[capture]', msg, e); alert(msg + (e && e.message ? '\n' + e.message : '')); }
+  function log(...args) { console.log('[capture]', ...args); }
+  function warn(...args) { console.warn('[capture]', ...args); }
+  function fail(msg, e) { console.error('[capture]', msg, e); alert(msg + (e && e.message ? '\n' + e.message : '')); }
 
-    // canvas.toBlob wrapper with DataURL fallback (very defensive)
-    function canvasToBlob(canvas, mime='image/jpeg', quality=0.92){
-        return new Promise((resolve, reject) => {
-        try {
-            if (canvas.toBlob) {
-            canvas.toBlob(b => {
-                if (b) resolve(b);
-                else {
-                // fallback
-                try {
-                    const dataUrl = canvas.toDataURL(mime, quality);
-                    const parts = dataUrl.split(';base64,');
-                    const binary = atob(parts[1]);
-                    const len = binary.length;
-                    const u8 = new Uint8Array(len);
-                    for (let i=0;i<len;i++) u8[i] = binary.charCodeAt(i);
-                    resolve(new Blob([u8], { type: mime }));
-                } catch (e2) { reject(e2); }
-                }
-            }, mime, quality);
-            } else {
-            const dataUrl = canvas.toDataURL(mime, quality);
-            const parts = dataUrl.split(';base64,');
-            const binary = atob(parts[1]);
-            const len = binary.length;
-            const u8 = new Uint8Array(len);
-            for (let i=0;i<len;i++) u8[i] = binary.charCodeAt(i);
-            resolve(new Blob([u8], { type: mime }));
+  // Canvas to blob conversion with fallback
+  function canvasToBlob(canvas, mime = 'image/jpeg', quality = 0.92) {
+    return new Promise((resolve, reject) => {
+      try {
+        if (canvas.toBlob) {
+          canvas.toBlob(b => {
+            if (b) resolve(b);
+            else {
+              try {
+                const dataUrl = canvas.toDataURL(mime, quality);
+                const parts = dataUrl.split(';base64,');
+                const binary = atob(parts[1]);
+                const len = binary.length;
+                const u8 = new Uint8Array(len);
+                for (let i = 0; i < len; i++) u8[i] = binary.charCodeAt(i);
+                resolve(new Blob([u8], { type: mime }));
+              } catch (e2) { reject(e2); }
             }
-        } catch (e) { reject(e); }
-        });
-    }
-
-    // iterative compression: reduce quality, then downscale until under limit
-    async function compressBlobToLimit(blob, maxBytes = MAX_BYTES) {
-        try {
-        if (!blob) throw new Error('No blob provided');
-        if (blob.size <= maxBytes) return blob;
-
-        const img = await new Promise((res, rej) => {
-            const url = URL.createObjectURL(blob);
-            const i = new Image();
-            i.onload = () => { URL.revokeObjectURL(url); res(i); };
-            i.onerror = e => { URL.revokeObjectURL(url); rej(e); };
-            i.src = url;
-        });
-
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        let w = img.width, h = img.height;
-        canvas.width = w; canvas.height = h;
-        ctx.drawImage(img, 0, 0, w, h);
-
-        let quality = 0.92;
-        let out = await canvasToBlob(canvas, 'image/jpeg', quality);
-
-        while (out.size > maxBytes && quality > 0.08) {
-            quality = Math.max(0.08, quality - 0.07);
-            out = await canvasToBlob(canvas, 'image/jpeg', quality);
+          }, mime, quality);
+        } else {
+          const dataUrl = canvas.toDataURL(mime, quality);
+          const parts = dataUrl.split(';base64,');
+          const binary = atob(parts[1]);
+          const len = binary.length;
+          const u8 = new Uint8Array(len);
+          for (let i = 0; i < len; i++) u8[i] = binary.charCodeAt(i);
+          resolve(new Blob([u8], { type: mime }));
         }
+      } catch (e) { reject(e); }
+    });
+  }
 
-        while (out.size > maxBytes && Math.min(w,h) > 200) {
-            w = Math.floor(w * 0.92);
-            h = Math.floor(h * 0.92);
-            canvas.width = w; canvas.height = h;
-            ctx.drawImage(img, 0, 0, w, h);
-            quality = 0.85;
-            out = await canvasToBlob(canvas, 'image/jpeg', quality);
-            while (out.size > maxBytes && quality > 0.08) {
-            quality = Math.max(0.08, quality - 0.07);
-            out = await canvasToBlob(canvas, 'image/jpeg', quality);
-            }
-        }
+  // Iterative compression
+  async function compressBlobToLimit(blob, maxBytes = MAX_BYTES) {
+    try {
+      if (!blob) throw new Error('No blob provided');
+      if (blob.size <= maxBytes) return blob;
 
-        return out;
-        } catch (e) {
-        warn('compressBlobToLimit failed — returning original blob', e);
-        return blob;
-        }
-    }
-
-    // create a thumbnail in #image_preview and add a remove button
-    function addThumbnail(blob, filename) {
-        if (!previewWrap) return;
+      const img = await new Promise((res, rej) => {
         const url = URL.createObjectURL(blob);
-        const container = document.createElement('div');
-        container.className = 'thumb';
-        container.style = 'display:inline-block;margin:6px;position:relative;';
-        container.dataset.filename = filename;
-        container.innerHTML = `
-        <img src="${url}" alt="${filename}" style="width:120px;height:90px;object-fit:cover;border-radius:6px;border:1px solid #ddd;">
-        <div class="remove-btn" title="Remove" style="position:absolute;right:6px;top:6px;background:rgba(0,0,0,0.6);color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;cursor:pointer;font-size:12px;">&times;</div>
-        <div style="font-size:11px;margin-top:4px;text-align:center;">${Math.round((blob.size||0)/1024)} KB</div>
-        `;
-        previewWrap.prepend(container);
+        const i = new Image();
+        i.onload = () => { URL.revokeObjectURL(url); res(i); };
+        i.onerror = e => { URL.revokeObjectURL(url); rej(e); };
+        i.src = url;
+      });
 
-        const removeEl = container.querySelector('.remove-btn');
-        removeEl.addEventListener('click', () => {
-        // remove from DOM
-        container.remove();
-        // remove from filesCapture input (if present)
-        if (filesCaptureInput) removeFileFromInputByName(filesCaptureInput, filename);
-        // also remove from fallback store if present
-        if (window.__capturedFilesFallback && window.__capturedFilesFallback.length) {
-            window.__capturedFilesFallback = window.__capturedFilesFallback.filter(f => f.name !== filename);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      let w = img.width, h = img.height;
+      canvas.width = w;
+      canvas.height = h;
+      ctx.drawImage(img, 0, 0, w, h);
+
+      let quality = 0.92;
+      let out = await canvasToBlob(canvas, 'image/jpeg', quality);
+
+      while (out.size > maxBytes && quality > 0.08) {
+        quality = Math.max(0.08, quality - 0.07);
+        out = await canvasToBlob(canvas, 'image/jpeg', quality);
+      }
+
+      while (out.size > maxBytes && Math.min(w, h) > 200) {
+        w = Math.floor(w * 0.92);
+        h = Math.floor(h * 0.92);
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+        quality = 0.85;
+        out = await canvasToBlob(canvas, 'image/jpeg', quality);
+        while (out.size > maxBytes && quality > 0.08) {
+          quality = Math.max(0.08, quality - 0.07);
+          out = await canvasToBlob(canvas, 'image/jpeg', quality);
         }
-        });
+      }
 
-        // revoke blob url eventually
-        setTimeout(() => URL.revokeObjectURL(url), 60 * 1000);
+      return out;
+    } catch (e) {
+      warn('compressBlobToLimit failed — returning original blob', e);
+      return blob;
     }
+  }
 
-    // append a File object to an input[type=file] using DataTransfer; returns true if worked.
-    function appendFileToInput(inputEl, file) {
-        if (!inputEl) {
-            // store in fallback
-            window.__capturedFilesFallback.push(file);
-            log('No input element; saved in fallback array');
-            return false;
+  // Add thumbnail with remove button
+  function addThumbnail(blob, filename) {
+    if (!previewWrap) return;
+    const url = URL.createObjectURL(blob);
+
+    var container = document.createElement('div');
+    container.className = 'file-thumb';
+    container.dataset.filename = filename;
+    container.dataset.type = 'camera';
+
+    container.style.cssText = "display:inline-block;margin:6px;position:relative;width:130px;vertical-align:top;";
+
+    var sizeKB = Math.round((blob.size || 0) / 1024);
+
+    container.innerHTML = `
+      <div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid #ddd;background:#fff;">
+        <img
+          src="${url}"
+          alt="${filename}"
+          style="width:130px;height:100px;object-fit:cover;display:block;"
+        >
+        <button
+          type="button"
+          class="remove-preview-btn"
+          style="position:absolute;top:6px;right:6px;width:24px;height:24px;border:none;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;cursor:pointer;font-size:14px;line-height:24px;"
+        >
+          ×
+        </button>
+      </div>
+      <div style="font-size:11px;margin-top:5px;text-align:center;word-break:break-word;">${filename}</div>
+      <div style="font-size:10px;color:#666;text-align:center;">${sizeKB} KB</div>
+    `;
+
+    previewWrap.prepend(container);
+
+    const removeBtn = container.querySelector('.remove-preview-btn');
+    removeBtn.addEventListener('click', () => {
+      container.remove();
+      removeFileFromInputByName(filesCaptureInput, filename);
+
+      updateFileLabels();
+      checkShowCleanButton();
+    });
+
+    setTimeout(() => URL.revokeObjectURL(url), 60 * 1000);
+  }
+
+  // Append file to input using DataTransfer
+  function appendFileToInput(inputEl, file) {
+    if (!inputEl) {
+      window.__capturedFilesFallback.push(file);
+      log('No input element; saved in fallback array');
+      return false;
+    }
+    try {
+      const dt = new DataTransfer();
+      Array.from(inputEl.files || []).forEach(f => dt.items.add(f));
+      dt.items.add(file);
+      inputEl.files = dt.files;
+      log('Appended file to input.files', file.name);
+      return true;
+    } catch (e) {
+      warn('Could not append to input.files; storing in fallback', e);
+      window.__capturedFilesFallback.push(file);
+      return false;
+    }
+  }
+
+  // Wait for video to be ready
+  function waitForVideoReady(videoEl, timeout = 3000) {
+    return new Promise((resolve, reject) => {
+      if (videoEl.videoWidth && videoEl.videoHeight) return resolve();
+      let elapsed = 0;
+      const iv = 100;
+      const t = setInterval(() => {
+        elapsed += iv;
+        if (videoEl.videoWidth && videoEl.videoHeight) {
+          clearInterval(t);
+          resolve();
         }
-        try {
-            const dt = new DataTransfer();
-            // copy existing files
-            Array.from(inputEl.files || []).forEach(f => dt.items.add(f));
-            dt.items.add(file);
-            inputEl.files = dt.files;
-            log('Appended file to input.files', file.name);
-            return true;
-        } catch (e) {
-            warn('Could not append to input.files; storing in fallback', e);
-            window.__capturedFilesFallback.push(file);
-            return false;
+        else if (elapsed >= timeout) {
+          clearInterval(t);
+          reject(new Error('Video not ready (timed out)'));
         }
+      }, iv);
+    });
+  }
+
+  // Start camera
+  async function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Camera not supported by this browser.');
+      return;
     }
-
-    // remove file from input's FileList by matching filename
-    function removeFileFromInputByName(inputEl, filename) {
-        if (!inputEl) return;
-        try {
-        const dt = new DataTransfer();
-        Array.from(inputEl.files || []).forEach(f => { if (f.name !== filename) dt.items.add(f); });
-        inputEl.files = dt.files;
-        log('Removed', filename, 'from input.files (if existed)');
-        } catch (e) { warn('removeFileFromInputByName failed', e); }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false
+      });
+      cameraPreview.srcObject = stream;
+      cameraPreview.style.display = 'block';
+      if (takeBtn) takeBtn.style.display = 'inline-block';
+      if (stopBtn) stopBtn.style.display = 'inline-block';
+      if (openBtn) openBtn.style.display = 'none';
+    } catch (e) {
+      fail('Unable to open camera', e);
     }
+  }
 
-    // small helper: wait until video has size
-    function waitForVideoReady(videoEl, timeout = 3000) {
-        return new Promise((resolve, reject) => {
-        if (videoEl.videoWidth && videoEl.videoHeight) return resolve();
-        let elapsed = 0;
-        const iv = 100;
-        const t = setInterval(() => {
-            elapsed += iv;
-            if (videoEl.videoWidth && videoEl.videoHeight) { clearInterval(t); resolve(); }
-            else if (elapsed >= timeout) { clearInterval(t); reject(new Error('Video not ready (timed out)')); }
-        }, iv);
-        });
+  // Stop camera
+  function stopCamera() {
+    try {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      cameraPreview.style.display = 'none';
+      if (takeBtn) takeBtn.style.display = 'none';
+      if (stopBtn) stopBtn.style.display = 'none';
+      if (openBtn) openBtn.style.display = 'inline-block';
+    } catch (e) { warn('stopCamera error', e); }
+  }
+
+  // Capture and attach
+  async function captureOnlyAttach() {
+    try {
+      if (!cameraPreview) throw new Error('cameraPreview element missing');
+      await waitForVideoReady(cameraPreview).catch(e => warn('video readiness wait failed (continuing):', e));
+
+      if (!cameraPreview.videoWidth || !cameraPreview.videoHeight) {
+        throw new Error('Camera frame not available yet - try waiting a second after opening camera.');
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = cameraPreview.videoWidth || 1280;
+      canvas.height = cameraPreview.videoHeight || 720;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get canvas 2D context');
+
+      ctx.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+
+      let blob = await canvasToBlob(canvas, 'image/jpeg', 0.92);
+      if (!blob) throw new Error('canvasToBlob returned null');
+
+      blob = await compressBlobToLimit(blob, MAX_BYTES);
+
+      const filename = 'capture_' + Date.now() + '.jpg';
+      let file;
+      try {
+        file = new File([blob], filename, { type: blob.type });
+      } catch (e) {
+        file = blob;
+        file.name = filename;
+        warn('File() constructor not supported — using blob with .name');
+      }
+
+      addThumbnail(blob, filename);
+      appendFileToInput(filesCaptureInput, file);
+
+      updateFileLabels();
+      checkShowCleanButton();
+
+      Swal.fire({
+        position: "top-end",
+        icon: "success",
+        title: "Capture saved!",
+        showConfirmButton: false,
+        timer: 460
+      });
+
+    } catch (e) {
+      fail('Capture failed', e);
     }
+  }
 
-    // --- camera controls ---
-    async function startCamera() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('Camera not supported by this browser.');
-        return;
-        }
-        try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-        cameraPreview.srcObject = stream;
-        cameraPreview.style.display = 'block';
-        if (takeBtn) takeBtn.style.display = 'inline-block';
-        if (stopBtn) stopBtn.style.display = 'inline-block';
-        if (openBtn) openBtn.style.display = 'none';
-        } catch (e) {
-        fail('Unable to open camera', e);
-        }
-    }
+  // Wire events
+  if (openBtn) openBtn.addEventListener('click', startCamera);
+  else warn('openCameraButton not found');
 
-    function stopCamera() {
-        try {
-        if (stream) {
-            stream.getTracks().forEach(t => t.stop());
-            stream = null;
-        }
-        cameraPreview.style.display = 'none';
-        if (takeBtn) takeBtn.style.display = 'none';
-        if (stopBtn) stopBtn.style.display = 'none';
-        if (openBtn) openBtn.style.display = 'inline-block';
-        } catch (e) { warn('stopCamera error', e); }
-    }
+  if (stopBtn) stopBtn.addEventListener('click', stopCamera);
+  else warn('stopCamera not found');
 
-    // capture frame, compress, and attach to filesCapture input (no upload)
-    async function captureOnlyAttach() {
-        try {
-            if (!cameraPreview) throw new Error('cameraPreview element missing');
-            await waitForVideoReady(cameraPreview).catch(e => warn('video readiness wait failed (continuing):', e));
+  if (takeBtn) takeBtn.addEventListener('click', captureOnlyAttach);
+  else warn('takeCameraPhoto button not found');
 
-            if (!cameraPreview.videoWidth || !cameraPreview.videoHeight) {
-                throw new Error('Camera frame not available yet - try waiting a second after opening camera.');
-            }
-
-            const canvas = document.createElement('canvas');
-            canvas.width = cameraPreview.videoWidth || 1280;
-            canvas.height = cameraPreview.videoHeight || 720;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) throw new Error('Could not get canvas 2D context');
-
-            ctx.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
-
-            let blob = await canvasToBlob(canvas, 'image/jpeg', 0.92);
-            if (!blob) throw new Error('canvasToBlob returned null');
-
-            blob = await compressBlobToLimit(blob, MAX_BYTES);
-
-            const filename = 'capture_' + Date.now() + '.jpg';
-            let file;
-            try {
-                file = new File([blob], filename, { type: blob.type });
-            } catch (e) {
-                // very old browsers may not support File constructor
-                file = blob;
-                file.name = filename;
-                warn('File() constructor not supported — using blob with .name');
-            }
-
-            // show thumb
-            addUnifiedThumbnail(blob, filename, file);
-
-            // attempt to add to input.files
-            appendFileToInput(filesCaptureInput, file);
-
-
-            Swal.fire({
-                position: "top",
-                icon: "success",
-                title: "Capture saved!",
-                showConfirmButton: false,
-                timer: 460
-            });
-
-        } catch (e) {
-            fail('Capture failed', e);
-        }
-    }
-
-    // wire events (defensive)
-    if (openBtn) openBtn.addEventListener('click', startCamera);
-    else warn('openCameraButton not found');
-
-    if (stopBtn) stopBtn.addEventListener('click', stopCamera);
-    else warn('stopCamera not found');
-
-    if (takeBtn) takeBtn.addEventListener('click', captureOnlyAttach);
-    else warn('takeCameraPhoto button not found');
-
-    // cleanup on unload
-    window.addEventListener('beforeunload', () => { if (stream) stopCamera(); });
+  // Cleanup on unload
+  window.addEventListener('beforeunload', () => {
+    if (stream) stopCamera();
+  });
 
 })();
+
+// Helper function to append captured files to FormData
+function appendAllFilesToFormData(fd) {
+  const filesCaptureInput = document.getElementById('filesCapture');
+  if (filesCaptureInput && filesCaptureInput.files && filesCaptureInput.files.length) {
+    Array.from(filesCaptureInput.files).forEach(function (f) {
+      fd.append('filesCapture[]', f, f.name || ('capture_' + Date.now() + '.jpg'));
+    });
+  }
+
+  if (window.__capturedFilesFallback && window.__capturedFilesFallback.length) {
+    window.__capturedFilesFallback.forEach(function (f, idx) {
+      const name = f.name || ('capture_fallback_' + Date.now() + '_' + idx + '.jpg');
+      fd.append('filesCapture[]', f, name);
+    });
+  }
+}
+
+function updateFileLabels() {
+  var uploadCount = document.querySelectorAll('.file-thumb[data-type="upload"]').length;
+  var cameraCount = document.querySelectorAll('.file-thumb[data-type="camera"]').length;
+
+  if (uploadCount > 0) {
+    $("#selectItem").html("attached files (" + uploadCount + ")");
+  } else {
+    $("#selectItem").html("attached files");
+  }
+
+  if (cameraCount > 0) {
+    $("#captureItem").html("camera captures (" + cameraCount + ")");
+  } else {
+    $("#captureItem").html("camera captures");
+  }
+}
+
+function checkShowCleanButton() {
+  var totalThumbs = document.querySelectorAll(".file-thumb").length;
+  if (totalThumbs > 0) {
+    $("#clean_files").removeClass("hide");
+  } else {
+    $("#clean_files").addClass("hide");
+  }
+}
+
+function removeFileFromInputByName(inputEl, filename) {
+  if (!inputEl) return;
+  try {
+    var dt = new DataTransfer();
+    Array.from(inputEl.files || []).forEach(function(f) {
+      if (f.name !== filename) dt.items.add(f);
+    });
+    inputEl.files = dt.files;
+  } catch (e) { console.warn('removeFileFromInputByName failed', e); }
+}
