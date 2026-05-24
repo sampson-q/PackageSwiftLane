@@ -7282,3 +7282,39 @@ function cdp_updatePackageTracking($order_id, $tracking_number = null, $estimate
 
     return $db->cdp_execute();
 }
+
+function cdp_updateUserStatus4234sf($userId, $status)
+{
+    $db = new Conexion;
+
+    // Prepare the update query
+    $db->cdp_query('UPDATE cdb_users SET active = :active WHERE id = :id');
+    
+    // Bind parameters
+    $db->bind(':active', $status);
+    $db->bind(':id', $userId);
+
+    // Execute and return the result
+    return $db->cdp_execute();
+}
+
+function approveUser($id) {
+    $db = new Conexion;
+
+    // Update both 'approve' and 'active' columns
+    $db->cdp_query("UPDATE cdb_users SET
+            approve = :approve,
+            active = :active
+            WHERE id = :id
+        ");
+    
+    $db->bind(':id', $id);
+    $db->bind(':approve', 1);
+    $db->bind(':active', 1);
+
+    if ($db->cdp_execute()) {
+        return true;
+    } else {
+        return false;
+    }
+}

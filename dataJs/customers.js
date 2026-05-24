@@ -2,29 +2,40 @@
 
 
 $(function () {
-	cdp_load(1);
-
+    var storedPerPage = localStorage.getItem('currentPerPage-Customers');
+    if(storedPerPage) {
+        $("#per_page").val(storedPerPage);
+    }
+    cdp_load(1);
 });
 
 
 //Cargar datos AJAX
 function cdp_load(page) {
-	var search = $("#search").val();
-	var filterby = $("#filterby").val();
-	var parametros = { "page": page, 'search': search, 'filterby': filterby };
-	$("#loader").fadeIn('slow');
-	$.ajax({
-		url: './ajax/customers/customers_list_ajax.php',
-		data: parametros,
-		beforeSend: function (objeto) {
-		},
-		success: function (data) {
-			$(".outer_div").html(data).fadeIn('slow');
-		}
-	})
+    localStorage.setItem('currentTablePage-Customers', page);
+    var search = $("#search").val();
+    var filterby = $("#filterby").val();
+    var per_page = $("#per_page").val();
+    
+    localStorage.setItem('currentPerPage-Customers', per_page);
+    
+    var parametros = { 
+        "page": page, 
+        'search': search, 
+        'filterby': filterby,
+        'per_page': per_page
+    };
+    
+    $("#loader").fadeIn('slow');
+    $.ajax({
+        url: './ajax/customers/customers_list_ajax.php',
+        data: parametros,
+        beforeSend: function (objeto) {},
+        success: function (data) {
+            $(".outer_div").html(data).fadeIn('slow');
+        }
+    });
 }
-
-
 
 
 //AJAX sweetalert2 borrar ID
@@ -66,7 +77,7 @@ function cdp_eliminar(id) {
                             scrollTop: 0
                         }, 600);
                         $('#resultados_ajax').html(response);
-                        cdp_load(1);
+                        cdp_load(localStorage.getItem('currentTablePage-Customers'));
                     } else if (response.status === 'error1') {
                         // Restricciones de integridad referencial
                         swal('Oops...', response.message, 'info');
@@ -88,7 +99,6 @@ function cdp_eliminar(id) {
 
 
 //Registro de datos
-
 $("#save_user").on('submit', function (event) {
 	$('#save_data').attr("disabled", true);
 	var inputFileImage = document.getElementById("avatar");
@@ -156,8 +166,6 @@ $("#save_user").on('submit', function (event) {
 	event.preventDefault();
 
 })
-
-
 
 $("#edit_user").on('submit', function (event) {
 	$('#save_data').attr("disabled", true);
@@ -228,5 +236,88 @@ $("#edit_user").on('submit', function (event) {
 		}
 	});
 	event.preventDefault();
-
 })
+
+$(document).ready(function() {
+    $(document).on('click', '#activateUserBtn', function(e) {
+        var id = $(this).data('id');
+        updateStatusActive(id); // Pass both id and stat
+        e.preventDefault();
+    });
+});
+
+function updateStatusActive(id) {
+    $.ajax({
+        type: "POST",
+        url: "ajax/customers/customers_status_ajax.php",  // Ensure this URL points to the correct PHP file
+        data: { id: id, stat: 1 }, // Send id and stat as an object
+        dataType: 'json',
+        success: function(response) {
+            if (response.status === 'success') {
+                location.reload();
+            } else {
+                $("#resultados_ajax").html('<div class="alert alert-danger">' + response.message + '</div>');
+            }
+        },
+        error: function() {
+            $("#resultados_ajax").html('<div class="alert alert-danger">An error occurred while processing the request.</div>');
+        }
+    });
+}
+
+
+$(document).ready(function() {
+    $(document).on('click', '#deactivateUserBtn', function(e) {
+        var id = $(this).data('id');
+        updateStatusInActive(id); // Pass both id and stat
+        e.preventDefault();
+    });
+});
+
+function updateStatusInActive(id) {
+    $.ajax({
+        type: "POST",
+        url: "ajax/customers/customers_status_ajax.php",
+        data: { id: id, stat: 0 },
+        dataType: 'json',
+        success: function(response) {
+            if (response.status === 'success') {
+                // location.reload();
+                cdp_load(localStorage.getItem('currentTablePage-Customers'));
+            } else {
+                $("#resultados_ajax").html('<div class="alert alert-danger">' + response.message + '</div>');
+            }
+        },
+        error: function() {
+            $("#resultados_ajax").html('<div class="alert alert-danger">An error occurred while processing the request.</div>');
+        }
+    });
+}
+
+$(document).ready(function() {
+    $(document).on('click', '.approveUserBtn', function(e) {
+        var id = $(this).data('id');
+        approveUser(id); // Pass the id for approval
+        e.preventDefault();
+    });
+});
+
+function approveUser(id) {
+    $.ajax({
+        type: "POST",
+        url: "ajax/customers/customers_status_ajax.php",
+        data: { id: id, approve: 1 },
+        dataType: 'json',
+        success: function(response) {
+            if (response.status === 'success') {
+                // location.reload();
+                cdp_load(localStorage.getItem('currentTablePage-Customers'));
+            } else {
+                $("#resultados_ajax").html('<div class="alert alert-danger">' + response.message + '</div>');
+            }
+        },
+        error: function() {
+            $("#resultados_ajax").html('<div class="alert alert-danger">An error occurred while processing the request.</div>');
+        }
+    });
+}

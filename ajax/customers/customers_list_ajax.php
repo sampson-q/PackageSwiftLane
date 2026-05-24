@@ -88,52 +88,87 @@ $total_pages = ceil($numrows / $per_page);
 
 if ($numrows > 0) { ?>
 <div class="table-responsive">	
-
 	<table id="zero_config" class="table table-condensed table-hover table-striped custom-table-checkbox">
 		<thead>
 			<tr>
-				<th><b><?php echo $lang['edit-clien38'] ?></b></th>
+                <th class="text-center"><b>Avatar</b></th>
+				<th class="text-center"><b><?php echo $lang['edit-clien38'] ?></b></th>
 				<th class="text-center"><b><?php echo $lang['edit-clien39'] ?></b></th>
 				<th class="text-center"><b><?php echo $lang['user-account21000'] ?></b></th>
 				<th class="text-center"><b><?php echo $lang['edit-clien40'] ?></b></th>
-				<th class="text-center"><b><?php echo $lang['edit-clien41'] ?></b></th>
+				<th class="text-center"><b><?php echo 'Approval Status' ?></b></th>
 				<th class="text-center"><b><?php echo $lang['edit-clien42'] ?></b></th>
 				<th class="text-center"><b><?php echo $lang['edit-clien43'] ?></b></th>
+				<th class="text-center"><b><?php echo 'Admin Actions' ?></b></th>
 			</tr>
 		</thead>
-
 
 		<?php if (!$data) { ?>
 			<tr>
 				<td colspan="6">
-					<?php echo "
-				<i align='center' class='display-3 text-warning d-block'><img src='assets/images/alert/ohh_shipment.png' width='150' /></i>								
-				", false; ?>
+					<?php echo "<i align='center' class='display-3 text-warning d-block'><img src='assets/images/alert/ohh_shipment.png' width='150' /></i>", false; ?>
 				</td>
 			</tr>
 		<?php } else { ?>
 			<?php foreach ($data as $user) { ?>
 			
 				<tr>
+                    <td class="text-center">
+                        <img src="assets/<?php echo ($user->avatar) ? $user->avatar : "/uploads/blank.png"; ?>"  alt="" class="rounded-circle" width="40" height="40" style="display: block; margin: auto;" />
+                    </td>
 					<td class="text-center"><?php echo $user->fname; ?> <?php echo $user->lname; ?></td>
 					<td class="text-center"><?php echo $user->email; ?></td>
 					<td class="text-center"><?php echo $user->locker; ?></td>
 					<td class="text-center"><?php echo cdp_userStatus($user->active, $user->id, $lang); ?></td>
-					<td class="text-center"><?php echo cdp_isAdmin($user->userlevel, $lang); ?></td>
+					<td class="text-center"><?php echo $user->approve ? '✔ Approved' : 'Unapproved'; ?></td>
 					<td class="text-center"><?php echo ($user->adate) ? $user->adate : "-/-"; ?></td>
-					<td align='center'>
-						<a href="customers_edit.php?user=<?php echo $user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien46'] ?>"><i class="ti-pencil"></i></a>
-						<a href="newsletter.php?email=<?php echo $user->email; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien45'] ?>"><i style="color:#F5590D" class="ti-email"></i></a>
-						<?php if ($user->id == 1) : ?>
-							<a data-rel="<?php echo $user->username; ?>"><button type="button" data-toggle="tooltip" data-original-title="Master Admin"><i class="ti-lock" aria-hidden="true"></i></button></a>
-						<?php else : ?>
-							<?php if ($userData->userlevel == 9) { ?>
-								<a onclick="cdp_eliminar('<?php echo $user->id; ?>')" id="item_<?php echo $user->id; ?>" class="delete" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien47'] ?>">
-									<div class="icon-holder"><i class="fi fi-rr-trash"></i></div>
-								</a>
-							<?php } ?>
-						<?php endif; ?>
-					</td>
+					
+                    <td class="text-center">
+                        <div class="action-buttons">
+                            <a href="customers_edit.php?user=<?php echo $user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien46'] ?>">
+                                <i class="ti-pencil"></i>
+                            </a>
+                            <a href="newsletter.php?email=<?php echo $user->email; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien45'] ?>">
+                                <i style="color:#F5590D" class="ti-email"></i>
+                            </a>
+                            <?php if ($user->id == 1) : ?>
+                                <a data-rel="<?php echo $user->username; ?>">
+                                    <button type="button" data-toggle="tooltip" data-original-title="Master Admin">
+                                        <i class="ti-lock" aria-hidden="true"></i>
+                                    </button>
+                                </a>
+                            <?php else : ?>
+                                <?php if ($userData->userlevel == 9) { ?>
+                                    <a onclick="cdp_eliminar('<?php echo $user->id; ?>')" id="item_<?php echo $user->id; ?>" class="delete" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien47'] ?>">
+                                        <i class="fi fi-rr-trash"></i>
+                                    </a>
+                                <?php } ?>
+                            <?php endif; ?>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <form method="POST" id="changeUserStatus">
+                            <?php if ($user->approve) { ?>
+                                <!-- If the user is approved -->
+                                <?php if ($user->active) { ?>
+                                    <!-- Deactivate button -->
+                                    <a id="deactivateUserBtn" type="button" class="btn btn-warning" data-id="<?php echo $user->id; ?>" title="Deactivate">
+                                        <i class="fas fa-power-off"></i>
+                                    </a>
+                                <?php } else { ?>
+                                    <!-- Activate button -->
+                                    <a id="activateUserBtn" type="button" class="btn btn-success" data-id="<?php echo $user->id; ?>" title="Activate">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                <?php } ?>
+                            <?php } else { ?>
+                                <!-- If the user is unapproved -->
+                                <a type="button" class="btn btn-primary approveUserBtn" data-id="<?php echo $user->id; ?>" title="Approve">
+                                    <img src="assets/uploads/user-check-solid.svg" alt="Approve Icon" width="20" height="20">
+                                </a>
+                            <?php } ?>
+                        </form>
+                    </td>
 				</tr>
 			
 			<?php } ?>
