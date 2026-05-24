@@ -238,7 +238,7 @@ if (empty($errors)) {
         // =======================
         $tracking_number = cdp_sanitize($_POST['tracking_number']);
         $estimated_eta   = cdp_sanitize($_POST['estimated_eta']);
-        error_log(cdp_updatePackageTracking($shipment_id, $tracking_number, $estimated_eta));
+        cdp_updatePackageTracking($shipment_id, $tracking_number, $estimated_eta);
 
         // =======================
         // FILES
