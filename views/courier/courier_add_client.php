@@ -42,7 +42,7 @@ $packaging_box = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_courier_com where id= '" . $infoship->courier_default3 . "'");
 $courier_comp = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_shipping_mode where id= '" . $infoship->service_default4 . "'");
+$db->cdp_query("SELECT * FROM cdb_shipping_mode where id = 8");
 $ship_modes = $db->cdp_registro();
 
 $db->cdp_query("SELECT * FROM cdb_delivery_time where id= '" . $infoship->time_default5 . "'");
@@ -153,7 +153,7 @@ $order_prefix = $settings->prefix;
         <?php $driverrow = $user->cdp_userAllDriver(); ?>
         <?php $delitimerow = $core->cdp_getDelitime(); ?>
         <?php $track = $core->cdp_order_track(); ?>
-        <?php $categories = $core->cdp_getCategories(); ?>
+        <?php $categories = $core->cdp_getCategoriesById(27); ?>
         <?php $code_countries = $core->cdp_getCodeCountries(); ?>
         <?php $trackDigitsx = $core->cdp_trackDigits(); ?>
 
@@ -378,11 +378,8 @@ $order_prefix = $settings->prefix;
                                         <div class="form-group col-md-4">
                                             <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title22'] ?></label>
                                             <div class="input-group mb-3">
-                                                <select class="select2 form-control custom-select" id="order_service_options" name="order_service_options" required style="width: 100%;">
+                                                <select class="select2 form-control custom-select" id="order_service_options" name="order_service_options" disabled style="width: 100%;">
                                                     <option value="<?php echo $ship_modes->id; ?>"><?php echo $ship_modes->ship_mode; ?></option>
-                                                    <?php foreach ($moderow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->ship_mode; ?></option>
-                                                    <?php endforeach; ?>
                                                 </select>
                                             </div>
                                         </div>
@@ -419,11 +416,8 @@ $order_prefix = $settings->prefix;
 
                                             <label for="inputlname" class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
                                             <div class="input-group mb-3">
-                                                <select class="select2 form-control custom-select" id="order_item_category" name="order_item_category" required style="width: 100%;">
-                                                    <option value="<?php echo $s_logistics->id; ?>"><?php echo $s_logistics->name_item; ?></option>
-                                                    <?php foreach ($categories as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_item; ?></option>
-                                                    <?php endforeach; ?>
+                                                <select class="select2 form-control custom-select" id="order_item_category" name="order_item_category" disabled style="width: 100%;">
+                                                    <option value="<?php echo $categories->id; ?>"><?php echo $categories->name_item; ?></option>
                                                 </select>
                                             </div>
                                         </div>
@@ -452,7 +446,7 @@ $order_prefix = $settings->prefix;
                                         </div>
 
                                         <div class="form-group col-md-4">
-                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['payment_methods'] ?></label>
+                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo 'Payment Status' ?></label>
                                             <div class="input-group mb-3">
                                                 <select class="select2 form-control custom-select" id="order_payment_method" name="order_payment_method" required style="width: 100%;">
                                                     <option value="<?php echo $payment_methods->id; ?>"><?php echo $payment_methods->label; ?></option>
