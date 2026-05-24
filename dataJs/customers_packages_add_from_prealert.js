@@ -872,6 +872,8 @@ $("#invoice_form").on("submit", function (event) {
     data.append("deleted_file_ids", deleted_file_ids);
   }
 
+  if (estimated_eta)      data.append("estimated_eta", $("#estimated_eta").val());
+
   var total_file = document.getElementById("filesMultiple").files.length;
 
   for (var i = 0; i < total_file; i++) {
