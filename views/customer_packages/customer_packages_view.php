@@ -96,6 +96,9 @@ $offices = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_customers_packages_detail WHERE order_id='" . $_GET['id'] . "'");
 $order_items = $db->cdp_registros();
 
+$db->cdp_query("SELECT estimated_eta FROM cdb_package_tracking_number WHERE order_id='" . (int) cdp_sanitize($_GET['id']) . "'");
+$eta = $db->cdp_registro();
+
 
 $dias_ = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
 $meses_ = array(
@@ -430,6 +433,15 @@ if ($row_order->status_invoice == 1) {
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['left66'] ?></b></h5>
                                             <p class="text-muted  m-l-5"><?php echo $row_order->price_purchase ?></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class=" col-sm-12 col-md-4 mb-2">
+                                        <div class="">
+                                            <h5> &nbsp;<b><?php echo $lang['left63'] ?></b></h5>
+                                            <p class="text-muted m-l-5"><?php echo $eta->estimated_eta; ?></p>
                                         </div>
                                     </div>
                                 </div>
@@ -1115,10 +1127,10 @@ if ($row_order->status_invoice == 1) {
 
                                                 $sumador_total = cdb_money_format_bar($sumador_total);
                                                 $sumador_libras = number_format($sumador_libras, 2, '.', '');
-                                                $sumador_volumetric = $sumador_volumetric;
+                                                // $sumador_volumetric = $sumador_volumetric;
                                                 $total_envio = cdb_money_format_bar($total_envio);
                                                 $total_seguro = cdb_money_format_bar($total_seguro);
-                                                $total_peso = $total_peso;
+                                                // $total_peso = $total_peso;
                                                 $total_impuesto_aduanero = cdb_money_format_bar($total_impuesto_aduanero);
                                                 $total_impuesto = cdb_money_format_bar($total_impuesto);
                                                 $total_descuento = cdb_money_format_bar($total_descuento);
