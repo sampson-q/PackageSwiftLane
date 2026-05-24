@@ -77,16 +77,16 @@ $total_pages = ceil($numrows / $per_page);
 
 if ($numrows > 0) { ?>
 	<div class="table-responsive">
-		<table id="zero_config" class="table table-condensed table-hover table-striped custom-table-checkbox">
+		<table id="zero_config" class="table table-condensed custom-table-checkbox">
 			<thead>
 				<tr>
-
+					<th><b><?php echo 'Sender Name' ?></b></th>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['left215'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['left219'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['lstatusshipment'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['ship-all5'] ?></b></th>
-					<th class="text-center"></th>
+					<th><b><?php echo 'Contents' ?></b></th>
+					<th><b><?php echo $lang['left215'] ?></b></th>
+					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
+					<th><b><?php echo $lang['ship-all5'] ?></b></th>
+					<th class="text-right"><button class="btn btn-primary btn-xs" id="add_all">Add All</button></th>
 				</tr>
 			</thead>
 			<tbody id="projects-tbl">
@@ -106,13 +106,22 @@ if ($numrows > 0) { ?>
 
 					$count = 0;
 					foreach ($data as $row) {
+                        // Get package total price.
+                        $db->cdp_query("SELECT user_id, sender_id FROM cdb_customers_packages WHERE order_id='" . $row->order_id . "'");
+                        $order_details = $db->cdp_registro();
+                        
+                        // Get order item description.
+                        $db->cdp_query("SELECT order_item_description FROM cdb_customers_packages_detail WHERE order_id = '" . $row->order_id . "'");
+                        $description = $db->cdp_registro();
 
+                        // Get sender info.
+                        $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . $order_details->sender_id . "'");
+                        $sender = $db->cdp_registro();
 
 						$db->cdp_query("SELECT IFNULL(sum(order_item_weight), 0) as weight FROM cdb_customers_packages_detail where order_id= '" . $row->order_id . "'");
 						$order_weight = $db->cdp_registro();
 
-						$weight = $order_weight->weight;
-
+						$weight = number_format($order_weight->weight, 2, '.', '');
 
 						$db->cdp_query("SELECT IFNULL(sum(order_item_length), 0) as length from  cdb_customers_packages_detail where order_id= '" . $row->order_id . "'");
 						$order_length = $db->cdp_registro();
@@ -122,7 +131,6 @@ if ($numrows > 0) { ?>
 
 						$db->cdp_query("SELECT IFNULL(sum(order_item_width), 0) as width from cdb_customers_packages_detail where order_id= '" . $row->order_id . "'");
 						$order_width = $db->cdp_registro();
-
 
 						$length = $order_length->length;
 						$width = $order_width->width;
@@ -136,34 +144,56 @@ if ($numrows > 0) { ?>
 						$tracking = $row->order_prefix . $row->order_no;
 
 					?>
-						<tr class="card-hover">
+						<tr class="card-hover" id="tb_row_id_<?php echo $row->order_id; ?>"
+							data-order-id="<?php echo $row->order_id; ?>"
+							data-total-metric="<?php echo $total_metric; ?>"
+							data-weight="<?php echo $weight; ?>"
+							data-length="<?php echo $length; ?>"
+							data-width="<?php echo $width; ?>"
+							data-height="<?php echo $height; ?>"
+							data-tracking="<?php echo $tracking; ?>"
+							data-order-no="<?php echo $row->order_no; ?>"
+							data-order-prefix="<?php echo $row->order_prefix; ?>"
+                            data-sender="<?php echo $sender->fname . ' ' . $sender->lname; ?>"
+                            data-description="<?php echo $description->order_item_description; ?>"
+                            data-total-order="<?php echo cdb_money_format($row->total_order); ?>"
+                            >
 
-							<td><b><?php echo $row->order_prefix . $row->order_no; ?></b></td>
+							<td><?php echo $sender->fname . ' ' . $sender->lname; ?></td>
 
-							<td class="text-center">
-								<?php echo $weight; ?>
-							</td>
+							<td><?php echo $row->order_prefix . $row->order_no; ?></td>
+							
+                            <td><?php echo $description->order_item_description; ?></td>
 
-							<td class="text-center">
-								<?php echo $total_metric; ?>
-							</td>
-
+							<td><?php echo $weight; ?></td>
 
 							<input type="hidden" id="total_ship_<?php echo $row->order_id; ?>" value="<?php echo cdb_money_format($row->total_order); ?>">
 
-							<td class="text-center">
+							<td>
 
 								<span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->mod_style; ?></span>
+								<br>
+
+								<?php
+								if ($row->is_pickup == true) { ?>
+									<span style="background: <?php echo $status_style_pickup->color; ?>;" class="label label-large"><?php echo $status_style_pickup->mod_style; ?></span>
+								<?php
+								}
+								?>
 							</td>
 
-							<td class="text-center">
+							<td>
 								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
 							</td>
 
 							<td class="text-right">
-							    <button type="button" name="add_row" id="add_row" onclick="cdp_add_item('<?php echo $row->order_id; ?>','<?php echo $total_metric; ?>', '<?php echo $weight; ?>', '<?php echo $length; ?>', '<?php echo $width; ?>', '<?php echo $height; ?>', '<?php echo $tracking; ?>', '<?php echo $row->order_no; ?>',' <?php echo $row->order_prefix; ?>'); $('#row_id_<?php echo $row->order_id; ?>').addClass('marked-row');" class="btn btn-outline-success btn-sm add_row"><i class="fa fa-plus"></i></button>
+								<button type="button" name="add_row" id="add_row" 
+									onclick="cdp_add_item('<?php echo $row->order_id; ?>','<?php echo $total_metric; ?>', '<?php echo $weight; ?>', '<?php echo $length; ?>', '<?php echo $width; ?>', '<?php echo $height; ?>', '<?php echo $tracking; ?>', '<?php echo $row->order_no; ?>','<?php echo $row->order_prefix; ?>', '<?php echo $sender->fname . ' ' . $sender->lname; ?>', '<?php echo $description->order_item_description; ?>', '<?php echo cdb_money_format($row->total_order); ?>'); 
+									$('#tb_row_id_<?php echo $row->order_id; ?>').addClass('marked-row').hide();" 
+									class="btn btn-outline-success btn-sm add_row">
+									<i class="fa fa-plus"></i>
+								</button>
 							</td>
-
 						</tr>
 					<?php $count++;
 					} ?>
@@ -171,12 +201,7 @@ if ($numrows > 0) { ?>
 				<?php } ?>
 			</tbody>
 
-		</table> 
-
-
-		<div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'courier_list_add_packages');	?>
-		</div>
+		</table>
 
 		<script>
 			var count = 0;
@@ -261,8 +286,6 @@ if ($numrows > 0) { ?>
 			});
 		</script>
 
-
-
 		<script>
 			$("#send_checkbox_status").submit(function(event) {
 
@@ -340,5 +363,37 @@ if ($numrows > 0) { ?>
 			}
 		</script>
 
+		<script>
+			document.getElementById("add_all").addEventListener("click", function(event) {
+				event.preventDefault(); // Prevent default behavior (useful if inside a form)
+
+				document.querySelectorAll("tbody#projects-tbl tr").forEach(function(row) {
+					let orderId = row.getAttribute("data-order-id");
+					let totalMetric = row.getAttribute("data-total-metric");
+					let weight = row.getAttribute("data-weight");
+					let length = row.getAttribute("data-length");
+					let width = row.getAttribute("data-width");
+					let height = row.getAttribute("data-height");
+					let tracking = row.getAttribute("data-tracking");
+					let orderNo = row.getAttribute("data-order-no");
+					let orderPrefix = row.getAttribute("data-order-prefix");
+                    let sender = row.getAttribute("data-sender");
+                    let description = row.getAttribute("data-description");
+                    let totalOrder = row.getAttribute("data-total-order");
+
+					// Ensure values exist before calling function
+					if (orderId) {
+						cdp_add_item(orderId, totalMetric, weight, length, width, height, tracking, orderNo, orderPrefix, sender, description, totalOrder);
+						row.classList.add("marked-row");
+						row.style.display = "none"; // Hide row after adding
+					}
+				});
+			});
+		</script>
+
+	</div>
+<?php } else { ?>
+	<div class="text-center">
+		<h4>There's no package ready for consolidation</h4>
 	</div>
 <?php } ?>
