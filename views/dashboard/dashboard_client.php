@@ -21,7 +21,8 @@
 
 
 $userData = $user->cdp_getUserData();
-$virtualMailboxes = $core->cdp_getVirtualMailboxes(' WHERE default_address = 1');
+// $virtualMailboxes = $core->cdp_getVirtualMailboxes(' WHERE default_address = 1');
+$virtualMailboxes = $core->cdp_getVirtualMailboxes('');
 
 $db = new Conexion;
 
@@ -133,7 +134,7 @@ foreach ($data as $row) {
                         <div class="card">
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-12 col-sm-8 col-md-8 col-lg-8 col-xl-8">
+                                    <div class="col-12">
                                         <div class="card-header-title d-flex justify-content-between">
                                             <div class="card-title mb-0">
                                                 <h5 class="m-0 me-2"><?php echo $lang['virtual_mailbox-4'] ?></h5>
@@ -141,68 +142,40 @@ foreach ($data as $row) {
                                         </div>
                                         <div><br></div>
                                         <div class="pb-0">
-                                            <div class="row">
-                                                <!-- Virtual Address -->
+                                            <div class="d-flex flex-row flex-nowrap gap-3 overflow-auto" style="overflow-x: scroll;">
                                                 <?php foreach ($virtualMailboxes as $virtualMailbox) {
-                                                    $db->cdp_query("SELECT * FROM cdb_countries WHERE id='" . $virtualMailbox-> cdb_countries_id . "'");
+                                                    $db->cdp_query("SELECT * FROM cdb_countries WHERE id='" . $virtualMailbox->cdb_countries_id . "'");
                                                     $db->cdp_execute();
                                                     $country_data = $db->cdp_registro();
-                                                    ?>
-                                                    
-                                                    <div class="col-5">
-                                                        <div class="card">
-                                                            <div class="card-body">
-                                                                <h4 class="col-12">
-                                                                    <?= $country_data->name; ?>
-                                                                    <span class="display-20 flag-circle">
-                                                                        <i class="fi fi-<?php echo strtolower($country_data->iso2); ?>"></i>
-                                                                        <hr>
-                                                                    </span>
-                                                                </h4>
-                                                                <ul class="list-style-none">
-                                                                    <li class="mb-2">
-                                                                        <div class="row">
-                                                                            <div class="col-12">
-                                                                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                                                    <div class="me-2">
-                                                                                        <h4 class="mb-0">
-                                                                                            <?php echo $userData->fname . ' ' . $userData->lname . ' (' . $userData->locker . ')'; ?>
-                                                                                        </h4>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </li>
+                                                ?>
+                                                    <div class="card flex-shrink-0 ml-2" style="width: 300px;">
+                                                        <div class="card-body">
+                                                            <h4 class="col-12">
+                                                                <?= $country_data->name; ?>
+                                                                <span class="display-20 flag-circle">
+                                                                    <i class="fi fi-<?php echo strtolower($country_data->iso2); ?>"></i>
+                                                                    <hr>
+                                                                </span>
+                                                            </h4>
 
-                                                                    <li class="mb-2">
-                                                                        <div class="row">
-                                                                            <div class="col-9">
-                                                                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                                                    <div class="me-2">
-                                                                                        <h6 class="mb-0"><?php echo $virtualMailbox->address; ?></h6>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </li>
+                                                            <ul class="list-style-none">
+                                                                <li class="mb-2">
+                                                                    <h4 class="mb-0">
+                                                                        <?php echo $userData->fname . ' ' . $userData->lname . ' (' . $userData->locker . ')'; ?>
+                                                                    </h4>
+                                                                </li>
 
-                                                                    <li class="mb-2">
-                                                                        <div class="row">
-                                                                            <div class="col-9">
-                                                                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                                                    <div class="me-2">
-                                                                                        <h6 class="mb-0"><?php echo $virtualMailbox->city . ' ' . $virtualMailbox->postcode ?></h6>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </li>
-                                                                </ul>
-                                                            </div>
+                                                                <li class="mb-2">
+                                                                    <h6 class="mb-0"><?php echo $virtualMailbox->address; ?></h6>
+                                                                </li>
+
+                                                                <li class="mb-2">
+                                                                    <h6 class="mb-0"><?php echo $virtualMailbox->city . ' ' . $virtualMailbox->postcode; ?></h6>
+                                                                </li>
+                                                            </ul>
                                                         </div>
                                                     </div>
                                                 <?php } ?>
-                                                <!--/ Virtual Address -->
                                             </div>
                                         </div>
                                     </div>
