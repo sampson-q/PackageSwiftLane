@@ -147,6 +147,7 @@ if (empty($errors)) {
     );
 
     $shipment_id = cdp_insertCustomerPackages($dataShipment);
+    cdp_insertPackageTracking($shipment_id, $_SESSION['userid'], cdp_sanitize($_POST["estimated_sdfasdfa sdfeta"]), cdp_sanitize($_POST["estimated_eta"]));
 
     if ($shipment_id !== null) {
 
