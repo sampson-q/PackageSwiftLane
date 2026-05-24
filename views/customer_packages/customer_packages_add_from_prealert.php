@@ -47,17 +47,18 @@ $db->cdp_query("SELECT * FROM cdb_users where id= '" . $data_pre_alert->customer
 $sender_data = $db->cdp_registro();
 
 $db = new Conexion;
-
-//Prefix tracking   
 $sql = "SELECT * FROM cdb_settings";
-
 $db->cdp_query($sql);
-
 $db->cdp_execute();
-
 $settings = $db->cdp_registro();
 
 $order_prefix = $settings->prefix_online_shopping;
+
+$db->cdp_query("SELECT * FROM cdb_shipping_mode where id = 8");
+$moderow = $db->cdp_registro();
+
+$db->cdp_query("SELECT * FROM cdb_delivery_time where id = 14");
+$delitimerow = $db->cdp_registro();
 
 ?>
 
@@ -148,11 +149,9 @@ $order_prefix = $settings->prefix_online_shopping;
         <?php $payrow = $core->cdp_getPayment(); ?>
         <?php $paymethodrow = $core->cdp_getPaymentMethod(); ?>
         <?php $itemrow = $core->cdp_getItem(); ?>
-        <?php $moderow = $core->cdp_getShipmode(); ?>
         <?php $driverrow = $user->cdp_userAllDriver(); ?>
-        <?php $delitimerow = $core->cdp_getDelitime(); ?>
         <?php $track = $core->cdp_online_shopping_track(); ?>
-        <?php $categories = $core->cdp_getCategories(); ?>
+        <?php $categories = $core->cdp_getCategoriesById(26); ?>
         <?php $code_countries = $core->cdp_getCodeCountries(); ?>
 
         <!-- End Left Sidebar - style you can find in sidebar.scss  -->
@@ -403,7 +402,7 @@ $order_prefix = $settings->prefix_online_shopping;
                                         <div class="form-group col-md-4">
                                             <label for="inputlname" class="control-label col-form-label"><?php echo $lang['add-title17'] ?></label>
                                             <div class="input-group">
-                                                <select class="custom-select col-12" id="order_package" name="order_package" required="" style="border: 1px solid red;">
+                                                <select class="custom-select col-12" id="order_package" name="order_package" required>
                                                     <option value="">--<?php echo $lang['left203'] ?>--</option>
                                                     <?php foreach ($packrow as $row) : ?>
                                                         <option value="<?php echo $row->id; ?>"><?php echo $row->name_pack; ?></option>
@@ -413,13 +412,11 @@ $order_prefix = $settings->prefix_online_shopping;
                                         </div>
 
                                         <div class="form-group col-md-4">
-
                                             <label for="inputlname" class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
                                             <div class="input-group">
-                                                <select class="custom-select col-12" id="order_item_category" name="order_item_category" required>
-                                                    <?php foreach ($categories as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_item; ?></option>
-                                                    <?php endforeach; ?>
+                                                <select class="custom-select col-12" id="order_item_category" name="order_item_category" disabled>
+                                                    <option value="<?php echo $categories->id; ?>"><?php echo $categories->name_item; ?></option>
+                                                    
                                                 </select>
                                             </div>
                                         </div>
@@ -443,15 +440,11 @@ $order_prefix = $settings->prefix_online_shopping;
                                     </div>
 
                                     <div class="row">
-
                                         <div class="form-group col-md-4">
                                             <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title22'] ?></label>
                                             <div class="input-group">
-                                                <select class="custom-select col-12" id="order_service_options" name="order_service_options" required="" style="border: 1px solid red;">
-                                                    <option value="">--<?php echo $lang['left205'] ?>--</option>
-                                                    <?php foreach ($moderow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->ship_mode; ?></option>
-                                                    <?php endforeach; ?>
+                                                <select class="custom-select col-12" id="order_service_options" name="order_service_options" disabled>
+                                                    <option value="<?php echo $moderow->id; ?>"><?php echo $moderow->ship_mode; ?></option>
                                                 </select>
                                             </div>
                                         </div>
@@ -460,11 +453,8 @@ $order_prefix = $settings->prefix_online_shopping;
                                         <div class="form-group col-md-4">
                                             <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title20'] ?></label>
                                             <div class="input-group">
-                                                <select class="custom-select col-12" id="order_deli_time" name="order_deli_time" required="" style="border: 1px solid red;">
-                                                    <option value="">--<?php echo $lang['left207'] ?>--</option>
-                                                    <?php foreach ($delitimerow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->delitime; ?></option>
-                                                    <?php endforeach; ?>
+                                                <select class="custom-select col-12" id="order_deli_time" name="order_deli_time" disabled>
+                                                    <option value="<?php echo $delitimerow->id; ?>"><?php echo $delitimerow->delitime; ?></option>
                                                 </select>
                                             </div>
                                         </div>
@@ -517,6 +507,11 @@ $order_prefix = $settings->prefix_online_shopping;
                                             </div>
                                         <?php
                                         } ?>
+                                    </div>
+
+                                    <div class="form-group col-md-4">
+                                        <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
+                                        <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" />
                                     </div>
 
                                     <div class="row">
