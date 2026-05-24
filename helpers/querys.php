@@ -7234,3 +7234,51 @@ function cdp_insertPackageTracking($order_id, $user_id, $tracking_number, $estim
 
     return $db->cdp_execute();
 }
+
+function cdp_getPackageTracking($order_id) {
+    $db = new Conexion;
+
+    $db->cdp_query('SELECT * FROM cdb_package_tracking_number WHERE order_id = :order_id');
+    $db->bind(':order_id', $order_id);
+
+    return $db->cdp_registro();
+}
+
+function cdp_updatePackageTracking($order_id, $tracking_number = null, $estimated_eta = null) {
+    $db = new Conexion;
+
+    $tracking = cdp_getPackageTracking($order_id);
+
+    if (!$tracking) {
+        return false;
+    }
+
+    $fields = [];
+    $params = [':order_id' => $order_id];
+
+    $trackingNumberProvided = func_num_args() >= 2 && $tracking_number !== null;
+    $etaProvided = func_num_args() >= 3 && $estimated_eta !== null;
+
+    if ($trackingNumberProvided && $tracking->tracking_number != $tracking_number) {
+        $fields[] = 'tracking_number = :tracking_number';
+        $params[':tracking_number'] = $tracking_number;
+    }
+
+    if ($etaProvided && $tracking->estimated_eta != $estimated_eta) {
+        $fields[] = 'estimated_eta = :estimated_eta';
+        $params[':estimated_eta'] = $estimated_eta;
+    }
+
+    if (empty($fields)) {
+        return true;
+    }
+
+    $sql = 'UPDATE cdb_package_tracking_number SET ' . implode(', ', $fields) . ' WHERE order_id = :order_id';
+    $db->cdp_query($sql);
+
+    foreach ($params as $key => $value) {
+        $db->bind($key, $value);
+    }
+
+    return $db->cdp_execute();
+}
