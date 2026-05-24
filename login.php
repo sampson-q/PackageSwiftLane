@@ -149,7 +149,7 @@ if (isset($_POST['login'])) {
                                     <div class="row">
                                         <div class="col-12">
                                             <div class="mb-3">
-                                                <label class="form-label"><?php echo 'Swift ' . $lang['left115'] ?> <span class="text-danger">*</span></label>
+                                                <label class="form-label"><?php echo 'Swift ' . $lang['left115'] . ' / Email' ?> <span class="text-danger">*</span></label>
                                                 <div class="form-icon position-relative">
                                                     <i data-feather="mail" class="fea icon-sm icons"></i>
                                                     <input type="text" class="form-control ps-5" placeholder="<?php echo $lang['left116'] . ' / Email' ?>" name="username" id="username" required="" autocomplete="username">
