@@ -326,7 +326,7 @@ if (empty($errors)) {
             $email_template->body
         );
 
-        $newbody = cdp_cleanOut($body);
+        $newbody = cdp_cleanOutx($body);
 
         //SENDMAIL PHP
 
