@@ -798,6 +798,7 @@ $("#invoice_form").on("submit", function (event) {
   var data = new FormData();
   data.append("packages", JSON.stringify(packagesItems));
   data.append("_csrf_token", $('input[name="_csrf_token"]').val());
+  data.append("estimated_eta", $("#estimated_eta").val());
 
   if (order_id) data.append("order_id", order_id);
   if (tracking_purchase) data.append("tracking_purchase", tracking_purchase);

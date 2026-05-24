@@ -431,7 +431,7 @@ $numrows     = $db->cdp_rowCount();
                                                 <tr>
                                                     <th style="width:70px;"><?php echo $lang['courier_table_qty']; ?></th>
                                                     <th class="text-center" style="min-width:140px;"><?php echo $lang['left213']; ?></th>
-                                                    <th><?php echo 'Weight (TVW)'; ?></th>
+                                                    <th><?php echo 'Weight (TRW)'; ?></th>
                                                     <th class="text-center"><?php echo $lang['left216'] . ' (TVW)'; ?></th>
                                                     <th class="text-center"><?php echo $lang['left217'] . ' (TVW)'; ?></th>
                                                     <th class="text-center"><?php echo $lang['left218'] . ' (TVW)'; ?></th>

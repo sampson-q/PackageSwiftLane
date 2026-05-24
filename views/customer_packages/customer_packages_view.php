@@ -440,7 +440,7 @@ if ($row_order->status_invoice == 1) {
                                 <div class="row">
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
-                                            <h5> &nbsp;<b><?php echo $lang['left63'] ?></b></h5>
+                                            <h5> &nbsp;<b><?php echo 'Estimated Time of Arrival' ?></b></h5>
                                             <p class="text-muted m-l-5"><?php echo $eta->estimated_eta; ?></p>
                                         </div>
                                     </div>

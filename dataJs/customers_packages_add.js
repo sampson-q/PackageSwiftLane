@@ -1312,6 +1312,8 @@ $("#invoice_form").on("submit", function (event) {
   var rate_provider  = $("#rate_provider").val() || "internal";
   var distance_miles = $("#distance_miles").val() || 0;
 
+  var estimated_eta = $("#estimated_eta").val();
+
   var data = new FormData();
 
   data.append("packages", JSON.stringify(packagesItems));
@@ -1347,6 +1349,7 @@ $("#invoice_form").on("submit", function (event) {
   if (declared_value_tax)   data.append("declared_value_tax", declared_value_tax);
   if (tariffs_value)        data.append("tariffs_value", tariffs_value);
   if (insurance_value)      data.append("insurance_value", insurance_value);
+  if (estimated_eta)      data.append("estimated_eta", estimated_eta);
 
   data.append("rate_provider", rate_provider || "internal");
   data.append("distance_miles", distance_miles);

@@ -48,6 +48,9 @@ $ship_modes = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row_order->order_prefix . $row_order->order_no . "'");
 $address_order = $db->cdp_registro();
 
+$db->cdp_query("SELECT * FROM cdb_package_tracking_number WHERE order_id='" . (int) cdp_sanitize($_GET['id']) . "'");
+$tracking_row = $db->cdp_registro();
+
 // recipient (may be null on older records)
 $receiver_data = null;
 $recipient_address_text = '';
@@ -468,7 +471,6 @@ if (!empty($files_order)) {
                                     </div>
 
                                     <div class="row">
-
                                         <div class="form-group col-md-4">
                                             <label for="inputlname" class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
                                             <div class="input-group mb-3">
@@ -538,6 +540,10 @@ if (!empty($files_order)) {
                                                 </select>
                                             </div>
                                         </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
+                                            <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" value="<?php echo $tracking_row->estimated_eta; ?>" />
+                                        </div>
 
                                     </div>
 
@@ -557,11 +563,11 @@ if (!empty($files_order)) {
 
                                         <div class="col-md-4">
                                             <div>
-                                                <label class="control-label" id="captureItem">camera captures</label>
+                                                <label class="control-label" id="captureItem">Camera Captures</label>
                                             </div>
                                             <input type="file" id="filesCapture" name="filesCapture[]" multiple="multiple" accept="image/*" style="display:none;">
                                             <button type="button" id="openCameraButton" class="btn btn-default pull-left mb-4">
-                                                <i class="fa fa-camera" style="font-size:18px;"></i> Open camera
+                                                <i class="fa fa-camera" style="font-size:18px;"></i> Open Camera
                                             </button>
                                             <button type="button" id="takeCameraPhoto" class="btn btn-default pull-left mb-4" style="display:none;">
                                                 <i class="fa fa-circle" style="font-size:18px;"></i> Capture

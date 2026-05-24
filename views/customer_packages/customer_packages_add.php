@@ -347,7 +347,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                     <!-- Bloque Modo de envío / millas / tiempo / pago -->
                                     <div class="rate-box mb-3">
                                         <div class="form-row">
-                                        <div class="form-group col-md-3" style="display: none;">
+                                            <div class="form-group col-md-3" style="display: none;">
                                                 <label class="control-label col-form-label mb-1"><?php echo isset($lang['add-title22']) ? $lang['add-title22'] : 'Modo de envío'; ?></label>
                                                 <select class="select2 form-control custom-select" id="order_service_options" name="order_service_options" required style="width:100%" disabled>
                                                     <option value="<?php echo $s_logistics->id; ?>"><?php echo htmlspecialchars($s_logistics->name_item); ?></option>
@@ -475,14 +475,19 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                 <label class="control-label col-form-label"><?php echo $lang['left64'] ?></label>
                                                 <input type="text" class="form-control" name="provider_purchase" id="provider_purchase" placeholder="<?php echo $lang['left65'] ?>">
                                             </div>
+                                            
                                         </div>
 
                                         <div class="row">
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label for="sum2"><?php echo $lang['left66']; ?></label>
-                                                    <input onkeypress="return isNumberKey(event, this)" type="text" class="form-control" name="price_purchase" id="price_purchase" placeholder="<?php echo $lang['left67'] ?>">
-                                                </div>
+                                            <div class="form-group col-md-3">
+                                                <label class="control-label col-form-label" for="sum2"><?php echo $lang['left66']; ?></label>
+                                                <input onkeypress="return isNumberKey(event, this)" type="text" class="form-control" name="price_purchase" id="price_purchase" placeholder="<?php echo $lang['left67'] ?>">
+                                            </div>
+                                            
+
+                                            <div class="form-group col-md-3">
+                                                <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
+                                                <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" />
                                             </div>
                                         </div>
                                     </div>
@@ -500,7 +505,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                 <tr>
                                                     <th style="width:70px;"><?php echo $lang['courier_table_qty']; ?></th>
                                                     <th class="text-center" style="min-width:140px;"><?php echo $lang['left213']; ?></th>
-                                                    <th><?php echo 'Weight (TVW)'; ?></th>
+                                                    <th><?php echo 'Weight (TRW)'; ?></th>
                                                     <th class="text-center"><?php echo $lang['left216'] . ' (TVW)'; ?></th>
                                                     <th class="text-center"><?php echo $lang['left217'] . ' (TVW)'; ?></th>
                                                     <th class="text-center"><?php echo $lang['left218'] . ' (TVW)'; ?></th>

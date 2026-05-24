@@ -201,6 +201,8 @@ if (empty($errors)) {
         $shipment = cdp_getCustomerPackage($shipment_id);
         $order_track = $shipment->order_prefix . $shipment->order_no;
 
+        cdp_updatePackageTracking($shipment_id, NULL, cdp_sanitize($_POST['estimated_eta']));
+
         // =====================
         // DELETE EXISTING FILES (already in your temp)
         // =====================
