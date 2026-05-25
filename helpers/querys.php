@@ -4577,9 +4577,17 @@ function cdp_getCountry($id)
 {
     $db = new Conexion;
 
-    $db->cdp_query('SELECT * FROM cdb_countries WHERE id=:id');
+    if ($id === null || $id === '') {
+        return ['data' => null, 'rowCount' => 0];
+    }
 
-    $db->bind(':id', $id);
+    if (is_numeric($id)) {
+        $db->cdp_query('SELECT * FROM cdb_countries WHERE id=:id');
+        $db->bind(':id', (int)$id);
+    } else {
+        $db->cdp_query('SELECT * FROM cdb_countries WHERE LOWER(name)=LOWER(:name)');
+        $db->bind(':name', (string)$id);
+    }
 
     $db->cdp_execute();
 
@@ -4731,9 +4739,17 @@ function cdp_getState($id)
 {
     $db = new Conexion;
 
-    $db->cdp_query('SELECT * FROM cdb_states WHERE id=:id');
+    if ($id === null || $id === '') {
+        return ['data' => null, 'rowCount' => 0];
+    }
 
-    $db->bind(':id', $id);
+    if (is_numeric($id)) {
+        $db->cdp_query('SELECT * FROM cdb_states WHERE id=:id');
+        $db->bind(':id', (int)$id);
+    } else {
+        $db->cdp_query('SELECT * FROM cdb_states WHERE LOWER(name)=LOWER(:name)');
+        $db->bind(':name', (string)$id);
+    }
 
     $db->cdp_execute();
 
@@ -4857,9 +4873,17 @@ function cdp_getCity($id)
 {
     $db = new Conexion;
 
-    $db->cdp_query('SELECT * FROM cdb_cities WHERE id=:id');
+    if ($id === null || $id === '') {
+        return ['data' => null, 'rowCount' => 0];
+    }
 
-    $db->bind(':id', $id);
+    if (is_numeric($id)) {
+        $db->cdp_query('SELECT * FROM cdb_cities WHERE id=:id');
+        $db->bind(':id', (int)$id);
+    } else {
+        $db->cdp_query('SELECT * FROM cdb_cities WHERE LOWER(name)=LOWER(:name)');
+        $db->bind(':name', (string)$id);
+    }
 
     $db->cdp_execute();
 
@@ -6417,7 +6441,66 @@ function cdp_getSenderAddress($id)
 
     $db->cdp_execute();
 
-    return  $db->cdp_registro();
+    $row = $db->cdp_registro();
+    if ($row) {
+        return $row;
+    }
+
+    // Legacy fallback: cdb_users_multiple_addresses (raw text values)
+    $db->cdp_query('SELECT * FROM cdb_users_multiple_addresses WHERE id=:id');
+    $db->bind(':id', $id);
+    $db->cdp_execute();
+    $legacy = $db->cdp_registro();
+
+    if (!$legacy) {
+        return null;
+    }
+
+    $countryId = 0;
+    $stateId = 0;
+    $cityId = 0;
+
+    $rawCountry = trim((string)($legacy->country ?? ''));
+    $rawState = trim((string)($legacy->state ?? ''));
+    $rawCity = trim((string)($legacy->city ?? ''));
+
+    if ($rawCountry !== '') {
+        $db->cdp_query('SELECT id FROM cdb_countries WHERE LOWER(name) = LOWER(:name) LIMIT 1');
+        $db->bind(':name', $rawCountry);
+        $db->cdp_execute();
+        $match = $db->cdp_registro();
+        $countryId = $match ? (int)$match->id : 0;
+    }
+
+    if ($rawState !== '') {
+        $db->cdp_query('SELECT id FROM cdb_states WHERE LOWER(name) = LOWER(:name) LIMIT 1');
+        $db->bind(':name', $rawState);
+        $db->cdp_execute();
+        $match = $db->cdp_registro();
+        $stateId = $match ? (int)$match->id : 0;
+    }
+
+    if ($rawCity !== '') {
+        $db->cdp_query('SELECT id FROM cdb_cities WHERE LOWER(name) = LOWER(:name) LIMIT 1');
+        $db->bind(':name', $rawCity);
+        $db->cdp_execute();
+        $match = $db->cdp_registro();
+        $cityId = $match ? (int)$match->id : 0;
+    }
+
+    $fallback = new stdClass();
+    $fallback->id_addresses = $legacy->id ?? $id;
+    $fallback->user_id = $legacy->user_id ?? null;
+    $fallback->address = $legacy->address ?? '';
+    $fallback->zip_code = $legacy->zip_code ?? ($legacy->postal ?? '');
+    $fallback->country = $countryId ? $countryId : $rawCountry;
+    $fallback->state = $stateId ? $stateId : $rawState;
+    $fallback->city = $cityId ? $cityId : $rawCity;
+    $fallback->legacy_country = $rawCountry;
+    $fallback->legacy_state = $rawState;
+    $fallback->legacy_city = $rawCity;
+
+    return $fallback;
 }
 
 function cdp_getRecipientAddress($id)

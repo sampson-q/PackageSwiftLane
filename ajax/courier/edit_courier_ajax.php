@@ -297,10 +297,7 @@ if (empty($errors)) {
         // Recipient address: respect recipient_type (same as add)
         $recipient_type = cdp_sanitize($_POST['recipient_type'] ?? 'recipient');
         if ($recipient_type === 'user') {
-            $db_ra = new Conexion;
-            $db_ra->cdp_query("SELECT * FROM cdb_senders_addresses WHERE id_addresses='" . intval($_POST["recipient_address_id"]) . "'");
-            $db_ra->cdp_execute();
-            $recipient_address_data = $db_ra->cdp_registro();
+            $recipient_address_data = cdp_getSenderAddress(intval($_POST["recipient_address_id"]));
         } else {
             $recipient_address_data = cdp_getRecipientAddress(intval($_POST["recipient_address_id"]));
         }

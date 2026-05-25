@@ -500,11 +500,8 @@ if (empty($errors)) {
             $recipient_type = isset($_POST["recipient_type"]) ? cdp_sanitize($_POST["recipient_type"]) : 'recipient';
 
             if ($recipient_type === 'user') {
-                // Fetch from sender's addresses (contacts)
-                $db->cdp_query("SELECT * FROM cdb_senders_addresses WHERE id_addresses = :id LIMIT 1");
-                $db->bind(':id', intval($_POST["recipient_address_id"]));
-                $db->cdp_execute();
-                $recip_addr = $db->cdp_registro();
+                // Fetch from sender's addresses (contacts) with legacy fallback
+                $recip_addr = cdp_getSenderAddress(intval($_POST["recipient_address_id"]));
             } else {
                 // Fetch from recipients addresses (default/external)
                 $db->cdp_query("SELECT * FROM cdb_recipients_addresses WHERE id_addresses = :id LIMIT 1");
