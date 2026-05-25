@@ -25,13 +25,13 @@ require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 
 
+
 $db = new Conexion;
 $user = new User;
 $core = new Core;
 $errors = array();
 
 $userData = $user->cdp_getUserData();
-
 
 if (CDP_APP_MODE_DEMO === true) {
 ?>
@@ -54,24 +54,25 @@ if (CDP_APP_MODE_DEMO === true) {
     <?php
 } else {
     
+
     // Verifica si hay errores en el formulario (si tienes esta lógica implementada)
     if (empty($errors)) {
         header('Content-type: application/json; charset=UTF-8');
         $response = array();
 
-        // Ruta donde se guardarán las imágenes del avatar (ajusta según tu estructura)
-        $upload_dir = realpath('../../assets/uploads/') . '/';
+        // Ruta donde se guardarán las imágenes del document (ajusta según tu estructura)
+        $upload_dir = realpath('../../assets/uploads/documents') . '/';
 
         if (!file_exists($upload_dir)) {
             mkdir($upload_dir, 0755, true);
         }
 
         // Verifica si se envió un archivo
-        if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == UPLOAD_ERR_OK) {
+        if (isset($_FILES['document']) && $_FILES['document']['error'] == UPLOAD_ERR_OK) {
             // Obtiene la información del archivo
-            $file_name = $_FILES['avatar']['name'];
-            $file_tmp = $_FILES['avatar']['tmp_name'];
-            $file_type = $_FILES['avatar']['type'];
+            $file_name = $_FILES['document']['name'];
+            $file_tmp = $_FILES['document']['tmp_name'];
+            $file_type = $_FILES['document']['type'];
 
             // Verifica el tipo de archivo (ajusta esto según tus necesidades)
             $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
@@ -80,7 +81,7 @@ if (CDP_APP_MODE_DEMO === true) {
             } else {
                 // Genera un nombre único para el archivo
                 $user_id = $_POST['id']; // Ajusta según tu lógica de obtener el ID
-                $current_avatar = $_POST['current_avatar']; // Ajusta según tu lógica de obtener el documento actual
+                $current_document = $_POST['current_document'];
                 $file_name = $user_id . '_' . time() . '_' . $file_name;
 
                 // Ruta completa donde se guardará el archivo
@@ -88,24 +89,29 @@ if (CDP_APP_MODE_DEMO === true) {
 
                 // Mueve el archivo al directorio de carga
                 if (move_uploaded_file($file_tmp, $upload_path)) {
-                    // Actualiza directamente la base de datos con la nueva ruta del avatar
-                    $db->cdp_query('UPDATE cdb_users SET avatar = :avatar WHERE id = :id');
+                    // Actualiza directamente la base de datos con la nueva ruta del document
+                    $db->cdp_query('UPDATE cdb_users SET document_photo = :document_photo WHERE id = :id');
 
-                    $db->bind(':avatar', 'uploads/' . $file_name);
+                    $db->bind(':document_photo', 'uploads/documents/' . $file_name);
                     $db->bind(':id', $user_id);
                     $db->cdp_execute();
 
-                    $avatarUpdateData = array(
+                    $documentUpdateData = array(
                         'user_id' =>  $user_id,
                         'update_by' => $userData->id,
-                        'prev_document' =>  $current_avatar, // Updated to use $current_avatar
-                        'remarks' =>  'Avatar updated',
+                        'prev_document' =>  $current_document,
+                        'remarks' =>  'Document updated',
                         'datetime' =>  cdp_sanitize(date("Y-m-d H:i:s")),
                     );
 
-                    $record_history = cdp_insertAvatarUpdateHistory($avatarUpdateData);
+                    $record_history = cdp_insertDocumentUpdateHistory($documentUpdateData);
 
-                    $response = array('success' => true, 'message' => 'Avatar successfully updated.');
+                    // if ($record_history) {
+                    //     $response = array('success' => true, 'message' => 'Document successfully updated.');
+                    // }
+                    
+                    $response = array('success' => true, 'message' => 'Document successfully updated.');
+
                 } else {
                     // Error al mover el archivo
                     $response = array('success' => false, 'message' => 'Error uploading file. ' . error_get_last()['message']);
@@ -113,7 +119,7 @@ if (CDP_APP_MODE_DEMO === true) {
             }
         } else {
             // No se envió ningún archivo
-            $response = array('success' => false, 'message' => 'No file was selected. Click on the Image to select your avatar.');
+            $response = array('success' => false, 'message' => 'No file was selected. Click on the Image to select your document.');
         }
 
         echo json_encode($response);

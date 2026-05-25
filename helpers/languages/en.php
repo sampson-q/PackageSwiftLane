@@ -2794,7 +2794,7 @@ $lang = array(
 
 
 	/** Tools Database Backups **/
-	"tools-database1" => "Add backups",
+	"tools-database1" => "Add Backups",
 	"tools-database2" => "Make sure your database is backed up frequently. Click Create Backup to manually back up your database.",
 	"tools-database3" => "Backups are stored in",
 	"tools-database4" => "folder and can be downloaded from the list below.",
@@ -2807,10 +2807,10 @@ $lang = array(
 	"tools-database11" => "backups",
 
 	/** ToolsFilter **/
-	"filter1" => "Edit user management",
-	"filter2" => "Add user management",
-	"filter3" => "User management",
-	"filter4" => "Edit client",
+	"filter1" => "Edit User Management",
+	"filter2" => "Add User Management",
+	"filter3" => "User Management",
+	"filter4" => "Edit Client",
 	"filter5" => "Add Client",
 	"filter6" => "Client management",
 	"filter7" => "System Settings",
@@ -2821,12 +2821,12 @@ $lang = array(
 	"filter12" => "Edit Manage News Announcements",
 	"filter13" => "Add Manage News Ads",
 	"filter14" => "Manage news announcements",
-	"filter15" => "Edit offices",
-	"filter16" => "Add offices",
-	"filter17" => "list of offices",
-	"filter18" => "Create shipments",
-	"filter19" => "Create shipments",
-	"filter20" => "Create container",
+	"filter15" => "Edit Offices",
+	"filter16" => "Add Offices",
+	"filter17" => "List of Offices",
+	"filter18" => "Create Shipments",
+	"filter19" => "Create Shipments",
+	"filter20" => "Create Container",
 	"filter21" => "Create container",
 	"filter22" => "Add container",
 	"filter23" => "Container",
@@ -3623,6 +3623,18 @@ $lang = array(
 
     'eta' => 'Estimated Time of Arrival',
     'postal_tracking' => 'Postal Tracking',
+
+        // customers_edit.php
+    'documentViewBtn' => "View Document",
+    'documentView' => "View",
+    'documentUpdate' => "Update",
+    'documentUpdateHistory' => "Document Update History",
+    'updateTH' => "Update By",
+    'updateFrom' => "Updated From",
+    'updateTo' => "Updated To",
+    'dateHistory' => "Date / Time",
+    'prevDocument' => "Previous Doc.",
+    'remarks' => "Remarks",
 
 
 );

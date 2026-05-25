@@ -5225,9 +5225,9 @@ function cdp_insertCustomer($datos)
     return $db->dbh->lastInsertId();
 }
 
-function cdp_updateCustomers($datos)
-{
+function cdp_updateCustomers($datos, $approve = null) {
     $db = new Conexion;
+    $approveQ = ', approve = 1';
 
     $db->cdp_query('UPDATE cdb_users SET
     
@@ -5241,7 +5241,7 @@ function cdp_updateCustomers($datos)
         phone =:phone,
         gender =:gender,
         newsletter =:newsletter,
-        active =:active
+        active =:active' . ($approve ? $approveQ : '') . '
 
         where id = :id
     ');
@@ -7317,4 +7317,64 @@ function approveUser($id) {
     } else {
         return false;
     }
+}
+
+function cdp_insertDocumentUpdateHistory($datos) {
+    $db = new Conexion;
+    $db->cdp_query("
+                INSERT INTO cdb_profile_update_history 
+                (
+                    user_id,
+                    update_by,
+                    prev_document,
+                    remarks,
+                    datetime       
+                    )
+                VALUES
+                    (
+                    :user_id,
+                    :update_by,
+                    :prev_document,
+                    :remarks,
+                    :datetime
+                    )
+            ");
+
+    $db->bind(':user_id', $datos["user_id"]);
+    $db->bind(':update_by', $datos["update_by"]);
+    $db->bind(':prev_document', $datos["prev_document"]);
+    $db->bind(':remarks', $datos["remarks"]);
+    $db->bind(':datetime', $datos["datetime"]);
+
+    return  $db->cdp_execute();
+}
+
+function cdp_insertAvatarUpdateHistory($datos) {
+    $db = new Conexion;
+    $db->cdp_query("
+                INSERT INTO cdb_profile_update_history 
+                (
+                    user_id,
+                    update_by,
+                    prev_document,
+                    remarks,
+                    datetime       
+                    )
+                VALUES
+                    (
+                    :user_id,
+                    :update_by,
+                    :prev_document,
+                    :remarks,
+                    :datetime
+                    )
+            ");
+
+    $db->bind(':user_id', $datos["user_id"]);
+    $db->bind(':update_by', $datos["update_by"]);
+    $db->bind(':prev_document', $datos["prev_document"]);
+    $db->bind(':remarks', $datos["remarks"]);
+    $db->bind(':datetime', $datos["datetime"]);
+
+    return  $db->cdp_execute();
 }

@@ -327,9 +327,6 @@ $(document).on("click", ".remove_row", function () {
 
 });
 
- 
-
-
 $("#edit_user").on("submit", function (event) {
       var count = $('#total_address').val();
 
@@ -379,6 +376,7 @@ $("#edit_user").on("submit", function (event) {
     var newsletter = $("input:radio[name=newsletter]:checked").val();
     var total_address = $("#total_address").val();
     var id = $("#id").val();
+    var approve = $("#approve").val();
 
     var address = document.getElementsByName("address[]");
     var country = document.getElementsByName("country[]");
@@ -432,6 +430,7 @@ $("#edit_user").on("submit", function (event) {
     data.append("notify", notify);
     data.append("total_address", total_address);
     data.append("id", id);
+    data.append("approve", approve);
 
     for (var a of address) {
       data.append("address[]", a.value);
@@ -451,8 +450,6 @@ $("#edit_user").on("submit", function (event) {
     for (var ai of address_id) {
       data.append("address_id[]", ai.value);
     }
-
-    data.append('_csrf_token', $('input[name="_csrf_token"]').val());
  
     $.ajax({
       type: "POST",
@@ -523,8 +520,6 @@ $("#edit_user").on("submit", function (event) {
   event.preventDefault();
 });
 
-
-
 $(document).ready(function() {
     $('#edit_avatar_form').on('submit', function(event) {
         event.preventDefault(); // Evita que el formulario se envíe de forma convencional
@@ -571,10 +566,53 @@ $(document).ready(function() {
             }
         });
     }
+
+    $('#edit_document_form').on('submit', function(event) {
+        event.preventDefault(); // Evita que el formulario se envíe de forma convencional
+        updateDocument();
+    });
+
+    function updateDocument() {
+        var formData = new FormData($('#edit_document_form')[0]);
+
+        $.ajax({
+            type: 'POST',
+            url: './ajax/customers/customers_document_edit_ajax.php',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(response) {
+                // Manejar la respuesta del servidor
+                if (response.success) {
+                    // Mostrar SweetAlert2 de éxito
+                    Swal.fire({
+                        type: 'success',
+                        title: 'Document Updated',
+                        text: response.message
+                    }).then(() => {
+                        // Redirigir al mismo sitio
+                        window.location.href = window.location.href;
+                    });
+                } else {
+                    // Mostrar SweetAlert2 de error
+                    Swal.fire({
+                         type: 'error',
+                        title: 'Document Update Error',
+                        text: response.message
+                    });
+                }
+            },
+            error: function() {
+                // Manejar errores de conexión u otros errores
+                Swal.fire({
+                    type: 'error',
+                    title: 'Error',
+                    text: 'Connection or processing error on the server.'
+                });
+            }
+        });
+    }
 });
-
-
-
 
 function cdp_showError(errors) {
   var html_code = "";
@@ -608,4 +646,124 @@ function cdp_showSuccess(messages) {
   " </p > " + "</div > ";
 
   $("#resultados_ajax").append(html_code);
+}
+
+$(document).ready(function() {
+    $(document).on('click', '#activateUserBtn', function(e) {
+        var id = $(this).data('id');
+        updateStatusActive(id); // Pass both id and stat
+        e.preventDefault();
+    });
+});
+
+function updateStatusActive(id) {
+    $.ajax({
+        type: "POST",
+        url: "ajax/customers/customers_status_ajax.php",  // Ensure this URL points to the correct PHP file
+        data: { id: id, stat: 1 }, // Send id and stat as an object
+        dataType: 'json',
+        success: function(response) {
+            if (response.status === 'success') {
+                // Mostrar SweetAlert2 de éxito
+                Swal.fire({
+                    type: 'success',
+                    title: 'User Account Activated',
+                    text: response.message
+                }).then(() => {
+                    // Redirigir al mismo sitio
+                    window.location.href = 'customers_list.php';
+                });
+            } else {
+                // Mostrar SweetAlert2 de error
+                Swal.fire({
+                    type: 'error',
+                    title: 'User Account Activation Error',
+                    text: response.message
+                });
+            }
+        },
+        error: function() {
+            $("#resultados_ajax").html('<div class="alert alert-danger">An error occurred while processing the request.</div>');
+        }
+    });
+}
+
+$(document).ready(function() {
+    $(document).on('click', '#deactivateUserBtn', function(e) {
+        var id = $(this).data('id');
+        updateStatusInActive(id); // Pass both id and stat
+        e.preventDefault();
+    });
+});
+
+function updateStatusInActive(id) {
+    $.ajax({
+        type: "POST",
+        url: "ajax/customers/customers_status_ajax.php",
+        data: { id: id, stat: 0 },
+        dataType: 'json',
+        success: function(response) {
+            if (response.status === 'success') {
+                // Mostrar SweetAlert2 de éxito
+                Swal.fire({
+                    type: 'success',
+                    title: 'User Account Deactivated',
+                    text: response.message
+                }).then(() => {
+                    // Redirigir al mismo sitio
+                    window.location.href = 'customers_list.php';
+                });
+            } else {
+                // Mostrar SweetAlert2 de error
+                Swal.fire({
+                    type: 'error',
+                    title: 'User Account Deactivation Error',
+                    text: response.message
+                });
+            }
+        },
+        error: function() {
+            $("#resultados_ajax").html('<div class="alert alert-danger">An error occurred while processing the request.</div>');
+        }
+    });
+}
+
+$(document).ready(function() {
+    $(document).on('click', '.approveUserBtn', function(e) {
+        var id = $(this).data('id');
+        approveUser(id); // Pass the id for approval
+        e.preventDefault();
+    });
+});
+
+function approveUser(id) {
+    $.ajax({
+        type: "POST",
+        url: "ajax/customers/customers_status_ajax.php",
+        data: { id: id, approve: 1 },
+        dataType: 'json',
+        success: function(response) {
+            if (response.status === 'success') {
+                // Mostrar SweetAlert2 de éxito
+                Swal.fire({
+                    type: 'success',
+                    title: 'User Account Approved',
+                    text: response.message
+                }).then(() => {
+                    // Redirigir al mismo sitio
+                    window.location.href = 'customers_list.php';
+                });
+            } else {
+                // Mostrar SweetAlert2 de error
+                Swal.fire({
+                    type: 'error',
+                    title: 'User Account Approval Error',
+                    text: response.message
+                });
+            }
+        },
+        error: function() {
+            $("#resultados_ajax").html('<div class="alert alert-danger">An error occurred while processing the request.</div>');
+        }
+    });
 }
