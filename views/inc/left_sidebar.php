@@ -1801,8 +1801,8 @@
 					<?php 
 
 						$perModule = [
-						'pickup_add',
-						'view_pickup_list',
+						'pickup_add_',
+						'view_pickup_list_',
 						];
 						if ($user->cdp_hasPermission($perModule)) {
 
