@@ -1689,12 +1689,12 @@
 						<!-- End User Profile-->
 					</li>
 
-					<?php if ($user->cdp_hasPermission('pickup_add')) { ?>
+					<?php if ($user->cdp_hasPermission('courier_add_client')) { ?>
 					<!-- Module add pickup-->
 					<li class="p-15 m-t-10">
-						<a href="pickup_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
+						<a href="courier_add_client.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
 							<iconify-icon icon="solar:delivery-linear" style="font-size: 20px"></iconify-icon>
-							<span class="hide-menu"> &nbsp; <?php echo $lang['left-menu-sidebar-20'] ?></span>
+							<span class="hide-menu"> &nbsp; <?php echo $lang['left-menu-sidebar-15'] ?></span>
 						</a>
 					</li>
 					<?php } ?>
