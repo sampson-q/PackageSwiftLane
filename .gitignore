@@ -33,3 +33,11 @@ assets/uploads/
 api/v1/storage/pending_logins/*
 api/v1/storage/pending_signups/*
 .vscode
+
+analyze_migration.php
+migrate_seuptpfxcj_to_v84.php
+migrate_v2.php
+
+loader.php
+
+.gitignore
