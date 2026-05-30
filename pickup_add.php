@@ -30,7 +30,7 @@
 
         $permissions = $user->cdp_getUserPermissions();
 
-        if (!$user->cdp_hasPermission('pickup_add')) {
+        if (!$user->cdp_hasPermission('pickup_add_')) {
             header("location: error403.php");
             exit;
         }
