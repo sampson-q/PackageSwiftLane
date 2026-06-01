@@ -154,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->bind(':document_type',   $pending['document_type']);
                     $db->bind(':created',         $pending['created']);
                     $db->bind(':phone',           $pending['phone']);
-                    $db->bind(':active',          1);
+                    $db->bind(':active',          0);
                     $db->bind(':terms',           $pending['terms']);
                     $db->bind(':avatar',          '../' . $avatarPath);
                     $db->bind(':document_photo',  '../' . $documentPhotoPath);
