@@ -38,25 +38,19 @@ $errors = array();
 
 
 if (empty($_POST['tracking_purchase']))
-
     $errors['tracking_purchase'] = $lang['validate_field_ajax170'];
 
 if (empty($_POST['provider_purchase']))
-
     $errors['provider_purchase'] = $lang['validate_field_ajax172'];
 
 if (empty($_POST['price_purchase']))
-
     $errors['price_purchase'] = $lang['validate_field_ajax174'];
-
-
 
 if (empty($_POST['sender_id']))
     $errors['sender_id'] = $lang['validate_field_ajax150'];
 
 if (empty($_POST['sender_address_id']))
     $errors['sender_address_id'] = $lang['validate_field_ajax145'];
-
 
 if (empty($_POST['agency']))
     $errors['agency'] = $lang['validate_field_ajax148'];
@@ -81,7 +75,6 @@ if (empty($_POST['order_service_options']))
 
 if (empty($_POST['order_deli_time']))
     $errors['order_deli_time'] = $lang['validate_field_ajax155'];
-
 
 if (empty($errors)) {
 
@@ -253,7 +246,6 @@ if (empty($errors)) {
         $update = cdp_updateCustomerPackagesTotals($dataShipmentUpdateTotals);
         $order_track = $code_prefix . $_POST["order_no"];
 
-
         if (isset($_FILES['filesMultiple']) && count($_FILES['filesMultiple']['name']) > 0 && $_FILES['filesMultiple']['tmp_name'][0] != '') {
 
             $target_dir = "../../order_files/";
@@ -303,13 +295,57 @@ if (empty($errors)) {
         $app_url = $settings->site_url . 'track.php?order_track=' . $fullshipment;
         $subject = $lang['notification_shipment2'] . $lang['notification_shipment6'] .  $fullshipment;
 
-        $email_template = cdp_getEmailTemplatesdg1i4(16);
+        $email_template = cdp_getEmailTemplatesdg1i4(33);
+
+        // Build email packages details (HTML-friendly)
+        $email_packages_details = '';
+        if (isset($packages) && is_array($packages) && count($packages) > 0) {
+            foreach ($packages as $index => $package) {
+                $email_packages_details .= ($index + 1) . ". " . $package->description . "\n" .
+                    "   • Qty: " . $package->qty . "\n" .
+                    "   • Weight: " . $package->weight . " lbs\n" .
+                    "   • Dimensions: " . $package->length . " x " . $package->width . " x " . $package->height . " inches\n" .
+                    "   • Declared Value: $" . number_format($package->declared_value, 2);
+                if ($package->fixed_value > 0) {
+                    $email_packages_details .= "\n   • Fixed Value: $" . number_format($package->fixed_value, 2);
+                }
+                $email_packages_details .= "\n\n";
+            }
+        }
+
+        // Get courier name for email
+        $db_courier_email = new Conexion;
+        $db_courier_email->cdp_query("SELECT courier_name FROM cdb_courier_com WHERE id = :id");
+        $db_courier_email->bind(':id', $_POST["order_courier"]);
+        $db_courier_email->cdp_execute();
+        $courier_obj_email = $db_courier_email->cdp_registro();
+        $email_courier_name = $courier_obj_email ? $courier_obj_email->courier_name : 'Standard';
+
+        // Get service type for email
+        $db_service_email = new Conexion;
+        $db_service_email->cdp_query("SELECT s_name FROM cdb_shipping_mode WHERE id = :id");
+        $db_service_email->bind(':id', $_POST["order_service_options"]);
+        $db_service_email->cdp_execute();
+        $service_obj_email = $db_service_email->cdp_registro();
+        $email_service_type = $service_obj_email ? $service_obj_email->s_name : 'Standard';
+
+        // Get delivery time for email
+        $db_delivery_email = new Conexion;
+        $db_delivery_email->cdp_query("SELECT estimated_eta FROM cdb_package_tracking_number WHERE order_id = :id");
+        $db_delivery_email->bind(':id', $shipment_id);
+        $db_delivery_email->cdp_execute();
+        $delivery_obj_email = $db_delivery_email->cdp_registro();
+        $email_delivery_time = $delivery_obj_email ? $delivery_obj_email->estimated_eta : 'N/A';
 
         $body = str_replace(
             array(
                 '[NAME]',
                 '[TRACKING]',
+                '[COURIER_NAME]',
+                '[SERVICE_TYPE]',
                 '[DELIVERY_TIME]',
+                '[PACKAGES_DETAILS]',
+                '[TOTAL_AMOUNT]',
                 '[URL]',
                 '[URL_LINK]',
                 '[SITE_NAME]',
@@ -318,7 +354,11 @@ if (empty($errors)) {
             array(
                 $sender_data->fname . ' ' . $sender_data->lname,
                 $fullshipment,
-                $date_ship,
+                $email_courier_name,
+                $email_service_type,
+                $email_delivery_time,
+                trim($email_packages_details),
+                '$' . number_format($total_envio, 2),
                 $msite_url,
                 $mlogo,
                 $msnames,
@@ -434,6 +474,91 @@ if (empty($errors)) {
         //NOTIFICATION TO CUSTOMER
         cdp_insertNotificationsUsers($notification_id, intval($_POST['sender_id']));
 
+        if (!empty($sender_data->phone) && (!empty($_POST['notify_whatsapp_sender']) && $_POST['notify_whatsapp_sender']) === 1) {
+            try {
+                // Get template 16 for package registration
+                $tpl = getTemplateWhatsApp(16);
+
+                if ($tpl) {
+                    // Build packages details list
+                    $packages_details = '';
+                    if (isset($packages) && is_array($packages) && count($packages) > 0) {
+                        foreach ($packages as $index => $package) {
+                            $packages_details .= ($index + 1) . ". " .
+                                $package->description . "\n" .
+                                "   • Qty: " . $package->qty . "\n" .
+                                "   • Weight: " . $package->weight . " lbs\n" .
+                                "   • Dimensions: " . $package->length .
+                                " x " . $package->width .
+                                " x " . $package->height . " inches\n" .
+                                "   • Declared Value: $" . number_format($package->declared_value, 2) . "\n";
+
+                            if ($package->fixed_value > 0) {
+                                $packages_details .= "   • Fixed Value: $" . number_format($package->fixed_value, 2) . "\n";
+                            }
+                            $packages_details .= "\n";
+                        }
+                    }
+
+                    // Get courier name
+                    $db_courier = new Conexion;
+                    $db_courier->cdp_query("SELECT courier_name FROM cdb_courier_com WHERE id = :id");
+                    $db_courier->bind(':id', $_POST["order_courier"]);
+                    $db_courier->cdp_execute();
+                    $courier_obj = $db_courier->cdp_registro();
+                    $courier_name = $courier_obj ? $courier_obj->courier_name : 'Standard';
+
+                    // Get service type
+                    $db_service = new Conexion;
+                    $db_service->cdp_query("SELECT s_name FROM cdb_shipping_mode WHERE id = :id");
+                    $db_service->bind(':id', $_POST["order_service_options"]);
+                    $db_service->cdp_execute();
+                    $service_obj = $db_service->cdp_registro();
+                    $service_type = $service_obj ? $service_obj->s_name : 'Standard';
+
+                    // Get delivery time
+                    $db_delivery = new Conexion;
+                    $db_delivery->cdp_query("SELECT deli_time_description FROM cdb_delivery_time WHERE id = :id");
+                    $db_delivery->bind(':id', $_POST["order_deli_time"]);
+                    $db_delivery->cdp_execute();
+                    $delivery_obj = $db_delivery->cdp_registro();
+                    $delivery_time = $delivery_obj ? $delivery_obj->deli_time_description : 'N/A';
+
+                    // Format the message with all placeholders
+                    $whatsapp_body = str_replace(
+                        [
+                            '[CUSTOMER_FULLNAME]',
+                            '[TRACKING_NUMBER]',
+                            '[PACKAGES_DETAILS]',
+                            '[COURIER_NAME]',
+                            '[SERVICE_TYPE]',
+                            '[DELIVERY_TIME]',
+                            '[TOTAL_AMOUNT]',
+                            '[COMPANY_SITE_URL]',
+                            '[COMPANY_NAME]'
+                        ],
+                        [
+                            ucfirst("{$sender_data->fname} {$sender_data->lname}"),
+                            $fullshipment,
+                            trim($packages_details),
+                            $courier_name,
+                            $service_type,
+                            $delivery_time,
+                            '$' . number_format($total_envio, 2),
+                            $settings->site_url,
+                            $settings->site_name
+                        ],
+                        $tpl->body
+                    );
+
+                    // Send via v2 API
+                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                }
+            } catch (Exception $e) {
+                error_log('Error sending WhatsApp v2 notification to sender: ' . $e->getMessage());
+            }
+        }
+
         $sender_address_data = cdp_getSenderAddress(intval($_POST["sender_address_id"]));
         $sender_country = $sender_address_data->country;
         $sender_state = $sender_address_data->state;
@@ -468,9 +593,9 @@ if (empty($errors)) {
         );
 
         cdp_insertCourierShipmentAddresses($dataAddresses);
-        if (isset($_POST['notify_whatsapp_sender']) && $_POST['notify_whatsapp_sender'] == 1) {
-            sendNotificationWhatsAppWithPDFPackages($sender_data, $shipment_id, 8);
-        }
+        // if (isset($_POST['notify_whatsapp_sender']) && $_POST['notify_whatsapp_sender'] == 1) {
+        //     sendNotificationWhatsAppWithPDFPackages($sender_data, $shipment_id, 8);
+        // }
 
         $messages[] = $lang['message_ajax_success_add_shipment'];
     } else {

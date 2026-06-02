@@ -1517,3 +1517,8 @@ function cdp_showSuccess(messages, shipment_id) {
     }
   });
 }
+
+function cdp_soloNumeros(e) {
+  var key = e.charCode;
+  return key >= 44 && key <= 57;
+}
