@@ -70,12 +70,12 @@ $stats_new = (int) ($row ? $row->total : 0);
 $db->cdp_query("SELECT COUNT(*) as total FROM cdb_users WHERE userlevel = 1 AND created < DATE_SUB(NOW(), INTERVAL 30 DAY)" . $whereAgency);
 $row = $db->cdp_registro();
 $stats_previous = (int) ($row ? $row->total : 0);
-$pct_total = $stats_previous > 0 ? round((($stats_total - $stats_previous) / $stats_previous) * 100) : 0;
-$pct_active = $stats_total > 0 ? round(($stats_active / $stats_total) * 100) : 0;
-$pct_inactive = $stats_total > 0 ? round(($stats_inactive / $stats_total) * 100) : 0;
-$pct_new = $stats_total > 0 ? round(($stats_new / $stats_total) * 100) : 0;
-$pct_approve = $stats_total > 0 ? round(($stats_approve / $stats_total) * 100) : 0;
-$pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 100) : 0;
+$pct_total = $stats_previous > 0 ? round((($stats_total - $stats_previous) / $stats_previous) * 100, 1) : 0;
+$pct_active = $stats_total > 0 ? round(($stats_active / $stats_total) * 100, 1) : 0;
+$pct_inactive = $stats_total > 0 ? round(($stats_inactive / $stats_total) * 100, 1) : 0;
+$pct_new = $stats_total > 0 ? round(($stats_new / $stats_total) * 100, 1) : 0;
+$pct_approve = $stats_total > 0 ? round(($stats_approve / $stats_total) * 100, 1) : 0;
+$pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 100, 1) : 0;
 
 ?>
 <!DOCTYPE html>
