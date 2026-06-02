@@ -553,132 +553,100 @@ if (empty($errors)) {
         cdp_insertCourierShipmentAddresses($dataAddresses);
 
         //NOTIFY WHATSAPP ULTRASMG API
-        
-        if (!empty($_POST['notify_whatsapp_sender'])) {
+        if (!empty($_POST['notify_whatsapp_sender']) && intval($_POST['notify_whatsapp_sender']) === 1) {
             try {
                 require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
-        
-                // Get sender data
+
                 $db_sender = new Conexion;
                 $db_sender->cdp_query("SELECT * FROM cdb_users WHERE id = :id");
-                $db_sender->bind(':id', $_POST['sender_id'] ?? 0);
+                $db_sender->bind(':id', intval($_POST['sender_id']));
                 $db_sender->cdp_execute();
                 $sender_data = $db_sender->cdp_registro();
-        
-                // Only send if sender has phone
+
                 if ($sender_data && !empty($sender_data->phone)) {
-        
-                    // Get template 4 (package registration)
                     $tpl = getTemplateWhatsApp(4);
-        
+
                     if ($tpl && !empty($tpl->body)) {
-        
-                        // Get tracking number (use order_no or tracking_number field)
-                        $fullshipment = !empty($_POST['tracking_number']) ? $_POST['tracking_number'] : $_POST['order_no'];
-        
-                        // Build packages details list
-                        $packages_details = '';
-                        if (!empty($_POST['packages'])) {
-                            $packages = json_decode($_POST['packages'], true);
-                            if (is_array($packages)) {
-                                foreach ($packages as $index => $package) {
-                                    $packages_details .= ($index + 1) . ". " . ($package['description'] ?? 'Item') . "\n";
-                                    $packages_details .= "   • Qty: " . ($package['qty'] ?? 1) . "\n";
-                                    $packages_details .= "   • Weight: " . ($package['weight'] ?? 0) . " lbs\n";
-                                    $packages_details .= "   • Dimensions: " . ($package['length'] ?? 0) . " x " . 
-                                                    ($package['width'] ?? 0) . " x " . ($package['height'] ?? 0) . " in\n";
-                                    $packages_details .= "   • Declared: $" . number_format((float)($package['declared_value'] ?? 0), 2) . "\n";
-        
-                                    if (!empty($package['fixed_value']) && $package['fixed_value'] > 0) {
-                                        $packages_details .= "   • Fixed: $" . number_format((float)$package['fixed_value'], 2) . "\n";
-                                    }
-                                    $packages_details .= "\n";
-                                }
-                            }
-                        }
-        
-                        // Get courier name
-                        $courier_name = 'Standard';
-                        if (!empty($_POST['order_courier'])) {
-                            $db_courier = new Conexion;
-                            $db_courier->cdp_query("SELECT name_com FROM cdb_courier_com WHERE id = :id LIMIT 1");
-                            $db_courier->bind(':id', (int)$_POST['order_courier']);
-                            $db_courier->cdp_execute();
-                            $courier_obj = $db_courier->cdp_registro();
-                            if ($courier_obj && !empty($courier_obj->name_com)) {
-                                $courier_name = $courier_obj->name_com;
-                            }
-                        }
-        
-                        // Get service type
-                        $service_type = 'Standard';
-                        if (!empty($_POST['order_service_options'])) {
-                            $db_service = new Conexion;
-                            $db_service->cdp_query("SELECT name_item FROM cdb_category WHERE id = :id LIMIT 1");
-                            $db_service->bind(':id', (int)$_POST['order_service_options']);
-                            $db_service->cdp_execute();
-                            $service_obj = $db_service->cdp_registro();
-                            if ($service_obj && !empty($service_obj->name_item)) {
-                                $service_type = $service_obj->name_item;
-                            }
-                        }
-        
-                        // Get delivery time
-                        $delivery_time = 'N/A';
-                        if (!empty($_POST['order_deli_time'])) {
-                            $db_delivery = new Conexion;
-                            $db_delivery->cdp_query("SELECT delitime FROM cdb_delivery_time WHERE id = :id LIMIT 1");
-                            $db_delivery->bind(':id', (int)$_POST['order_deli_time']);
-                            $db_delivery->cdp_execute();
-                            $delivery_obj = $db_delivery->cdp_registro();
-                            if ($delivery_obj && !empty($delivery_obj->delitime)) {
-                                $delivery_time = $delivery_obj->delitime;
-                            }
-                        }
-        
-                        // Get settings for company info
-                        $settings = cdp_getSettingsCourier();
-                        $total_amount = isset($_POST['total_order']) ? number_format((float)$_POST['total_order'], 2) : '0.00';
-        
-                        // Replace all placeholders
+
+                        // Courier name
+                        $db_courier = new Conexion;
+                        $db_courier->cdp_query("SELECT name_com FROM cdb_courier_com WHERE id = :id LIMIT 1");
+                        $db_courier->bind(':id', intval($dataShipment['order_courier']));
+                        $db_courier->cdp_execute();
+                        $courier_obj = $db_courier->cdp_registro();
+                        $courier_name = $courier_obj ? $courier_obj->name_com : 'N/A';
+
+                        // Service type
+                        $db_service = new Conexion;
+                        $db_service->cdp_query("SELECT ship_mode FROM cdb_shipping_mode WHERE id = :id LIMIT 1");
+                        $db_service->bind(':id', intval($dataShipment['order_service_options']));
+                        $db_service->cdp_execute();
+                        $service_obj = $db_service->cdp_registro();
+                        $service_type = $service_obj ? $service_obj->ship_mode : 'N/A';
+
+                        // Delivery time
+                        $db_delivery = new Conexion;
+                        $db_delivery->cdp_query("SELECT delitime FROM cdb_delivery_time WHERE id = :id LIMIT 1");
+                        $db_delivery->bind(':id', intval($dataShipment['order_deli_time']));
+                        $db_delivery->cdp_execute();
+                        $delivery_obj = $db_delivery->cdp_registro();
+                        $delivery_time = $delivery_obj ? $delivery_obj->delitime : 'N/A';
+
+                        // Package type
+                        $db_package = new Conexion;
+                        $db_package->cdp_query("SELECT name_pack FROM cdb_pack WHERE id = :id LIMIT 1");
+                        $db_package->bind(':id', intval($dataShipment['order_package']));
+                        $db_package->cdp_execute();
+                        $package_obj = $db_package->cdp_registro();
+                        $package_type = $package_obj ? $package_obj->name_pack : 'N/A';
+
+                        // Origin office
+                        $db_office = new Conexion;
+                        $db_office->cdp_query("SELECT name_off FROM cdb_offices WHERE id = :id LIMIT 1");
+                        $db_office->bind(':id', intval($dataShipment['origin_off']));
+                        $db_office->cdp_execute();
+                        $office_obj = $db_office->cdp_registro();
+                        $origin_office = $office_obj ? $office_obj->name_off : 'N/A';
+
                         $whatsapp_body = str_replace(
                             [
                                 '[CUSTOMER_FULLNAME]',
                                 '[TRACKING_NUMBER]',
-                                '[PACKAGES_DETAILS]',
+                                '[PROVIDER_NAME]',
+                                '[PRICE_PURCHASE]',
                                 '[COURIER_NAME]',
+                                '[PACKAGE_TYPE]',
                                 '[SERVICE_TYPE]',
                                 '[DELIVERY_TIME]',
-                                '[TOTAL_AMOUNT]',
+                                '[ORIGIN_OFFICE]',
                                 '[COMPANY_SITE_URL]',
                                 '[COMPANY_NAME]'
                             ],
                             [
                                 ucfirst(trim(($sender_data->fname ?? '') . ' ' . ($sender_data->lname ?? ''))),
                                 $fullshipment,
-                                trim($packages_details),
+                                $dataShipment['provider_purchase'],
+                                number_format((float)$dataShipment['price_purchase'], 2),
                                 $courier_name,
+                                $package_type,
                                 $service_type,
                                 $delivery_time,
-                                '$' . $total_amount,
+                                $origin_office,
                                 !empty($settings->site_url) ? $settings->site_url : 'www.company.com',
                                 !empty($settings->site_name) ? $settings->site_name : 'Our Company'
                             ],
                             $tpl->body
                         );
-        
-                        // Send WhatsApp notification
+
                         $wa_result = sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
-        
-                        // Log result (don't fail shipment if WhatsApp fails)
+
                         if (!$wa_result['success']) {
-                            error_log("WhatsApp notification failed for order {$order_id}: " . $wa_result['message']);
+                            error_log("WhatsApp notification failed for shipment {$fullshipment}: " . $wa_result['message']);
                         }
                     }
                 }
             } catch (Exception $e) {
-                // Log but don't fail the shipment
-                error_log('WhatsApp notification error for order ' . $order_id . ': ' . $e->getMessage());
+                error_log('WhatsApp notification error for shipment ' . ($fullshipment ?? 'unknown') . ': ' . $e->getMessage());
             }
         }
 
