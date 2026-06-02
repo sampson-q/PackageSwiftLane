@@ -55,6 +55,14 @@ $db->cdp_query("SELECT COUNT(*) as total FROM cdb_users WHERE userlevel = 1 AND 
 $row = $db->cdp_registro();
 $stats_inactive = (int) ($row ? $row->total : 0);
 
+$db->cdp_query("SELECT COUNT(*) as total FROM cdb_users WHERE userlevel = 1 AND approve = 1" . $whereAgency);
+$row = $db->cdp_registro();
+$stats_approve = (int) ($row ? $row->total : 0);
+
+$db->cdp_query("SELECT COUNT(*) as total FROM cdb_users WHERE userlevel = 1 AND approve = 0" . $whereAgency);
+$row = $db->cdp_registro();
+$stats_unapprove = (int) ($row ? $row->total : 0);
+
 $db->cdp_query("SELECT COUNT(*) as total FROM cdb_users WHERE userlevel = 1 AND created >= DATE_SUB(NOW(), INTERVAL 30 DAY)" . $whereAgency);
 $row = $db->cdp_registro();
 $stats_new = (int) ($row ? $row->total : 0);
@@ -66,6 +74,8 @@ $pct_total = $stats_previous > 0 ? round((($stats_total - $stats_previous) / $st
 $pct_active = $stats_total > 0 ? round(($stats_active / $stats_total) * 100) : 0;
 $pct_inactive = $stats_total > 0 ? round(($stats_inactive / $stats_total) * 100) : 0;
 $pct_new = $stats_total > 0 ? round(($stats_new / $stats_total) * 100) : 0;
+$pct_approve = $stats_total > 0 ? round(($stats_approve / $stats_total) * 100) : 0;
+$pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 100) : 0;
 
 ?>
 <!DOCTYPE html>
@@ -153,82 +163,116 @@ $pct_new = $stats_total > 0 ? round(($stats_new / $stats_total) * 100) : 0;
             <!-- -------------------------------------------------------------- -->
               <!-- Mini Dashboard - Diseño exacto referencia (borde rojo): 4 tarjetas, icono Solar en módulo -->
               <!-- -------------------------------------------------------------- -->
-              <div class="d-md-flex align-items-center">
-                    <div>
-                        <h3 class="card-title"><span><?php echo $lang['filter6']; ?></span></h3>
-                    </div>
+            <div class="d-md-flex align-items-center">
+                <div>
+                    <h3 class="card-title"><span><?php echo $lang['filter6']; ?></span></h3>
                 </div>
-                <div><br></div>
-              <div class="row mb-4">
-                <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-lg-0">
-                  <div class="card customers-stats-card h-100">
-                    <div class="card-body">
-                      <div class="stat-top">
-                        <h6 class="stat-title"><?php echo isset($lang['filter6']) ? $lang['filter6'] : 'Total'; ?></h6>
-                        <div class="stat-icon-module bg-label-primary">
-                          <iconify-icon icon="solar:users-group-two-rounded-linear"></iconify-icon>
+            </div>
+            <div><br></div>
+            <div class="row mb-4">
+                <div class="col-12 col-sm-6 col-lg-2 mb-3 mb-lg-0">
+                    <div class="card customers-stats-card h-100">
+                        <div class="card-body">
+                            <div class="stat-top">
+                                <h6 class="stat-title"><?php echo isset($lang['filter6']) ? $lang['filter6'] : 'Total'; ?></h6>
+                                <div class="stat-icon-module bg-label-primary">
+                                    <iconify-icon icon="solar:users-group-two-rounded-linear"></iconify-icon>
+                                </div>
+                            </div>
+                            <h4 class="stat-value"><?php echo number_format($stats_total); ?></h4>
+                            <?php if ($pct_total != 0): ?>
+                                <span class="stat-badge <?php echo $pct_total >= 0 ? 'text-success' : 'text-danger'; ?>">(<?php echo $pct_total >= 0 ? '+' : ''; ?><?php echo $pct_total; ?>%)</span>
+                            <?php endif; ?>
+                            <p class="stat-label"><?php echo isset($lang['filter83']) ? $lang['filter83'] : 'Todos los clientes'; ?></p>
                         </div>
-                      </div>
-                      <h4 class="stat-value"><?php echo number_format($stats_total); ?></h4>
-                      <?php if ($pct_total != 0): ?>
-                      <span class="stat-badge <?php echo $pct_total >= 0 ? 'text-success' : 'text-danger'; ?>">(<?php echo $pct_total >= 0 ? '+' : ''; ?><?php echo $pct_total; ?>%)</span>
-                      <?php endif; ?>
-                      <p class="stat-label"><?php echo isset($lang['filter83']) ? $lang['filter83'] : 'Todos los clientes'; ?></p>
                     </div>
-                  </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-lg-0">
-                  <div class="card customers-stats-card h-100">
-                    <div class="card-body">
-                      <div class="stat-top">
-                        <h6 class="stat-title"><?php echo isset($lang['filter84']) ? $lang['filter84'] : 'Activos'; ?></h6>
-                        <div class="stat-icon-module bg-label-success">
-                          <iconify-icon icon="solar:user-check-linear"></iconify-icon>
+                <div class="col-12 col-sm-6 col-lg-2 mb-3 mb-lg-0">
+                    <div class="card customers-stats-card h-100">
+                        <div class="card-body">
+                            <div class="stat-top">
+                                <h6 class="stat-title"><?php echo isset($lang['filter84']) ? $lang['filter84'] : 'Activos'; ?></h6>
+                                <div class="stat-icon-module bg-label-success">
+                                    <iconify-icon icon="solar:user-plus-linear"></iconify-icon>
+                                </div>
+                            </div>
+                            <h4 class="stat-value"><?php echo number_format($stats_active); ?></h4>
+                            <?php if ($stats_total > 0): ?>
+                                <span class="stat-badge text-success">(<?php echo $pct_active; ?>%)</span>
+                            <?php endif; ?>
+                            <p class="stat-label"><?php echo isset($lang['filter84']) ? $lang['filter84'] : 'Cuentas activas'; ?></p>
                         </div>
-                      </div>
-                      <h4 class="stat-value"><?php echo number_format($stats_active); ?></h4>
-                      <?php if ($stats_total > 0): ?>
-                      <span class="stat-badge text-success">(<?php echo $pct_active; ?>%)</span>
-                      <?php endif; ?>
-                      <p class="stat-label"><?php echo isset($lang['filter84']) ? $lang['filter84'] : 'Cuentas activas'; ?></p>
                     </div>
-                  </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-lg-0">
-                  <div class="card customers-stats-card h-100">
-                    <div class="card-body">
-                      <div class="stat-top">
-                        <h6 class="stat-title"><?php echo isset($lang['filter85']) ? $lang['filter85'] : 'Inactivos'; ?></h6>
-                        <div class="stat-icon-module bg-label-secondary">
-                          <iconify-icon icon="solar:user-minus-linear"></iconify-icon>
+                <div class="col-12 col-sm-6 col-lg-2 mb-3 mb-lg-0">
+                    <div class="card customers-stats-card h-100">
+                        <div class="card-body">
+                            <div class="stat-top">
+                                <h6 class="stat-title"><?php echo isset($lang['filter85']) ? $lang['filter85'] : 'Inactivos'; ?></h6>
+                                <div class="stat-icon-module bg-label-secondary">
+                                <iconify-icon icon="solar:user-minus-linear"></iconify-icon>
+                                </div>
+                            </div>
+                            <h4 class="stat-value"><?php echo number_format($stats_inactive); ?></h4>
+                            <?php if ($stats_total > 0): ?>
+                                <span class="stat-badge text-danger">(<?php echo $pct_inactive; ?>%)</span>
+                            <?php endif; ?>
+                            <p class="stat-label"><?php echo isset($lang['filter85']) ? $lang['filter85'] : 'Cuentas inactivas'; ?></p>
                         </div>
-                      </div>
-                      <h4 class="stat-value"><?php echo number_format($stats_inactive); ?></h4>
-                      <?php if ($stats_total > 0): ?>
-                      <span class="stat-badge text-danger">(<?php echo $pct_inactive; ?>%)</span>
-                      <?php endif; ?>
-                      <p class="stat-label"><?php echo isset($lang['filter85']) ? $lang['filter85'] : 'Cuentas inactivas'; ?></p>
                     </div>
-                  </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-lg-0">
-                  <div class="card customers-stats-card h-100">
-                    <div class="card-body">
-                      <div class="stat-top">
-                        <h6 class="stat-title">News</h6>
-                        <div class="stat-icon-module bg-label-warning">
-                          <iconify-icon icon="solar:user-plus-linear"></iconify-icon>
+                <div class="col-12 col-sm-6 col-lg-2 mb-3 mb-lg-0">
+                    <div class="card customers-stats-card h-100">
+                        <div class="card-body">
+                            <div class="stat-top">
+                                <h6 class="stat-title">Approved Users</h6>
+                                <div class="stat-icon-module bg-label-primary">
+                                    <iconify-icon icon="solar:user-check-linear"></iconify-icon>
+                                </div>
+                            </div>
+                            <h4 class="stat-value"><?php echo number_format($stats_approve); ?></h4>
+                            <?php if ($stats_total > 0): ?>
+                                <span class="stat-badge text-success">(<?php echo $pct_approve; ?>%)</span>
+                            <?php endif; ?>
+                            <p class="stat-label">Approved Users</p>
                         </div>
-                      </div>
-                      <h4 class="stat-value"><?php echo number_format($stats_new); ?></h4>
-                      <?php if ($stats_total > 0): ?>
-                      <span class="stat-badge text-success">(<?php echo $pct_new; ?>%)</span>
-                      <?php endif; ?>
-                      <p class="stat-label">Last 30 days</p>
                     </div>
-                  </div>
                 </div>
-              </div>
+                <div class="col-12 col-sm-6 col-lg-2 mb-3 mb-lg-0">
+                    <div class="card customers-stats-card h-100">
+                        <div class="card-body">
+                            <div class="stat-top">
+                                <h6 class="stat-title">Unapproved Users</h6>
+                                <div class="stat-icon-module bg-label-danger">
+                                    <iconify-icon icon="solar:user-minus-linear"></iconify-icon>
+                                </div>
+                            </div>
+                            <h4 class="stat-value"><?php echo number_format($stats_unapprove); ?></h4>
+                            <?php if ($stats_total > 0): ?>
+                                <span class="stat-badge text-success">(<?php echo $pct_unapprove; ?>%)</span>
+                            <?php endif; ?>
+                            <p class="stat-label">Unapproved Users</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-2 mb-3 mb-lg-0">
+                    <div class="card customers-stats-card h-100">
+                        <div class="card-body">
+                            <div class="stat-top">
+                                <h6 class="stat-title">News</h6>
+                                <div class="stat-icon-module bg-label-warning">
+                                    <iconify-icon icon="solar:user-heart-linear"></iconify-icon>
+                                </div>
+                            </div>
+                            <h4 class="stat-value"><?php echo number_format($stats_new); ?></h4>
+                            <?php if ($stats_total > 0): ?>
+                                <span class="stat-badge text-success">(<?php echo $pct_new; ?>%)</span>
+                            <?php endif; ?>
+                            <p class="stat-label">Last 30 days</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- -------------------------------------------------------------- -->
               <!-- Start Page Content -->
