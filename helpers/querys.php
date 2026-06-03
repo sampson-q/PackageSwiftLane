@@ -7327,20 +7327,34 @@ function cdp_getPackageTracking($order_id) {
     return $db->cdp_registro();
 }
 
-function cdp_updatePackageTracking($order_id, $tracking_number = null, $estimated_eta = null) {
+function cdp_updatePackageTracking($order_id, $user_id, $tracking_number = null, $estimated_eta = null) {
     $db = new Conexion;
-
     $tracking = cdp_getPackageTracking($order_id);
-
-    if (!$tracking) {
-        return false;
-    }
-
-    $fields = [];
-    $params = [':order_id' => $order_id];
 
     $trackingNumberProvided = func_num_args() >= 2 && $tracking_number !== null;
     $etaProvided = func_num_args() >= 3 && $estimated_eta !== null;
+
+    // Nothing to save
+    if (!$trackingNumberProvided && !$etaProvided) {
+        return false;
+    }
+
+    // If no row exists yet, insert one
+    if (!$tracking) {
+        $sql = 'INSERT INTO cdb_package_tracking_number (order_id, user_id, tracking_number, estimated_eta) VALUES (:order_id, :user_id, :tracking_number, :estimated_eta)';
+
+        $db->cdp_query($sql);
+        $db->bind(':order_id', $order_id);
+        $db->bind(':user_id', $user_id);
+        $db->bind(':tracking_number', $trackingNumberProvided ? $tracking_number : null);
+        $db->bind(':estimated_eta', $etaProvided ? $estimated_eta : null);
+
+        return $db->cdp_execute();
+    }
+
+    // Otherwise update only changed fields
+    $fields = [];
+    $params = [':order_id' => $order_id];
 
     if ($trackingNumberProvided && $tracking->tracking_number != $tracking_number) {
         $fields[] = 'tracking_number = :tracking_number';
