@@ -634,7 +634,7 @@ function cdp_cal_final_total() {
   $("#total_envio_input").val(total_envio.toFixed(2));
 }
 
-function cdp_add_item(id, total_vol, weight, length, width, height, tracking, order_no, order_prefix) {
+function cdp_add_item(id, total_vol, weight, length, width, height, tracking, order_no, order_prefix, sender, description, total_price, quantity) {
   if (selected.includes(id)) {
     Swal.fire({
       title: "Error!",
@@ -653,10 +653,14 @@ function cdp_add_item(id, total_vol, weight, length, width, height, tracking, or
     var html_code = "";
     html_code += '<tr class="card-hover " id="row_id_' + id + '">';
 
-    html_code += '<td class="" colspan="3"> <b>' + tracking + " </b></td>";
-    html_code += '<td class="text-center"  colspan="2">' + weight + "</td>";
-    html_code += '<td class="text-center"></td>';
-    html_code += '<td class="text-center">' + total_vol + "</td>";
+    html_code += '<td><b>' + sender + "</b></td>";
+    html_code += '<td><b>' + tracking + "</b></td>";
+    html_code += '<td class="text-right">' + parseInt(quantity) + '</td>';
+    html_code += '<td><b>' + description + "</b></td>";
+    html_code += '<td><b>' + weight + "</b></td>";
+    html_code += '<td></td>';
+    html_code += '<td><b>' + total_price + "</b></td>";
+    // html_code += '<td>' + total_vol + "</td>";
 
     html_code += '<input type="hidden"  id="total_vol_' + id + '"  value="' + total_vol + '" name="weight_vol[]">';
     html_code += '<input type="hidden"   value="' + order_prefix + '" name="prefix[]">';

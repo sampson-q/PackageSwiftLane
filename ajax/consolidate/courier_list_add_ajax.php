@@ -113,6 +113,9 @@ if ($numrows > 0) { ?>
                         // Get order item description.
                         $db->cdp_query("SELECT order_item_description FROM cdb_add_order_item WHERE order_id = '" . $row->order_id . "'");
                         $description = $db->cdp_registro();
+                        
+                        $db->cdp_query("SELECT order_item_quantity FROM cdb_add_order_item WHERE order_id = '" . $row->order_id . "'");
+                        $quantity = $db->cdp_registro();
 
                         // Get sender info.
                         $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . $order_details->sender_id . "'");
@@ -156,6 +159,7 @@ if ($numrows > 0) { ?>
 							data-order-prefix="<?php echo $row->order_prefix; ?>"
                             data-sender="<?php echo $sender->fname . ' ' . $sender->lname; ?>"
                             data-description="<?php echo $description->order_item_description; ?>"
+                            data-quantity="<?php echo $quantity->order_item_quantity; ?>"
                             data-total-order="<?php echo cdb_money_format($row->total_order); ?>"
                             >
 
@@ -188,7 +192,7 @@ if ($numrows > 0) { ?>
 
 							<td class="text-right">
 								<button type="button" name="add_row" id="add_row" 
-									onclick="cdp_add_item('<?php echo $row->order_id; ?>','<?php echo $total_metric; ?>', '<?php echo $weight; ?>', '<?php echo $length; ?>', '<?php echo $width; ?>', '<?php echo $height; ?>', '<?php echo $tracking; ?>', '<?php echo $row->order_no; ?>','<?php echo $row->order_prefix; ?>', '<?php echo $sender->fname . ' ' . $sender->lname; ?>', '<?php echo $description->order_item_description; ?>', '<?php echo cdb_money_format($row->total_order); ?>'); 
+									onclick="cdp_add_item('<?php echo $row->order_id; ?>','<?php echo $total_metric; ?>', '<?php echo $weight; ?>', '<?php echo $length; ?>', '<?php echo $width; ?>', '<?php echo $height; ?>', '<?php echo $tracking; ?>', '<?php echo $row->order_no; ?>','<?php echo $row->order_prefix; ?>', '<?php echo $sender->fname . ' ' . $sender->lname; ?>', '<?php echo $description->order_item_description; ?>', '<?php echo cdb_money_format(($row->total_order)); ?>', '<?php echo $quantity->order_item_quantity; ?>'); 
 									$('#tb_row_id_<?php echo $row->order_id; ?>').addClass('marked-row').hide();" 
 									class="btn btn-outline-success btn-sm add_row">
 									<i class="fa fa-plus"></i>

@@ -1188,10 +1188,7 @@ if (isset($_POST["create_invoice"])) {
 
 
                                     <div class="row">
-                                        <div class="resultados_file col-md-4 pull-right mt-4">
-
-
-                                        </div>
+                                        <div class="resultados_file col-md-4 pull-right mt-4"></div>
                                     </div>
                                 </div>
 
@@ -1214,30 +1211,30 @@ if (isset($_POST["create_invoice"])) {
                                         <!-- Adicionar envios al consolidado de envios-->
                                         <div class="col-md-6 text-right">
                                             <button type="button" data-toggle="modal" data-target="#myModalConsolidate" class="btn btn-outline-dark">
-                                                    <span class="fa fa-search"></span>
-                                                    <?php echo $lang['leftorder148']; ?>
+                                                <span class="fa fa-search"></span>
+                                                <?php echo $lang['leftorder148']; ?>
                                             </button>
                                         </div>
-                                        
                                     </div>
 
                                     <div><br></div>
 
                                     <div class="table-responsive">
                                         <table id="invoice-item-table" class="table">
-  
                                             <thead class="bg-inverse text-white">
                                                 <tr>
-                                                    <th colspan="3"><b><?php echo $lang['ltracking'] ?></b></th>
-                                                    <th colspan="2" class="text-center"><b><?php echo $lang['left215'] ?></b></th>
-                                                    <th colspan="2" class="text-right"><b><?php echo $lang['left219'] ?></b></th>
-                                                    <th class="text-center"></th>
+                                                    <th><b><?php echo $lang['packager'] ?></b></th>
+                                                    <th><b><?php echo $lang['ltracking'] ?></b></th>
+                                                    <th class="text-right"><b>Qty</b></th>
+                                                    <th><b><?php echo $lang['contents'] ?></b></th>
+                                                    <th><b><?php echo $lang['left215'] ?></b></th>
+                                                    <th></th>
+                                                    <th><b><?php echo $lang['ship-all5'] ?></b></th>
+                                                    <th></th>
                                                 </tr>
                                             </thead>
 
-                                            <tbody id="projects-tbl">
-
-                                            </tbody>
+                                            <tbody id="projects-tbl"></tbody>
 
                                             <tfoot>
                                                 <tr class="card-hover">
@@ -1252,7 +1249,6 @@ if (isset($_POST["create_invoice"])) {
                                     </div>
 
                                     <div class="row">
-
                                         <div class="col-md-12">
                                             <div class="form-actions">
                                                 <div class="card-body">
