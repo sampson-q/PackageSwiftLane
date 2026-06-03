@@ -35,7 +35,7 @@ $(function () {
   $("#tariff_mode").click(function () {
     if ($(this).is(":checked")) {
       // $("#table-totals").removeClass("d-none");
-      $("#create_invoice").prop("disabled", false);
+    //   $("#create_invoice").prop("disabled", false);
       $("#calculate_invoice").prop("disabled", true);
     } else {
       // $("#table-totals").addClass("d-none");
@@ -873,6 +873,9 @@ $("#invoice_form").on("submit", function (event) {
   var declared_value_tax = $("#declared_value_tax").val();
   var tariffs_value = $("#tariffs_value").val();
 
+    var tracking_number = $("#tracking_number").val();
+    var estimated_eta = $("#estimated_eta").val();
+
   var deleted_file_ids = $("#deleted_file_ids").val();
 
   var data = new FormData();
@@ -990,6 +993,11 @@ $("#invoice_form").on("submit", function (event) {
   for (var i = 0; i < total_file; i++) {
     data.append("filesMultiple[]", document.getElementById("filesMultiple").files[i]);
   }
+
+    if (tracking_number)    data.append("tracking_number", tracking_number);
+    if (estimated_eta)      data.append("estimated_eta", estimated_eta);
+
+  data.append('_csrf_token', $('input[name="_csrf_token"]').val());
 
   $.ajax({
     type: "POST",
@@ -2101,6 +2109,9 @@ $("#calculate_invoice").on("click", function (event) {
   $.ajax({
     type: "POST",
     data: data,
+    headers: {
+        'X-CSRF-TOKEN': $('input[name="_csrf_token"]').val()
+    },
     url: "ajax/courier/get_price_range_weight_tariffs_ajax.php",
     dataType: "json",
     beforeSend: function (objeto) {

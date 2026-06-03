@@ -105,15 +105,6 @@ $address_order = $db->cdp_registro();
         .select2-selection__arrow {
             height: 34px !important;
         }
-
-        .pre {
-            border: solid 1px red;
-        }
-
-        .pre:focus {
-            border: 1px solid blue;
-            outline: none;
-        }
     </style>
 
 </head>
@@ -178,6 +169,7 @@ $address_order = $db->cdp_registro();
             </div>
 
             <form method="post" id="invoice_form" name="invoice_form">
+                <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
                 <div class="container-fluid">
                     <div class="row">
@@ -315,20 +307,7 @@ $address_order = $db->cdp_registro();
                                     <h4 class="card-title"><i class="mdi mdi-information-outline" style="color:#20c997"></i><?php echo $lang['left334']; ?></h4>
                                     <hr>
                                     <div class="resultados_ajax_add_user_modal_recipient"></div>
-                                    <br>
-                                    <?php
-                                    if ($core->active_whatsapp == 1) {
-                                    ?>
-                                        <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
-                                            <input type="checkbox" class="custom-control-input" name="notify_whatsapp_receiver" id="notify_whatsapp_receiver" value="1">
-                                            <b>
-                                                <?php echo $lang['leftorder14443']; ?>
-
-                                                <i class="mdi mdi-whatsapp" style="font-size: 22px; color:#07bc4c;"></i>
-                                            </b>
-                                            <span class="custom-control-indicator"></span>
-                                        </label>
-                                    <?php } ?>
+                                    <br><br><br>
 
                                     <?php
                                     if ($core->active_sms == 1) {
@@ -380,7 +359,6 @@ $address_order = $db->cdp_registro();
                     </div>
                     <!-- Row -->
 
-
                     <div class="row">
                         <div class="col-lg-12">
                             <div class="card">
@@ -388,7 +366,7 @@ $address_order = $db->cdp_registro();
                                     <h4 class="card-title"><i class="mdi mdi-book-multiple" style="color:#20c997"></i> <?php echo $lang['add-title13'] ?></h4>
                                     <br>
                                     <div class="row">
-                                        <div class="form-group col-md-4">
+                                        <div class="form-group col-md-3">
                                             <label for="inputlname" class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
                                             <div class="input-group">
                                                 <select class="custom-select col-12" id="order_item_category" name="order_item_category" required>
@@ -405,7 +383,7 @@ $address_order = $db->cdp_registro();
 
                                         </div>
 
-                                        <div class="form-group col-md-4">
+                                        <div class="form-group col-md-3">
                                             <label for="inputlname" class="control-label col-form-label"><?php echo $lang['add-title17'] ?></label>
                                             <div class="input-group mb-3">
                                                 <select class="custom-select col-12" id="order_package" name="order_package" required>
@@ -420,7 +398,7 @@ $address_order = $db->cdp_registro();
                                             </div>
                                         </div>
 
-                                        <div class="form-group col-md-4">
+                                        <div class="form-group col-md-3">
                                             <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['payment_methods'] ?></label>
                                             <div class="input-group mb-3">
                                                 <select class="custom-select col-12" id="order_payment_method" name="order_payment_method" required>
@@ -432,9 +410,7 @@ $address_order = $db->cdp_registro();
                                                 </select>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div class="row">
                                         <div class="form-group col-md-3">
                                             <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title18'] ?></label>
                                             <div class="input-group mb-3">
@@ -449,6 +425,9 @@ $address_order = $db->cdp_registro();
                                             </div>
                                         </div>
 
+                                    </div>
+
+                                    <div class="row">
                                         <div class="form-group col-md-3">
                                             <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title22'] ?></label>
                                             <div class="input-group mb-3">
@@ -463,7 +442,6 @@ $address_order = $db->cdp_registro();
                                             </div>
                                         </div>
 
-
                                         <div class="col-md-4" style="display:none;">
                                             <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title15'] ?></i></label>
                                             <div class="input-group">
@@ -473,8 +451,6 @@ $address_order = $db->cdp_registro();
                                                 <input type='text' class="form-control" name="order_date" id="order_date" placeholder="--<?php echo $lang['left206'] ?>--" data-toggle="tooltip" data-placement="bottom" title="<?php echo $lang['add-title16'] ?>" value="<?php echo date("Y/m/d", strtotime($row_order->order_datetime)); ?>" readonly />
                                             </div>
                                         </div>
-
-
 
                                         <div class="form-group col-md-3">
                                             <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title20'] ?></label>
@@ -505,21 +481,8 @@ $address_order = $db->cdp_registro();
                                                 </select>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div>
-                                                <label class="control-label" id="selectItem"> <?php echo $lang['leftorder15']; ?></label>
-                                            </div>
-                                            <input class="custom-file-input" id="filesMultiple" name="filesMultiple[]" multiple="multiple" type="file" style="display: none;" onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
-                                            <button type="button" id="openMultiFile" class="btn btn-default  pull-left  mb-4">
-                                                <i class='fa fa-paperclip' id="openMultiFile" style="font-size:18px; cursor:pointer;">
-                                                </i> <?php echo $lang['leftorder16']; ?> </button>
-                                        </div>
-                                        <?php
-                                        if ($userData->userlevel == 3) { ?>
-
+                                        <?php if ($userData->userlevel == 3) { ?>
                                             <div class="col-md-6">
                                                 <label for="inputname" class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
                                                 <div class="input-group mb-3">
@@ -533,11 +496,8 @@ $address_order = $db->cdp_registro();
                                                     </select>
                                                 </div>
                                             </div>
-                                        <?php
-
-                                        } else { ?>
-
-                                            <div class="col-md-6">
+                                        <?php } else { ?>
+                                            <div class="col-md-3">
                                                 <label for="inputname" class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
                                                 <div class="input-group mb-3">
                                                     <div class="input-group-prepend">
@@ -555,12 +515,31 @@ $address_order = $db->cdp_registro();
                                                     </select>
                                                 </div>
                                             </div>
+                                        <?php } ?>
 
-                                        <?php
-                                        } ?>
+                                        <div class="form-group col-md-3">
+                                            <label class="control-label col-form-label"><?php echo '# Tracking' ?></label>
+                                            <input type='text' class="form-control" id="tracking_number" name="tracking_number" placeholder="# Tracking" />
+                                        </div>
+                                        
+                                        <div class="form-group col-md-3">
+                                            <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
+                                            <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" />
+                                        </div>
                                     </div>
 
 
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div>
+                                                <label class="control-label" id="selectItem"> <?php echo $lang['leftorder15']; ?></label>
+                                            </div>
+                                            <input class="custom-file-input" id="filesMultiple" name="filesMultiple[]" multiple="multiple" type="file" style="display: none;" onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
+                                            <button type="button" id="openMultiFile" class="btn btn-default  pull-left  mb-4">
+                                                <i class='fa fa-paperclip' id="openMultiFile" style="font-size:18px; cursor:pointer;"></i> <?php echo $lang['leftorder16']; ?>
+                                            </button>
+                                        </div>
+                                    </div>
 
                                     <div class="col-md-12 row" id="image_preview"></div>
                                     <div class="col-md-4 mt-4">
@@ -656,9 +635,8 @@ $address_order = $db->cdp_registro();
                                         </div>
                                         <!-- crear tarifa de envios si no existe-->
                                         <div class="col-sm-12 col-md-2">
-
                                             <label class="custom-control custom-checkbox">
-                                                <?php echo $lang['messagesform112'] ?> <input type="checkbox" class="custom-control-input" name="tariff_mode" id="tariff_mode" value="1">
+                                                <?php echo $lang['messagesform112'] ?> <input type="checkbox" class="custom-control-input" checked name="tariff_mode" id="tariff_mode" value="1">
                                                 <span class="custom-control-indicator"></span>
                                             </label>
                                         </div>
@@ -668,9 +646,7 @@ $address_order = $db->cdp_registro();
                                                 <?php echo $lang['leftorder17712'] ?>
                                             </a>
                                         </div>
-
                                     </div>
-
 
                                     <!-- Listas item caja -->
                                     <div id="data_items"></div>
@@ -695,8 +671,6 @@ $address_order = $db->cdp_registro();
                                         </div>
                                     </div>
 
-
-
                                     <div class="row mt-3">
                                         <div class="col-md-3 text-left">
                                             <button type="button" onclick="addPackage()" name="add_rows" id="add_rows" class="btn btn-outline-dark"><span class="fa fa-plus"></span> <?php echo $lang['left231'] ?></button>
@@ -718,11 +692,10 @@ $address_order = $db->cdp_registro();
                                                         <div class="form-group">
                                                             <label for="emailAddress1"><?php echo $lang['left905'] ?> &nbsp; <?php echo $core->weight_p; ?> </label>
                                                             <div class="input-group">
-                                                                <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event, this)" class="form-control form-control-sm" value="<?php echo $core->value_weight; ?>" name="price_lb" id="price_lb" style="border: 1px solid red;">
+                                                                <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event, this)" class="form-control form-control-sm" value="<?php echo $core->value_weight; ?>" name="price_lb" id="price_lb">
                                                             </div>
                                                         </div>
                                                     </div>
-
 
                                                     <div class="col-sm-12 col-md-6 col-lg-2">
                                                         <div class="form-group">
@@ -747,7 +720,7 @@ $address_order = $db->cdp_registro();
                                                         <div class="form-group">
                                                             <label for="emailAddress1"><?php echo $lang['leftorder22'] ?> </label>
                                                             <div class="input-group">
-                                                                <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event, this)" class="form-control form-control-sm" value="100" name="insured_value" id="insured_value" style="border: 1px solid darkorange;">
+                                                                <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event, this)" class="form-control form-control-sm" value="100" name="insured_value" id="insured_value">
                                                             </div>
 
                                                             <td class="text-center" id="insured_label"></td>
@@ -755,12 +728,11 @@ $address_order = $db->cdp_registro();
                                                         </div>
                                                     </div>
 
-
                                                     <div class="col-sm-12 col-md-6 col-lg-2">
                                                         <div class="form-group">
                                                             <label for="emailAddress1"><?php echo $lang['leftorder24'] ?> <?php echo $lang['leftorder222221'] ?> </label>
                                                             <div class="input-group">
-                                                                <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event, this)" class="form-control form-control-sm" value="<?php echo $core->insurance; ?>" name="insurance_value" id="insurance_value" style="border: 1px solid darkorange;">
+                                                                <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event, this)" class="form-control form-control-sm" value="<?php echo $core->insurance; ?>" name="insurance_value" id="insurance_value">
                                                             </div>
 
                                                             <?php
@@ -774,7 +746,6 @@ $address_order = $db->cdp_registro();
 
                                                         </div>
                                                     </div>
-
 
                                                     <div class="col-sm-12 col-md-6 col-lg-2">
                                                         <div class="form-group">
@@ -794,7 +765,6 @@ $address_order = $db->cdp_registro();
 
                                                         </div>
                                                     </div>
-
 
                                                     <div class="col-sm-12 col-md-6 col-lg-2">
                                                         <div class="form-group">
@@ -845,8 +815,6 @@ $address_order = $db->cdp_registro();
 
                                                         </div>
                                                     </div>
-
-
 
                                                     <div class="col-sm-12 col-md-6 col-lg-2">
                                                         <div class="form-group ">
@@ -909,12 +877,12 @@ $address_order = $db->cdp_registro();
                                                     <div class="text-right">
                                                         <input type="hidden" name="total_item_files" id="total_item_files" value="0" />
                                                         <input type="hidden" name="deleted_file_ids" id="deleted_file_ids" />
-                                                        <button type="button" name="calculate_invoice" id="calculate_invoice" class="btn btn-info">
+                                                        <!-- <button type="button" name="calculate_invoice" id="calculate_invoice" class="btn btn-info">
                                                             <i class="fas fa-calculator"></i>
                                                             <span class="ml-1">
                                                                 <?php echo $lang['leftorder17714'] ?>
                                                             </span>
-                                                        </button>
+                                                        </button> -->
                                                         <button type="submit" name="create_invoice" id="create_invoice" class="btn btn-danger">
                                                             <i class="fas fa-save"></i>
                                                             <span class="ml-1"><?php echo $lang['left1103'] ?></span>
