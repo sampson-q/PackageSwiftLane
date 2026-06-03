@@ -390,16 +390,7 @@ $order_prefix = $settings->prefix;
                                     <h4 class="card-title"><i class="mdi mdi-information-outline" style="color:#20c997"></i><?php echo $lang['left334']; ?></h4>
                                     <hr>
                                     <div class="resultados_ajax_add_user_modal_recipient"></div>
-
-                                    <?php
-                                    if ($core->active_whatsapp == 1) {
-                                    ?>
-                                        <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
-                                            <input type="checkbox" class="custom-control-input" name="notify_whatsapp_receiver" id="notify_whatsapp_receiver" value="1">
-                                            <b><?php echo $lang['leftorder14443']; ?> <i class="mdi mdi-whatsapp" style="font-size: 22px; color:#07bc4c;"></i></b>
-                                            <span class="custom-control-indicator"></span>
-                                        </label>
-                                    <?php } ?>
+                                    <br><br>
 
                                     <?php
                                     if ($core->active_sms == 1) {
