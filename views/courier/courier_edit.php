@@ -404,17 +404,12 @@ $numrows     = $db->cdp_rowCount();
 
                                             <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label"><?php echo '# Tracking' ?></label>
-                                                <input type='text' class="form-control" id="tracking_number" name="tracking_number"
-                                                       style="border:1px solid red;"
-                                                       value="<?php echo htmlspecialchars($tracking_row->tracking_number, ENT_QUOTES, 'UTF-8'); ?>"
-                                                       placeholder="# Tracking" />
+                                                <input type='text' class="form-control" id="tracking_number" name="tracking_number" value="<?php echo htmlspecialchars($tracking_row->tracking_number, ENT_QUOTES, 'UTF-8'); ?>" placeholder="# Tracking" />
                                             </div>
 
                                             <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
-                                                <input type='date' class="form-control" id="estimated_eta" name="estimated_eta"
-                                                       style="border:1px solid red;"
-                                                       value="<?php echo htmlspecialchars($tracking_row->estimated_eta, ENT_QUOTES, 'UTF-8'); ?>" />
+                                                <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" value="<?php echo htmlspecialchars($tracking_row->estimated_eta, ENT_QUOTES, 'UTF-8'); ?>" />
                                             </div>
                                         </div>
                                     </div>

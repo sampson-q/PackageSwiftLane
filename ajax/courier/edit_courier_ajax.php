@@ -16,7 +16,7 @@ $core   = new Core;
 $errors = array();
 
 // =======================
-// VALIDATIONS — match courier_add (order_item_category and order_service_options optional)
+// VALIDATIONS
 // =======================
 if (empty($_POST['sender_id']))            $errors['sender_id']            = $lang['validate_field_ajax144'];
 if (empty($_POST['sender_address_id']))    $errors['sender_address_id']    = $lang['validate_field_ajax145'];
@@ -25,7 +25,6 @@ if (empty($_POST['recipient_address_id'])) $errors['recipient_address_id'] = $la
 if (empty($_POST['agency']))               $errors['agency']               = $lang['validate_field_ajax148'];
 if (empty($_POST['origin_off']))           $errors['origin_off']           = $lang['validate_field_ajax149'];
 if (empty($_POST['order_no']))             $errors['order_no']             = $lang['validate_field_ajax150'];
-// order_item_category and order_service_options intentionally not required (commented out in courier_add)
 if (empty($_POST['order_package']))        $errors['order_package']        = $lang['validate_field_ajax152'];
 if (empty($_POST['order_courier']))        $errors['order_courier']        = $lang['validate_field_ajax153'];
 if (empty($_POST['order_deli_time']))      $errors['order_deli_time']      = $lang['validate_field_ajax155'];
@@ -36,6 +35,18 @@ if (empty($errors)) {
 
     $settings = cdp_getSettingsCourier();
 
+    $site_email = $settings->email_address;
+    $check_mail = $settings->mailer;
+    $names_info = $settings->smtp_names;
+    $mlogo      = $settings->logo;
+    $msite_url  = $settings->site_url;
+    $msnames    = $settings->site_name;
+    $smtphoste  = $settings->smtp_host;
+    $smtpuser   = $settings->smtp_user;
+    $smtppass   = $settings->smtp_password;
+    $smtpport   = $settings->smtp_port;
+    $smtpsecure = $settings->smtp_secure;
+
     $templatessender   = 4;
     $templatesreceiver = 3;
 
@@ -44,7 +55,7 @@ if (empty($errors)) {
 
     $sale_date = date("Y-m-d H:i:s");
 
-    $days = 0;
+    $days            = 0;
     $payment_methods = null;
     if (!empty($_POST["order_payment_method"])) {
         $payment_methods = cdp_getPaymentMethodCourier($_POST["order_payment_method"]);
@@ -54,14 +65,65 @@ if (empty($errors)) {
     }
     $due_date       = cdp_sumardias($sale_date, $days);
     $status_invoice = ($days === 0) ? 1 : 2;
+    $tariff_mode    = isset($_POST['tariff_mode']) ? 1 : 0;
 
-    $tariff_mode = isset($_POST['tariff_mode']) ? 1 : 0;
+    $shipment_id = cdp_sanitize(intval($_POST["order_id"]));
+
+    // =======================
+    // SNAPSHOT OLD VALUES BEFORE UPDATE
+    // =======================
+    $old_shipment = cdp_getCourier($shipment_id);
+
+    $old_status_label   = '';
+    $old_courier_name   = '';
+    $old_service_type   = '';
+    $old_delivery_time  = '';
+    $old_eta            = '';
+    $old_total          = 0;
+
+    if ($old_shipment) {
+        $db_snap = new Conexion;
+
+        $old_status_obj   = cdp_getCourierstatusApi((int)$old_shipment->status_courier);
+        $old_status_label = $old_status_obj ? $old_status_obj->mod_style : 'N/A';
+
+        $db_snap->cdp_query("SELECT courier_name FROM cdb_courier_com WHERE id = :id LIMIT 1");
+        $db_snap->bind(':id', (int)$old_shipment->order_courier);
+        $db_snap->cdp_execute();
+        $r = $db_snap->cdp_registro();
+        $old_courier_name = $r ? $r->courier_name : 'N/A';
+
+        $db_snap->cdp_query("SELECT s_name FROM cdb_shipping_mode WHERE id = :id LIMIT 1");
+        $db_snap->bind(':id', (int)$old_shipment->order_service_options);
+        $db_snap->cdp_execute();
+        $r = $db_snap->cdp_registro();
+        $old_service_type = $r ? $r->s_name : 'N/A';
+
+        $db_snap->cdp_query("SELECT deli_time_description FROM cdb_delivery_time WHERE id = :id LIMIT 1");
+        $db_snap->bind(':id', (int)$old_shipment->order_deli_time);
+        $db_snap->cdp_execute();
+        $r = $db_snap->cdp_registro();
+        $old_delivery_time = $r ? $r->deli_time_description : 'N/A';
+
+        $db_snap->cdp_query("SELECT * FROM cdb_package_tracking_number WHERE order_id = :id LIMIT 1");
+        $db_snap->bind(':id', $shipment_id);
+        $db_snap->cdp_execute();
+        $r = $db_snap->cdp_registro();
+        $old_eta = $r ? $r->estimated_eta : '';
+        $old_tracking = $r ? $r->tracking_number : '';
+
+        $db_snap->cdp_query("SELECT total_order FROM cdb_courier_totals WHERE order_id = :id LIMIT 1");
+        $db_snap->bind(':id', $shipment_id);
+        $db_snap->cdp_execute();
+        $r = $db_snap->cdp_registro();
+        $old_total = $r ? (float)$r->total_order : 0;
+    }
 
     // =======================
     // UPDATE SHIPMENT HEADER
     // =======================
     $dataShipment = array(
-        'order_id'              => cdp_sanitize(intval($_POST["order_id"])),
+        'order_id'              => $shipment_id,
         'driver_id'             => cdp_sanitize(intval($_POST["driver_id"])),
         'sender_id'             => cdp_sanitize(intval($_POST["sender_id"])),
         'recipient_id'          => cdp_sanitize(intval($_POST["recipient_id"])),
@@ -81,9 +143,8 @@ if (empty($errors)) {
         'manual_tariff'         => $tariff_mode,
     );
 
-    $updateShip  = cdp_updateCourierShipment($dataShipment);
-    $shipment_id = cdp_sanitize(intval($_POST["order_id"]));
-    $messages    = array();
+    $updateShip = cdp_updateCourierShipment($dataShipment);
+    $messages   = array();
 
     if ($updateShip) {
 
@@ -111,7 +172,6 @@ if (empty($errors)) {
         $tax_value          = isset($_POST["tax_value"])          ? floatval($_POST["tax_value"])          : 0;
         $declared_value_tax = isset($_POST["declared_value_tax"]) ? floatval($_POST["declared_value_tax"]) : 0;
         $tariffs_value      = isset($_POST["tariffs_value"])      ? floatval($_POST["tariffs_value"])      : 0;
-        // Read meter from hidden field name "meter" (JS sends core_meter value as "meter")
         $core_meter         = isset($_POST["meter"])              ? floatval($_POST["meter"])              : floatval($settings->meter ?? 0);
 
         if (isset($_POST["packages"])) {
@@ -160,7 +220,6 @@ if (empty($errors)) {
             $calculate_weight = max($sum_weight_real, $sum_weight_vol);
             $total_peso       = $sum_weight_real + $sum_weight_vol;
 
-            // Flete base
             $meter_edit = (float)($settings->meter ?? $core_meter);
             if ($tariff_mode == 0 && $meter_edit > 0) {
                 $distance_miles_edit = (float)($_POST['distance_miles'] ?? 0);
@@ -234,11 +293,11 @@ if (empty($errors)) {
         ));
 
         // =======================
-        // TRACKING NUMBER / ETA — upsert
+        // TRACKING NUMBER / ETA
         // =======================
         $tracking_number = cdp_sanitize($_POST['tracking_number']);
         $estimated_eta   = cdp_sanitize($_POST['estimated_eta']);
-        cdp_updatePackageTracking($shipment_id, $tracking_number, $estimated_eta);
+        cdp_updatePackageTracking($shipment_id, $_SESSION['userid'], $tracking_number, $estimated_eta);
 
         // =======================
         // FILES
@@ -286,15 +345,14 @@ if (empty($errors)) {
         // =======================
         cdp_deleteCourierAddress($order_track);
 
-        $sender_address_data = cdp_getSenderAddress(intval($_POST["sender_address_id"]));
-        $_sender_country     = cdp_getCountry($sender_address_data->country);
-        $final_sender_country= $_sender_country['data'];
-        $_sender_state       = cdp_getState($sender_address_data->state);
-        $final_sender_state  = $_sender_state['data'];
-        $sender_city_obj     = cdp_getCity($sender_address_data->city);
-        $final_sender_city   = $sender_city_obj['data'];
+        $sender_address_data  = cdp_getSenderAddress(intval($_POST["sender_address_id"]));
+        $_sender_country      = cdp_getCountry($sender_address_data->country);
+        $final_sender_country = $_sender_country['data'];
+        $_sender_state        = cdp_getState($sender_address_data->state);
+        $final_sender_state   = $_sender_state['data'];
+        $sender_city_obj      = cdp_getCity($sender_address_data->city);
+        $final_sender_city    = $sender_city_obj['data'];
 
-        // Recipient address: respect recipient_type (same as add)
         $recipient_type = cdp_sanitize($_POST['recipient_type'] ?? 'recipient');
         if ($recipient_type === 'user') {
             $recipient_address_data = cdp_getSenderAddress(intval($_POST["recipient_address_id"]));
@@ -325,7 +383,7 @@ if (empty($errors)) {
         ));
 
         // =======================
-        // SMS / WhatsApp
+        // RESOLVE NEW LABELS + BUILD DIFF
         // =======================
         $sender_data   = cdp_getSenderCourier(intval($_POST["sender_id"]));
         $receiver_data = cdp_getRecipientCourier(intval($_POST["recipient_id"]));
@@ -334,6 +392,192 @@ if (empty($errors)) {
         $add_status    = $name_status->mod_style;
         $app_url       = $settings->site_url . 'track.php?order_track=' . $fullshipment;
 
+        $db_new = new Conexion;
+
+        $db_new->cdp_query("SELECT courier_name FROM cdb_courier_com WHERE id = :id LIMIT 1");
+        $db_new->bind(':id', (int)$_POST["order_courier"]);
+        $db_new->cdp_execute();
+        $r = $db_new->cdp_registro();
+        $new_courier_name = $r ? $r->courier_name : 'N/A';
+
+        $db_new->cdp_query("SELECT s_name FROM cdb_shipping_mode WHERE id = :id LIMIT 1");
+        $db_new->bind(':id', (int)($_POST["order_service_options"] ?? 0));
+        $db_new->cdp_execute();
+        $r = $db_new->cdp_registro();
+        $new_service_type = $r ? $r->s_name : 'N/A';
+
+        $db_new->cdp_query("SELECT deli_time_description FROM cdb_delivery_time WHERE id = :id LIMIT 1");
+        $db_new->bind(':id', (int)$_POST["order_deli_time"]);
+        $db_new->cdp_execute();
+        $r = $db_new->cdp_registro();
+        $new_delivery_time = $r ? $r->deli_time_description : 'N/A';
+
+        $new_status_label = $add_status;
+        $new_eta          = $estimated_eta;
+        $new_tracking      = $tracking_number;
+        $new_total        = $total_envio;
+
+        // Build changed fields array
+        $changed_fields = [];
+
+        if ($old_shipment) {
+            if ((int)$old_shipment->status_courier !== (int)$_POST["status_courier"])
+                $changed_fields['Shipment Status'] = ['old' => $old_status_label,  'new' => $new_status_label];
+
+            if ((int)$old_shipment->order_courier !== (int)$_POST["order_courier"])
+                $changed_fields['Courier'] = ['old' => $old_courier_name,  'new' => $new_courier_name];
+
+            if ((int)$old_shipment->order_service_options !== (int)($_POST["order_service_options"] ?? 0))
+                $changed_fields['Service Type'] = ['old' => $old_service_type,  'new' => $new_service_type];
+
+            if ((int)$old_shipment->order_deli_time !== (int)$_POST["order_deli_time"])
+                $changed_fields['Estimated Delivery'] = ['old' => $old_delivery_time, 'new' => $new_delivery_time];
+
+            if (trim($old_eta) !== trim($new_eta) && !empty($new_eta))
+                $changed_fields['ETA'] = ['old' => $old_eta ?: 'N/A', 'new' => $new_eta];
+            
+            if (trim($old_tracking) !== trim($new_tracking) && !empty($new_tracking))
+                $changed_fields['Tracking Number'] = ['old' => $old_tracking ?: 'N/A', 'new' => $new_tracking];
+
+            if (isset($_POST["packages"]))
+                $changed_fields['_packages_updated'] = true;
+
+            if (round($old_total, 2) !== round($new_total, 2))
+                $changed_fields['Order Total'] = [
+                    'old' => '$' . number_format($old_total, 2),
+                    'new' => '$' . number_format($new_total, 2)
+                ];
+        }
+
+        // =======================
+        // EMAIL — HELPER CLOSURE
+        // =======================
+        $sendShipmentEmail = function($recipient_obj, $recipient_name_label) use (
+            $changed_fields, $packages, $total_envio,
+            $fullshipment, $app_url, $msite_url, $mlogo, $msnames,
+            $site_email, $check_mail, $names_info,
+            $smtphoste, $smtpuser, $smtppass, $lang
+        ) {
+            if (!$recipient_obj || empty($recipient_obj->email)) return;
+
+            $email_template = cdp_getEmailTemplatesdg1i4(36);
+            if (!$email_template) return;
+
+            // Build changed fields HTML rows
+            $changed_fields_html = '';
+            $row_alt = false;
+            foreach ($changed_fields as $label => $diff) {
+                if ($label === '_packages_updated') continue;
+                $bg = $row_alt ? 'background:#f0f0f0;' : '';
+                $changed_fields_html .= '
+                <tr style="' . $bg . '">
+                    <td width="35%" style="font-size:13px;color:#888888;font-family:Roboto,Arial,Helvetica,sans-serif;padding:8px;">' . htmlspecialchars($label) . '</td>
+                    <td style="font-size:13px;font-family:Roboto,Arial,Helvetica,sans-serif;padding:8px;">
+                        <span style="color:#999999;text-decoration:line-through;">' . htmlspecialchars($diff['old']) . '</span>
+                        &nbsp;&rarr;&nbsp;
+                        <strong style="color:#1a1a1a;">' . htmlspecialchars($diff['new']) . '</strong>
+                    </td>
+                </tr>';
+                $row_alt = !$row_alt;
+            }
+
+            if (empty($changed_fields_html)) {
+                $changed_fields_html = '
+                <tr>
+                    <td colspan="2" style="font-size:13px;color:#888888;font-family:Roboto,Arial,Helvetica,sans-serif;padding:8px;">Your shipment details have been reviewed and updated.</td>
+                </tr>';
+            }
+
+            // Build packages section (only if packages were updated)
+            $packages_section_html = '';
+            if (isset($changed_fields['_packages_updated']) && isset($packages) && is_array($packages) && count($packages) > 0) {
+                $pkg_rows = '';
+                foreach ($packages as $index => $pkg) {
+                    $pkg_rows .= ($index + 1) . ". " . htmlspecialchars($pkg->description) . "\n" .
+                        "   Weight: " . $pkg->weight . " lbs\n" .
+                        "   Dimensions: " . $pkg->length . " x " . $pkg->width . " x " . $pkg->height . " inches\n" .
+                        "   Declared Value: $" . number_format($pkg->declared_value, 2) . "\n\n";
+                }
+                $packages_section_html = '
+                <p style="margin:0 0 8px 0;font-size:14px;font-weight:700;color:#1a1a1a;font-family:Roboto,Arial,Helvetica,sans-serif;">Package Breakdown</p>
+                <table border="0" cellpadding="8" cellspacing="0" width="100%" style="background:#fff8f0;border-left:3px solid #f5a800;border-radius:4px;margin-bottom:20px;">
+                  <tr>
+                    <td style="font-size:13px;color:#444444;line-height:22px;font-family:Roboto,Arial,Helvetica,sans-serif;white-space:pre-line;">' . trim($pkg_rows) . '</td>
+                  </tr>
+                </table>';
+            }
+
+            $body = str_replace(
+                [
+                    '[NAME]',
+                    '[TRACKING]',
+                    '[CHANGED_FIELDS]',
+                    '[PACKAGES_SECTION]',
+                    '[TOTAL_AMOUNT]',
+                    '[URL]',
+                    '[URL_LINK]',
+                    '[SITE_NAME]',
+                    '[URL_SHIP]'
+                ],
+                [
+                    $recipient_name_label,
+                    $fullshipment,
+                    $changed_fields_html,
+                    $packages_section_html,
+                    '$' . number_format($total_envio, 2),
+                    $msite_url,
+                    $mlogo,
+                    $msnames,
+                    $app_url
+                ],
+                $email_template->body
+            );
+
+            $newbody = cdp_cleanOutx($body);
+            $subject = 'Shipment Update - ' . $fullshipment;
+
+            if ($check_mail == 'PHP') {
+                $header  = "MIME-Version: 1.0\r\n";
+                $header .= "Content-type: text/html; charset=UTF-8 \r\n";
+                $header .= "From: " . $site_email . " \r\n";
+                try { mail($recipient_obj->email, $subject, $newbody, $header); } catch (Exception $e) {}
+
+            } elseif ($check_mail == 'SMTP') {
+                $mail = new PHPMailer(true);
+                $mail->isSMTP();
+                $mail->Host       = $smtphoste;
+                $mail->SMTPAuth   = true;
+                $mail->Username   = $smtpuser;
+                $mail->Password   = $smtppass;
+                $mail->SMTPSecure = 'tls';
+                $mail->Port       = 587;
+                $mail->setFrom($site_email, $names_info);
+                $mail->addAddress($recipient_obj->email);
+                $mail->addCC($site_email, $msnames);
+                $mail->isHTML(true);
+                $mail->CharSet = 'UTF-8';
+                $mail->Subject = $subject;
+                $mail->Body    = "<html><body><p>{$newbody}</p></body></html><br />";
+                $mail->SMTPOptions = ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true]];
+                try { $mail->Send(); } catch (Exception $e) {}
+            }
+        };
+
+        // Send email to sender
+        $sendShipmentEmail(
+            $sender_data,
+            $sender_data->fname . ' ' . $sender_data->lname
+        );
+
+        // Send email to receiver
+        $sendShipmentEmail(
+            $receiver_data,
+            $receiver_data ? ($receiver_data->fname . ' ' . $receiver_data->lname) : ''
+        );
+
+        // =======================
+        // SMS
+        // =======================
         $notify_sms_sender   = isset($_POST['notify_sms_sender'])   && $_POST['notify_sms_sender']   == 1;
         $notify_sms_receiver = isset($_POST['notify_sms_receiver']) && $_POST['notify_sms_receiver'] == 1;
 
