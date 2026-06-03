@@ -3740,6 +3740,27 @@ function cdp_getCustomerPackagePrint($id)
     return $datos;
 }
 
+function cdp_getPackagePrint($id) {
+    $db = new Conexion;
+
+
+    $db->cdp_query('SELECT * FROM cdb_add_order WHERE order_id=:id');
+
+    $db->bind(':id', $id);
+
+    $db->cdp_execute();
+
+    $data = $db->cdp_registro();
+    $rowCount = $db->cdp_rowCount();
+
+    $datos = [
+        'data' => $data,
+        'rowCount' => $rowCount
+    ];
+
+    return $datos;
+}
+
 
 
 function cdp_updateStatusCustomerPackageMultiple($order_no, $status)
@@ -3781,6 +3802,25 @@ function cdp_getPackageMultiple($order_no)
     return $data;
 }
 
+function cdp_getPackageMultiple_($order_no) {
+    $db = new Conexion;
+
+    $db->cdp_query('SELECT * FROM cdb_add_order WHERE order_no=:order_no');
+    $db->bind(':order_no', $order_no);
+    $db->cdp_execute();
+
+    return $db->cdp_registro();
+}
+
+function cdp_getPackageMultipleByOrderId_($order_id) {
+    $db = new Conexion;
+
+    $db->cdp_query('SELECT * FROM cdb_add_order WHERE order_id=:order_id');
+    $db->bind(':order_id', $order_id);
+    $db->cdp_execute();
+
+    return $db->cdp_registro();
+}
 
 
 function cdp_updatePackageMultiple($order_track, $status, $comments, $office, $user)
