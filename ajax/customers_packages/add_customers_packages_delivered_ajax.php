@@ -179,7 +179,7 @@ if (empty($errors)) {
                 $sender_data->fname . ' ' . $sender_data->lname,
                 $fullshipment,
                 $date_ship,
-                $status_data->mod_style,
+                'Completed!',
                 $_POST['country'] . ' | ' . $_POST['address'],
                 $_POST['comments'],
                 $msite_url,

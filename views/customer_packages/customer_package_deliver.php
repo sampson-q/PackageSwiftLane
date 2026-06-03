@@ -168,6 +168,7 @@ $driverrow = $user->cdp_userAllDriver();
 
                                 </div>
                                 <form name="invoice_form" class="xform" enctype="multipart/form-data" id="invoice_form" method="POST">
+                                    <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                     <header>
                                         <h4 class="modal-title"> <b class="text-danger"><?php echo $lang['deliver-ship1'] ?> </b> <b>| <?php echo $row->order_prefix . $row->order_no; ?></b>
                                         </h4><!--  <?php echo $lang['status-ship3'] ?> <?php echo $receiver_data->country; ?> | <?php echo $receiver_data->city; ?> -->

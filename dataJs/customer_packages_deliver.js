@@ -194,6 +194,8 @@ $("#invoice_form").on("submit", function (event) {
     formData.append("sig-dataUrl", sigDataUrl);
   }
 
+  formData.append('_csrf_token', $('input[name="_csrf_token"]').val());
+
   $.ajax({
     type: "POST",
     url: "ajax/customers_packages/add_customers_packages_delivered_ajax.php",
