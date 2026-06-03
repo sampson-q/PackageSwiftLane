@@ -3295,6 +3295,16 @@ function cdp_getConsolidateMultiple($order_no)
     return $data;
 }
 
+function cdp_getConsolidatePackagesMultiple($order_no) {
+    $db = new Conexion;
+
+    $db->cdp_query('SELECT * FROM cdb_consolidate_packages WHERE c_no=:order_no');
+    $db->bind(':order_no', $order_no);
+    $db->cdp_execute();
+
+    return $db->cdp_registro();
+}
+
 
 function cdp_insertCharges($datos)
 {

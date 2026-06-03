@@ -37,7 +37,8 @@ foreach ($data as $key) {
     cdp_updateStatusConsolidatePackagesMultiple($key, $status);
 
 
-    $courier = cdp_getConsolidateMultiple($key);
+    $courier = cdp_getConsolidatePackagesMultiple($key);
+    
 
     $receiver = $courier->receiver_id;
     $prefix = $courier->c_prefix;
@@ -50,6 +51,33 @@ foreach ($data as $key) {
     $user = $_SESSION['userid'];
 
     cdp_updateConsolidateTrackingMultiple($tracking, $status, $comments, $office, $user);
+
+    $sender_data = cdp_getSenderCourier($courier->sender_id);
+    $status_detail = $core->cdp_getStatusById($status);
+
+    try {
+        require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
+
+        // Only send if sender has phone
+        if ($sender_data && !empty($sender_data->phone)) {
+            $whatsapp_body = "Dear {$sender_data->fname } {$sender_data->lname},\n\n
+            Your shipment has been updated with a new status. Here are the details:\n
+            *Tracking Number:* {$tracking}\n
+            *Status:* {$status_detail->mod_style}\n
+
+            Login to your account for more details.";
+
+            // Send WhatsApp notification
+            $wa_result = sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+
+            // Log result (don't fail shipment if WhatsApp fails)
+            if (!$wa_result['success']) {
+                error_log("WhatsApp notification failed for order {$order_id}: " . $wa_result['message']);
+            }
+        }
+    } catch (Exception $e) {
+        error_log('WhatsApp notification error for order ' . $order_id . ': ' . $e->getMessage());
+    }
 
     $message[$key] = $key . ' ' . $lang['modal-text30'];
 }
