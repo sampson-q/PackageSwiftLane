@@ -31,7 +31,7 @@ require_once("../../helpers/querys.php");
 require_once("../../helpers/functions.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
-require_once("../notify_whatsapp/api_whatsapp_service.php");
+require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 require_once("../notify_sms/api_sms_service.php");
 
 
@@ -190,7 +190,7 @@ if (empty($errors)) {
             $email_template->body
         );
 
-        $newbody = cdp_cleanOut($body);
+        $newbody = cdp_cleanOutx($body);
 
         //SENDMAIL PHP
 
@@ -280,8 +280,30 @@ if (empty($errors)) {
 
         //NOTIFY WHATSAPP API
 
-        if (isset($_POST['notify_whatsapp']) && intval($_POST['notify_whatsapp']) == 1) {
-            $notification_result =  sendNotificationWhatsApp($sender_data, 10, null, $fullshipment);
+        // if (isset($_POST['notify_whatsapp']) && intval($_POST['notify_whatsapp']) == 1) {
+        //     $notification_result =  sendNotificationWhatsApp($sender_data, 10, null, $fullshipment);
+        // }
+
+        if (!empty($sender_data->phone) && isset($_POST['notify_whatsapp']) && (int)$_POST['notify_whatsapp'] === 1) {
+            try {
+                $whatsapp_body = "Hello {$sender_data->fname} {$sender_data->lname} 👋\n\n" .
+                    "✅ *Your package has been successfully delivered!*\n\n" .
+                    "📦 *Shipment Details:*\n" .
+                    "- Shipment No: *{$fullshipment}*\n" .
+                    "- Delivered To: " . cdp_sanitize($_POST['person_receives']) . "\n" .
+                    "- Delivered On: {$date_ship}\n\n" .
+                    "You can view your full delivery record using the link below:\n" .
+                    "🔗 {$app_url}\n\n" .
+                    "Thank you for choosing *{$msnames}*. We hope to serve you again! 🙏";
+
+                // Send via v2 API
+                sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                
+            } catch (Exception $e) {
+                // Capture specific exceptions and log them for easier debugging
+                error_log('Error sending WhatsApp v2 notification to sender: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+                throw $e; // Optional: rethrow to halt execution if this is a critical step
+            }
         }
 
 

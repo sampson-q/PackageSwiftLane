@@ -30,7 +30,7 @@ require_permission('view_client_list');
 require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
-require_once("../notify_whatsapp/api_whatsapp_service.php");
+require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 
 $user = new User;
 $core = new Core;
@@ -474,7 +474,7 @@ if (empty($errors)) {
         //NOTIFICATION TO CUSTOMER
         cdp_insertNotificationsUsers($notification_id, intval($_POST['sender_id']));
 
-        if (!empty($sender_data->phone) && (!empty($_POST['notify_whatsapp_sender']) && $_POST['notify_whatsapp_sender']) === 1) {
+        if (!empty($sender_data->phone) && (!empty($_POST['notify_whatsapp_sender']) && ($_POST['notify_whatsapp_sender']) === 1)) {
             try {
                 // Get template 16 for package registration
                 $tpl = getTemplateWhatsApp(16);
