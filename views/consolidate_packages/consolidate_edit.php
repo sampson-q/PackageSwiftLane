@@ -23,6 +23,10 @@
 
 require_once('helpers/querys.php');
 
+require_once('helpers/phpmailer/class.phpmailer.php');
+require_once('helpers/phpmailer/class.smtp.php');
+require_once('ajax/notify_whatsapp/api_whatsapp_service_v2.php');
+
 $userData = $user->cdp_getUserData();
 if ($userData->userlevel == 1)
     cdp_redirect_to("login.php");
@@ -69,7 +73,45 @@ $receiver_data = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row_order->c_prefix . $row_order->c_no . "'");
 $address_order = $db->cdp_registro();
 
-
+$_before_pkg_edit = null;
+ 
+if (isset($_POST["total_item"])) {
+    $db_pkg_snap = new Conexion;
+    $db_pkg_snap->cdp_query(
+        "SELECT
+            cp.sender_id,
+            cp.receiver_id,
+            cp.value_weight,
+            cp.sub_total,
+            cp.total_tax_insurance,
+            cp.total_insured_value,
+            cp.total_tax_discount,
+            cp.total_tax_custom_tariffis,
+            cp.total_tax,
+            cp.total_order,
+            cp.total_weight,
+            cp.order_datetime,
+            cp.agency,
+            cp.origin_off,
+            cp.order_package,
+            cp.order_item_category,
+            cp.order_courier,
+            cp.order_service_options,
+            cp.order_deli_time,
+            cp.order_pay_mode,
+            cp.status_courier,
+            cp.driver_id,
+            cp.seals_package,
+            ptn.estimated_eta
+         FROM cdb_consolidate_packages cp
+         LEFT JOIN cdb_package_tracking_number ptn ON ptn.order_id = cp.consolidate_id
+         WHERE cp.consolidate_id = :cid
+         LIMIT 1"
+    );
+    $db_pkg_snap->bind(':cid', (int) $_GET['id']);
+    $db_pkg_snap->cdp_execute();
+    $_before_pkg_edit = $db_pkg_snap->cdp_registro();
+}
 
 if (isset($_POST["total_item"])) {
 
@@ -137,6 +179,210 @@ if (isset($_POST["total_item"])) {
     $db->bind(':seals_package',  cdp_sanitize($_POST["seals"]));
 
     $db->cdp_execute();
+
+    try {
+        if ($_before_pkg_edit) {
+    
+            // ── 1. Resolve human-readable labels for FK fields ──────────────────
+            $db_lbl2 = new Conexion;
+    
+            // Payment method label – old
+            // Note: consolidate_package_edit.php uses cdp_getPaymentMethod() → cdb_payment_methods
+            $db_lbl2->cdp_query("SELECT label FROM cdb_payment_methods WHERE id = :id");
+            $db_lbl2->bind(':id', (int) $_before_pkg_edit->order_pay_mode);
+            $db_lbl2->cdp_execute();
+            $_old_pay2 = $db_lbl2->cdp_registro();
+            $old_pay_label2 = $_old_pay2 ? $_old_pay2->label : (string) $_before_pkg_edit->order_pay_mode;
+    
+            // Payment method label – new
+            $db_lbl2->cdp_query("SELECT label FROM cdb_payment_methods WHERE id = :id");
+            $db_lbl2->bind(':id', (int) cdp_sanitize($_POST["order_pay_mode"]));
+            $db_lbl2->cdp_execute();
+            $_new_pay2 = $db_lbl2->cdp_registro();
+            $new_pay_label2 = $_new_pay2 ? $_new_pay2->label : cdp_sanitize($_POST["order_pay_mode"]);
+    
+            // Status label – old
+            $db_lbl2->cdp_query("SELECT mod_style FROM cdb_styles WHERE id = :id");
+            $db_lbl2->bind(':id', (int) $_before_pkg_edit->status_courier);
+            $db_lbl2->cdp_execute();
+            $_old_status2 = $db_lbl2->cdp_registro();
+            $old_status_label2 = $_old_status2 ? $_old_status2->mod_style : (string) $_before_pkg_edit->status_courier;
+    
+            // Status label – new
+            $db_lbl2->cdp_query("SELECT mod_style FROM cdb_styles WHERE id = :id");
+            $db_lbl2->bind(':id', (int) cdp_sanitize($_POST["status_courier"]));
+            $db_lbl2->cdp_execute();
+            $_new_status2 = $db_lbl2->cdp_registro();
+            $new_status_label2 = $_new_status2 ? $_new_status2->mod_style : cdp_sanitize($_POST["status_courier"]);
+    
+            // Driver label – old
+            $db_lbl2->cdp_query("SELECT fname, lname FROM cdb_users WHERE id = :id");
+            $db_lbl2->bind(':id', (int) $_before_pkg_edit->driver_id);
+            $db_lbl2->cdp_execute();
+            $_old_drv2 = $db_lbl2->cdp_registro();
+            $old_driver_label2 = $_old_drv2 ? trim($_old_drv2->fname . ' ' . $_old_drv2->lname) : 'None';
+    
+            // Driver label – new
+            $db_lbl2->cdp_query("SELECT fname, lname FROM cdb_users WHERE id = :id");
+            $db_lbl2->bind(':id', (int) cdp_sanitize($_POST["driver_id"]));
+            $db_lbl2->cdp_execute();
+            $_new_drv2 = $db_lbl2->cdp_registro();
+            $new_driver_label2 = $_new_drv2 ? trim($_new_drv2->fname . ' ' . $_new_drv2->lname) : 'None';
+    
+            // ── 2. Build diff array ─────────────────────────────────────────────
+            $diff_map2 = [
+                'Payment Method'        => [(string) $old_pay_label2,                               (string) $new_pay_label2],
+                'Status'                => [(string) $old_status_label2,                            (string) $new_status_label2],
+                'Driver'                => [(string) $old_driver_label2,                            (string) $new_driver_label2],
+                'Seals / Package No.'   => [(string) $_before_pkg_edit->seals_package,             cdp_sanitize($_POST["seals"])],
+                'Estimated ETA'         => [(string) ($_before_pkg_edit->estimated_eta ?? ''),     cdp_sanitize($_POST["estimated_eta"])],
+                'Price per lb'          => [(string) $_before_pkg_edit->value_weight,              (string) floatval($_POST["price_lb"])],
+                'Sub-Total'             => [(string) $_before_pkg_edit->sub_total,                 (string) floatval($_POST["subtotal_input"])],
+                'Insurance'             => [(string) $_before_pkg_edit->total_tax_insurance,       (string) floatval($_POST["insurance_input"])],
+                'Insured Value'         => [(string) $_before_pkg_edit->total_insured_value,       (string) floatval($_POST["insured_input"])],
+                'Discount'              => [(string) $_before_pkg_edit->total_tax_discount,        (string) floatval($_POST["discount_input"])],
+                'Custom Tariffs'        => [(string) $_before_pkg_edit->total_tax_custom_tariffis, (string) floatval($_POST["total_impuesto_aduanero_input"])],
+                'Tax'                   => [(string) $_before_pkg_edit->total_tax,                 (string) floatval($_POST["impuesto_input"])],
+                'Total Order'           => [(string) $_before_pkg_edit->total_order,               (string) floatval($_POST["total_envio_input"])],
+                'Total Weight'          => [(string) $_before_pkg_edit->total_weight,              (string) floatval($_POST["total_weight_input"])],
+            ];
+    
+            $changed_rows2 = [];
+            foreach ($diff_map2 as $label => [$old_val, $new_val]) {
+                if ($old_val !== $new_val) {
+                    $changed_rows2[] = [
+                        'label' => $label,
+                        'old'   => $old_val ?: '—',
+                        'new'   => $new_val ?: '—',
+                    ];
+                }
+            }
+    
+            // ── 3. Only send email when something actually changed ──────────────
+            if (!empty($changed_rows2)) {
+    
+                $rows_html2 = '';
+                foreach ($changed_rows2 as $cr) {
+                    $rows_html2 .= '
+                    <tr>
+                        <td style="padding:8px 12px;font-size:13px;color:#555555;font-family:Roboto,Arial,Helvetica,sans-serif;border-bottom:1px solid #eeeeee;white-space:nowrap;">
+                            <strong>' . htmlspecialchars($cr['label']) . '</strong>
+                        </td>
+                        <td style="padding:8px 12px;font-size:13px;color:#c0392b;font-family:Roboto,Arial,Helvetica,sans-serif;border-bottom:1px solid #eeeeee;text-decoration:line-through;">
+                            ' . htmlspecialchars($cr['old']) . '
+                        </td>
+                        <td style="padding:8px 12px;font-size:13px;color:#27ae60;font-family:Roboto,Arial,Helvetica,sans-serif;border-bottom:1px solid #eeeeee;">
+                            &#10132; ' . htmlspecialchars($cr['new']) . '
+                        </td>
+                    </tr>';
+                }
+    
+                $consolidate_number2 = $row_order->c_prefix . $row_order->c_no;
+    
+                $message_html2 = '
+                <p style="margin:0 0 16px 0;font-size:14px;color:#444444;line-height:24px;font-family:Roboto,Arial,Helvetica,sans-serif;">
+                    The following changes were made to consolidation package
+                    <strong style="color:#1a1a1a;">' . htmlspecialchars($consolidate_number2) . '</strong>:
+                </p>
+                <table border="0" cellpadding="0" cellspacing="0" width="100%"
+                    style="border:1px solid #eeeeee;border-radius:4px;border-collapse:collapse;margin-bottom:16px;">
+                    <thead>
+                        <tr style="background:#f7f7f7;">
+                            <th style="padding:8px 12px;font-size:12px;color:#888888;font-family:Roboto,Arial,Helvetica,sans-serif;text-align:left;border-bottom:2px solid #eeeeee;">Field</th>
+                            <th style="padding:8px 12px;font-size:12px;color:#888888;font-family:Roboto,Arial,Helvetica,sans-serif;text-align:left;border-bottom:2px solid #eeeeee;">Previous Value</th>
+                            <th style="padding:8px 12px;font-size:12px;color:#888888;font-family:Roboto,Arial,Helvetica,sans-serif;text-align:left;border-bottom:2px solid #eeeeee;">New Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>' . $rows_html2 . '</tbody>
+                </table>
+                <p style="margin:0;font-size:13px;color:#888888;font-family:Roboto,Arial,Helvetica,sans-serif;">
+                    If you have any questions, please contact us.
+                </p>';
+    
+                // ── 4. Load template 12 ─────────────────────────────────────────
+                $db_tpl2 = new Conexion;
+                $db_tpl2->cdp_query("SELECT * FROM cdb_email_templates WHERE id = 12 LIMIT 1");
+                $db_tpl2->cdp_execute();
+                $email_tpl_12b = $db_tpl2->cdp_registro();
+    
+                if ($email_tpl_12b) {
+    
+                    $db_cfg2 = new Conexion;
+                    $db_cfg2->cdp_query("SELECT * FROM cdb_settings LIMIT 1");
+                    $db_cfg2->cdp_execute();
+                    $mail_cfg2 = $db_cfg2->cdp_registro();
+    
+                    // Get sender's user record
+                    $db_sender2 = new Conexion;
+                    $db_sender2->cdp_query("SELECT fname, lname, email FROM cdb_users WHERE id = :id LIMIT 1");
+                    $db_sender2->bind(':id', (int) cdp_sanitize($_POST["sender_id"]));
+                    $db_sender2->cdp_execute();
+                    $email_recipient2 = $db_sender2->cdp_registro();
+    
+                    if ($email_recipient2 && !empty($email_recipient2->email)) {
+    
+                        $sender_name2 = trim($email_recipient2->fname . ' ' . $email_recipient2->lname);
+    
+                        $email_body_12b = str_replace(
+                            ['[SITE_NAME]', '[NAME]', '[MESSAGE]', '[URL]'],
+                            [
+                                $mail_cfg2->site_name,
+                                htmlspecialchars($sender_name2),
+                                $message_html2,
+                                rtrim($mail_cfg2->site_url, '/'),
+                            ],
+                            $email_tpl_12b->body
+                        );
+    
+                        $email_body_12b = cdp_cleanOutx($email_body_12b);
+    
+                        $edit_subject2 = 'Consolidation Package Updated: ' . $consolidate_number2;
+    
+                        if ($mail_cfg2->mailer === 'PHP') {
+    
+                            $mail_headers2  = "MIME-Version: 1.0\r\n";
+                            $mail_headers2 .= "Content-type: text/html; charset=UTF-8\r\n";
+                            $mail_headers2 .= "From: " . $mail_cfg2->site_email . "\r\n";
+    
+                            mail(
+                                $email_recipient2->email,
+                                $edit_subject2,
+                                $email_body_12b,
+                                $mail_headers2
+                            );
+    
+                        } elseif ($mail_cfg2->mailer === 'SMTP') {
+    
+                            $edit_mail2 = new PHPMailer();
+                            $edit_mail2->IsSMTP();
+                            $edit_mail2->SMTPAuth   = true;
+                            $edit_mail2->Port       = $mail_cfg2->smtp_port;
+                            $edit_mail2->IsHTML(true);
+                            $edit_mail2->CharSet    = 'utf-8';
+                            $edit_mail2->Host       = $mail_cfg2->smtp_host;
+                            $edit_mail2->Username   = $mail_cfg2->smtp_user;
+                            $edit_mail2->Password   = $mail_cfg2->smtp_password;
+                            $edit_mail2->From       = $mail_cfg2->site_email;
+                            $edit_mail2->FromName   = $mail_cfg2->smtp_names;
+                            $edit_mail2->AddAddress($email_recipient2->email);
+                            $edit_mail2->Subject    = $edit_subject2;
+                            $edit_mail2->Body       = '<html><body>' . $email_body_12b . '</body></html>';
+                            $edit_mail2->SMTPOptions = [
+                                'ssl' => [
+                                    'verify_peer'       => false,
+                                    'verify_peer_name'  => false,
+                                    'allow_self_signed' => true,
+                                ],
+                            ];
+                            $edit_mail2->Send();
+                        }
+                    }
+                }
+            } // end if !empty($changed_rows2)
+        }
+    } catch (Exception $e) {
+        error_log('consolidate_package_edit.php – email notification error: ' . $e->getMessage());
+    }
 
     $order_id = $row_order->consolidate_id;
 
@@ -206,6 +452,98 @@ if (isset($_POST["total_item"])) {
         $db->bind(':is_consolidate',  $is_consolidate);
 
         $db->cdp_execute();
+    }
+
+    try {
+        $package_order_id = intval($_POST["order_id"][$count]);
+        $package_prefix = cdp_sanitize($_POST["prefix"][$count]);
+        $package_order_no = cdp_sanitize($_POST["order_no_item"][$count]);
+        $package_tracking = $package_prefix . $package_order_no;
+
+        // Get the original package shipment data
+        $db_pkg = new Conexion;
+        $db_pkg->cdp_query("SELECT sender_id, receiver_id FROM cdb_add_order WHERE order_id = :id");
+        $db_pkg->bind(':id', $package_order_id);
+        $db_pkg->cdp_execute();
+        $package_data = $db_pkg->cdp_registro();
+
+        if ($package_data) {
+            $package_sender = cdp_getSenderCourier(intval($package_data->sender_id));
+
+            if (!empty($package_sender->phone)) {
+                // Get template 13 for package consolidation
+                $tpl = getTemplateWhatsApp(13);
+
+                if ($tpl) {
+                    // Get package details
+                    $db_pkg_detail = new Conexion;
+                    $db_pkg_detail->cdp_query("SELECT order_datetime, status_courier FROM cdb_add_order WHERE order_id = :id");
+                    $db_pkg_detail->bind(':id', $package_order_id);
+                    $db_pkg_detail->cdp_execute();
+                    $pkg_detail = $db_pkg_detail->cdp_registro();
+
+                    // Get settings
+                    $db_settings = new Conexion;
+                    $db_settings->cdp_query("SELECT * FROM cdb_settings LIMIT 1");
+                    $db_settings->cdp_execute();
+                    $settings = $db_settings->cdp_registro();
+
+                    // Current status = Consolidated
+                    $consolidation_status = "Consolidated";
+                    $invoice_status = "Pending";
+
+                    // Order date
+                    $order_date = $pkg_detail ? date('M d, Y', strtotime($pkg_detail->order_datetime)) : 'N/A';
+
+                    // Get recipient name
+                    $package_receiver = cdp_getRecipientCourier(intval($package_data->receiver_id));
+                    $recipient_name = $package_receiver ? ($package_receiver->fname . ' ' . $package_receiver->lname) : 'N/A';
+
+                    // Origin and destination from consolidation addresses
+                    $origin = $final_sender_city->name . ', ' . $final_sender_state->name;
+                    $destination = $final_recipient_city->name . ', ' . $final_recipient_state->name;
+
+                    // Tracking URL
+                    $package_app_url = $settings->site_url . 'track.php?order_track=' . $package_tracking;
+
+                    // Format the message with all placeholders
+                    $whatsapp_body = str_replace(
+                        [
+                            '[CUSTOMER_FULLNAME]',
+                            '[TRACKING_NUMBER]',
+                            '[PREV_STATUS]',
+                            '[CURR_STATUS]',
+                            '[INV_STATUS]',
+                            '[ORD_DATE]',
+                            '[RECIPIENT]',
+                            '[ORIGIN]',
+                            '[DESTINATION]',
+                            '[APP_URL]',
+                            '[COMPANY_NAME]'
+                        ],
+                        [
+                            ucfirst("{$package_sender->fname} {$package_sender->lname}"),
+                            $package_tracking,
+                            'In Transit',
+                            $consolidation_status,
+                            $invoice_status,
+                            $order_date,
+                            $recipient_name,
+                            $origin,
+                            $destination,
+                            $package_app_url,
+                            $settings->site_name
+                        ],
+                        $tpl->body
+                    );
+
+                    // Send via v2 API
+                    sendNotificationWhatsApp_v2($package_sender, $whatsapp_body);
+                }
+            }
+        }
+    } catch (Exception $e) {
+        error_log('Error sending WhatsApp v2 notification for consolidation edit package: ' . $e->getMessage());
     }
 
     //INSERT HISTORY USER

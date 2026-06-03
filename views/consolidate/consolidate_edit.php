@@ -74,6 +74,46 @@ $db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row_
 $address_order = $db->cdp_registro();
 
 
+$_before_edit = null;
+ 
+if (isset($_POST["total_item"])) {
+    // capture old values before we overwrite them
+    $db_snap = new Conexion;
+    $db_snap->cdp_query(
+        "SELECT
+            cp.sender_id,
+            cp.receiver_id,
+            cp.value_weight,
+            cp.sub_total,
+            cp.total_tax_insurance,
+            cp.total_insured_value,
+            cp.total_tax_discount,
+            cp.total_tax_custom_tariffis,
+            cp.total_tax,
+            cp.total_order,
+            cp.total_weight,
+            cp.order_datetime,
+            cp.agency,
+            cp.origin_off,
+            cp.order_package,
+            cp.order_item_category,
+            cp.order_courier,
+            cp.order_service_options,
+            cp.order_deli_time,
+            cp.order_pay_mode,
+            cp.status_courier,
+            cp.driver_id,
+            cp.seals_package,
+            ptn.estimated_eta
+         FROM cdb_consolidate cp
+         LEFT JOIN cdb_package_tracking_number ptn ON ptn.order_id = cp.consolidate_id
+         WHERE cp.consolidate_id = :cid
+         LIMIT 1"
+    );
+    $db_snap->bind(':cid', (int) $_GET['id']);
+    $db_snap->cdp_execute();
+    $_before_edit = $db_snap->cdp_registro();
+}
 
 if (isset($_POST["total_item"])) {
 
@@ -140,6 +180,213 @@ if (isset($_POST["total_item"])) {
     $db->bind(':seals_package',  cdp_sanitize($_POST["seals"]));
 
     $db->cdp_execute();
+
+    try {
+        if ($_before_edit) {
+    
+            // ── 1. Helper: resolve human-readable labels for FK fields ──────────
+            // Payment method
+            $db_lbl = new Conexion;
+            $db_lbl->cdp_query("SELECT met_payment FROM cdb_met_payment WHERE id = :id");
+            $db_lbl->bind(':id', (int) $row_order->order_pay_mode);
+            $db_lbl->cdp_execute();
+            $_old_pay = $db_lbl->cdp_registro();
+            $old_pay_label = $_old_pay ? $_old_pay->met_payment : (string) $row_order->order_pay_mode;
+    
+            $db_lbl->cdp_query("SELECT met_payment FROM cdb_met_payment WHERE id = :id");
+            $db_lbl->bind(':id', (int) cdp_sanitize($_POST["order_pay_mode"]));
+            $db_lbl->cdp_execute();
+            $_new_pay = $db_lbl->cdp_registro();
+            $new_pay_label = $_new_pay ? $_new_pay->met_payment : cdp_sanitize($_POST["order_pay_mode"]);
+    
+            // Status
+            $db_lbl->cdp_query("SELECT mod_style FROM cdb_styles WHERE id = :id");
+            $db_lbl->bind(':id', (int) $row_order->status_courier);
+            $db_lbl->cdp_execute();
+            $_old_status = $db_lbl->cdp_registro();
+            $old_status_label = $_old_status ? $_old_status->mod_style : (string) $row_order->status_courier;
+    
+            $db_lbl->cdp_query("SELECT mod_style FROM cdb_styles WHERE id = :id");
+            $db_lbl->bind(':id', (int) cdp_sanitize($_POST["status_courier"]));
+            $db_lbl->cdp_execute();
+            $_new_status = $db_lbl->cdp_registro();
+            $new_status_label = $_new_status ? $_new_status->mod_style : cdp_sanitize($_POST["status_courier"]);
+    
+            // Driver
+            $db_lbl->cdp_query("SELECT fname, lname FROM cdb_users WHERE id = :id");
+            $db_lbl->bind(':id', (int) $row_order->driver_id);
+            $db_lbl->cdp_execute();
+            $_old_drv = $db_lbl->cdp_registro();
+            $old_driver_label = $_old_drv ? trim($_old_drv->fname . ' ' . $_old_drv->lname) : 'None';
+    
+            $db_lbl->cdp_query("SELECT fname, lname FROM cdb_users WHERE id = :id");
+            $db_lbl->bind(':id', (int) cdp_sanitize($_POST["driver_id"]));
+            $db_lbl->cdp_execute();
+            $_new_drv = $db_lbl->cdp_registro();
+            $new_driver_label = $_new_drv ? trim($_new_drv->fname . ' ' . $_new_drv->lname) : 'None';
+    
+            // ── 2. Build diff array ─────────────────────────────────────────────
+            // Each entry: [ label, old_value, new_value ]
+            $diff_map = [
+                'Payment Method'        => [$old_pay_label,                            $new_pay_label],
+                'Status'                => [$old_status_label,                         $new_status_label],
+                'Driver'                => [$old_driver_label,                         $new_driver_label],
+                'Seals / Package No.'   => [(string) $_before_edit->seals_package,    cdp_sanitize($_POST["seals"])],
+                'Estimated ETA'         => [(string) ($_before_edit->estimated_eta ?? ''), cdp_sanitize($_POST["estimated_eta"])],
+                'Price per lb'          => [(string) $_before_edit->value_weight,      (string) floatval($_POST["price_lb"])],
+                'Sub-Total'             => [(string) $_before_edit->sub_total,         (string) floatval($_POST["subtotal_input"])],
+                'Insurance'             => [(string) $_before_edit->total_tax_insurance,(string) floatval($_POST["insurance_input"])],
+                'Insured Value'         => [(string) $_before_edit->total_insured_value,(string) floatval($_POST["insured_input"])],
+                'Discount'              => [(string) $_before_edit->total_tax_discount, (string) floatval($_POST["discount_input"])],
+                'Custom Tariffs'        => [(string) $_before_edit->total_tax_custom_tariffis, (string) floatval($_POST["total_impuesto_aduanero_input"])],
+                'Tax'                   => [(string) $_before_edit->total_tax,          (string) floatval($_POST["impuesto_input"])],
+                'Total Order'           => [(string) $_before_edit->total_order,        (string) floatval($_POST["total_envio_input"])],
+                'Total Weight'          => [(string) $_before_edit->total_weight,       (string) floatval($_POST["total_weight_input"])],
+            ];
+    
+            $changed_rows = [];
+            foreach ($diff_map as $label => [$old_val, $new_val]) {
+                // Normalise: trim whitespace and compare as strings
+                if (rtrim((string) $old_val, '0') !== rtrim((string) $new_val, '0')
+                    && $old_val !== $new_val) {
+                    $changed_rows[] = [
+                        'label' => $label,
+                        'old'   => $old_val ?: '—',
+                        'new'   => $new_val ?: '—',
+                    ];
+                }
+            }
+    
+            // ── 3. Only send email when something actually changed ──────────────
+            if (!empty($changed_rows)) {
+    
+                // Build HTML table of changes
+                $rows_html = '';
+                foreach ($changed_rows as $cr) {
+                    $rows_html .= '
+                    <tr>
+                        <td style="padding:8px 12px;font-size:13px;color:#555555;font-family:Roboto,Arial,Helvetica,sans-serif;border-bottom:1px solid #eeeeee;white-space:nowrap;">
+                            <strong>' . htmlspecialchars($cr['label']) . '</strong>
+                        </td>
+                        <td style="padding:8px 12px;font-size:13px;color:#c0392b;font-family:Roboto,Arial,Helvetica,sans-serif;border-bottom:1px solid #eeeeee;text-decoration:line-through;">
+                            ' . htmlspecialchars($cr['old']) . '
+                        </td>
+                        <td style="padding:8px 12px;font-size:13px;color:#27ae60;font-family:Roboto,Arial,Helvetica,sans-serif;border-bottom:1px solid #eeeeee;">
+                            &#10132; ' . htmlspecialchars($cr['new']) . '
+                        </td>
+                    </tr>';
+                }
+    
+                $consolidate_number = $row_order->c_prefix . $row_order->c_no;
+    
+                $message_html = '
+                <p style="margin:0 0 16px 0;font-size:14px;color:#444444;line-height:24px;font-family:Roboto,Arial,Helvetica,sans-serif;">
+                    The following changes were made to consolidation
+                    <strong style="color:#1a1a1a;">' . htmlspecialchars($consolidate_number) . '</strong>:
+                </p>
+                <table border="0" cellpadding="0" cellspacing="0" width="100%"
+                    style="border:1px solid #eeeeee;border-radius:4px;border-collapse:collapse;margin-bottom:16px;">
+                    <thead>
+                        <tr style="background:#f7f7f7;">
+                            <th style="padding:8px 12px;font-size:12px;color:#888888;font-family:Roboto,Arial,Helvetica,sans-serif;text-align:left;border-bottom:2px solid #eeeeee;">Field</th>
+                            <th style="padding:8px 12px;font-size:12px;color:#888888;font-family:Roboto,Arial,Helvetica,sans-serif;text-align:left;border-bottom:2px solid #eeeeee;">Previous Value</th>
+                            <th style="padding:8px 12px;font-size:12px;color:#888888;font-family:Roboto,Arial,Helvetica,sans-serif;text-align:left;border-bottom:2px solid #eeeeee;">New Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>' . $rows_html . '</tbody>
+                </table>
+                <p style="margin:0;font-size:13px;color:#888888;font-family:Roboto,Arial,Helvetica,sans-serif;">
+                    If you have any questions, please contact us.
+                </p>';
+    
+                // ── 4. Load template 12 (dynamic/generic) ──────────────────────
+                $db_tpl = new Conexion;
+                $db_tpl->cdp_query("SELECT * FROM cdb_email_templates WHERE id = 12 LIMIT 1");
+                $db_tpl->cdp_execute();
+                $email_tpl_12 = $db_tpl->cdp_registro();
+    
+                if ($email_tpl_12) {
+    
+                    // Get settings for mail config (already available as $settings in scope,
+                    // but re-query defensively in case this block runs after scope changes)
+                    $db_cfg = new Conexion;
+                    $db_cfg->cdp_query("SELECT * FROM cdb_settings LIMIT 1");
+                    $db_cfg->cdp_execute();
+                    $mail_cfg = $db_cfg->cdp_registro();
+    
+                    // Sender's email address
+                    $db_sender_email = new Conexion;
+                    $db_sender_email->cdp_query("SELECT fname, lname, email FROM cdb_users WHERE id = :id LIMIT 1");
+                    $db_sender_email->bind(':id', (int) cdp_sanitize($_POST["sender_id"]));
+                    $db_sender_email->cdp_execute();
+                    $email_recipient_user = $db_sender_email->cdp_registro();
+    
+                    if ($email_recipient_user && !empty($email_recipient_user->email)) {
+    
+                        $sender_full_name = trim($email_recipient_user->fname . ' ' . $email_recipient_user->lname);
+    
+                        // Replace template placeholders
+                        $email_body_12 = str_replace(
+                            ['[SITE_NAME]', '[NAME]', '[MESSAGE]', '[URL]'],
+                            [
+                                $mail_cfg->site_name,
+                                htmlspecialchars($sender_full_name),
+                                $message_html,
+                                rtrim($mail_cfg->site_url, '/'),
+                            ],
+                            $email_tpl_12->body
+                        );
+    
+                        $email_body_12 = cdp_cleanOutx($email_body_12);
+    
+                        $edit_subject = 'Consolidation Updated: ' . $consolidate_number;
+    
+                        // ── 5. Send via PHP mail or SMTP ────────────────────────
+                        if ($mail_cfg->mailer === 'PHP') {
+    
+                            $mail_headers  = "MIME-Version: 1.0\r\n";
+                            $mail_headers .= "Content-type: text/html; charset=UTF-8\r\n";
+                            $mail_headers .= "From: " . $mail_cfg->site_email . "\r\n";
+    
+                            mail(
+                                $email_recipient_user->email,
+                                $edit_subject,
+                                $email_body_12,
+                                $mail_headers
+                            );
+    
+                        } elseif ($mail_cfg->mailer === 'SMTP') {
+    
+                            $edit_mail = new PHPMailer();
+                            $edit_mail->IsSMTP();
+                            $edit_mail->SMTPAuth   = true;
+                            $edit_mail->Port       = $mail_cfg->smtp_port;
+                            $edit_mail->IsHTML(true);
+                            $edit_mail->CharSet    = 'utf-8';
+                            $edit_mail->Host       = $mail_cfg->smtp_host;
+                            $edit_mail->Username   = $mail_cfg->smtp_user;
+                            $edit_mail->Password   = $mail_cfg->smtp_password;
+                            $edit_mail->From       = $mail_cfg->site_email;
+                            $edit_mail->FromName   = $mail_cfg->smtp_names;
+                            $edit_mail->AddAddress($email_recipient_user->email);
+                            $edit_mail->Subject    = $edit_subject;
+                            $edit_mail->Body       = '<html><body>' . $email_body_12 . '</body></html>';
+                            $edit_mail->SMTPOptions = [
+                                'ssl' => [
+                                    'verify_peer'       => false,
+                                    'verify_peer_name'  => false,
+                                    'allow_self_signed' => true,
+                                ],
+                            ];
+                            $edit_mail->Send();
+                        }
+                    }
+                }
+            } // end if !empty($changed_rows)
+        }
+    } catch (Exception $e) {
+        error_log('consolidate_edit.php – email notification error: ' . $e->getMessage());
+    }
 
     $order_id = $row_order->consolidate_id;
 
