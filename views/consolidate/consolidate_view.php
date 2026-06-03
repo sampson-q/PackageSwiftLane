@@ -940,11 +940,15 @@ if ($row_order->status_invoice == 1) {
                                     <table class="table table-hover" id="tabla">
                                         <thead class="bg-inverse text-white">
                                             <tr>
-                                                <th colspan="3"><b><?php echo $lang['ltracking'] ?></b></th>
-                                                <th colspan="3" class="text-right"><b><?php echo $lang['left215'] ?></b></th>
-                                                <th class="text-center"></th>
-                                                <th colspan="3" class="text-right"><b><?php echo $lang['left219'] ?></b></th>
-                                                <th class="text-center"></th>
+                                                <th colspan="3"><b><?php echo $lang['packager']; ?></b></th>
+                                                <th></th>
+                                                <th colspan="3"><b><?php echo $lang['ltracking']; ?></b></th>
+                                                <th colspan="3" class="text-right"><b><?php echo 'Qty' ?></b></th>
+                                                <th colspan="3"><b><?php echo $lang['contents']; ?></b></th>
+                                                <th></th>
+                                                <th colspan="3"><b><?php echo $lang['left215']; ?></b></th>
+                                                <th colspan="3"><b><?php echo $lang['ship-all5']; ?></b></th>
+                                                <th></th>
                                             </tr>
                                         </thead>
                                         <tbody id="projects-tbl">
@@ -990,19 +994,42 @@ if ($row_order->status_invoice == 1) {
                                                         $total_impuesto = $sumador_total * $row_order->tax_value / 100;
                                                     }
 
-                                            ?>
+                                                    // Fetch sender name
+                                                    $db->cdp_query("SELECT user_id, sender_id FROM cdb_add_order WHERE order_no = '" . $row_order_item->order_no . "'");
+                                                    $package_owners = $db->cdp_registro();
 
+                                                    $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . $package_owners->sender_id . "'");
+                                                    $sender = $db->cdp_registro();
+                                                    $sender_name = $sender->fname . ' ' . $sender->lname;
+
+                                                    // Fetch package total price
+                                                    $db->cdp_query("SELECT total_order FROM cdb_add_order WHERE order_no='" . $row_order_item->order_no . "'");
+                                                    $package_total_price = $db->cdp_registro();
+
+                                                    // Fetch items (quantity + description)
+                                                    $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id = '" . $row_order_item->order_id . "'");
+                                                    $items = $db->cdp_registros();
+                                                    ?>
                                                     <tr class="card-hover">
-                                                        <td colspan="3"><b><?php echo $row_order_item->order_prefix . $row_order_item->order_no; ?> </b></td>
-                                                        <td colspan="3" class="text-right"><?php echo $weight_item; ?></td>
+                                                        <td colspan="3"><b><?php echo $sender_name; ?></b></td>
                                                         <td></td>
-                                                        <td colspan="3" class="text-right"><?php echo $total_metric; ?></td>
+                                                        <td colspan="3"><b><?php echo $row_order_item->order_prefix . $row_order_item->order_no; ?></b></td>
+                                                        <td colspan="3" class="text-right">
+                                                            <?php foreach ($items as $item) { ?>
+                                                                <b><?php echo (int) $item->order_item_quantity; ?></b><br>
+                                                            <?php } ?>
+                                                        </td>
+                                                        <td colspan="3">
+                                                            <?php foreach ($items as $item) { ?>
+                                                                <b><?php echo $item->order_item_description; ?></b><br>
+                                                            <?php } ?>
+                                                        </td>
                                                         <td></td>
-
+                                                        <td colspan="3"><?php echo number_format($row_order_item->weight, 2, '.', ''); ?></td>
+                                                        <td colspan="3"><?php echo cdb_money_format($package_total_price->total_order); ?></td>
+                                                        <td></td>
                                                     </tr>
-                                                <?php
-
-                                                }
+                                                <?php }
 
                                                 $total_descuento = $sumador_total * $row_order->tax_discount / 100;
                                                 $total_peso = $sumador_libras + $sumador_volumetric;
@@ -1022,9 +1049,6 @@ if ($row_order->status_invoice == 1) {
                                                 $total_impuesto_aduanero = cdb_money_format_bar($total_impuesto_aduanero);
                                                 $total_impuesto = cdb_money_format_bar($total_impuesto);
                                                 $total_descuento = cdb_money_format_bar($total_descuento);
-
-                                                ?>
-                                             <?php
                                             } ?>
                                         </tbody>
 

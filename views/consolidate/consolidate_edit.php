@@ -564,6 +564,7 @@ if (isset($_POST["total_item"])) {
             </div>
 
             <form method="post" id="invoice_form" name="invoice_form">
+                <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
                 <div class="container-fluid">
                     <div class="row">
@@ -788,12 +789,14 @@ if (isset($_POST["total_item"])) {
                                             </div>
                                             <thead class="bg-inverse text-white">
                                                 <tr>
-
-                                                    <th colspan="3"><b><?php echo $lang['ltracking'] ?></b></th>
-                                                    <th colspan="2" class="text-center"><b><?php echo $lang['left215'] ?></b></th>
-                                                    <th colspan="2" class="text-right"><b><?php echo $lang['left219'] ?></b></th>
-                                                    <th class="text-center"></th>
-
+                                                    <th><b><?php echo $lang['packager'] ?></b></th>
+                                                    <th><b><?php echo $lang['ltracking'] ?></b></th>
+                                                    <th class="text-right"><b><?php echo 'Qty'; ?></b></th>
+                                                    <th><b><?php echo $lang['contents'] ?></b></th>
+                                                    <th><b><?php echo $lang['left215'] ?></b></th>
+                                                    <th></th>
+                                                    <th><b><?php echo $lang['ship-all5'] ?></b></th>
+                                                    <th></th>
                                                 </tr>
                                             </thead>
                                             <tbody id="projects-tbl">
@@ -813,6 +816,22 @@ if (isset($_POST["total_item"])) {
                                                     $count_item = 0;
 
                                                     foreach ($order_items as $row_order_item) {
+
+                                                        // Get package total price.
+                                                        $db->cdp_query("SELECT total_order, sender_id FROM cdb_add_order WHERE order_no='" . $row_order_item->order_no . "'");
+                                                        $order_details = $db->cdp_registro();
+
+                                                        // Get order item description.
+                                                        $db->cdp_query("SELECT order_item_description FROM cdb_add_order_item WHERE order_id = '" . $row_order_item->order_id . "'");
+                                                        $description = $db->cdp_registro();
+
+                                                        // Get sender info.
+                                                        $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . $order_details->sender_id . "'");
+                                                        $sender = $db->cdp_registro();
+
+                                                        // Fetch items (quantity + description)
+                                                        $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id = '" . $row_order_item->order_id . "'");
+                                                        $items = $db->cdp_registros();
 
                                                         // echo '<script> selected.push("'echo $row_order_item->order_id;'"); </script>';
 
@@ -858,12 +877,22 @@ if (isset($_POST["total_item"])) {
 
                                                         <tr class="card-hover" id="row_id_<?php echo $row_order_item->order_id; ?>">
 
-                                                            <td colspan="3"><b><?php echo $row_order_item->order_prefix . $row_order_item->order_no; ?> </b></td>
+                                                            <td><b><?php echo $sender->fname . ' ' . $sender->lname; ?> </b></td>
+                                                            <td><b><?php echo $row_order_item->order_prefix . $row_order_item->order_no; ?> </b></td>
+                                                            <td class="text-right">
+                                                                <?php foreach ($items as $item) { ?>
+                                                                    <b><?php echo (int) $item->order_item_quantity; ?></b><br>
+                                                                <?php } ?>
+                                                            </td>
+                                                            <td>
+                                                                <?php foreach ($items as $item) { ?>
+                                                                    <b><?php echo $item->order_item_description; ?></b><br>
+                                                                <?php } ?>
+                                                            </td>
+                                                            <td><b><?php echo $weight_item; ?></b></td>
+                                                            <td></td>
 
-                                                            <td colspan="2" class="text-center"><?php echo $weight_item; ?></td>
-                                                            <td class="text-center"></td>
-
-                                                            <td class="text-right"><?php echo $row_order_item->weight_vol; ?></td>
+                                                            <td><b><?php echo cdb_money_format((float)$order_details->total_order); ?></b></td>
 
                                                             <td class="text-center">
                                                                 <button type="button" name="remove_row" id="<?php echo $row_order_item->order_id; ?>" class="btn btn-danger btn-xs remove_row mt-2"><i class="fa fa-trash"></i></button>

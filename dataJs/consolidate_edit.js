@@ -392,74 +392,63 @@ $("#save_data").on("submit", function (event) {
 $(function () {
   var count = $("#total_item").val();
 
-  $(document).on("click", ".remove_row", function () {
-    var row_id = $(this).attr("id");
-    var parent = $("#row_id_" + row_id);
+    $(document).on("click", ".remove_row", function () {
+        var row_id = $(this).attr("id");
+        var parent = $("#row_id_" + row_id);
 
-    new Messi(
-      '<p class="messi-warning"><i class="icon-warning-sign icon-3x pull-left"></i>' +
-        message_delete_confirm +
-        "<br /><strong>" +
-        message_delete_confirm2 +
-        "</strong></p>",
-      {
-        title: "Delete shipment",
-        titleClass: "",
-        modal: true,
-        closeButton: true,
-        buttons: [
-          {
-            id: 0,
-            label: message_delete_confirm1,
-            class: "",
-            val: "Y",
-          },
-        ],
-        callback: function (val) {
-          if (val === "Y") {
-            $.ajax({
-              type: "post",
-              url: "./ajax/consolidate/consolidate_item_delete_ajax.php",
-              data: {
-                id: row_id,
-              },
-              beforeSend: function () {
-                parent.animate(
-                  {
-                    backgroundColor: "#FFBFBF",
-                  },
-                  400
-                );
-              },
-              success: function (data) {
-                var index = selected.indexOf(row_id);
+        Swal.fire({
+            title: message_delete_confirm,
+            text: message_delete_confirm2,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: message_delete_confirm1
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    type: "post",
+                    headers: {
+                        'X-CSRF-TOKEN': $('input[name="_csrf_token"]').val()
+                    },
+                    url: "./ajax/consolidate/consolidate_item_delete_ajax.php",
+                    data: {
+                        id: row_id,
+                        origin_off: $("#exampleFormControlSelect1").val(),
+                    },
+                    beforeSend: function () {
+                    parent.animate({
+                        backgroundColor: "#FFBFBF",
+                        }, 400);
+                    },
+                    success: function (data) {
+                        var index = selected.indexOf(row_id);
+                        selected.splice(index, 1);
+    
+                        parent.animate({
+                        backgroundColor: "#FFBFBF",
+                        }, 40);
+    
+                        count--;
+                        parent.fadeOut(40, function () {
+                            // parent.remove();
+                            $("#row_id_" + row_id).remove();
+                            cdp_cal_final_total();
+                        });
+    
+                        $("#total_item").val(selected.length);
+                        cdp_load(localStorage.getItem('currentTablePageConsolidateEdit'));
 
-                selected.splice(index, 1);
-
-                parent.animate(
-                  {
-                    backgroundColor: "#FFBFBF",
-                  },
-                  400
-                );
-
-                count--;
-                parent.fadeOut(400, function () {
-                  // parent.remove();
-                  $("#row_id_" + row_id).remove();
-                  cdp_cal_final_total();
+                        Swal.fire({
+                            title: "Package Removed!",
+                            text: "Package has been removed from consolidation.",
+                            icon: "success"
+                        });
+                    },
                 });
-
-                $("#total_item").val(selected.length);
-
-                cdp_load(1);
-              },
-            });
-          }
-        },
-      }
-    );
-  });
+            }
+        });
+    });
 
   $("#create_invoice").on("click", function () {
     if ($.trim($("#total_item").val()) <= 1) {
@@ -639,7 +628,7 @@ function cdp_cal_final_total() {
   $("#total_envio_input").val(total_envio.toFixed(2));
 }
 
-function cdp_add_item(id, total_vol, weight, length, width, height, tracking, order_no, order_prefix) {
+function cdp_add_item(id, total_vol, weight, length, width, height, tracking, order_no, order_prefix, sender, description, total_price) {
   if (selected.includes(id)) {
     $("#modal_consolidate").html(
       '<div class="alert alert-danger" id="success-alert">' +
@@ -662,10 +651,14 @@ function cdp_add_item(id, total_vol, weight, length, width, height, tracking, or
     var html_code = "";
     html_code += '<tr class="card-hover " id="row_id_' + id + '">';
 
-    html_code += '<td class="" colspan="3"> <b>' + tracking + " </b></td>";
-    html_code += '<td class="text-center"  colspan="2">' + weight + "</td>";
-    html_code += '<td class="text-center"></td>';
-    html_code += '<td class="text-right">' + total_vol + "</td>";
+    html_code += '<td><b>' + sender + "</b></td>";
+    html_code += '<td><b>' + tracking + "</b></td>";
+    html_code += '<td></td>';
+    html_code += '<td><b>' + description + "</b></td>";
+    html_code += '<td><b>' + weight + "</b></td>";
+    html_code += '<td></td>';
+    html_code += '<td><b>' + total_price + "</b></td>";
+    // html_code += '<td>' + total_vol + "</td>";
 
     html_code += '<input type="hidden"  id="total_vol_' + id + '"  value="' + total_vol + '" name="weight_vol[]">';
     html_code += '<input type="hidden"   value="' + order_prefix + '" name="prefix[]">';

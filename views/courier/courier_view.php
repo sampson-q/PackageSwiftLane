@@ -108,6 +108,15 @@ $met_payment = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . $_GET['id'] . "'");
 $order_items = $db->cdp_registros();
 
+$db->cdp_query("SELECT consolidate_id FROM cdb_consolidate_detail where order_no='" . $row_order->order_no . "'");
+$consolidate_id = $db->cdp_registro() -> consolidate_id;
+
+$db->cdp_query("SELECT status_courier FROM cdb_consolidate where consolidate_id='" . $consolidate_id . "'");
+$consolidate_status_courier = $db->cdp_registro() -> status_courier;
+
+$db->cdp_query("SELECT * FROM cdb_styles where id='" . $consolidate_status_courier . "'");
+$consolidate_style = $db->cdp_registro();
+
 $db->cdp_query("SELECT tracking_number, estimated_eta FROM cdb_package_tracking_number WHERE order_id='" . $_GET['id'] . "'");
 $postal_tracking = $db->cdp_registro();
 
@@ -360,7 +369,7 @@ if ($row_order->status_invoice == 1) {
                                 <div class="row">
                                     <div class=" col-sm-12 col-md-6 mb-2">
                                         <b class=""><?php echo $lang['left506']?></b>
-                                        <span class="label" style="background-color: <?php echo $status_courier->color; ?>"><?php echo $status_courier->mod_style; ?></span>
+                                        <span class="label" style="background-color: <?php echo $row_order->is_consolidate ? $consolidate_style->color : $status_courier->color; ?>"><?php echo $row_order->is_consolidate ? $consolidate_style->mod_style : $status_courier->mod_style; ?></span>
                                     </div>
 
                                     <div class=" col-sm-12 col-md-6 mb-2">
