@@ -43,6 +43,16 @@ if (empty($_POST['driver_id']))
 
 if (empty($errors)) {
 
+    $customer_packages = cdp_getCustomerPackagePrint(cdp_sanitize($_POST['id_shipment']))['data'];
+    
+    $sender_id = $customer_packages->sender_id;
+    $sender_data = cdp_getSenderCourier($sender_id);
+    
+    $driver_data = cdp_getSenderCourier(cdp_sanitize($_POST['driver_id']));
+
+    $estimated_eta = cdp_getPackageTracking(cdp_sanitize($_POST['id_shipment']));
+    $eta = $estimated_eta->estimated_eta ? "*Estimated Time of Arrival:* " . $estimated_eta->estimated_eta . "\n\n" :  "\n";
+
     $data = array(
         'id_shipment' => trim($_POST['id_shipment']),
         'driver_id' => trim($_POST['driver_id']),
@@ -91,6 +101,31 @@ if (empty($errors)) {
         //NOTIFICATION TO DRIVER
 
         cdp_insertNotificationsUsers($notification_id, $_POST["driver_id"]);
+
+        try {
+            require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
+    
+            // Only send if sender has phone
+            if ($sender_data && !empty($sender_data->phone)) {
+                $whatsapp_body = "Dear {$sender_data->fname } {$sender_data->lname },\n\n
+                Your shipment has been updated with a new driver assignment. Here are the details:\n
+                *Tracking Number:* {$customer_packages->order_prefix}{$customer_packages->order_no}\n
+                *Courier:* {$driver_data->fname}\n
+                $eta
+                
+                Login to your account for more details.";
+
+                // Send WhatsApp notification
+                $wa_result = sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+
+                // Log result (don't fail shipment if WhatsApp fails)
+                if (!$wa_result['success']) {
+                    error_log("WhatsApp notification failed for order {$order_id}: " . $wa_result['message']);
+                }
+            }
+        } catch (Exception $e) {
+            error_log('WhatsApp notification error for order ' . $order_id . ': ' . $e->getMessage());
+        }
 
 
         //NOTIFICATION TO ADMIN AND EMPLOYEES
