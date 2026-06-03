@@ -23,6 +23,7 @@
 require_once('helpers/querys.php');
 require_once("helpers/phpmailer/class.phpmailer.php");
 require_once("helpers/phpmailer/class.smtp.php");
+require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 
 $userData = $user->cdp_getUserData();
 
@@ -298,7 +299,7 @@ if (isset($_POST['address'])) {
         );
 
 
-        $newbody = cdp_cleanOut($body);
+        $newbody = cdp_cleanOutx($body);
 
 
         //SENDMAIL PHP
@@ -363,6 +364,35 @@ if (isset($_POST['address'])) {
                 //echo "El correo fue enviado correctamente.";
             } catch (Exception $e) {
                 //echo "Ocurrió un error inesperado.";
+            }
+        }
+
+        if ($sender_data && !empty($sender_data->phone)) {
+            try {
+                $db_wa = new Conexion;
+                $db_wa->cdp_query("SELECT mod_style FROM cdb_styles WHERE id = :id LIMIT 1");
+                $db_wa->bind(':id', (int) cdp_sanitize($_POST['status_courier']));
+                $db_wa->cdp_execute();
+                $_wa_status = $db_wa->cdp_registro();
+                $wa_status_label = $_wa_status ? $_wa_status->mod_style : cdp_sanitize($_POST['status_courier']);
+        
+                $wa_location = cdp_sanitize($_POST['country']) . ' | ' . cdp_sanitize($_POST['address']);
+                $wa_comment  = trim(cdp_sanitize($_POST['comments'] ?? ''));
+        
+                $whatsapp_body_sender =
+                    "Hello {$sender_data->fname} {$sender_data->lname},\n\n" .
+                    "There is a new tracking update on your consolidation *{$fullshipment}*.\n\n" .
+                    "*Status:* {$wa_status_label}\n" .
+                    "*Location:* {$wa_location}\n" .
+                    "*Date:* {$date_ship}\n" .
+                    (!empty($wa_comment) ? "*Note:* {$wa_comment}\n" : '') .
+                    "\nTrack your shipment:\n{$app_url}\n\n" .
+                    "Thank you, *{$msnames}* Team";
+        
+                sendNotificationWhatsApp_v2($sender_data, $whatsapp_body_sender);
+        
+            } catch (Exception $e) {
+                error_log('consolidate_tracking.php – WhatsApp error for ' . $fullshipment . ': ' . $e->getMessage());
             }
         }
 
