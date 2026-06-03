@@ -37,6 +37,43 @@ foreach ($data as $key) {
 
     cdp_updateDriverConsolidatePackagesMultiple($key, $driver);
 
+    $customer_packages = cdp_getPackageMultiple($key);
+        
+    $sender_id = $customer_packages->sender_id;
+    $sender_data = cdp_getSenderCourier($sender_id);
+
+    $driver_data = cdp_getSenderCourier($driver);
+
+    $order_id = $customer_packages->order_id;
+    $estimated_eta = cdp_getPackageTracking($order_id);
+
+    $eta = $estimated_eta->estimated_eta ? "*Estimated Time of Arrival:* " . $estimated_eta->estimated_eta . "\n\n" :  "\n";
+
+    try {
+        require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
+
+        // Only send if sender has phone
+        if ($sender_data && !empty($sender_data->phone)) {
+            $whatsapp_body = "Dear {$sender_data->fname } {$sender_data->lname },\n\n
+            Your shipment has been updated with a new driver assignment. Here are the details:\n
+            *Tracking Number:* {$customer_packages->order_prefix}{$customer_packages->order_no}\n
+            *Courier:* {$driver_data->fname}\n
+            $eta
+            
+            Login to your account for more details.";
+
+            // Send WhatsApp notification
+            $wa_result = sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+
+            // Log result (don't fail shipment if WhatsApp fails)
+            if (!$wa_result['success']) {
+                error_log("WhatsApp notification failed for order {$order_id}: " . $wa_result['message']);
+            }
+        }
+    } catch (Exception $e) {
+        error_log('WhatsApp notification error for order ' . $order_id . ': ' . $e->getMessage());
+    }
+
     $message[$key] = $key . ' ' . $lang['modal-text30'];
 }
 
