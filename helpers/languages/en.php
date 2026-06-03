@@ -225,13 +225,13 @@ $lang = array(
 	"validate_field_ajax61" => "Enter thumbnail logo length",
 	"validate_field_ajax62" => "Illegal file type. Only jpg and png file types are allowed.",
 
-	"validate_field_ajax63" => "Enter SMTP names",
-	"validate_field_ajax64" => "Enter SMTP address",
-	"validate_field_ajax65" => "Enter SMTP server",
-	"validate_field_ajax66" => "Enter SMTP user",
-	"validate_field_ajax67" => "Enter SMTP password",
-	"validate_field_ajax68" => "Enter SMTP port",
-	"validate_field_ajax69" => "Enter secure SMTP",
+	"validate_field_ajax63" => "Enter SMTP Names",
+	"validate_field_ajax64" => "Enter SMTP Address",
+	"validate_field_ajax65" => "Enter SMTP Server",
+	"validate_field_ajax66" => "Enter SMTP User",
+	"validate_field_ajax67" => "Enter SMTP Password",
+	"validate_field_ajax68" => "Enter SMTP Port",
+	"validate_field_ajax69" => "Enter Secure SMTP",
 
 	"validate_field_ajax178" => "Enter template title",
 	"validate_field_ajax179" => "Enter email subject",
@@ -253,47 +253,45 @@ $lang = array(
 	"validate_field_ajax81" => "Enter public key",
 	"validate_field_ajax82" => "Enter secret key",
 
-
 	"validate_field_ajax83" => "You cannot delete this payment method because it is linked to a shipment",
 
-
-	"validate_field_ajax84" => "Enter office",
+	"validate_field_ajax84" => "Enter Office",
 	"validate_field_ajax85" => "The new office is already in use",
 	"validate_field_ajax86" => "Enter code",
 	"validate_field_ajax87" => "The code is already in use",
-	"validate_field_ajax88" => "Enter address",
-	"validate_field_ajax89" => "Enter city",
-	"validate_field_ajax90" => "Enter phone number",
+	"validate_field_ajax88" => "Enter Address",
+	"validate_field_ajax89" => "Enter City",
+	"validate_field_ajax90" => "Enter Phone Number",
 	"validate_field_ajax91" => "You cannot delete this office because it is linked to a shipment",
 
-	"validate_field_ajax92" => "Enter branch",
+	"validate_field_ajax92" => "Enter Branch",
 	"validate_field_ajax93" => "The branch is already in use.",
-	"validate_field_ajax94" => "Enter address",
-	"validate_field_ajax95" => "Enter city",
-	"validate_field_ajax96" => "Enter phone number",
+	"validate_field_ajax94" => "Enter Address",
+	"validate_field_ajax95" => "Enter City",
+	"validate_field_ajax96" => "Enter Phone Number",
 	"validate_field_ajax97" => "You cannot delete this agency because it is linked to a shipment",
 
 
 	"validate_field_ajax98" => "Enter courier company",
 	"validate_field_ajax99" => "The courier company is already in use",
-	"validate_field_ajax100" => "Enter address",
-	"validate_field_ajax101" => "Enter phone number",
-	"validate_field_ajax102" => "Enter country",
-	"validate_field_ajax1022212" => "Enter state",
-	"validate_field_ajax103" => "Enter city",
+	"validate_field_ajax100" => "Enter Address",
+	"validate_field_ajax101" => "Enter Phone Number",
+	"validate_field_ajax102" => "Enter Country",
+	"validate_field_ajax1022212" => "Enter State",
+	"validate_field_ajax103" => "Enter City",
 	"validate_field_ajax104" => "Enter Zip Code",
 	"validate_field_ajax105" => "You cannot delete this courier because it is linked to a shipment",
 
 	"validate_field_ajax106" => "Enter the new state",
 	"validate_field_ajax107" => "The state is already in use.",
-	"validate_field_ajax108" => "Enter observations",
-	"validate_field_ajax109" => "Enter color",
+	"validate_field_ajax108" => "Enter Observations",
+	"validate_field_ajax109" => "Enter Color",
 	"validate_field_ajax110" => "The color is already in use",
 	"validate_field_ajax111" => "You cannot delete this state because it is linked to a shipment",
 
 	"validate_field_ajax112" => "Enter service logistics",
 	"validate_field_ajax113" => "The logistics service is already in use",
-	"validate_field_ajax114" => "Enter details",
+	"validate_field_ajax114" => "Enter Details",
 	"validate_field_ajax115" => "You cannot delete this fulfillment service because it is linked to a shipment",
 
 
@@ -2219,7 +2217,7 @@ $lang = array(
 	"add-tariff-internal" => "Internal (table)",
 	"add-section-service-quote" => "Service and Quote",
 	"add-title23" => "Payment Method",
-	"add-title24" => "Number (tracking)",
+	"add-title24" => "Number (Tracking)",
 	"add-title25" => "Taxes",
 	"add-title26" => "Sure",
 	"add-title27" => "Article Category",
@@ -2244,21 +2242,7 @@ $lang = array(
 	"add-title46" => "Generate Shipment",
 	"add-title47" => "Find another Client",
 	"add-title48" => "Shipping Information",
-
-
-
-
-
-
-
-
-
-
-
 	"edit-courier1" => "Edit Courier",
-
-
-
 
 	/** Shipping List **/
 	"shipping-list" => "Shipping List",
@@ -2267,7 +2251,7 @@ $lang = array(
 	"ship-all2" => "Customer Name",
 	"ship-all3" => "Email",
 	"ship-all4" => "Shipping Status",
-	"ship-all5" => "Total cost",
+	"ship-all5" => "Total Cost",
 
 	/** Edit Customer **/
 	"edit-clien2" => "Editing Current Client",
@@ -2333,11 +2317,6 @@ $lang = array(
 	"send-news9" => "Send mail",
 	"send-news10" => "Return to Dashboard",
 	"send-news11" => "Display email templates",
-
-
-
-
-
 
 	/** Payment List PAYPAL and Credit Card **/
 	"payment1" => "List of payments",
@@ -3639,7 +3618,7 @@ $lang = array(
     'prealert_smart_title' => 'Smart Prealert',
     'prealert_smart_subtitle' => 'Auto-fill product details using tracking and courier, then review before submitting.',
     'prealert_smart_button' => 'Smart Prealert',
-    'prealert_fetch_button' => 'Fetch details',
+    'prealert_fetch_button' => 'Fetch Details',
     'prealert_fetch_hint' => 'Select courier and enter tracking to fetch details.',
     'prealert_fetch_missing_fields' => 'Select a courier and enter a tracking number to fetch details.',
     'prealert_fetch_success' => 'Details loaded. Review and adjust if needed.',
@@ -3659,5 +3638,9 @@ $lang = array(
     'prealert_settings_api_secret' => 'API Secret',
     'prealert_settings_account' => 'Account/Client ID',
     'prealert_settings_timeout' => 'Timeout (seconds)',
+
+    //package details update
+    'packager' => "Account Name",
+    "contents" => "Contents",
 
 );
