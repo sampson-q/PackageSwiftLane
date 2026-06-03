@@ -25,6 +25,7 @@ require_once('helpers/querys.php');
 require_once("helpers/phpmailer/class.phpmailer.php");
 require_once("helpers/phpmailer/class.smtp.php");
 require_once("ajax/notify_sms/api_sms_consolidate_service.php");
+require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 
 $userData = $user->cdp_getUserData();
 
@@ -311,7 +312,7 @@ if (isset($_POST['person_receives'])) {
         );
 
 
-        $newbody = cdp_cleanOut($body);
+        $newbody = cdp_cleanOutx($body);
 
 
         //SENDMAIL PHP
@@ -375,7 +376,26 @@ if (isset($_POST['person_receives'])) {
             }
         }
 
-        
+        if (!empty($sender_data->phone)) {
+            try {
+                // Get template 3 for package delivery
+                $tpl = getTemplateWhatsApp(3);
+
+                if ($tpl) {
+                    // Format the message with tracking number placeholder
+                    $whatsapp_body = str_replace(
+                        '[TRACKING_NUMBER]',
+                        $fullshipment,
+                        $tpl->body
+                    );
+
+                    // Send via v2 API
+                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                }
+            } catch (Exception $e) {
+                error_log('Error sending WhatsApp v2 notification to sender on delivery: ' . $e->getMessage());
+            }
+        }
 
         // Obtener el estado de las casillas de verificación
         $notify_sms_sender = isset($_POST['notify_sms_sender']) && $_POST['notify_sms_sender'] == 1;
