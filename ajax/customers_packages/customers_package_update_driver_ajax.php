@@ -40,10 +40,17 @@ $errors = array();
 if (empty($_POST['driver_id']))
     $errors['driver_id'] = $lang['validate_field_ajax164'];
 
-
- 
-
 if (empty($errors)) {
+
+    $customer_packages = cdp_getCustomerPackagePrint(cdp_sanitize($_POST['id_shipment']))['data'];
+    
+    $sender_id = $customer_packages->sender_id;
+    $sender_data = cdp_getSenderCourier($sender_id);
+    
+    $driver_data = cdp_getSenderCourier(cdp_sanitize($_POST['driver_id']));
+
+    $estimated_eta = cdp_getPackageTracking(cdp_sanitize($_POST['id_shipment']));
+    $eta = $estimated_eta->estimated_eta ? "*Estimated Time of Arrival:* " . $estimated_eta->estimated_eta . "\n\n" :  "\n";
 
     $data = array(
         'id_shipment' => trim($_POST['id_shipment']),
@@ -91,22 +98,41 @@ if (empty($errors)) {
         $notification_id = $db->dbh->lastInsertId();
 
         //NOTIFICATION TO DRIVER
-
         cdp_insertNotificationsUsers($notification_id, $_POST["driver_id"]);
 
-
         //NOTIFICATION TO ADMIN AND EMPLOYEES
-
         $users_employees = cdp_getUsersAdminEmployees();
-
         foreach ($users_employees as $key) {
-
             cdp_insertNotificationsUsers($notification_id, $key->id);
         }
-        //NOTIFICATION TO CUSTOMER
 
+        //NOTIFICATION TO CUSTOMER
         cdp_insertNotificationsUsers($notification_id, $_POST['id_senderclient_driver_update']);
-    } else {
+
+        try {
+            require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
+    
+            // Only send if sender has phone
+            if ($sender_data && !empty($sender_data->phone)) {
+                $whatsapp_body = "Dear {$sender_data->fname } {$sender_data->lname },\n\n
+                Your shipment has been updated with a new driver assignment. Here are the details:\n
+                *Tracking Number:* {$customer_packages->order_prefix}{$customer_packages->order_no}\n
+                *Courier:* {$driver_data->fname}\n
+                $eta
+                
+                Login to your account for more details.";
+
+                // Send WhatsApp notification
+                $wa_result = sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+
+                // Log result (don't fail shipment if WhatsApp fails)
+                if (!$wa_result['success']) {
+                    error_log("WhatsApp notification failed for order {$order_id}: " . $wa_result['message']);
+                }
+            }
+        } catch (Exception $e) {
+            error_log('WhatsApp notification error for order ' . $order_id . ': ' . $e->getMessage());
+        }
 
         $errors['critical_error'] =  $lang['message_error'];
     }
