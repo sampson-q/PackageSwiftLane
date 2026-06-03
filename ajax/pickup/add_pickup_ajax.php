@@ -173,6 +173,8 @@ if (empty($errors)) {
 
     $shipment_id = cdp_insertCourierShipment($dataShipment);
 
+    cdp_insertPackageTracking($shipment_id, $_SESSION['userid'], cdp_sanitize($_POST['tracking_number']), cdp_sanitize($_POST['estimated_eta']));
+
     if ($shipment_id !== null) {
 
         if (isset($_POST["packages"])) {

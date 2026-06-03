@@ -565,10 +565,9 @@ $order_prefix = $settings->prefix;
                                         <?php
 
                                         if ($userData->userlevel == 3) { ?>
-
                                             <div class="col-md-3">
                                                 <label for="inputname" class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
-                                                <div class="input-group mb-3">
+                                                <div class="input-group mb-2">
                                                     <div class="input-group-prepend">
                                                         <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
                                                     </div>
@@ -585,7 +584,7 @@ $order_prefix = $settings->prefix;
 
                                             <div class="col-md-3">
                                                 <label for="inputname" class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
-                                                <div class="input-group mb-3">
+                                                <div class="input-group mb-2">
                                                     <div class="input-group-prepend">
                                                         <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
                                                     </div>
@@ -599,6 +598,16 @@ $order_prefix = $settings->prefix;
                                             </div>
                                         <?php
                                         } ?>
+
+                                        <div class="form-group col-md-3">
+                                            <label class="control-label col-form-label"><?php echo '# Tracking' ?></label>
+                                            <input type='text' class="form-control" id="tracking_number" name="tracking_number" placeholder="# Tracking" />
+                                        </div>
+                                        
+                                        <div class="form-group col-md-3">
+                                            <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
+                                            <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" />
+                                        </div>
 
                                     </div>
 

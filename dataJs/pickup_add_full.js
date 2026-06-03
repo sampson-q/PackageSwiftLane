@@ -671,6 +671,9 @@ $("#invoice_form").on("submit", function (event) {
 
   var deleted_file_ids = $("#deleted_file_ids").val();
 
+    var tracking_number = $("#tracking_number").val();
+    var estimated_eta = $("#estimated_eta").val();
+
   var data = new FormData();
 
   data.append("packages", JSON.stringify(packagesItems));
@@ -791,6 +794,9 @@ $("#invoice_form").on("submit", function (event) {
   for (var i = 0; i < total_file; i++) {
     data.append("filesMultiple[]", document.getElementById("filesMultiple").files[i]);
   }
+
+    if (tracking_number)    data.append("tracking_number", tracking_number);
+    if (estimated_eta)      data.append("estimated_eta", estimated_eta);
 
   data.append('_csrf_token', $('input[name="_csrf_token"]').val());
 
