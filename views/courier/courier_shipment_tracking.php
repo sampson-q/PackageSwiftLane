@@ -164,6 +164,7 @@ $statusrow = $core->cdp_getStatusByType(2);
 
                                 </div>
                                 <form class="xform" id="invoice_form" name="invoice_form" method="post">
+                                    <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                     <header>
                                         <h4 class="modal-title"> <b class="text-danger"><?php echo $lang['status-ship1'] ?> </b> <b>| <?php echo $row->order_prefix . $row->order_no; ?></b>
                                         </h4>
@@ -265,13 +266,6 @@ $statusrow = $core->cdp_getStatusByType(2);
                                                     <b><?php echo $lang['leftorder144430'] ?> &nbsp; <i class="mdi mdi-whatsapp" style="font-size: 22px; color:#07bc4c;"></i></b>
                                                     <span class="custom-control-indicator"></span>
                                                 </label>
-                                                <br>
-                                                <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
-                                                    <input type="checkbox" class="custom-control-input" name="notify_whatsapp_receiver" id="notify_whatsapp_receiver" value="1">
-                                                    <b><?php echo $lang['leftorder144442'] ?><i class="mdi mdi-whatsapp" style="font-size: 22px; color:#07bc4c;"></i></b>
-                                                    <span class="custom-control-indicator"></span>
-                                                </label>
-
                                             </div>
                                         <?php } ?>
 
