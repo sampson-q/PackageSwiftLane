@@ -1,3 +1,8 @@
+<?php
+    require_once ("loader.php");
+    $login = new User;
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -14,18 +19,13 @@
     <link href="assets/css_main_deprixa/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <!-- Icons -->
     <link href="assets/css_main_deprixa/css/materialdesignicons.min.css" rel="stylesheet" type="text/css" />
-    <!-- Slider -->
-    <link rel="stylesheet" href="assets/css_main_deprixa/css/tiny-slider.css" />
-    <!-- Date picker -->
-    <link rel="stylesheet" href="assets/css_main_deprixa/css/datepicker.min.css">
     <!-- Main Css -->
     <link href="assets/css_main_deprixa/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
     <link href="assets/css_main_deprixa/css/colors/default.css" rel="stylesheet" id="color-opt">
-
-
+    <link href="assets/css_main_deprixa/css/auth-pages.css" rel="stylesheet" type="text/css" />
 </head>
 
-<body class="cover-user">
+<body class="auth-page">
     <!-- Loader -->
     <div id="preloader">
         <div id="status">
@@ -35,134 +35,129 @@
             </div>
         </div>
     </div>
-    <!-- Loader -->
 
-    <!-- Navbar STart -->
-    <header id="topnav" class="defaultscroll sticky">
-        <div class="container">
-            <!-- Logo container-->
-            <a class="logo" href="index.php">
-                <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
+    <div class="back-to-home">
+        <a href="login.php" class="back-button btn btn-icon btn-primary" aria-label="Back to login">
+            <i data-feather="arrow-left" class="icons"></i>
+        </a>
+    </div>
 
+    <section class="auth-shell">
+        <div class="container-fluid px-0">
+            <div class="row g-0 auth-shell__grid">
 
-            </a>
-
-            <!-- End Logo container-->
-            <div class="menu-extras">
-                <div class="menu-item">
-                    <!-- Mobile menu toggle-->
-                    <a class="navbar-toggle" id="isToggle" onclick="toggleMenu()">
-                        <div class="lines">
-                            <span></span>
-                            <span></span>
-                            <span></span>
+                <!-- Visual panel -->
+                <div class="col-lg-6 auth-shell__panel auth-shell__panel--visual order-1 order-lg-1">
+                    <div class="auth-visual d-flex flex-column justify-content-center h-100">
+                        <a class="auth-mobile-logo auth-brand" href="index.php">
+                            <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="100px" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
+                        </a>
+                        <div class="auth-visual-copy">
+                            <span class="auth-badge">Live tracking</span>
+                            <h1><?php echo $lang['left127'] ?></h1>
+                            <p><?php echo $lang['left128'] ?></p>
+                            <div class="auth-mini-list">
+                                <span>Packages</span>
+                                <span>Shipments</span>
+                                <span>Real-time</span>
+                            </div>
                         </div>
-                    </a>
-                    <!-- End mobile menu toggle-->
-                </div>
-            </div>
-
-            <!--Login button Start-->
-            <ul class="buy-button list-inline mb-0">
-                <li class="list-inline-item mb-0">
-                    <a href="index.php">
-                        <div class="login-btn-primary"><span class="btn btn-icon btn-pills btn-soft-primary"><i data-feather="home" class="fea icon-sm"></i></span></div>
-                        <div class="login-btn-light"><span class="btn btn-icon btn-pills btn-light"><i data-feather="home" class="fea icon-sm"></i></span></div>
-                    </a>
-                </li>
-
-            </ul>
-            <!--Login button End-->
-
-        </div>
-        <!--end container-->
-    </header>
-    <!--end header-->
-    <!-- Navbar End -->
-
-    <!-- Hero Start -->
-    <section class="bg-half-170 d-table w-100 h-full" style="background: url('assets/images/PackageTracking.svg') center; background-repeat: no-repeat;">
-        <div class="bg-overlay"></div>
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-7 col-md-6">
-                    <div class="title-heading mt-4">
-                        <h1 class="display-4 fw-bold text-white title-dark mb-3"><?php echo $lang['left127'] ?> </span> <br> <?php echo $lang['left128'] ?></h1>
-
+                        <img src="assets/images/PackageTracking.svg" alt="Package tracking illustration" class="auth-visual__image img-fluid">
                     </div>
                 </div>
-                <!--end col-->
 
-                <div class="col-lg-5 col-md-6 mt-4 pt-2 mt-sm-0 pt-sm-0">
-                    <div class="card shadow rounded border-0 ms-lg-5">
+                <!-- Form panel -->
+                <div class="col-lg-6 auth-shell__panel auth-shell__panel--form order-2 order-lg-2">
+                    <div class="auth-card auth-card--compact card login-page border-0">
+                        <div class="auth-card__top text-center">
+                            <a class="logo" href="index.php">
+                                <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
+                            </a>
+                        </div>
+
                         <div class="card-body">
+                            <div class="text-center">
+                                <h4 class="auth-heading mb-2"><?php echo $lang['left127'] ?></h4>
+                                <p class="auth-subtitle"><?php echo $lang['left129'] ?? 'Enter one or more tracking numbers below.' ?></p>
+                            </div>
 
-                            <form class="login-form" method="POST" name="ib_form" id="ib_form">
+                            <div id="msgholder2" class="mt-3"></div>
+                            <div id="loader" style="display:none"></div>
+
+                            <form class="login-form mt-4" method="POST" name="ib_form" id="ib_form">
                                 <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group position-relative">
-
-                                            <div class="col-md-12">
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="trackingType" id="trackingType" value="1" checked>
-                                                    <label class="form-check-label" for="trackingType"><?php echo $lang['message_title_tracking1'] ?></label>
-                                                </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="trackingType" id="trackingType" value="2">
-                                                    <label class="form-check-label" for="trackingType"><?php echo $lang['message_title_tracking2'] ?></label>
-                                                </div>
+                                    <!-- Tracking type selector -->
+                                    <div class="col-12">
+                                        <div class="mb-3 d-flex gap-3">
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input" type="radio"
+                                                       name="trackingType" id="trackingType1" value="1" checked>
+                                                <label class="form-check-label" for="trackingType1">
+                                                    <?php echo $lang['message_title_tracking1'] ?>
+                                                </label>
                                             </div>
-
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input" type="radio"
+                                                       name="trackingType" id="trackingType2" value="2">
+                                                <label class="form-check-label" for="trackingType2">
+                                                    <?php echo $lang['message_title_tracking2'] ?>
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-12">
+
+                                    <!-- Tracking number(s) input -->
+                                    <div class="col-12">
                                         <div class="mb-3">
-
+                                            <label class="form-label"><?php echo $lang['left130'] ?></label>
                                             <div class="form-icon position-relative">
-                                                <i class="mdi mdi-cube-send ml-3 icons"></i>
-                                                <textarea name="order_track" placeholder="<?php echo $lang['left130'] ?>" id="order_track" rows="4" class="form-control ps-5" required></textarea>
+                                                <i data-feather="package" class="fea icon-sm icons"></i>
+                                                <textarea name="order_track" id="order_track"
+                                                          rows="4" class="form-control ps-5"
+                                                          placeholder="<?php echo $lang['left130'] ?>"
+                                                          required></textarea>
                                             </div>
                                         </div>
                                     </div>
 
-
-                                    <div class="col-md-12">
+                                    <!-- Submit -->
+                                    <div class="col-12">
                                         <div class="d-grid">
-                                            <button type="submit" name="submit" class="btn btn-danger rounded w-100"><i class="mdi mdi-cube-outline ml-3 icons"></i> <?php echo $lang['left131'] ?></button>
+                                            <button type="submit" name="submit" class="btn btn-grad">
+                                                <i data-feather="search" class="fea icon-sm me-1"></i>
+                                                <?php echo $lang['left131'] ?>
+                                            </button>
                                         </div>
                                     </div>
 
+                                    <!-- Footer link -->
+                                    <?php if (!$login->cdp_loginCheck()) { ?>
+                                    <div class="col-12 text-center auth-footer-links">
+                                        <a href="login.php" class="text-dark fw-bold">
+                                            <?php echo $lang['langs_010111'] ?? 'Sign in' ?>
+                                        </a>
+                                    </div>
+                                    <?php } ?>
                                 </div>
                             </form>
+
+                            <!-- Tracking result injected here by tracking.js -->
+                            <div id="tracking_result" class="mt-4"></div>
                         </div>
                     </div>
                 </div>
-                <!--end col-->
+
             </div>
-            <!--end row-->
         </div>
-        <!--end container-->
     </section>
-    <!--end section-->
 
-    <!-- Hero End -->
-
-
-
-
-    <!-- javascript -->
-    <script src="assets/css_main_deprixa/main_deprixa/js/jquery.min.js"></script>
+    <script src="assets/custom_dependencies/jquery-3.6.0.min.js"></script>
     <script src="assets/css_main_deprixa/js/bootstrap.bundle.min.js"></script>
-    <!-- SLIDER -->
-    <script src="assets/css_main_deprixa/js/tiny-slider.js "></script>
-    <!-- Datepicker -->
-    <script src="assets/css_main_deprixa/js/datepicker.min.js"></script>
-    <!-- Icons -->
     <script src="assets/css_main_deprixa/js/feather.min.js"></script>
-    <!-- Main Js -->
     <script src="assets/css_main_deprixa/js/plugins.init.js"></script>
-    <!--Note: All init js like tiny slider, counter, countdown, maintenance, lightbox, gallery, swiper slider, aos animation etc.-->
     <script src="assets/css_main_deprixa/js/app.js"></script>
+    <script src="dataJs/tracking.js"></script>
+>
     <!--Note: All important javascript like page loader, menu, sticky menu, menu-toggler, one page menu etc. -->
 
     <script src="dataJs/tracking.js"></script>

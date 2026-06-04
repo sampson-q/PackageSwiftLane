@@ -72,7 +72,7 @@
                 <div class="col-lg-5 auth-shell__panel auth-shell__panel--visual order-1 order-lg-1">
                     <div class="auth-visual d-flex flex-column justify-content-center h-100">
                         <a class="auth-mobile-logo auth-brand" href="index.php">
-                            <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
+                            <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="100px" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
                         </a>
                         <div class="auth-visual-copy">
                             <span class="auth-badge">Create account</span>
