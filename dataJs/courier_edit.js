@@ -671,8 +671,8 @@ function addUnifiedThumbnail(blob, filename, originalFile, fileType) {
 function updateFileLabels() {
   var uploadCount = document.querySelectorAll('.file-thumb[data-type="upload"]').length;
   var cameraCount = document.querySelectorAll('.file-thumb[data-type="camera"]').length;
-  $("#selectItem").html(uploadCount > 0 ? "attached files (" + uploadCount + ")" : "attached files");
-  $("#captureItem").html(cameraCount > 0 ? "camera captures (" + cameraCount + ")" : "camera captures");
+  $("#selectItem").html(uploadCount > 0 ? "Attached Files (" + uploadCount + ")" : "Attached Files");
+  $("#captureItem").html(cameraCount > 0 ? "Camera Captures (" + cameraCount + ")" : "Camera Captures");
 }
 
 function checkShowCleanButton() {
