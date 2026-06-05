@@ -118,61 +118,16 @@ if (isset($_POST["total_item"])) {
     $db = new Conexion;
 
     $db->cdp_query("
-                UPDATE  cdb_consolidate_packages SET                
-                    
-                    sender_id =:sender_id,
-                    receiver_id =:receiver_id,     
-                     sender_address_id= :sender_address_id,
-                    receiver_address_id = :receiver_address_id,
-                    value_weight=:value_weight,              
-                    sub_total =:sub_total,
-                    total_tax_insurance =:total_tax_insurance,
-                    total_insured_value =:total_insured_value,
-                    total_tax_custom_tariffis =:total_tax_custom_tariffis,                    
-                    total_tax_discount=:total_tax_discount,
-                    total_tax =:total_tax,
-                    total_order =:total_order,                    
-                    order_datetime =:order_datetime,
-                    agency =:agency,
-                    origin_off =:origin_off,
-                    order_package =:order_package,
-                    order_item_category =:order_item_category,
-                    order_courier =:order_courier,
-                    order_service_options =:order_service_options,
-                    order_deli_time =:order_deli_time,                   
-                    order_pay_mode =:order_pay_mode,
-                    status_courier =:status_courier,
-                    driver_id=:driver_id,
-                    seals_package=:seals_package,
-                    total_weight=:total_weight            
-
-                    WHERE consolidate_id=:consolidate_id
-                
-            ");
+        UPDATE cdb_consolidate_packages SET
+            order_pay_mode = :order_pay_mode,
+            status_courier = :status_courier,
+            driver_id = :driver_id,
+            seals_package = :seals_package
+        WHERE consolidate_id = :consolidate_id
+    ");
 
     $db->bind(':consolidate_id',  $_GET['id']);
-    $db->bind(':order_datetime',  trim($_POST["order_date"]));
-    $db->bind(':sender_id',  cdp_sanitize($_POST["sender_id"]));
-    $db->bind(':receiver_id',  cdp_sanitize($_POST["recipient_id"]));
-    $db->bind(':sender_address_id',  cdp_sanitize($_POST["sender_address_id"]));
-    $db->bind(':receiver_address_id',  cdp_sanitize($_POST["recipient_address_id"]));
-    $db->bind(':value_weight',  floatval($_POST["price_lb"]));
-    $db->bind(':sub_total',  floatval($_POST["subtotal_input"]));
-    $db->bind(':total_tax_insurance',  floatval($_POST["insurance_input"]));
-    $db->bind(':total_insured_value', floatval($_POST["insured_input"]));
-    $db->bind(':total_tax_discount',  floatval($_POST["discount_input"]));
-    $db->bind(':total_tax_custom_tariffis',  floatval($_POST["total_impuesto_aduanero_input"]));
-    $db->bind(':total_tax',  floatval($_POST["impuesto_input"]));
-    $db->bind(':total_order',  floatval($_POST["total_envio_input"]));
-    $db->bind(':total_weight',  floatval($_POST["total_weight_input"]));
 
-    $db->bind(':agency',  cdp_sanitize($_POST["agency"]));
-    $db->bind(':origin_off',  cdp_sanitize($_POST["origin_off"]));
-    $db->bind(':order_package',  cdp_sanitize($_POST["order_package"]));
-    $db->bind(':order_item_category',  cdp_sanitize($_POST["order_item_category"]));
-    $db->bind(':order_courier',  cdp_sanitize($_POST["order_courier"]));
-    $db->bind(':order_service_options',  cdp_sanitize($_POST["order_service_options"]));
-    $db->bind(':order_deli_time',  cdp_sanitize($_POST["order_deli_time"]));
     $db->bind(':order_pay_mode',  cdp_sanitize($_POST["order_pay_mode"]));
     $db->bind(':status_courier',  cdp_sanitize($_POST["status_courier"]));
     $db->bind(':driver_id',  cdp_sanitize($_POST["driver_id"]));
@@ -667,7 +622,7 @@ if (isset($_POST["total_item"])) {
     $db->bind(':recipient_zip_code',   $recipient_zip_code);
     $db->bind(':recipient_address',   $recipient_address);
 
-    $db->cdp_execute();
+    // $db->cdp_execute();
 
 
     if (isset($_FILES['filesMultiple']['name']) && count($_FILES['filesMultiple']['name']) > 0) {
@@ -695,11 +650,11 @@ if (isset($_POST["total_item"])) {
     if ($db->cdp_execute()) {
         // Éxito al actualizar en la base de datos
         $consolidate_number = $row_order->c_prefix . $row_order->c_no;
-        $message = "El consolidado número " . $consolidate_number . " se ha actualizado correctamente";
-        $success_script = 'swal("¡Muy bien!", "' . $message . '", "success").then(function() { window.location.href = "consolidate_package_view.php?id=' . $row_order->consolidate_id . '"; });';
+        $message = "Consolidation #" . $consolidate_number . " has been updated successfully";
+        $success_script = 'swal("Success", "' . $message . '", "success").then(function() { window.location.href = "consolidate_package_view.php?id=' . $row_order->consolidate_id . '"; });';
     } else {
         // Error al actualizar en la base de datos
-        $message = "Hubo un error al procesar los datos";
+        $message = "There was an error processing the data";
         $error_script = 'swal("Error", "' . $message . '", "error");';
     }
 
