@@ -6024,7 +6024,7 @@ function cdp_insertCourierPickupFromCustomer($datos)
     $db = new Conexion;
 
     $db->cdp_query("
-    INSERT INTO cdb_add_order 
+    INSERT INTO cdb_add_order
     (
         user_id,
         order_prefix,
@@ -6032,17 +6032,18 @@ function cdp_insertCourierPickupFromCustomer($datos)
         order_date,
         sender_id,
         sender_address_id,
-        receiver_id,                
+        receiver_id,
         receiver_address_id,
         volumetric_percentage,
         order_datetime,
-        order_item_category, 
+        order_item_category,
         order_package,
         status_courier,
         is_pickup,
         due_date,
         status_invoice,
-        order_incomplete                 
+        order_incomplete,
+        recipient_type
         )
     VALUES
         (
@@ -6052,18 +6053,18 @@ function cdp_insertCourierPickupFromCustomer($datos)
         :order_date,
         :sender_id,
         :sender_address_id,
-        :receiver_id,       
-        :receiver_address_id,    
+        :receiver_id,
+        :receiver_address_id,
         :volumetric_percentage,
         :order_datetime,
-        :order_item_category, 
+        :order_item_category,
         :order_package,
         :status_courier,
         :is_pickup,
         :due_date,
         :status_invoice,
-        :order_incomplete         
-
+        :order_incomplete,
+        :recipient_type
         )
 ");
 
@@ -6071,6 +6072,7 @@ function cdp_insertCourierPickupFromCustomer($datos)
     $db->bind(':order_prefix',  $datos['order_prefix']);
     $db->bind(':order_incomplete',  $datos['order_incomplete']);
     $db->bind(':is_pickup',  $datos['is_pickup']);
+    $db->bind(':recipient_type',  $datos['recipient_type'] ?? 'recipient');
     $db->bind(':order_no', $datos["order_no"]);
     $db->bind(':order_datetime',  $datos['order_datetime']);
     $db->bind(':sender_id',  $datos["sender_id"]);
