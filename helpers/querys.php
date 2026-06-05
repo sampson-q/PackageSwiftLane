@@ -5708,6 +5708,10 @@ function cdp_calculateTariffServerSide($sender_id, $sender_address_id, $recipien
 
     $sender_address    = cdp_getSenderAddress($sender_address_id);
     $recipient_address = cdp_getRecipientAddress($recipient_address_id);
+    if (!$recipient_address) {
+        // recipient_type='user': address lives in sender/legacy tables, not cdb_recipients_addresses
+        $recipient_address = cdp_getSenderAddress($recipient_address_id);
+    }
     if (!$sender_address || !$recipient_address) {
         return null;
     }
@@ -6481,6 +6485,26 @@ function cdp_insertNotification($datos)
     return $db->dbh->lastInsertId();
 }
 
+/**
+ * Resolve a country/state/city ID or raw text to a human-readable name.
+ * Falls back to $legacyText when the lookup returns no match.
+ * Returns '' when everything is empty or unresolvable.
+ */
+function cdp_resolveAddressName($idOrText, $lookupFn, $legacyText = '')
+{
+    if ($idOrText === null || $idOrText === '' || $idOrText === 0) {
+        return (string)$legacyText;
+    }
+    $result = $lookupFn($idOrText);
+    if ($result && !empty($result['data']) && !empty($result['data']->name)) {
+        return $result['data']->name;
+    }
+    if ($legacyText !== '') {
+        return (string)$legacyText;
+    }
+    return is_numeric($idOrText) ? '' : (string)$idOrText;
+}
+
 function cdp_getSenderAddress($id)
 {
     $db = new Conexion;
@@ -6497,7 +6521,7 @@ function cdp_getSenderAddress($id)
     }
 
     // Legacy fallback: cdb_users_multiple_addresses (raw text values)
-    $db->cdp_query('SELECT * FROM cdb_users_multiple_addresses WHERE id=:id');
+    $db->cdp_query('SELECT * FROM cdb_users_multiple_addresses WHERE id_addresses=:id');
     $db->bind(':id', $id);
     $db->cdp_execute();
     $legacy = $db->cdp_registro();
@@ -6539,7 +6563,7 @@ function cdp_getSenderAddress($id)
     }
 
     $fallback = new stdClass();
-    $fallback->id_addresses = $legacy->id ?? $id;
+    $fallback->id_addresses = $legacy->id_addresses ?? $id;
     $fallback->user_id = $legacy->user_id ?? null;
     $fallback->address = $legacy->address ?? '';
     $fallback->zip_code = $legacy->zip_code ?? ($legacy->postal ?? '');
