@@ -283,8 +283,7 @@ $numrows     = $db->cdp_rowCount();
                                         <div class="mb-2 mb-md-0">
                                             <label class="custom-control custom-checkbox m-0">
                                                 <?php echo $lang['messagesform112'] ?>
-                                                <input type="checkbox" class="custom-control-input" name="tariff_mode" id="tariff_mode" value="1"
-                                                       <?php if ((int)$row_order->manual_tariff === 1) echo 'checked'; ?>>
+                                                <input type="checkbox" class="custom-control-input" name="tariff_mode" id="tariff_mode" value="1" checked>
                                                 <span class="custom-control-indicator"></span>
                                             </label>
                                             <a href="shipping_tariffs_add.php" class="btn btn-default btn-sm mt-2">
