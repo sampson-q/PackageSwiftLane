@@ -136,7 +136,8 @@ if (empty($errors)) {
         'status_invoice' =>  $status_invoice,
         'is_prealert' =>  $is_prealert,
         'user_id' =>  $_SESSION['userid'],
-        'volumetric_percentage' =>  $meter
+        'volumetric_percentage' =>  $meter,
+        'recipient_type' =>  'sender'
     );
 
     $shipment_id = cdp_insertCustomerPackages($dataShipment);
