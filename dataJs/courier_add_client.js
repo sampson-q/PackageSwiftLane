@@ -496,7 +496,7 @@ function addPackage() {
 
   loadPackages();
   calculateFinalTotal();
-  $("#create_invoice").attr("disabled", true);
+//   $("#create_invoice").attr("disabled", true);
 
   $("#row_id_" + index).animate(
     {
@@ -526,7 +526,7 @@ function deletePackage(index) {
     $("#row_id_" + index).remove();
     loadPackages();
     calculateFinalTotal();
-    $("#create_invoice").attr("disabled", true);
+    // $("#create_invoice").attr("disabled", true);
   });
 }
 
@@ -546,7 +546,7 @@ function changePackage(e) {
     return item;
   });
   calculateFinalTotal();
-  $("#create_invoice").attr("disabled", true);
+//   $("#create_invoice").attr("disabled", true);
 }
 
 function calculateFinalTotal(element = null) {
@@ -2047,13 +2047,13 @@ function getTariffs() {
     success: function (data) {
       if (data.success) {
         $("#table-totals").removeClass("d-none");
-        $("#create_invoice").attr("disabled", false);
+        // $("#create_invoice").attr("disabled", false);
         $("#price_lb").val(data.data.price);
         $("#price_lb_label").html(data.data.price);
         calculateFinalTotal();
       } else {
         $("#table-totals").addClass("d-none");
-        $("#create_invoice").attr("disabled", true);
+        // $("#create_invoice").attr("disabled", true);
         Swal.fire({
           title: "Error!",
           text: data.error,
