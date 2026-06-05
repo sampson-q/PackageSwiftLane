@@ -298,56 +298,26 @@ if (empty($errors)) {
         cdp_deleteCourierAddress($shipment_id);
 
         $sender_address_data = cdp_getSenderAddress(intval($_POST["sender_address_id"]));
-        $sender_country = $sender_address_data->country;
-        $sender_state = $sender_address_data->state;
-        $sender_city = $sender_address_data->city;
-        $sender_zip_code = $sender_address_data->zip_code;
-        $sender_address = $sender_address_data->address;
-
-        $_sender_country = cdp_getCountry($sender_country);
-        $final_sender_country = $_sender_country['data'];
-
-        $_sender_state = cdp_getState($sender_state);
-        $final_sender_state = $_sender_state['data'];
-
-        $sender_city = cdp_getCity($sender_city);
-        $final_sender_city = $sender_city['data'];
-
-
-        $recipient_address_data = cdp_getRecipientAddress(intval($_POST["recipient_address_id"]));
-
-        $recipient_address = $recipient_address_data->address;
-        $recipient_country = $recipient_address_data->country;
-        $recipient_city = $recipient_address_data->city;
-        $recipient_state = $recipient_address_data->state;
-        $recipient_zip_code = $recipient_address_data->zip_code;
-
-        $_recipient_country = cdp_getCountry($recipient_country);
-        $final_recipient_country = $_recipient_country['data'];
-
-        $_recipient_state = cdp_getState($recipient_state);
-        $final_recipient_state = $_recipient_state['data'];
-
-        $recipient_city = cdp_getCity($recipient_city);
-        $final_recipient_city = $recipient_city['data'];
-
-
         $shipment = cdp_getCourier($shipment_id);
+        $acc_recipient_type = cdp_sanitize($_POST['recipient_type'] ?? ($shipment->recipient_type ?? 'recipient'));
+        $acc_recip_addr = ($acc_recipient_type === 'user')
+            ? cdp_getSenderAddress(intval($_POST["recipient_address_id"]))
+            : cdp_getRecipientAddress(intval($_POST["recipient_address_id"]));
 
         // SAVE ADDRESS FOR Shipments
         $dataAddresses = array(
-            'order_id' =>   $shipment_id,
-            'order_track' =>  $shipment->order_prefix . $shipment->order_no,
-            'sender_country' =>   $final_sender_country->name,
-            'sender_state' =>   $final_sender_state->name,
-            'sender_city' =>   $final_sender_city->name,
-            'sender_zip_code' =>   $sender_zip_code,
-            'sender_address' =>   $sender_address,
-            'recipient_country' =>   $final_recipient_country->name,
-            'recipient_state' =>   $final_recipient_state->name,
-            'recipient_city' =>   $final_recipient_city->name,
-            'recipient_zip_code' =>   $recipient_zip_code,
-            'recipient_address' =>   $recipient_address,
+            'order_id'           => $shipment_id,
+            'order_track'        => $shipment->order_prefix . $shipment->order_no,
+            'sender_country'     => $sender_address_data ? cdp_resolveAddressName($sender_address_data->country, 'cdp_getCountry', $sender_address_data->legacy_country ?? '') : '',
+            'sender_state'       => $sender_address_data ? cdp_resolveAddressName($sender_address_data->state,   'cdp_getState',   $sender_address_data->legacy_state   ?? '') : '',
+            'sender_city'        => $sender_address_data ? cdp_resolveAddressName($sender_address_data->city,    'cdp_getCity',    $sender_address_data->legacy_city    ?? '') : '',
+            'sender_zip_code'    => $sender_address_data ? ($sender_address_data->zip_code ?? '') : '',
+            'sender_address'     => $sender_address_data ? ($sender_address_data->address  ?? '') : '',
+            'recipient_country'  => $acc_recip_addr ? cdp_resolveAddressName($acc_recip_addr->country ?? '', 'cdp_getCountry', $acc_recip_addr->legacy_country ?? '') : '',
+            'recipient_state'    => $acc_recip_addr ? cdp_resolveAddressName($acc_recip_addr->state   ?? '', 'cdp_getState',   $acc_recip_addr->legacy_state   ?? '') : '',
+            'recipient_city'     => $acc_recip_addr ? cdp_resolveAddressName($acc_recip_addr->city    ?? '', 'cdp_getCity',    $acc_recip_addr->legacy_city    ?? '') : '',
+            'recipient_zip_code' => $acc_recip_addr ? ($acc_recip_addr->zip_code ?? '') : '',
+            'recipient_address'  => $acc_recip_addr ? ($acc_recip_addr->address  ?? '') : '',
         );
 
         cdp_insertCourierShipmentAddresses($dataAddresses);
