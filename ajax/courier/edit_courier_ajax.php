@@ -345,13 +345,16 @@ if (empty($errors)) {
         // =======================
         cdp_deleteCourierAddress($order_track);
 
-        $sender_address_data  = cdp_getSenderAddress(intval($_POST["sender_address_id"]));
-        $_sender_country      = cdp_getCountry($sender_address_data->country);
-        $final_sender_country = $_sender_country['data'];
-        $_sender_state        = cdp_getState($sender_address_data->state);
-        $final_sender_state   = $_sender_state['data'];
-        $sender_city_obj      = cdp_getCity($sender_address_data->city);
-        $final_sender_city    = $sender_city_obj['data'];
+        $sender_address_data = cdp_getSenderAddress(intval($_POST["sender_address_id"]));
+        $final_sender_country_name = $sender_address_data
+            ? cdp_resolveAddressName($sender_address_data->country, 'cdp_getCountry', $sender_address_data->legacy_country ?? '')
+            : '';
+        $final_sender_state_name = $sender_address_data
+            ? cdp_resolveAddressName($sender_address_data->state, 'cdp_getState', $sender_address_data->legacy_state ?? '')
+            : '';
+        $final_sender_city_name = $sender_address_data
+            ? cdp_resolveAddressName($sender_address_data->city, 'cdp_getCity', $sender_address_data->legacy_city ?? '')
+            : '';
 
         $recipient_type = cdp_sanitize($_POST['recipient_type'] ?? 'recipient');
         if ($recipient_type === 'user') {
@@ -360,26 +363,29 @@ if (empty($errors)) {
             $recipient_address_data = cdp_getRecipientAddress(intval($_POST["recipient_address_id"]));
         }
 
-        $_recipient_country      = cdp_getCountry($recipient_address_data->country);
-        $final_recipient_country = $_recipient_country['data'];
-        $_recipient_state        = cdp_getState($recipient_address_data->state);
-        $final_recipient_state   = $_recipient_state['data'];
-        $recipient_city_obj      = cdp_getCity($recipient_address_data->city);
-        $final_recipient_city    = $recipient_city_obj['data'];
+        $final_recipient_country_name = $recipient_address_data
+            ? cdp_resolveAddressName($recipient_address_data->country, 'cdp_getCountry', $recipient_address_data->legacy_country ?? '')
+            : '';
+        $final_recipient_state_name = $recipient_address_data
+            ? cdp_resolveAddressName($recipient_address_data->state, 'cdp_getState', $recipient_address_data->legacy_state ?? '')
+            : '';
+        $final_recipient_city_name = $recipient_address_data
+            ? cdp_resolveAddressName($recipient_address_data->city, 'cdp_getCity', $recipient_address_data->legacy_city ?? '')
+            : '';
 
         cdp_insertCourierShipmentAddresses(array(
             'order_id'           => $shipment_id,
             'order_track'        => $order_track,
-            'sender_country'     => $final_sender_country->name,
-            'sender_state'       => $final_sender_state->name,
-            'sender_city'        => $final_sender_city->name,
-            'sender_zip_code'    => $sender_address_data->zip_code,
-            'sender_address'     => $sender_address_data->address,
-            'recipient_country'  => $final_recipient_country->name,
-            'recipient_state'    => $final_recipient_state->name,
-            'recipient_city'     => $final_recipient_city->name,
-            'recipient_zip_code' => $recipient_address_data->zip_code,
-            'recipient_address'  => $recipient_address_data->address,
+            'sender_country'     => $final_sender_country_name,
+            'sender_state'       => $final_sender_state_name,
+            'sender_city'        => $final_sender_city_name,
+            'sender_zip_code'    => $sender_address_data ? ($sender_address_data->zip_code ?? '') : '',
+            'sender_address'     => $sender_address_data ? ($sender_address_data->address ?? '') : '',
+            'recipient_country'  => $final_recipient_country_name,
+            'recipient_state'    => $final_recipient_state_name,
+            'recipient_city'     => $final_recipient_city_name,
+            'recipient_zip_code' => $recipient_address_data ? ($recipient_address_data->zip_code ?? '') : '',
+            'recipient_address'  => $recipient_address_data ? ($recipient_address_data->address ?? '') : '',
         ));
 
         // =======================
@@ -599,8 +605,8 @@ if (empty($errors)) {
                     $invoice_status      = $shipment->status_invoice == 1 ? 'Paid' : 'Pending';
                     $order_date_fmt      = date('M d, Y', strtotime($shipment->order_datetime));
                     $recipient_name      = $receiver_data ? ($receiver_data->fname . ' ' . $receiver_data->lname) : 'N/A';
-                    $origin              = $final_sender_city->name . ', ' . $final_sender_state->name;
-                    $destination         = $final_recipient_city->name . ', ' . $final_recipient_state->name;
+                    $origin              = $final_sender_city_name . ', ' . $final_sender_state_name;
+                    $destination         = $final_recipient_city_name . ', ' . $final_recipient_state_name;
 
                     $whatsapp_body = str_replace(
                         ['[CUSTOMER_FULLNAME]','[TRACKING_NUMBER]','[PREV_STATUS]','[CURR_STATUS]','[INV_STATUS]','[ORD_DATE]','[RECIPIENT]','[ORIGIN]','[DESTINATION]','[APP_URL]','[COMPANY_NAME]'],
