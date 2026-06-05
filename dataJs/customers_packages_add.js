@@ -592,15 +592,15 @@ function updateFileLabels() {
   var cameraCount = document.querySelectorAll('.file-thumb[data-type="camera"]').length;
 
   if (uploadCount > 0) {
-    $("#selectItem").html("attached files (" + uploadCount + ")");
+    $("#selectItem").html("Attached Files (" + uploadCount + ")");
   } else {
-    $("#selectItem").html("attached files");
+    $("#selectItem").html("Attached Files");
   }
 
   if (cameraCount > 0) {
-    $("#captureItem").html("camera captures (" + cameraCount + ")");
+    $("#captureItem").html("Camera Captures (" + cameraCount + ")");
   } else {
-    $("#captureItem").html("camera captures");
+    $("#captureItem").html("Camera Captures");
   }
 }
 
@@ -679,7 +679,7 @@ $("#clean_file_button").on("click", function () {
   $("#filesMultiple").val("");
   $("#filesCapture").val("");
   $("#selectItem").html("Attach files");
-  $("#captureItem").html("Camera captures");
+  $("#captureItem").html("Camera Captures");
   $("#clean_files").addClass("hide");
   $("#image_preview").html("");
   deleted_file_ids = [];
@@ -698,7 +698,7 @@ $("input[type=file]").on("change", function () {
 
   var count_files = $("#total_item_files").val();
 
-  $("#selectItem").html("attached files (" + count_files + ")");
+  $("#selectItem").html("Attached Files (" + count_files + ")");
 });
 
 // ========== CAMERA FEATURE INTEGRATION ==========
