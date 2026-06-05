@@ -57,6 +57,12 @@ $(function () {
   cdp_load_states("_modal_recipient_address");
   cdp_load_cities("_modal_recipient_address");
 
+  // Restore recipient_type from server-rendered hidden field before any select2 init
+  var _prefillType = $("#prefill_recipient_type").val();
+  if (_prefillType) {
+    window.recipient_type = _prefillType;
+  }
+
   // Init Select2 (mirror add: sender + sender address + recipient + recipient address)
   cdp_select2_init_sender();
   cdp_select2_init_sender_address();
@@ -295,12 +301,12 @@ function updateFileLabels() {
 
   var totalAttach = uploadCount + existingCount;
 
-  if (totalAttach > 0) $("#selectItem").html("attached files (" + totalAttach + ")");
-  else $("#selectItem").html("attached files");
+  if (totalAttach > 0) $("#selectItem").html("Attached Files (" + totalAttach + ")");
+  else $("#selectItem").html("Attached Files");
 
   if ($("#captureItem").length) {
-    if (cameraCount > 0) $("#captureItem").html("camera captures (" + cameraCount + ")");
-    else $("#captureItem").html("camera captures");
+    if (cameraCount > 0) $("#captureItem").html("Camera Captures (" + cameraCount + ")");
+    else $("#captureItem").html("Camera Captures");
   }
 }
 
@@ -335,7 +341,7 @@ $("#clean_file_button").on("click", function () {
   $("#filesCapture").val("");
 
   $("#selectItem").html("Attach files");
-  if ($("#captureItem").length) $("#captureItem").html("camera captures");
+  if ($("#captureItem").length) $("#captureItem").html("Camera Captures");
 
   $("#clean_files").addClass("hide");
   $("#image_preview").html("");
@@ -364,7 +370,7 @@ $("input[type=file]").on("change", function () {
   if (count_files > 0) $("#clean_files").removeClass("hide");
   else $("#clean_files").addClass("hide");
 
-  $("#selectItem").html("attached files (" + count_files + ")");
+  $("#selectItem").html("Attached Files (" + count_files + ")");
 
   // update preview thumbnails
   cdp_preview_images();
@@ -848,7 +854,7 @@ $("#invoice_form").on("submit", function (event) {
     }
   }
 
-  // Camera captures
+  // Camera Captures
   appendAllFilesToFormData(data);
 
   $.ajax({
@@ -1082,6 +1088,12 @@ function prefillSenderRecipientFromHiddenInputs() {
   var senderAddrId = $("#prefill_sender_address_id").val();
   var recipId = $("#prefill_recipient_id").val();
   var recipAddrId = $("#prefill_recipient_address_id").val();
+
+  // Ensure recipient_type is set correctly before address select2 is initialized
+  var savedType = $("#prefill_recipient_type").val();
+  if (savedType) {
+    window.recipient_type = savedType;
+  }
 
   // ensure dependent buttons are enabled when ids exist
   if (senderId && parseInt(senderId, 10) > 0) {
