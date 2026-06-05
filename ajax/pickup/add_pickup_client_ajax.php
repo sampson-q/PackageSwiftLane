@@ -108,6 +108,7 @@ if (empty($errors)) {
         'recipient_id' =>  cdp_sanitize(intval($_POST["recipient_id"])),
         'sender_address_id' =>  cdp_sanitize(intval($_POST["sender_address_id"])),
         'recipient_address_id' =>  cdp_sanitize(intval($_POST["recipient_address_id"])),
+        'recipient_type' =>  cdp_sanitize($_POST['recipient_type'] ?? 'recipient'),
         'order_date' =>  date("Y-m-d H:i:s"),
         'order_package' =>  cdp_sanitize(intval($_POST["order_package"])),
         'order_item_category' =>  cdp_sanitize(intval($_POST["order_item_category"])),
