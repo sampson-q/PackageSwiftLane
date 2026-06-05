@@ -49,8 +49,8 @@ $(function () {
 
   cdp_select2_init_sender();
   cdp_select2_init_sender_address();
-  cdp_select2_init_recipient_address();
   cdp_select2_init_recipient();
+  cdp_select2_init_recipient_address();
 });
 
 function cdp_load_countries(modal) {
@@ -896,6 +896,7 @@ $("#invoice_form").on("submit", function (event) {
     data.append("filesMultiple[]", document.getElementById("filesMultiple").files[i]);
   }
 
+  data.append('recipient_type', window.recipient_type || 'recipient');
   data.append('_csrf_token', $('input[name="_csrf_token"]').val());
 
   $.ajax({
@@ -970,59 +971,18 @@ function isNumberKey(evt, element) {
 }
 
 function cdp_select2_init_sender() {
-  $("#sender_id")
-    .select2({
-      ajax: {
-        url: "ajax/select2_sender.php",
-        dataType: "json",
-
-        delay: 250,
-        data: function (params) {
-          return {
-            q: params.term, // search term
-          };
-        },
-        processResults: function (data) {
-          return {
-            results: data,
-          };
-        },
-        cache: true,
-      },
-
-      minimumInputLength: 2,
-      placeholder: search_sender,
-      allowClear: true,
-    })
-    .on("change", function (e) {
-      var sender_id = $("#sender_id").val();
-      $("#sender_address_id").attr("disabled", true);
-      $("#recipient_id").attr("disabled", true);
-
-      $("#recipient_address_id").attr("disabled", true);
-      $("#add_address_sender").attr("disabled", true);
-      $("#add_recipient").attr("disabled", true);
-      $("#add_address_recipient").attr("disabled", true);
-
-      $("#recipient_id").val(null);
-      $("#sender_address_id").val(null);
-      $("#recipient_address_id").val(null);
-      $("#table-totals").addClass("d-none");
-
-      if (sender_id != null) {
-        $("#add_address_sender").attr("disabled", false);
-        $("#sender_address_id").attr("disabled", false);
-        $("#recipient_id").attr("disabled", false);
-        $("#add_recipient").attr("disabled", false);
-      }
-      cdp_select2_init_sender_address();
-      cdp_select2_init_recipient_address();
-      cdp_select2_init_recipient();
-    });
+  // Sender is pre-set in this form — enable dependent elements directly
+  var sender_id = $("#sender_id_temp").val() || $("#sender_id").val();
+  if (sender_id) {
+    $("#sender_address_id").prop("disabled", false);
+    $("#add_address_sender").prop("disabled", false);
+    $("#recipient_id").prop("disabled", false);
+    $("#add_recipient").prop("disabled", false);
+  }
 }
 
 function cdp_select2_init_sender_address() {
-  var sender_id = $("#sender_id").val();
+  var sender_id = $("#sender_id_temp").val() || $("#sender_id").val();
   $("#sender_address_id")
     .select2({
       ajax: {
@@ -1098,83 +1058,67 @@ function cdp_formatAdressSelection(repo) {
   return repo.text;
 }
 
-// Track the selected recipient type ('user' or 'recipient')
-var selectedRecipientType = 'recipient';
-
 function cdp_select2_init_recipient() {
-  var sender_id = $("#sender_id").val();
+  var sender_id = $("#sender_id_temp").val() || $("#sender_id").val();
 
   $("#recipient_id")
     .select2({
       ajax: {
         url: "ajax/select2_recipient.php?id=" + sender_id,
         dataType: "json",
-
         delay: 250,
         data: function (params) {
-          return {
-            q: params.term, // search term
-          };
+          return { q: params.term };
         },
         processResults: function (data) {
-          return {
-            results: data,
-          };
+          return { results: data };
         },
-        cache: true,
+        cache: false,
       },
-      // minimumInputLength: 2,
       placeholder: search_recipient,
       allowClear: true,
     })
-    .on("change", function (e) {
-      var recipient_id = $("#recipient_id").val();
-      $("#add_address_recipient").attr("disabled", true);
-      $("#recipient_address_id").attr("disabled", true);
-      $("#recipient_address_id").val(null);
-      $("#table-totals").addClass("d-none");
+    .on("select2:select", function (e) {
+      var data = e.params.data;
+      window.recipient_type = data.type || 'recipient';
 
-      // Capture the type from the selected option's data
-      var selectedData = $("#recipient_id").select2("data");
-      selectedRecipientType = selectedData && selectedData[0] && selectedData[0].type ? selectedData[0].type : "recipient";
+      $("#recipient_address_id").val(null).trigger("change").prop("disabled", true);
+      $("#add_address_recipient").prop("disabled", true);
 
-      if (recipient_id != null) {
-        $("#recipient_address_id").attr("disabled", false);
-        $("#add_address_recipient").attr("disabled", false);
+      if ($(this).val()) {
+        $("#recipient_address_id").prop("disabled", false);
+        $("#add_address_recipient").prop("disabled", false);
       }
-      cdp_select2_init_recipient_address();
+    })
+    .on("select2:unselect", function () {
+      window.recipient_type = 'recipient';
+      $("#recipient_address_id").val(null).trigger("change").prop("disabled", true);
+      $("#add_address_recipient").prop("disabled", true);
     });
 }
 
 function cdp_select2_init_recipient_address() {
-  var recipient_id = $("#recipient_id").val();
-
   $("#recipient_address_id")
     .select2({
       ajax: {
-        url: "ajax/select2_recipient_addresses.php?id=" + recipient_id + "&type=" + selectedRecipientType,
+        url: "ajax/select2_recipient_addresses.php",
         dataType: "json",
         delay: 250,
         data: function (params) {
           return {
-            q: params.term, // search term
+            id: $("#recipient_id").val(),
+            type: window.recipient_type || 'recipient',
+            q: params.term,
           };
         },
         processResults: function (data) {
-          return {
-            results: data,
-          };
+          return { results: data };
         },
-        cache: true,
+        cache: false,
       },
-
-      escapeMarkup: function (markup) {
-        return markup;
-      }, // let our custom formatter work
-      // minimumInputLength: 1,
-      templateResult: cdp_formatAdress, // omitted for brevity, see the source of this page
-      templateSelection: cdp_formatAdressSelection, // omitted for brevity, see the source of this page
-      // minimumInputLength: 2,
+      escapeMarkup: function (markup) { return markup; },
+      templateResult: cdp_formatAdress,
+      templateSelection: cdp_formatAdressSelection,
       placeholder: search_recipient_address,
       allowClear: true,
     })
@@ -2005,6 +1949,7 @@ function getTariffs() {
     sender_address: sender_address_id,
     recipient_address: recipient_address_id,
     recipient_id: recipient_id,
+    recipient_type: window.recipient_type || 'recipient',
   };
 
   $.ajax({
