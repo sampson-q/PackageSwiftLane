@@ -38,7 +38,7 @@ $(function () {
       $("#calculate_invoice").prop("disabled", true);
     } else {
       $("#table-totals").addClass("d-none");
-      $("#create_invoice").prop("disabled", true);
+    //   $("#create_invoice").prop("disabled", true);
       $("#calculate_invoice").prop("disabled", false);
     }
     calculateFinalTotal();
