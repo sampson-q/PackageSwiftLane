@@ -175,6 +175,7 @@ if (!empty($files_order)) {
                 <input type="hidden" id="prefill_sender_address_id" value="<?php echo (int)$row_order->sender_address_id; ?>">
                 <input type="hidden" id="prefill_recipient_id" value="<?php echo (int)($row_order->receiver_id ?? 0); ?>">
                 <input type="hidden" id="prefill_recipient_address_id" value="<?php echo (int)($row_order->receiver_address_id ?? 0); ?>">
+                <input type="hidden" id="prefill_recipient_type" value="<?php echo htmlspecialchars($row_order->recipient_type ?? 'recipient', ENT_QUOTES, 'UTF-8'); ?>">
 
                 <!-- Existing DB files deletion list -->
                 <input type="hidden" name="deleted_db_file_ids" id="deleted_db_file_ids" value="">
