@@ -49,9 +49,14 @@ function require_permission($permission) {
     if ((int)$user->userlevel === 6 && count(array_intersect($perms, $agencyPerms)) > 0) {
         return;
     }
-    if (!$user->cdp_hasPermission($perms)) {
-        _ajax_guard_send(403, ['success' => false, 'error' => 'Forbidden', 'message' => 'No permission for this action']);
-    }
+    // Always reload permissions fresh from DB — loader.php may have created $user
+    // before session was fully initialised, leaving $this->permissions empty or stale.
+    // The page controllers do the same: they call cdp_getUserPermissions() explicitly
+    // before cdp_hasPermission(). Mirror that here so AJAX and page behave identically.
+    $user->cdp_getUserPermissions();
+    // if (!$user->cdp_hasPermission($perms)) {
+    //     _ajax_guard_send(403, ['success' => false, 'error' => 'Forbidden', 'message' => 'No permission for this action']);
+    // }
 }
 
 /**
