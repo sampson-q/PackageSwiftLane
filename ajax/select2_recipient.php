@@ -46,25 +46,26 @@ if ($ctx['is_restricted']) {
 /*
 ------------------------------------
 1. DEFAULT RECIPIENT (THE SENDER)
+   No agency/userlevel filter — sender is uniquely identified by id.
 ------------------------------------
 */
 
-$sql = "SELECT id,fname,lname FROM cdb_users
+$sql = "SELECT id,fname,lname,email FROM cdb_users
         WHERE id = $sender_id
-        AND userlevel='1'
         AND (
             fname LIKE '%$search%' OR
             lname LIKE '%$search%' OR
             email LIKE '%$search%' OR
             phone LIKE '%$search%'
-        )
-        $extraWhere";
+        )";
 
 $db->cdp_query($sql);
 $db->cdp_execute();
 $users = $db->cdp_registros();
 
+$sender_email = '';
 foreach ($users as $row) {
+    $sender_email = $row->email ?? '';
     $data[] = [
         'id' => $row->id,
         'text' => $row->fname . " " . $row->lname,
@@ -76,11 +77,16 @@ foreach ($users as $row) {
 /*
 ------------------------------------
 2. EXTRA RECIPIENTS
+   Exclude any recipient whose email matches the sender (prevents duplicates
+   when the sender was also added as their own recipient in cdb_recipients).
 ------------------------------------
 */
 
+$excludeEmail = $sender_email !== '' ? " AND email != '" . addslashes($sender_email) . "'" : '';
+
 $sql = "SELECT * FROM cdb_recipients
         WHERE sender_id = $sender_id
+        $excludeEmail
         AND (
             fname LIKE '%$search%' OR
             lname LIKE '%$search%' OR

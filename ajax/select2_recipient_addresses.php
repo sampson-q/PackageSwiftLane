@@ -57,7 +57,7 @@ if ($type === "user" && !$datas) {
             'zip_code' => $key->zip_code ?? ($key->postal ?? '')
         ];
     }
-} else {
+} elseif ($datas) {
     foreach ($datas as $key) {
 
         $db->cdp_query("SELECT name FROM cdb_countries WHERE id='$key->country'");
