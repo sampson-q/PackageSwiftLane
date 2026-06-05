@@ -715,13 +715,13 @@ $order_prefix = $settings->prefix;
                                                     <div class="text-right">
                                                         <input type="hidden" name="total_item_files" id="total_item_files" value="0" />
                                                         <input type="hidden" name="deleted_file_ids" id="deleted_file_ids" />
-                                                        <button type="button" name="calculate_invoice" id="calculate_invoice" class="btn btn-info">
+                                                        <!-- <button type="button" name="calculate_invoice" id="calculate_invoice" class="btn btn-info">
                                                             <i class="fas fa-calculator"></i>
                                                             <span class="ml-1">
                                                                 <?php echo $lang['leftorder17714'] ?>
                                                             </span>
-                                                        </button>
-                                                        <button type="submit" name="create_invoice" id="create_invoice" class="btn btn-danger" disabled>
+                                                        </button> -->
+                                                        <button type="submit" name="create_invoice" id="create_invoice" class="btn btn-danger">
                                                             <i class="fas fa-save"></i>
                                                             <span class="ml-1">
                                                                 <?php echo $lang['left1103'] ?>
