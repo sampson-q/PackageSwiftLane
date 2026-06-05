@@ -180,6 +180,7 @@ $address_order = $db->cdp_registro();
             </div>
 
             <form method="post" id="invoice_form" name="invoice_form">
+                <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
                 <div class="container-fluid">
                     <div class="row">
@@ -315,22 +316,9 @@ $address_order = $db->cdp_registro();
                                     <div class="resultados_ajax_add_user_modal_recipient"></div>
 
 
-                                    <br>
-                                    <?php
-                                    if ($core->active_whatsapp == 1) {
-                                    ?>
-                                        <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
-                                            <input type="checkbox" class="custom-control-input" name="notify_whatsapp_receiver" id="notify_whatsapp_receiver" value="1">
-                                            <b>
-                                                <?php echo $lang['leftorder14443']; ?>
-
-                                                <i class="mdi mdi-whatsapp" style="font-size: 22px; color:#07bc4c;"></i>
-                                            </b>
-                                            <span class="custom-control-indicator"></span>
-                                        </label>
-                                    <?php } ?>
+                                    <br><br><br>
+                                    
                                     <div class="row">
-
                                         <div class="col-md-12">
                                             <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['recipient_search_title'] ?></label>
 
@@ -645,7 +633,7 @@ $address_order = $db->cdp_registro();
                                         <div class="col-sm-12 col-md-2">
 
                                             <label class="custom-control custom-checkbox">
-                                                <?php echo $lang['messagesform112'] ?> <input type="checkbox" class="custom-control-input" name="tariff_mode" id="tariff_mode" value="1">
+                                                <?php echo $lang['messagesform112'] ?> <input type="checkbox" checked class="custom-control-input" name="tariff_mode" id="tariff_mode" value="1">
                                                 <span class="custom-control-indicator"></span>
                                             </label>
                                         </div>
@@ -897,10 +885,10 @@ $address_order = $db->cdp_registro();
                                                     <div class="text-right">
                                                         <input type="hidden" name="total_item_files" id="total_item_files" value="0" />
                                                         <input type="hidden" name="deleted_file_ids" id="deleted_file_ids" />
-                                                        <button type="button" name="calculate_invoice" id="calculate_invoice" class="btn btn-info">
+                                                        <!-- <button type="button" name="calculate_invoice" id="calculate_invoice" class="btn btn-info">
                                                             <i class="fas fa-calculator"></i>
                                                             <span class="ml-1"> <?php echo $lang['leftorder17714'] ?></span>
-                                                        </button>
+                                                        </button> -->
                                                         <button type="submit" name="create_invoice" id="create_invoice" class="btn btn-danger">
                                                             <i class="fas fa-save"></i>
                                                             <span class="ml-1"><?php echo $lang['left1103'] ?></span>
