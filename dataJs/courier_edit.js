@@ -550,34 +550,28 @@ function cdp_select2_init_recipient() {
   }).on("select2:select", function (e) {
     var d = e.params.data;
     window.recipient_type = d.type || 'recipient';
-    $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
+    $("#recipient_address_id").val(null).trigger("change").prop("disabled", true);
     $("#add_address_recipient").prop("disabled", true);
     if ($(this).val()) {
       $("#recipient_address_id").prop("disabled", false);
       $("#add_address_recipient").prop("disabled", false);
     }
-    cdp_select2_init_recipient_address();
     scheduleAutoFetch();
-  }).on("change", function () {
-    if (!$(this).val()) {
-      window.recipient_type = 'recipient';
-      $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
-      $("#add_address_recipient").prop("disabled", true);
-      cdp_select2_init_recipient_address();
-      scheduleAutoFetch();
-    }
+  }).on("select2:unselect", function () {
+    window.recipient_type = 'recipient';
+    $("#recipient_address_id").val(null).trigger("change").prop("disabled", true);
+    $("#add_address_recipient").prop("disabled", true);
+    scheduleAutoFetch();
   });
 }
 
 function cdp_select2_init_recipient_address() {
-  var recipient_id   = $("#recipient_id").val();
-  var recipient_type = window.recipient_type || 'recipient';
   $("#recipient_address_id").select2({
     ajax: {
       url: "ajax/select2_recipient_addresses.php",
       dataType: "json", delay: 250,
-      data: function (p) { return { id: recipient_id, type: recipient_type, q: p.term }; },
-      processResults: function (d) { return { results: d }; }, cache: true
+      data: function (p) { return { id: $("#recipient_id").val(), type: window.recipient_type || 'recipient', q: p.term }; },
+      processResults: function (d) { return { results: d }; }, cache: false
     },
     escapeMarkup: function (m) { return m; },
     templateResult: cdp_formatAdress, templateSelection: cdp_formatAdressSelection,
