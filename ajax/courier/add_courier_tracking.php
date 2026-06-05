@@ -19,7 +19,7 @@
 // *                                                                       *
 // *************************************************************************
 
-// ini_set('display_errors', 0);
+ini_set('display_errors', 0);
 
 
 require_once("../../loader.php");
@@ -100,19 +100,21 @@ if (empty($errors)) {
 
     if ($shipment) {
 
-        $update = updateCourierStatusFromTracking($status, $shipment_id);
         $order_track = $shipment->order_prefix . $shipment->order_no;
 
+        $update = updateCourierStatusFromTracking($status, $shipment_id);
+
         $dataTrack = array(
-            'user_id' =>  $_SESSION['userid'],
-            'order_track' =>  $order_track,
-            't_date' => $date,
-            'status_courier' =>  cdp_sanitize(intval($status)),
-            'comments' =>   cdp_sanitize($_POST['comments']),
-            'office' => cdp_sanitize(intval($_POST["office"]))
+            'user_id'        => $_SESSION['userid'],
+            'order_id'       => $shipment_id,
+            'order_track'    => $order_track,
+            't_date'         => $date,
+            'status_courier' => cdp_sanitize(intval($status)),
+            'comments'       => cdp_sanitize($_POST['comments'] ?? ''),
+            'office'         => cdp_sanitize(intval($_POST["office"]))
         );
 
-        insertCourierShipmentTrack($dataTrack);
+        cdp_insertCourierShipmentTrack($dataTrack);
 
         $dataHistory = array(
             'user_id' =>  $_SESSION['userid'],
@@ -155,7 +157,9 @@ if (empty($errors)) {
 
 
         $sender_data = cdp_getSenderCourier(intval($shipment->sender_id));
-        $receiver_data = cdp_getRecipientCourier(intval($shipment->receiver_id));
+        $receiver_data = ($shipment->recipient_type === 'user')
+            ? cdp_getSenderCourier(intval($shipment->receiver_id))
+            : cdp_getRecipientCourier(intval($shipment->receiver_id));
 
         $fullshipment = $shipment->order_prefix . $shipment->order_no;
         $date_ship   = date("Y-m-d H:i:s a");
@@ -271,13 +275,16 @@ if (empty($errors)) {
         if (isset($_POST['notify_whatsapp_sender']) && intval($_POST['notify_whatsapp_sender']) === 1) {
             if ($sender_data && !empty($sender_data->phone)) {
                 try {
+                    $wa_location   = cdp_sanitize($_POST['country'] ?? '') . ' | ' . cdp_sanitize($_POST['address'] ?? '');
+                    $wa_comment    = cdp_sanitize($_POST['comments'] ?? '');
+                    $wa_new_status = $status_data ? $status_data->mod_style : '';
+
                     $whatsapp_body_sender =
                         "Hello {$sender_data->fname} {$sender_data->lname},\n\n" .
                         "There is a tracking update on your shipment *{$fullshipment}*.\n\n" .
-                        "*What changed:*\n" .
-                        "- *Status:* _{$old_status_label}_ -> *{$new_status_label}*\n" .
-                        "- *Location:* {$new_location}\n" .
-                        (!empty($new_comment) ? "- *Note:* {$new_comment}\n" : '') .
+                        "- *Status:* *{$wa_new_status}*\n" .
+                        "- *Location:* {$wa_location}\n" .
+                        (!empty($wa_comment) ? "- *Note:* {$wa_comment}\n" : '') .
                         "\nTrack your shipment at any time:\n" .
                         $app_url . "\n\n" .
                         "Thank you, *{$msnames}* Team";
