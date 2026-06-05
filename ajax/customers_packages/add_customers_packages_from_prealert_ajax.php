@@ -560,36 +560,21 @@ if (empty($errors)) {
         }
 
         $sender_address_data = cdp_getSenderAddress(intval($_POST["sender_address_id"]));
-        $sender_country = $sender_address_data->country;
-        $sender_state = $sender_address_data->state;
-        $sender_city = $sender_address_data->city;
-        $sender_zip_code = $sender_address_data->zip_code;
-        $sender_address = $sender_address_data->address;
-
-        $_sender_country = cdp_getCountry($sender_country);
-        $final_sender_country = $_sender_country['data'];
-
-        $_sender_state = cdp_getState($sender_state);
-        $final_sender_state = $_sender_state['data'];
-
-        $sender_city = cdp_getCity($sender_city);
-        $final_sender_city = $sender_city['data'];
-
 
         // SAVE ADDRESS FOR Shipments
         $dataAddresses = array(
-            'order_id' =>   $shipment_id,
-            'order_track' =>   $order_track,
-            'sender_country' =>   $final_sender_country->name,
-            'sender_state' =>   $final_sender_state->name,
-            'sender_city' =>   $final_sender_city->name,
-            'sender_zip_code' =>   $sender_zip_code,
-            'sender_address' =>   $sender_address,
-            'recipient_country' =>   '',
-            'recipient_state' =>   '',
-            'recipient_city' =>  '',
-            'recipient_zip_code' =>   '',
-            'recipient_address' =>   '',
+            'order_id'           => $shipment_id,
+            'order_track'        => $order_track,
+            'sender_country'     => $sender_address_data ? cdp_resolveAddressName($sender_address_data->country, 'cdp_getCountry', $sender_address_data->legacy_country ?? '') : '',
+            'sender_state'       => $sender_address_data ? cdp_resolveAddressName($sender_address_data->state,   'cdp_getState',   $sender_address_data->legacy_state   ?? '') : '',
+            'sender_city'        => $sender_address_data ? cdp_resolveAddressName($sender_address_data->city,    'cdp_getCity',    $sender_address_data->legacy_city    ?? '') : '',
+            'sender_zip_code'    => $sender_address_data ? ($sender_address_data->zip_code ?? '') : '',
+            'sender_address'     => $sender_address_data ? ($sender_address_data->address  ?? '') : '',
+            'recipient_country'  => '',
+            'recipient_state'    => '',
+            'recipient_city'     => '',
+            'recipient_zip_code' => '',
+            'recipient_address'  => '',
         );
 
         cdp_insertCourierShipmentAddresses($dataAddresses);
