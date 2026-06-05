@@ -35,11 +35,11 @@ $(function () {
   $("#tariff_mode").click(function () {
     if ($(this).is(":checked")) {
       // $("#table-totals").removeClass("d-none");
-      $("#create_invoice").prop("disabled", false);
+    //   $("#create_invoice").prop("disabled", false);
       $("#calculate_invoice").prop("disabled", true);
     } else {
       $("#table-totals").addClass("d-none");
-      $("#create_invoice").prop("disabled", true);
+    //   $("#create_invoice").prop("disabled", true);
       $("#calculate_invoice").prop("disabled", false);
     }
     calculateFinalTotal();
@@ -976,6 +976,8 @@ $("#invoice_form").on("submit", function (event) {
   for (var i = 0; i < total_file; i++) {
     data.append("filesMultiple[]", document.getElementById("filesMultiple").files[i]);
   }
+
+  data.append('_csrf_token', $('input[name="_csrf_token"]').val());
 
   $.ajax({
     type: "POST",
