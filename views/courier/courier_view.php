@@ -877,7 +877,6 @@ if ($row_order->status_invoice == 1) {
                 <?php if ($user->cdp_hasPermission('view_users_history_courier')) { ?>
                     <?php
 
-                        $db->cdp_query("SELECT * FROM cdb_order_user_history where order_id='" . $_GET['id'] . "' ORDER BY history_id");
                         $db->cdp_query("SELECT * FROM cdb_order_user_history where order_track='" . $row_order->order_prefix . $row_order->order_no . "' ORDER BY history_id");
 
                         $order_user_history = $db->cdp_registros();
