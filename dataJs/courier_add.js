@@ -361,38 +361,26 @@ function cdp_select2_init_recipient() {
         })
         .on("select2:select", function (e) {
             var data = e.params.data;
-
             window.recipient_type = data.type || 'recipient';
 
-            $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
+            $("#recipient_address_id").val(null).trigger("change").prop("disabled", true);
             $("#add_address_recipient").prop("disabled", true);
 
             if ($(this).val()) {
                 $("#recipient_address_id").prop("disabled", false);
                 $("#add_address_recipient").prop("disabled", false);
             }
-
-            // re-init with correct type
-            cdp_select2_init_recipient_address();
             scheduleAutoFetch();
         })
-        .on("change", function () {
-            if (!$(this).val()) {
-                window.recipient_type = 'recipient'; // reset on clear
-                $("#recipient_address_id").prop("disabled", true).val(null).trigger("change");
-                $("#add_address_recipient").prop("disabled", true);
-                cdp_select2_init_recipient_address();
-                scheduleAutoFetch();
-            }
+        .on("select2:unselect", function () {
+            window.recipient_type = 'recipient';
+            $("#recipient_address_id").val(null).trigger("change").prop("disabled", true);
+            $("#add_address_recipient").prop("disabled", true);
+            scheduleAutoFetch();
         })
 }
 
 function cdp_select2_init_recipient_address() {
-    var recipient_id = $("#recipient_id").val();
-
-    // get type (default fallback = recipient)
-    var recipient_type = window.recipient_type || 'recipient';
-
     $("#recipient_address_id")
         .select2({
             ajax: {
@@ -401,13 +389,13 @@ function cdp_select2_init_recipient_address() {
                 delay: 250,
                 data: function (params) {
                     return {
-                        id: recipient_id,
-                        type: recipient_type,
+                        id: $("#recipient_id").val(),
+                        type: window.recipient_type || 'recipient',
                         q: params.term
                     };
                 },
                 processResults: function (data) { return { results: data }; },
-                cache: true
+                cache: false
             },
             escapeMarkup: function (m) { return m; },
             templateResult: cdp_formatAdress,
