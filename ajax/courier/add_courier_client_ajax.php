@@ -25,7 +25,7 @@ ini_set('display_errors', 0);
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
-require_permission('view_shipment_list');
+require_permission('add_shipment');
 
 require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
