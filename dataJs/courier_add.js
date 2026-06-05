@@ -70,7 +70,7 @@ let autoFetchTimer = null;
     const files = this.files || [];
     $("#total_item_files").val(files.length);
     if (files.length > 0) $("#clean_files").removeClass("hide"); else $("#clean_files").addClass("hide");
-    var countLabel = typeof translate_attached_files_count !== "undefined" ? translate_attached_files_count : "attached files";
+    var countLabel = typeof translate_attached_files_count !== "undefined" ? translate_attached_files_count : "Attached Files";
     $("#selectItem").html(countLabel + " (" + files.length + ")");
     if (cdp_validateZiseFiles()) return;
     cdp_preview_images();
@@ -990,7 +990,7 @@ $("#invoice_form").on("submit", function (event) {
     }
   }
 
-    // camera captures
+    // Camera Captures
     var captureInput = document.getElementById("filesCapture");
     if (captureInput && captureInput.files) {
         for (var k = 0; k < captureInput.files.length; k++) {
@@ -1538,15 +1538,15 @@ function updateFileLabels() {
   var cameraCount = document.querySelectorAll('.file-thumb[data-type="camera"]').length;
 
   if (uploadCount > 0) {
-    $("#selectItem").html("attached files (" + uploadCount + ")");
+    $("#selectItem").html("Attached Files (" + uploadCount + ")");
   } else {
-    $("#selectItem").html("attached files");
+    $("#selectItem").html("Attached Files");
   }
 
   if (cameraCount > 0) {
-    $("#captureItem").html("camera captures (" + cameraCount + ")");
+    $("#captureItem").html("Camera Captures (" + cameraCount + ")");
   } else {
-    $("#captureItem").html("camera captures");
+    $("#captureItem").html("Camera Captures");
   }
 }
 
