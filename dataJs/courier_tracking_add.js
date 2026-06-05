@@ -40,12 +40,12 @@ $("#invoice_form").on("submit", function (event) {
 
 function cdp_showError(errors) {
   var html_code = "<ul class='error'>";
-  for (var i = 0; i < errors.length; i++) {
+  for (var key in errors) {
     html_code += '<li class="text-left">';
-    html_code += errors[i];
+    html_code += errors[key];
     html_code += "</li>";
   }
-  html_code += "</ul>"; // Corrected the closing tag
+  html_code += "</ul>";
 
   Swal.fire({
     title: message_error,
