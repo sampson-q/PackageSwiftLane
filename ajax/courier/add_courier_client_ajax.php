@@ -82,14 +82,14 @@ if (empty($_POST['order_courier']))
 if (empty($_POST['order_service_options']))
     $errors['order_service_options'] = $lang['validate_field_ajax154'];
 
-if (empty($_POST['order_deli_time']))
-    $errors['order_deli_time'] = $lang['validate_field_ajax155'];
+// if (empty($_POST['order_deli_time']))
+//     $errors['order_deli_time'] = $lang['validate_field_ajax155'];
 
 if (empty($_POST['order_pay_mode']))
     $errors['order_pay_mode'] = $lang['validate_field_ajax156'];
 
-if (empty($_POST['status_courier']))
-    $errors['status_courier'] = $lang['validate_field_ajax157'];
+// if (empty($_POST['status_courier']))
+//     $errors['status_courier'] = $lang['validate_field_ajax157'];
 
 if (empty($_POST['order_payment_method']))
     $errors['order_payment_method'] = $lang['validate_field_ajax158'];
