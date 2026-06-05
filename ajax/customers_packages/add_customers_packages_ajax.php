@@ -474,80 +474,57 @@ if (empty($errors)) {
         cdp_insertNotificationsUsers($notification_id, intval($_POST['sender_id']));
 
         $sender_address_data = cdp_getSenderAddress(intval($_POST["sender_address_id"]));
-        $sender_country = $sender_address_data->country;
-        $sender_state = $sender_address_data->state;
-        $sender_city = $sender_address_data->city;
-        $sender_zip_code = $sender_address_data->zip_code;
-        $sender_address = $sender_address_data->address;
-
-        $_sender_country = cdp_getCountry($sender_country);
-        $final_sender_country = $_sender_country['data'];
-
-        $_sender_state = cdp_getState($sender_state);
-        $final_sender_state = $_sender_state['data'];
-
-        $sender_city = cdp_getCity($sender_city);
-        $final_sender_city = $sender_city['data'];
+        $sender_zip_code = $sender_address_data ? ($sender_address_data->zip_code ?? '') : '';
+        $sender_address  = $sender_address_data ? ($sender_address_data->address  ?? '') : '';
+        $final_sender_country_name = $sender_address_data
+            ? cdp_resolveAddressName($sender_address_data->country, 'cdp_getCountry', $sender_address_data->legacy_country ?? '')
+            : '';
+        $final_sender_state_name = $sender_address_data
+            ? cdp_resolveAddressName($sender_address_data->state, 'cdp_getState', $sender_address_data->legacy_state ?? '')
+            : '';
+        $final_sender_city_name = $sender_address_data
+            ? cdp_resolveAddressName($sender_address_data->city, 'cdp_getCity', $sender_address_data->legacy_city ?? '')
+            : '';
 
         // Recipient address lookup with recipient_type discriminator
-        $recipient_country = '';
-        $recipient_state = '';
-        $recipient_city = '';
+        $recipient_country  = '';
+        $recipient_state    = '';
+        $recipient_city     = '';
         $recipient_zip_code = '';
-        $recipient_address = '';
+        $recipient_address  = '';
 
         if (!empty($_POST['recipient_address_id'])) {
             $recipient_type = isset($_POST["recipient_type"]) ? cdp_sanitize($_POST["recipient_type"]) : 'recipient';
 
             if ($recipient_type === 'user') {
-                // Fetch from sender's addresses (contacts) with legacy fallback
                 $recip_addr = cdp_getSenderAddress(intval($_POST["recipient_address_id"]));
             } else {
-                // Fetch from recipients addresses (default/external)
-                $db->cdp_query("SELECT * FROM cdb_recipients_addresses WHERE id_addresses = :id LIMIT 1");
-                $db->bind(':id', intval($_POST["recipient_address_id"]));
-                $db->cdp_execute();
-                $recip_addr = $db->cdp_registro();
+                $recip_addr = cdp_getRecipientAddress(intval($_POST["recipient_address_id"]));
             }
 
             if ($recip_addr) {
-                $recipient_country = $recip_addr->country ?? '';
-                $recipient_state = $recip_addr->state ?? '';
-                $recipient_city = $recip_addr->city ?? '';
                 $recipient_zip_code = $recip_addr->zip_code ?? '';
-                $recipient_address = $recip_addr->address ?? '';
-
-                // Resolve country/state/city IDs to names
-                if (!empty($recipient_country)) {
-                    $_recip_country = cdp_getCountry($recipient_country);
-                    $recipient_country = $_recip_country['data']->name ?? '';
-                }
-                if (!empty($recipient_state)) {
-                    $_recip_state = cdp_getState($recipient_state);
-                    $recipient_state = $_recip_state['data']->name ?? '';
-                }
-                if (!empty($recipient_city)) {
-                    $_recip_city = cdp_getCity($recipient_city);
-                    $recipient_city = $_recip_city['data']->name ?? '';
-                }
+                $recipient_address  = $recip_addr->address  ?? '';
+                $recipient_country  = cdp_resolveAddressName($recip_addr->country ?? '', 'cdp_getCountry', $recip_addr->legacy_country ?? '');
+                $recipient_state    = cdp_resolveAddressName($recip_addr->state   ?? '', 'cdp_getState',   $recip_addr->legacy_state   ?? '');
+                $recipient_city     = cdp_resolveAddressName($recip_addr->city    ?? '', 'cdp_getCity',    $recip_addr->legacy_city    ?? '');
             }
         }
 
-
         // SAVE ADDRESS FOR Shipments
         $dataAddresses = array(
-            'order_id' =>   $shipment_id,
-            'order_track' =>   $order_track,
-            'sender_country' =>   $final_sender_country->name,
-            'sender_state' =>   $final_sender_state->name,
-            'sender_city' =>   $final_sender_city->name,
-            'sender_zip_code' =>   $sender_zip_code,
-            'sender_address' =>   $sender_address,
-            'recipient_country' =>   $recipient_country,
-            'recipient_state' =>   $recipient_state,
-            'recipient_city' =>  $recipient_city,
-            'recipient_zip_code' =>   $recipient_zip_code,
-            'recipient_address' =>   $recipient_address,
+            'order_id'           => $shipment_id,
+            'order_track'        => $order_track,
+            'sender_country'     => $final_sender_country_name,
+            'sender_state'       => $final_sender_state_name,
+            'sender_city'        => $final_sender_city_name,
+            'sender_zip_code'    => $sender_zip_code,
+            'sender_address'     => $sender_address,
+            'recipient_country'  => $recipient_country,
+            'recipient_state'    => $recipient_state,
+            'recipient_city'     => $recipient_city,
+            'recipient_zip_code' => $recipient_zip_code,
+            'recipient_address'  => $recipient_address,
         );
 
         cdp_insertCourierShipmentAddresses($dataAddresses);
