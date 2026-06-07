@@ -651,7 +651,7 @@ $lang = array(
 	"left-menu-sidebar-87800334" => "Consolidated Sea Shipments",
 	"left-menu-sidebar-23" => "Consolidation Control Panel",
 	"left-menu-sidebar-24" => "List of Consolidations",
-	"left-menu-sidebar-25" => "Packages to Consolidate",
+	"left-menu-sidebar-25" => "Add Consolidation",
 
 
 	"left-menu-sidebar-26" => "General Reports",

@@ -520,7 +520,8 @@ $order_prefix = $settings->prefix;
                                             <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title20'] ?></label>
                                             <div class="input-group mb-3">
                                                 <select class="select2 form-control custom-select" id="order_deli_time" name="order_deli_time" required style="width: 100%;">
-                                                    <option value="<?php echo $delivery_times->id; ?>"><?php echo $delivery_times->delitime; ?></option>
+                                                    <!-- <option value="<?php echo $delivery_times->id; ?>"><?php echo $delivery_times->delitime; ?></option> -->
+                                                    <option><?php echo '---Select Delivery Time---'; ?></option>
                                                     <?php foreach ($delitimerow as $row) : ?>
                                                         <option value="<?php echo $row->id; ?>"><?php echo $row->delitime; ?></option>
                                                     <?php endforeach; ?>
