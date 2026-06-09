@@ -24,7 +24,7 @@
 /app/Config/database.php
 /vendors/*
 
-/config
+
 
 order_files/*
 pre_alert_files/*
