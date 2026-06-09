@@ -36,8 +36,8 @@
 					</li>
 					<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
 					<li class="p-15 m-t-10">
-						<!-- <a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center"> -->
-						<a href="customer_packages_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
+						<a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
+						<!-- <a href="customer_packages_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center"> -->
 							<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu m-l-5"> <?php echo $lang['left-menu-sidebar-1'] ?> </span>
 						</a>
@@ -85,8 +85,86 @@
                     <!-- Module online shopping-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
+							<iconify-icon icon="mingcute:ship-fill" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-64'] ?></span>
+						</a>
+						<ul aria-expanded="false" class="collapse  first-level">
+							<?php if ($user->cdp_hasPermission('view_dashboard_ship')) { ?>
+							<li class="sidebar-item">
+								<a href="dashboard_admin_shipments.php" class="sidebar-link">
+									<iconify-icon icon="solar:widget-4-linear" class="fs-5"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-14'] ?></span>
+								</a>
+							</li>
+							<?php } ?>
+
+                            <?php if ($user->cdp_hasPermission('prealert_list')) { ?>
+							<li class="sidebar-item">
+								<a class="sidebar-link waves-effect waves-dark" href="prealert_list.php" aria-expanded="false">
+									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-7'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+
+							<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
+							<li class="sidebar-item">
+								<a href="courier_add.php" class="sidebar-link">
+									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-15'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+
+							<li class="sidebar-item">
+								<a href="import_excel_add_courier.php" class="sidebar-link">
+									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['asingmoduleexcell1'] ?> </span>
+								</a>
+							</li>
+
+							<?php if ($user->cdp_hasPermission('view_shipment_list')) { ?>
+							<li class="sidebar-item">
+								<a href="courier_list.php" class="sidebar-link">
+									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-16'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+
+							<?php if ($user->cdp_hasPermission('view_payment_list')) { ?>
+							<li class="sidebar-item">
+								<a class="sidebar-link waves-effect waves-dark" href="payments_gateways_courier_list.php" aria-expanded="false">
+									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"><?php echo $lang['left-menu-sidebar-12'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+
+						</ul>
+					</li>
+
+					<?php } ?>
+
+
+					<?php 
+
+						$perModule = [
+						'view_dashboard_ship',
+						'add_shipment',
+						'add_multiple_shipments',
+						'view_shipment_list',
+						'view_payment_shipment_list',
+						];
+						if ($user->cdp_hasPermission($perModule)) {
+
+					?>
+                    <li class="sidebar-item">----------------------------------------</li>
+					<!-- Module shipment-->
+					<li class="sidebar-item">
+						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
 							<iconify-icon icon="mdi:airplane-takeoff" class="fs-5"></iconify-icon>
-							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-64'] ?></span>
+							<span class="hide-menu"><?php echo 'Sea ' . $lang['left-menu-sidebar-13'] ?></span>
 						</a>
 
 						<ul aria-expanded="false" class="collapse first-level">
@@ -99,17 +177,6 @@
 								</a>
 							</li>
 							<?php } ?>
-
-
-							<?php if ($user->cdp_hasPermission('prealert_list')) { ?>
-							<li class="sidebar-item">
-								<a class="sidebar-link waves-effect waves-dark" href="prealert_list.php" aria-expanded="false">
-									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-7'] ?> </span>
-								</a>
-							</li>
-							<?php } ?>
-
 
 							<?php if ($user->cdp_hasPermission('add_package')) { ?>
 							<li class="sidebar-item">
@@ -141,76 +208,6 @@
 						</ul>
 					</li>
 
-					<?php } ?>
-
-
-					<?php 
-
-						$perModule = [
-						'view_dashboard_ship',
-						'add_shipment',
-						'add_multiple_shipments',
-						'view_shipment_list',
-						'view_payment_shipment_list',
-						];
-						if ($user->cdp_hasPermission($perModule)) {
-
-					?>
-                    <li class="sidebar-item">----------------------------------------</li>
-					<!-- Module shipment-->
-					<li class="sidebar-item">
-						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="mingcute:ship-fill" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo 'Sea ' . $lang['left-menu-sidebar-13'] ?></span>
-						</a>
-						<ul aria-expanded="false" class="collapse  first-level">
-							<?php if ($user->cdp_hasPermission('view_dashboard_ship')) { ?>
-							<li class="sidebar-item">
-								<a href="dashboard_admin_shipments.php" class="sidebar-link">
-									<iconify-icon icon="solar:widget-4-linear" class="fs-5"></iconify-icon>
-									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-14'] ?></span>
-								</a>
-							</li>
-							<?php } ?>
-
-							<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
-							<li class="sidebar-item">
-								<a href="courier_add.php" class="sidebar-link">
-									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-15'] ?> </span>
-								</a>
-							</li>
-							<?php } ?>
-
-							
-
-							<li class="sidebar-item">
-								<a href="import_excel_add_courier.php" class="sidebar-link">
-									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-									<span class="hide-menu"> <?php echo $lang['asingmoduleexcell1'] ?> </span>
-								</a>
-							</li>
-
-							<?php if ($user->cdp_hasPermission('view_shipment_list')) { ?>
-							<li class="sidebar-item">
-								<a href="courier_list.php" class="sidebar-link">
-									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-16'] ?> </span>
-								</a>
-							</li>
-							<?php } ?>
-
-							<?php if ($user->cdp_hasPermission('view_payment_list')) { ?>
-							<li class="sidebar-item">
-								<a class="sidebar-link waves-effect waves-dark" href="payments_gateways_courier_list.php" aria-expanded="false">
-									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-									<span class="hide-menu"><?php echo $lang['left-menu-sidebar-12'] ?> </span>
-								</a>
-							</li>
-							<?php } ?>
-
-						</ul>
-					</li>
 					<?php } ?>
 
 					<?php 
@@ -907,8 +904,8 @@
 
 					<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
 					<li class="p-15 m-t-10">
-						<!-- <a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center"> -->
-						<a href="customer_packages_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
+						<a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
+						<!-- <a href="customer_packages_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center"> -->
 							<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
 							<span class="hide-menu m-l-5"> <?php echo $lang['left-menu-sidebar-1'] ?> </span>
 						</a>
@@ -1722,6 +1719,47 @@
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="mdi:airplane-takeoff" class="fs-5"></iconify-icon>
 							<span class="hide-menu"><?php echo 'Air Shipping' ?></span>
 						</a>
+                        <ul aria-expanded="false" class="collapse  first-level">
+							<?php if ($user->cdp_hasPermission('courier_add_client')) { ?>
+							<li class="sidebar-item">
+								<a href="courier_add_client.php" class="sidebar-link"><iconify-icon icon="solar:box-minimalistic-linear" class="fs-5" style="color:#f62d51"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-15'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+							<?php if ($user->cdp_hasPermission('view_shipment_list')) { ?>
+							<li class="sidebar-item">
+								<a href="courier_list.php" class="sidebar-link"><iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-16'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+							<?php if ($user->cdp_hasPermission('view_payment_shipment_list')) { ?>
+							<li class="sidebar-item">
+								<a class="sidebar-link waves-effect waves-dark" href="payments_gateways_courier_list.php" aria-expanded="false"><iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"><?php echo $lang['left-menu-sidebar-12'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+						</ul>
+					</li>
+					<?php } ?>
+
+					<?php 
+
+						$perModule = [
+						'courier_add_client',
+						'view_shipment_list',
+						'view_payment_shipment_list',
+						];
+						if ($user->cdp_hasPermission($perModule)) {
+
+					?>
+					<!-- Module pre-alerts-->
+					<li class="sidebar-item">
+						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="mingcute:ship-fill" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo 'Sea ' . $lang['left-menu-sidebar-13'] ?></span>
+						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
 							<?php if ($user->cdp_hasPermission('prealert_add')) { ?>
 							<li class="sidebar-item">
@@ -1749,47 +1787,6 @@
 							<li class="sidebar-item">
 								<a class="sidebar-link waves-effect waves-dark" href="payments_gateways_list.php" aria-expanded="false">
 									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-									<span class="hide-menu"><?php echo $lang['left-menu-sidebar-12'] ?> </span>
-								</a>
-							</li>
-							<?php } ?>
-						</ul>
-					</li>
-					<?php } ?>
-
-					<?php 
-
-						$perModule = [
-						'courier_add_client',
-						'view_shipment_list',
-						'view_payment_shipment_list',
-						];
-						if ($user->cdp_hasPermission($perModule)) {
-
-					?>
-					<!-- Module pre-alerts-->
-					<li class="sidebar-item">
-						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="mingcute:ship-fill" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo 'Sea ' . $lang['left-menu-sidebar-13'] ?></span>
-						</a>
-						<ul aria-expanded="false" class="collapse  first-level">
-							<?php if ($user->cdp_hasPermission('courier_add_client')) { ?>
-							<li class="sidebar-item">
-								<a href="courier_add_client.php" class="sidebar-link"><iconify-icon icon="solar:box-minimalistic-linear" class="fs-5" style="color:#f62d51"></iconify-icon>
-									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-15'] ?> </span>
-								</a>
-							</li>
-							<?php } ?>
-							<?php if ($user->cdp_hasPermission('view_shipment_list')) { ?>
-							<li class="sidebar-item">
-								<a href="courier_list.php" class="sidebar-link"><iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-16'] ?> </span>
-								</a>
-							</li>
-							<?php } ?>
-							<?php if ($user->cdp_hasPermission('view_payment_shipment_list')) { ?>
-							<li class="sidebar-item">
-								<a class="sidebar-link waves-effect waves-dark" href="payments_gateways_courier_list.php" aria-expanded="false"><iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
 									<span class="hide-menu"><?php echo $lang['left-menu-sidebar-12'] ?> </span>
 								</a>
 							</li>
@@ -1984,8 +1981,8 @@
 
 					<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
 					<li class="p-15 m-t-10">
-						<!-- <a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center"> -->
-						<a href="customer_packages_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
+						<a href="courier_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center">
+						<!-- <a href="customer_packages_add.php" class="btn btn-block create-btn text-white no-block d-flex align-items-center"> -->
 							<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon> <span class="hide-menu m-l-5"> <?php echo $lang['left-menu-sidebar-1'] ?> </span> </a>
 					</li>
 					<?php } ?>
@@ -2028,7 +2025,7 @@
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
 							<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-13'] ?></span>
+							<span class="hide-menu"> <?php echo 'Air ' . $lang['left-menu-sidebar-13'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
 							<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
