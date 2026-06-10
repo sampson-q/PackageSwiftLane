@@ -67,7 +67,7 @@ $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
 
-$sql = "SELECT a.status_invoice, a.recipient_type, a.total_order, a.consolidate_id , a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM cdb_consolidate_packages as a
+$sql = "SELECT a.status_invoice, a.recipient_type, a.total_order, a.consolidate_id , a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options, a.order_deli_time,  b.mod_style, b.color FROM cdb_consolidate_packages as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 $sWhere
 			  and a.status_courier!=14
@@ -197,7 +197,7 @@ if ($numrows > 0) { ?>
 							</td>
 
                             <td>
-                                <?php echo $package_tracking->estimated_eta ?: 'N/A'; ?>
+                                <?php echo cdp_etaOrDelivery($package_tracking->estimated_eta ?? null, $row->order_deli_time ?? null); ?>
                             </td>
 
 							<!-- <td>

@@ -7403,6 +7403,33 @@ function cdp_getPackageTracking($order_id) {
     return $db->cdp_registro();
 }
 
+/**
+ * ETA for display. Uses the manually-entered estimated_eta when present,
+ * otherwise falls back to the delivery-time label (cdb_delivery_time.delitime)
+ * resolved from the order's order_deli_time — mirroring how the legacy system
+ * derived the ETA for packages and consolidations.
+ *
+ * @param string|null     $estimated_eta   value from cdb_package_tracking_number
+ * @param int|string|null $order_deli_time  the order's order_deli_time id
+ * @return string  the ETA to display, or 'N/A'
+ */
+function cdp_etaOrDelivery($estimated_eta, $order_deli_time = null)
+{
+    if (!empty($estimated_eta)) {
+        return $estimated_eta;
+    }
+    if (!empty($order_deli_time)) {
+        $db = new Conexion;
+        $db->cdp_query("SELECT delitime FROM cdb_delivery_time WHERE id = :id LIMIT 1");
+        $db->bind(':id', (int) $order_deli_time);
+        $r = $db->cdp_registro();
+        if ($r && !empty($r->delitime)) {
+            return $r->delitime;
+        }
+    }
+    return 'N/A';
+}
+
 function cdp_updatePackageTracking($order_id, $user_id, $tracking_number = null, $estimated_eta = null) {
     $db = new Conexion;
     $tracking = cdp_getPackageTracking($order_id);
