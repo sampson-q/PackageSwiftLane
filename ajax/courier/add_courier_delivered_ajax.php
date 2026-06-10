@@ -287,10 +287,15 @@ if (empty($errors)) {
                 $tpl = getTemplateWhatsApp(3);
 
                 if ($tpl) {
-                    // Format the message with tracking number placeholder
+                    // Personalise the delivery message (name + tracking + company).
+                    $settings_wa = cdp_getSettingsCourier();
                     $whatsapp_body = str_replace(
-                        '[TRACKING_NUMBER]',
-                        $fullshipment,
+                        ['[CUSTOMER_FULLNAME]', '[TRACKING_NUMBER]', '[COMPANY_NAME]'],
+                        [
+                            ucfirst(trim(($sender_data->fname ?? '') . ' ' . ($sender_data->lname ?? ''))),
+                            $fullshipment,
+                            ($settings_wa && !empty($settings_wa->site_name)) ? $settings_wa->site_name : 'Our team',
+                        ],
                         $tpl->body
                     );
 
