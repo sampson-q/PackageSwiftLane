@@ -1003,11 +1003,11 @@ if ($row_order->status_invoice == 1) {
                                                     $sender_name = $sender->fname . ' ' . $sender->lname;
 
                                                     // Fetch package total price
-                                                    $db->cdp_query("SELECT total_order FROM cdb_add_order WHERE order_no='" . $row_order_item->order_no . "'");
-                                                    $package_total_price = $db->cdp_registro();
+                                                    $db->cdp_query("SELECT total_order, order_id FROM cdb_add_order WHERE order_no='" . $row_order_item->order_no . "'");
+                                                    $order_details = $db->cdp_registro();
 
                                                     // Fetch items (quantity + description)
-                                                    $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id = '" . $row_order_item->order_id . "'");
+                                                    $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id = '" . $order_details->order_id . "'");
                                                     $items = $db->cdp_registros();
                                                     ?>
                                                     <tr class="card-hover">
@@ -1026,7 +1026,7 @@ if ($row_order->status_invoice == 1) {
                                                         </td>
                                                         <td></td>
                                                         <td colspan="3"><?php echo number_format($row_order_item->weight, 2, '.', ''); ?></td>
-                                                        <td colspan="3"><?php echo cdb_money_format($package_total_price->total_order); ?></td>
+                                                        <td colspan="3"><?php echo cdb_money_format($order_details->total_order); ?></td>
                                                         <td></td>
                                                     </tr>
                                                 <?php }
