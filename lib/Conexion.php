@@ -42,7 +42,8 @@ class Conexion
         // Instanciar PDO
         try {
             $this->dbh = new PDO($dsn, $this->db_user, $this->db_pass, $options);
-            $this->dbh->exec('set names UTF8');
+            // utf8mb4 so 4-byte characters (emoji in WhatsApp templates) round-trip intact.
+            $this->dbh->exec('SET NAMES utf8mb4');
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
             // Puedes considerar registrar el error en lugar de mostrarlo
