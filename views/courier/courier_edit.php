@@ -51,7 +51,7 @@ $agency_default_id = ($ctx['is_restricted'] && $ctx['agency_id'] !== null) ? (in
 $office        = $core->cdp_getOffices();
 $agencyrow     = $core->cdp_getBranchoffices();
 $courierrow    = $core->cdp_getCouriercom();
-$statusrow     = $core->cdp_getStatusByType(2);
+$statusrow     = $core->cdp_getStatusByType(1);
 $packrow       = $core->cdp_getPack();
 $payrow        = $core->cdp_getPayment();
 $paymethodrow  = $core->cdp_getPaymentMethod();

@@ -46,7 +46,7 @@ if (isset($userData->userlevel) && (int)$userData->userlevel === 6) {
 $row = $data['data'];
 
 $office = $core->cdp_getOffices();
-$statusrow = $core->cdp_getStatusByType(2);
+$statusrow = $core->cdp_getStatusByType(1);
 
 
 ?>

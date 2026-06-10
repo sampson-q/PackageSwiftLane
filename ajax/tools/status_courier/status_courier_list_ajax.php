@@ -93,9 +93,9 @@ if ($numrows > 0) { ?>
                     <td>
 						<?php 
 							if ($row->status_type == 2) {
-								echo "Package";
-							} elseif ($row->status_type == 1) {
 								echo "Consolidate";
+							} elseif ($row->status_type == 1) {
+								echo "Package";
 							} else {
 								echo "Both";
 							}

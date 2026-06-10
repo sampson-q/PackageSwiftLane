@@ -21,7 +21,7 @@
 
 
 $userData = $user->cdp_getUserData();
-$statusrow = $core->cdp_getStatusByType(1);
+$statusrow = $core->cdp_getStatusByType(2);
 
 
 ?>

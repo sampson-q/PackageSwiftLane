@@ -148,7 +148,7 @@ if (!empty($files_order)) {
         $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel === 6) ? (int) cdp_getAgencyBranchIdForUser($userData->name_off ?? '') : 0;
 
         $courierrow = $core->cdp_getCouriercom();
-        $statusrow = $core->cdp_getStatusByType(1);
+        $statusrow = $core->cdp_getStatusByType(2);
         $packrow = $core->cdp_getPack();
         $moderow = $core->cdp_getShipmode();
         $driverrow = $user->cdp_userAllDriver();
