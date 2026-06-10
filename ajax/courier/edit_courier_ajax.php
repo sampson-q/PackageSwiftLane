@@ -87,23 +87,23 @@ if (empty($errors)) {
         $old_status_obj   = cdp_getCourierstatusApi((int)$old_shipment->status_courier);
         $old_status_label = $old_status_obj ? $old_status_obj->mod_style : 'N/A';
 
-        $db_snap->cdp_query("SELECT courier_name FROM cdb_courier_com WHERE id = :id LIMIT 1");
+        $db_snap->cdp_query("SELECT name_com FROM cdb_courier_com WHERE id = :id LIMIT 1");
         $db_snap->bind(':id', (int)$old_shipment->order_courier);
         $db_snap->cdp_execute();
         $r = $db_snap->cdp_registro();
-        $old_courier_name = $r ? $r->courier_name : 'N/A';
+        $old_courier_name = $r ? $r->name_com : 'N/A';
 
-        $db_snap->cdp_query("SELECT s_name FROM cdb_shipping_mode WHERE id = :id LIMIT 1");
+        $db_snap->cdp_query("SELECT ship_mode FROM cdb_shipping_mode WHERE id = :id LIMIT 1");
         $db_snap->bind(':id', (int)$old_shipment->order_service_options);
         $db_snap->cdp_execute();
         $r = $db_snap->cdp_registro();
-        $old_service_type = $r ? $r->s_name : 'N/A';
+        $old_service_type = $r ? $r->ship_mode : 'N/A';
 
-        $db_snap->cdp_query("SELECT deli_time_description FROM cdb_delivery_time WHERE id = :id LIMIT 1");
+        $db_snap->cdp_query("SELECT delitime FROM cdb_delivery_time WHERE id = :id LIMIT 1");
         $db_snap->bind(':id', (int)$old_shipment->order_deli_time);
         $db_snap->cdp_execute();
         $r = $db_snap->cdp_registro();
-        $old_delivery_time = $r ? $r->deli_time_description : 'N/A';
+        $old_delivery_time = $r ? $r->delitime : 'N/A';
 
         $db_snap->cdp_query("SELECT * FROM cdb_package_tracking_number WHERE order_id = :id LIMIT 1");
         $db_snap->bind(':id', $shipment_id);
@@ -400,23 +400,23 @@ if (empty($errors)) {
 
         $db_new = new Conexion;
 
-        $db_new->cdp_query("SELECT courier_name FROM cdb_courier_com WHERE id = :id LIMIT 1");
+        $db_new->cdp_query("SELECT name_com FROM cdb_courier_com WHERE id = :id LIMIT 1");
         $db_new->bind(':id', (int)$_POST["order_courier"]);
         $db_new->cdp_execute();
         $r = $db_new->cdp_registro();
-        $new_courier_name = $r ? $r->courier_name : 'N/A';
+        $new_courier_name = $r ? $r->name_com : 'N/A';
 
-        $db_new->cdp_query("SELECT s_name FROM cdb_shipping_mode WHERE id = :id LIMIT 1");
+        $db_new->cdp_query("SELECT ship_mode FROM cdb_shipping_mode WHERE id = :id LIMIT 1");
         $db_new->bind(':id', (int)($_POST["order_service_options"] ?? 0));
         $db_new->cdp_execute();
         $r = $db_new->cdp_registro();
-        $new_service_type = $r ? $r->s_name : 'N/A';
+        $new_service_type = $r ? $r->ship_mode : 'N/A';
 
-        $db_new->cdp_query("SELECT deli_time_description FROM cdb_delivery_time WHERE id = :id LIMIT 1");
+        $db_new->cdp_query("SELECT delitime FROM cdb_delivery_time WHERE id = :id LIMIT 1");
         $db_new->bind(':id', (int)$_POST["order_deli_time"]);
         $db_new->cdp_execute();
         $r = $db_new->cdp_registro();
-        $new_delivery_time = $r ? $r->deli_time_description : 'N/A';
+        $new_delivery_time = $r ? $r->delitime : 'N/A';
 
         $new_status_label = $add_status;
         $new_eta          = $estimated_eta;

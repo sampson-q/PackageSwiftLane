@@ -316,19 +316,19 @@ if (empty($errors)) {
 
         // Get courier name for email
         $db_courier_email = new Conexion;
-        $db_courier_email->cdp_query("SELECT courier_name FROM cdb_courier_com WHERE id = :id");
+        $db_courier_email->cdp_query("SELECT name_com FROM cdb_courier_com WHERE id = :id");
         $db_courier_email->bind(':id', $_POST["order_courier"]);
         $db_courier_email->cdp_execute();
         $courier_obj_email = $db_courier_email->cdp_registro();
-        $email_courier_name = $courier_obj_email ? $courier_obj_email->courier_name : 'Standard';
+        $email_courier_name = $courier_obj_email ? $courier_obj_email->name_com : 'Standard';
 
         // Get service type for email
         $db_service_email = new Conexion;
-        $db_service_email->cdp_query("SELECT s_name FROM cdb_shipping_mode WHERE id = :id");
+        $db_service_email->cdp_query("SELECT ship_mode FROM cdb_shipping_mode WHERE id = :id");
         $db_service_email->bind(':id', $_POST["order_service_options"]);
         $db_service_email->cdp_execute();
         $service_obj_email = $db_service_email->cdp_registro();
-        $email_service_type = $service_obj_email ? $service_obj_email->s_name : 'Standard';
+        $email_service_type = $service_obj_email ? $service_obj_email->ship_mode : 'Standard';
 
         // Get delivery time for email
         $db_delivery_email = new Conexion;
@@ -503,27 +503,27 @@ if (empty($errors)) {
 
                     // Get courier name
                     $db_courier = new Conexion;
-                    $db_courier->cdp_query("SELECT courier_name FROM cdb_courier_com WHERE id = :id");
+                    $db_courier->cdp_query("SELECT name_com FROM cdb_courier_com WHERE id = :id");
                     $db_courier->bind(':id', $_POST["order_courier"]);
                     $db_courier->cdp_execute();
                     $courier_obj = $db_courier->cdp_registro();
-                    $courier_name = $courier_obj ? $courier_obj->courier_name : 'Standard';
+                    $courier_name = $courier_obj ? $courier_obj->name_com : 'Standard';
 
                     // Get service type
                     $db_service = new Conexion;
-                    $db_service->cdp_query("SELECT s_name FROM cdb_shipping_mode WHERE id = :id");
+                    $db_service->cdp_query("SELECT ship_mode FROM cdb_shipping_mode WHERE id = :id");
                     $db_service->bind(':id', $_POST["order_service_options"]);
                     $db_service->cdp_execute();
                     $service_obj = $db_service->cdp_registro();
-                    $service_type = $service_obj ? $service_obj->s_name : 'Standard';
+                    $service_type = $service_obj ? $service_obj->ship_mode : 'Standard';
 
                     // Get delivery time
                     $db_delivery = new Conexion;
-                    $db_delivery->cdp_query("SELECT deli_time_description FROM cdb_delivery_time WHERE id = :id");
+                    $db_delivery->cdp_query("SELECT delitime FROM cdb_delivery_time WHERE id = :id");
                     $db_delivery->bind(':id', $_POST["order_deli_time"]);
                     $db_delivery->cdp_execute();
                     $delivery_obj = $db_delivery->cdp_registro();
-                    $delivery_time = $delivery_obj ? $delivery_obj->deli_time_description : 'N/A';
+                    $delivery_time = $delivery_obj ? $delivery_obj->delitime : 'N/A';
 
                     // Format the message with all placeholders
                     $whatsapp_body = str_replace(
