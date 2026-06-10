@@ -364,6 +364,12 @@ if (isset($_POST["total_item"])) {
         $db->bind(':is_consolidate', 1);
         $db->cdp_execute();
 
+        if ($_POST['status_courier'] == 32) {
+            $db->cdp_query("UPDATE cdb_add_order SET status_courier = '32', is_consolidate = '0' WHERE order_no = :order_no");
+            $db->bind(':order_no', cdp_sanitize($_POST["order_no_item"][$count]));
+            $db->cdp_execute();
+        }
+
         // ═════════════════════════════════════════════════════════════════
         // WhatsApp Notification per Package
         // ═════════════════════════════════════════════════════════════════
@@ -812,7 +818,7 @@ if (isset($_POST["total_item"])) {
                                                     $count_item = 0;
 
                                                     foreach ($order_items as $row_order_item) {
-                                                        $db->cdp_query("SELECT total_order, sender_id FROM cdb_add_order WHERE order_no='" . $row_order_item->order_no . "'");
+                                                        $db->cdp_query("SELECT total_order, sender_id, order_id FROM cdb_add_order WHERE order_no='" . $row_order_item->order_no . "'");
                                                         $order_details = $db->cdp_registro();
 
                                                         $db->cdp_query("SELECT order_item_description FROM cdb_add_order_item WHERE order_id = '" . $row_order_item->order_id . "'");
@@ -821,7 +827,7 @@ if (isset($_POST["total_item"])) {
                                                         $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . $order_details->sender_id . "'");
                                                         $sender = $db->cdp_registro();
 
-                                                        $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id = '" . $row_order_item->order_id . "'");
+                                                        $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id = '" . $order_details->order_id . "'");
                                                         $items = $db->cdp_registros();
 
                                                         $weight_item = $row_order_item->weight;
