@@ -159,8 +159,8 @@ $userData = $user->cdp_getUserData();
                                                     <select class="form-control" id="status_type" name="status_type">
                                                         <option value=""><?php echo 'Select Status Type' ?></option>
                                                         <option value="3"><?php echo 'Both' ?></option>
-                                                        <option value="2"><?php echo 'Package' ?></option>
-                                                        <option value="1"><?php echo 'Consolidation' ?></option>
+                                                        <option value="2"><?php echo 'Consolidation' ?></option>
+                                                        <option value="1"><?php echo 'Package' ?></option>
                                                     </select>
                                                 </div>
                                             </div>

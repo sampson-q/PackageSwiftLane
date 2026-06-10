@@ -170,8 +170,8 @@ $row_off = $data['data'];
                                                     <select class="form-control" id="status_type" name="status_type">
                                                         <option value=""><?php echo 'Select Status Type' ?></option>        
                                                         <option value="3" <?php echo ($row_off->status_type == 3) ? 'selected' : ''; ?>><?php echo 'Both' ?></option>        
-                                                        <option value="2" <?php echo ($row_off->status_type == 2) ? 'selected' : ''; ?>><?php echo 'Package' ?></option>        
-                                                        <option value="1" <?php echo ($row_off->status_type == 1) ? 'selected' : ''; ?>><?php echo 'Consolidate' ?></option>        
+                                                        <option value="2" <?php echo ($row_off->status_type == 2) ? 'selected' : ''; ?>><?php echo 'Consolidate' ?></option>        
+                                                        <option value="1" <?php echo ($row_off->status_type == 1) ? 'selected' : ''; ?>><?php echo 'Package' ?></option>        
                                                     </select>
                                                 </div>
                                             </div>
