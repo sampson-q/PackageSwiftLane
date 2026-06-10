@@ -28,6 +28,12 @@ if (isset($_GET['order_track'])) {
 	$sanitizedOrderTrack = preg_replace('/[^A-Za-z0-9-]/', '', $rawOrderTrackInput);
 	$results = cdp_getCourierTrack($sanitizedOrderTrack);
 	$track = $results['data'];
+	// Fallback: resolve customer package shipments (cdb_customers_packages) when
+	// the number is not a courier shipment, so package tracking numbers also work.
+	if (!$track) {
+		$results = cdp_getCustomersPackagesTrack($sanitizedOrderTrack);
+		$track = $results['data'];
+	}
 } else {
 
 	cdp_redirect_to("tracking.php");
