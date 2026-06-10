@@ -75,7 +75,7 @@ $db->cdp_execute();
 // 21 = Cancelled
 // 23 = Pending_payment
 // 25 = Not Shipped
-$warehouse_statuses = implode(',', [2, 4, 6, 10, 12, 13, 19, 21, 23, 25]);
+$warehouse_statuses = implode(',', [1, 4, 16, 32, 33]);
 
 $sql = "SELECT a.order_incomplete, a.status_invoice, a.is_consolidate, a.is_pickup, a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options, b.mod_style, b.color
         FROM cdb_add_order AS a

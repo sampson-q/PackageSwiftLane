@@ -1,11 +1,11 @@
 <?php
 $userData = $user->cdp_getUserData();
-$statusrow = $core->cdp_getStatus();
+$statusrow = $core->cdp_getStatusMultiple(1, 4, 16, 32, 33);
 
-$warehouse_status_ids = [2, 4, 6, 10, 12, 13, 19, 21, 23, 25];
-$statusrow = array_filter($statusrow, function($row) use ($warehouse_status_ids) {
-    return in_array((int)$row->id, $warehouse_status_ids);
-});
+// $warehouse_status_ids = [1, 4, 16, 32, 33];
+// $statusrow = array_filter($statusrow, function($row) use ($warehouse_status_ids) {
+//     return in_array((int)$row->id, $warehouse_status_ids);
+// });
 ?>
 <!DOCTYPE html>
 <html dir="<?php echo $direction_layout; ?>" lang="en">

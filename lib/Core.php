@@ -337,15 +337,26 @@ class Core
     return $row;
   }
   
-  public function cdp_getStatusByType($type) {
-    $sql = "SELECT * FROM cdb_styles WHERE status_type = :status_type OR status_type = 3 ORDER BY id ASC";
-    $this->db->cdp_query($sql);
-    $this->db->bind(':status_type', $type);
-    $this->db->cdp_execute();
-    $row = $this->db->cdp_registros();
+    public function cdp_getStatusByType($type) {
+        $sql = "SELECT * FROM cdb_styles WHERE status_type = :status_type OR status_type = 3 ORDER BY id ASC";
+        $this->db->cdp_query($sql);
+        $this->db->bind(':status_type', $type);
+        $this->db->cdp_execute();
+        $row = $this->db->cdp_registros();
 
-    return $row;
-  }
+        return $row;
+    }
+    
+    public function cdp_getStatusMultiple(...$types) {
+        $types = array_map('intval', $types);
+
+        $sql = "SELECT * FROM cdb_styles WHERE id IN (" . implode(',', $types) . ") ORDER BY id ASC";
+        
+        $this->db->cdp_query($sql);
+        $this->db->cdp_execute();
+
+        return $this->db->cdp_registros();
+    }
 
 
   /**
