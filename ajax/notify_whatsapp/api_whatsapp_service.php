@@ -7,6 +7,7 @@ if (!defined('DEPRIXAPRO_LOADER_LOADED')) {
     require_permission('view_dashboard');
 }
 require_once(__DIR__ . "/../../helpers/querys.php");
+require_once(__DIR__ . "/../../helpers/whatsapp.php");
 require_once __DIR__ . '/../../helpers/vendor/autoload.php';
 
 use Spipu\Html2Pdf\Html2Pdf;
@@ -55,9 +56,16 @@ function sendNotificationWhatsApp($sender, $notification_template, $template_wha
                 $whatsapp_body
             );
 
+            // Anti-ban gate: normalise + verify the number (fail-open).
+            $wa_target = cdp_wa_resolveSendTarget($sender);
+            if ($wa_target['skip']) {
+                $result['message'] = $wa_target['reason'];
+                return $result;
+            }
+
             $params = array(
                 'token' => $settings->api_ws_token,
-                'to' =>  $sender->phone,
+                'to' =>  $wa_target['phone'],
                 'body' => $final_template_whatsapp_description,
             );
 
@@ -246,7 +254,7 @@ function sendNotificationWhatsAppWithPDF($sender, $package_id, $notification_tem
 
                         $params = array(
                             'token' => $settings->api_ws_token,
-                            'to' =>  $sender->phone,
+                            'to' =>  cdp_normalizePhone($sender->phone),
                             'document' => $file_base64,
                             'caption' => $final_template_whatsapp_description,
                             'filename' => 'Factura_' . $tracking . '.pdf',
@@ -437,7 +445,7 @@ function sendNotificationWhatsAppWithPDFPackages($sender, $package_id, $notifica
 
                         $params = array(
                             'token' => $settings->api_ws_token,
-                            'to' =>  $sender->phone,
+                            'to' =>  cdp_normalizePhone($sender->phone),
                             'document' => $file_base64,
                             'caption' => $final_template_whatsapp_description,
                             'filename' => 'Factura_' . $tracking . '.pdf',
@@ -633,7 +641,7 @@ function sendNotificationWhatsAppWithPDFPackagess($sender, $package_id, $notific
 
                         $params = array(
                             'token' => $settings->api_ws_token,
-                            'to' =>  $sender->phone,
+                            'to' =>  cdp_normalizePhone($sender->phone),
                             'document' => $file_base64,
                             'caption' => $final_template_whatsapp_description,
                             'filename' => 'Factura_' . $tracking . '.pdf',
@@ -790,7 +798,7 @@ function sendNotificationWhatsAppWithPDFConsolidate($sender, $consolidate_id, $n
 
                         $params = array(
                             'token' => $settings->api_ws_token,
-                            'to' =>  $sender->phone,
+                            'to' =>  cdp_normalizePhone($sender->phone),
                             'document' => $file_base64,
                             'caption' => $final_template_whatsapp_description,
                             'filename' => 'Factura_' . $tracking . '.pdf',
