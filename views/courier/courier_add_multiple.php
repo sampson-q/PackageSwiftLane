@@ -293,7 +293,7 @@ $order_prefix = $settings->prefix;
                                     ?>
 
                                         <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
-                                            <input type="checkbox" class="custom-control-input" name="notify_whatsapp_sender" id="notify_whatsapp_sender" value="1">
+                                            <input type="checkbox" class="custom-control-input" name="notify_whatsapp_sender" id="notify_whatsapp_sender" value="1" checked>
                                             <b>
                                                 <?php echo $lang['leftorder14443']; ?>
 
@@ -381,7 +381,7 @@ $order_prefix = $settings->prefix;
                                     if ($core->active_whatsapp == 1) {
                                     ?>
                                         <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
-                                            <input type="checkbox" class="custom-control-input" name="notify_whatsapp_receiver" id="notify_whatsapp_receiver" value="1">
+                                            <input type="checkbox" class="custom-control-input" name="notify_whatsapp_receiver" id="notify_whatsapp_receiver" value="1" checked>
                                             <b>
                                                 <?php echo $lang['leftorder14443']; ?>
 

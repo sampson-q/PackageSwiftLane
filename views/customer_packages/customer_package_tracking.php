@@ -257,7 +257,7 @@ $statusrow = $core->cdp_getStatusByType(1);
                                         ?>
                                             <div class="col-sm-12 col-md-12">
                                                 <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
-                                                    <input type="checkbox" class="custom-control-input" name="notify_whatsapp" id="notify_whatsapp" value="1">
+                                                    <input type="checkbox" class="custom-control-input" name="notify_whatsapp" id="notify_whatsapp" value="1" checked>
                                                     <b><?php echo $lang['leftorder144430'] ?> &nbsp; <i class="mdi mdi-whatsapp" style="font-size: 22px; color:#07bc4c;"></i></b>
                                                     <span class="custom-control-indicator"></span>
                                                 </label>

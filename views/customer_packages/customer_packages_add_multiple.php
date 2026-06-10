@@ -279,7 +279,7 @@ $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel =
                                         <br>
 
                                         <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
-                                            <input type="checkbox" class="custom-control-input" name="notify_whatsapp_sender" id="notify_whatsapp_sender" value="1">
+                                            <input type="checkbox" class="custom-control-input" name="notify_whatsapp_sender" id="notify_whatsapp_sender" value="1" checked>
                                             <b> <?php echo $lang['leftorder14443']; ?> <i class="mdi mdi-whatsapp" style="font-size: 22px; color:#07bc4c;"></i></b>
                                             <span class="custom-control-indicator"></span>
                                         </label>
