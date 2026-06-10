@@ -144,7 +144,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                             <div class="m-r-10">
                                                 <a href="consolidate_package_list.php">
                                                     <span class="text-secondary display-7">
-                                                        <iconify-icon icon="solar:gift-linear" class="fs-5"></iconify-icon>
+                                                        <iconify-icon icon="solar:layers-minimalistic-linear" class="fs-5" style="color:#0d6efd"></iconify-icon>
                                                     </span>
                                                 </a>
                                             </div>
@@ -170,7 +170,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                             <div class="m-r-10">
                                                 <a href="consolidate_package_list.php">
                                                     <span class="text-secondary display-7">
-                                                        <iconify-icon icon="solar:wallet-money-linear" class="fs-5"></iconify-icon>
+                                                        <iconify-icon icon="solar:clock-circle-linear" class="fs-5" style="color:#f59e0b"></iconify-icon>
                                                     </span>
                                                 </a>
                                             </div>
@@ -196,7 +196,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                             <div class="m-r-10">
                                                 <a href="consolidate_package_list.php">
                                                     <span class="text-secondary display-7">
-                                                        <iconify-icon icon="solar:wallet-money-linear" class="fs-5"></iconify-icon>
+                                                        <iconify-icon icon="solar:clock-circle-linear" class="fs-5" style="color:#f59e0b"></iconify-icon>
                                                     </span>
                                                 </a>
                                             </div>
@@ -222,7 +222,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                             <div class="m-r-10">
                                                 <a href="consolidate_package_list.php">
                                                     <span class="text-secondary display-7">
-                                                        <iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
+                                                        <iconify-icon icon="solar:bill-check-linear" class="fs-5" style="color:#6f42c1"></iconify-icon>
                                                     </span>
                                                 </a>
                                             </div>

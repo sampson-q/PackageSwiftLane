@@ -141,7 +141,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                             <div class="m-r-10">
                                                 <a href="courier_list.php">
                                                     <span class="text-secondary display-7">
-                                                        <iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
+                                                        <iconify-icon icon="solar:clipboard-list-linear" class="fs-5" style="color:#f59e0b"></iconify-icon>
                                                     </span>
                                                 </a>
                                             </div>
@@ -169,7 +169,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                             <div class="m-r-10">
                                                 <a href="courier_list.php">
                                                     <span class="text-secondary display-7">
-                                                        <iconify-icon icon="solar:gift-linear" class="fs-5"></iconify-icon>
+                                                        <iconify-icon icon="solar:layers-minimalistic-linear" class="fs-5" style="color:#0d6efd"></iconify-icon>
                                                     </span>
                                                 </a>
                                             </div>
@@ -196,7 +196,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                             <div class="m-r-10">
                                                 <a href="courier_list.php">
                                                     <span class="text-secondary display-7">
-                                                        <iconify-icon icon="solar:wallet-money-linear" class="fs-5"></iconify-icon>
+                                                        <iconify-icon icon="solar:check-circle-linear" class="fs-5" style="color:#198754"></iconify-icon>
                                                     </span>
                                                 </a>
                                             </div>

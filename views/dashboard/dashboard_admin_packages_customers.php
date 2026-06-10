@@ -135,7 +135,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                             <div class="m-r-10">
                                                 <a href="customer_packages_list.php">
                                                     <span class="text-secondary display-7">
-                                                        <iconify-icon icon="solar:delivery-linear" class="fs-5"></iconify-icon>
+                                                        <iconify-icon icon="solar:delivery-linear" class="fs-5" style="color:#0d6efd"></iconify-icon>
                                                     </span>
                                                 </a>
                                             </div>
@@ -161,7 +161,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                             <div class="m-r-10">
                                                 <a href="customer_packages_list.php">
                                                     <span class="text-secondary display-7">
-                                                        <iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
+                                                        <iconify-icon icon="solar:box-minimalistic-linear" class="fs-5" style="color:#198754"></iconify-icon>
                                                     </span>
                                                 </a>
                                             </div>
@@ -189,7 +189,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                             <div class="m-r-10">
                                                 <a href="customer_packages_list.php">
                                                     <span class="text-secondary display-7">
-                                                        <iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
+                                                        <iconify-icon icon="solar:box-minimalistic-linear" class="fs-5" style="color:#198754"></iconify-icon>
                                                     </span>
                                                 </a>
                                             </div>
@@ -216,7 +216,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                             <div class="m-r-10">
                                                 <a href="customer_packages_list.php">
                                                     <span class="text-secondary display-7">
-                                                        <iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
+                                                        <iconify-icon icon="solar:box-minimalistic-linear" class="fs-5" style="color:#198754"></iconify-icon>
                                                     </span>
                                                 </a>
                                             </div>
@@ -243,7 +243,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                             <div class="m-r-10">
                                                 <a href="customer_packages_list.php">
                                                     <span class="text-secondary display-7">
-                                                        <iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
+                                                        <iconify-icon icon="solar:box-minimalistic-linear" class="fs-5" style="color:#198754"></iconify-icon>
                                                     </span>
                                                 </a>
                                             </div>
