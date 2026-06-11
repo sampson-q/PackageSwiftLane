@@ -49,7 +49,7 @@ class PreAlertsHandler
             LEFT JOIN cdb_courier_com cc ON p.courier_com = cc.id
             LEFT JOIN cdb_users       u  ON p.customer_id  = u.id
             {$where}
-            ORDER BY p.id {$sortDir}
+            ORDER BY p.pre_alert_id {$sortDir}
             LIMIT {$offset}, {$perPage}
         ");
         foreach ($params as $key => $val) { $db->bind($key, $val); }
@@ -80,7 +80,7 @@ class PreAlertsHandler
 
         // Duplicate tracking check
         $db = new Conexion();
-        $db->cdp_query("SELECT id FROM cdb_pre_alert WHERE tracking = :t AND customer_id = :cid LIMIT 1");
+        $db->cdp_query("SELECT pre_alert_id FROM cdb_pre_alert WHERE tracking = :t AND customer_id = :cid LIMIT 1");
         $db->bind(':t',   cdp_sanitize($data['tracking']));
         $db->bind(':cid', (int)$authUser->id);
         $db->cdp_execute();
@@ -91,7 +91,7 @@ class PreAlertsHandler
         // Handle optional file upload
         $invoiceFile = '';
         if (!empty($_FILES['file_invoice']['name'])) {
-            $uploadDir  = __DIR__ . '/../../../../pre_alert_files/';
+            $uploadDir  = __DIR__ . '/../../../pre_alert_files/';
             $imageName  = time() . '_' . basename($_FILES['file_invoice']['name']);
             $targetFile = $uploadDir . $imageName;
 
@@ -130,12 +130,12 @@ class PreAlertsHandler
         }
 
         // Fetch the new ID (cdp_insertPreAlert uses its own Conexion, so we query separately)
-        $db->cdp_query("SELECT id FROM cdb_pre_alert WHERE tracking = :t AND customer_id = :cid ORDER BY id DESC LIMIT 1");
+        $db->cdp_query("SELECT pre_alert_id FROM cdb_pre_alert WHERE tracking = :t AND customer_id = :cid ORDER BY pre_alert_id DESC LIMIT 1");
         $db->bind(':t',   cdp_sanitize($data['tracking']));
         $db->bind(':cid', (int)$authUser->id);
         $db->cdp_execute();
         $newRow = $db->cdp_registro();
-        $newId  = $newRow ? (int)$newRow->id : 0;
+        $newId  = $newRow ? (int)$newRow->pre_alert_id : 0;
 
         // Notification
         $db->cdp_query("
@@ -156,7 +156,7 @@ class PreAlertsHandler
         cdp_insertNotificationsUsers($notifId, (int)$authUser->id);
 
         // Fetch new record
-        $db->cdp_query("SELECT p.*, cc.name_com AS courier_name FROM cdb_pre_alert p LEFT JOIN cdb_courier_com cc ON p.courier_com = cc.id WHERE p.id = :id LIMIT 1");
+        $db->cdp_query("SELECT p.*, cc.name_com AS courier_name FROM cdb_pre_alert p LEFT JOIN cdb_courier_com cc ON p.courier_com = cc.id WHERE p.pre_alert_id = :id LIMIT 1");
         $db->bind(':id', (int)$newId);
         $db->cdp_execute();
         $row = $db->cdp_registro();
@@ -177,7 +177,7 @@ class PreAlertsHandler
             FROM cdb_pre_alert p
             LEFT JOIN cdb_courier_com cc ON p.courier_com = cc.id
             LEFT JOIN cdb_users       u  ON p.customer_id  = u.id
-            WHERE p.id = :id LIMIT 1
+            WHERE p.pre_alert_id = :id LIMIT 1
         ");
         $db->bind(':id', $id);
         $db->cdp_execute();
@@ -200,7 +200,7 @@ class PreAlertsHandler
         $authUser = ApiAuth::requirePermission('prealert_list');
 
         $db = new Conexion();
-        $db->cdp_query('SELECT id, customer_id FROM cdb_pre_alert WHERE id = :id LIMIT 1');
+        $db->cdp_query('SELECT pre_alert_id, customer_id FROM cdb_pre_alert WHERE pre_alert_id = :id LIMIT 1');
         $db->bind(':id', $id);
         $db->cdp_execute();
         $row = $db->cdp_registro();
@@ -212,7 +212,7 @@ class PreAlertsHandler
             ApiResponse::forbidden();
         }
 
-        $db->cdp_query('DELETE FROM cdb_pre_alert WHERE id = :id');
+        $db->cdp_query('DELETE FROM cdb_pre_alert WHERE pre_alert_id = :id');
         $db->bind(':id', $id);
         $db->cdp_execute();
 
@@ -225,7 +225,7 @@ class PreAlertsHandler
     {
         if (!$row) return [];
         return [
-            'id'             => (int)$row->id,
+            'id'             => (int)$row->pre_alert_id,
             'tracking'       => $row->tracking,
             'provider'       => $row->provider_shop ?? null,
             'courier_id'     => (int)($row->courier_com ?? 0),
