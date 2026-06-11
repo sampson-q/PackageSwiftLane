@@ -251,7 +251,7 @@ if ($numrows > 0) { ?>
 								if ($row->is_prealert == 1) { ?>
 
 									<span style="background: #ffa6a6;" class="label label-large">
-										<?php echo $lang['leftorder35']; ?>
+										<?php echo 'Pre-alert'; ?>
 									</span>
 
 								<?php } ?>
