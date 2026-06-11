@@ -99,8 +99,20 @@ $branchoffices = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_offices where id= '" . $row_order->origin_off . "'");
 $offices = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_consolidate_detail WHERE consolidate_id='" . $_GET['id'] . "'");
+$page      = (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) ? $_REQUEST['page'] : 1;
+$per_page = (isset($_REQUEST['per_page']) && !empty($_REQUEST['per_page'])) ? (int)$_REQUEST['per_page'] : 10;
+$adjacents = 4;
+$offset    = ($page - 1) * $per_page;
+
+$order_items_sql = "SELECT * FROM cdb_consolidate_detail WHERE consolidate_id='" . $_GET['id'] . "'";
+$db->cdp_query($order_items_sql);
+$db->cdp_execute();
+$numrows = $db->cdp_rowCount();
+
+$db->cdp_query($order_items_sql . " LIMIT $offset, $per_page");
 $order_items = $db->cdp_registros();
+
+$total_pages = ceil($numrows / $per_page);
 
 $db->cdp_query("SELECT estimated_eta FROM cdb_package_tracking_number WHERE order_id = :id");
 $db->bind(':id', $_GET['id']);
@@ -930,14 +942,28 @@ if ($row_order->status_invoice == 1) {
                     <div class="col-lg-12 col-xl-12 col-md-12">
                         <div class="card">
                             <div class="card-body">
-                                <div class="d-md-flex align-items-center">
-                                    <div>
+                                <div class="row d-md-flex align-items-center">
+                                    <div class="col-4">
                                         <h3 class="card-title"><span><?php echo $lang['left533020009'] ?></span></h3>
+                                    </div>
+                                    <div class="col-4 row">
+                                        <select onchange="cdp_filterByRows();" class="form-control custom-select" id="filter_rows" name="filter_rows">
+                                            <option value="0"><?php echo 'Filter By Rows'?></option>
+                                            <option value="10"><?php echo 10 ?></option>
+                                            <option value="20"><?php echo 20 ?></option>
+                                            <option value="30"><?php echo 30 ?></option>
+                                            <option value="40"><?php echo 40 ?></option>
+                                            <option value="50"><?php echo 50 ?></option>
+                                            <option value="show_all"><?php echo 'Show All' ?></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-4 text-right">
+                                        <button id="export-order-btn" class="btn btn-success btn-sm">Export this Order</button>
                                     </div>
                                 </div>
                                 <div><hr></div>
                                 <div class="table-responsive">
-                                    <table class="table table-hover" id="tabla">
+                                    <table class="table table-hover" id="tabla-items">
                                         <thead class="bg-inverse text-white">
                                             <tr>
                                                 <th colspan="3"><b><?php echo $lang['packager']; ?></b></th>
@@ -1299,7 +1325,7 @@ if ($row_order->status_invoice == 1) {
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
     <script src="dataJs/consolidate_view.js"></script>
-
+    <script>var cdp_consolidate_id = <?php echo (int)$_GET['id']; ?>;</script>
 
 </body>
 
