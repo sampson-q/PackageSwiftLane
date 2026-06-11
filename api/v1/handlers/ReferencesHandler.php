@@ -22,7 +22,7 @@ class ReferencesHandler
         ApiAuth::requireAuth();
 
         $db = new Conexion();
-        $db->cdp_query('SELECT id, name, code FROM cdb_countries ORDER BY name ASC');
+        $db->cdp_query('SELECT id, name, iso3 AS code, phone_code FROM cdb_countries ORDER BY name ASC');
         $rows = $db->cdp_registros();
         ApiResponse::success(self::toArray($rows));
     }
@@ -35,10 +35,10 @@ class ReferencesHandler
         $db = new Conexion();
 
         if ($countryId > 0) {
-            $db->cdp_query('SELECT id, name, code FROM cdb_states WHERE country_id = :cid ORDER BY name ASC');
+            $db->cdp_query('SELECT id, name, iso AS code FROM cdb_states WHERE country_id = :cid ORDER BY name ASC');
             $db->bind(':cid', $countryId);
         } else {
-            $db->cdp_query('SELECT id, name, code FROM cdb_states ORDER BY name ASC');
+            $db->cdp_query('SELECT id, name, iso AS code FROM cdb_states ORDER BY name ASC');
         }
 
         $rows = $db->cdp_registros();
@@ -88,7 +88,7 @@ class ReferencesHandler
         ApiAuth::requireAuth();
 
         $db = new Conexion();
-        $db->cdp_query('SELECT id, packaging_name AS name FROM cdb_packaging ORDER BY id ASC');
+        $db->cdp_query('SELECT id, name_pack AS name FROM cdb_packaging ORDER BY id ASC');
         $rows = $db->cdp_registros();
         ApiResponse::success(self::toArray($rows));
     }
@@ -98,7 +98,7 @@ class ReferencesHandler
         ApiAuth::requireAuth();
 
         $db = new Conexion();
-        $db->cdp_query('SELECT id, name_item AS name FROM cdb_shipping_mode ORDER BY id ASC');
+        $db->cdp_query('SELECT id, ship_mode AS name FROM cdb_shipping_mode ORDER BY id ASC');
         $rows = $db->cdp_registros();
         ApiResponse::success(self::toArray($rows));
     }
@@ -108,7 +108,7 @@ class ReferencesHandler
         ApiAuth::requireAuth();
 
         $db = new Conexion();
-        $db->cdp_query('SELECT id, deli_time AS name FROM cdb_delivery_time ORDER BY id ASC');
+        $db->cdp_query('SELECT id, delitime AS name FROM cdb_delivery_time ORDER BY id ASC');
         $rows = $db->cdp_registros();
         ApiResponse::success(self::toArray($rows));
     }
@@ -148,7 +148,7 @@ class ReferencesHandler
         ApiAuth::requireAuth();
 
         $db = new Conexion();
-        $db->cdp_query('SELECT id, name_method AS name, days, is_active FROM cdb_payment_methods WHERE is_active = 1 ORDER BY id ASC');
+        $db->cdp_query('SELECT id, label AS name, days FROM cdb_payment_methods ORDER BY id ASC');
         $rows = $db->cdp_registros();
         ApiResponse::success(self::toArray($rows));
     }
