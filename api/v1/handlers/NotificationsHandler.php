@@ -21,22 +21,22 @@ class NotificationsHandler
         $unread  = isset($_GET['unread']) ? (bool)$_GET['unread'] : false;
 
         $userId = (int)$authUser->id;
-        $extra  = $unread ? " AND nu.read_status = 0" : '';
+        $extra  = $unread ? " AND nu.notification_read = 0" : '';
 
         $db->cdp_query("SELECT COUNT(*) AS total FROM cdb_notifications n
-            INNER JOIN cdb_notifications_users nu ON nu.notification_id = n.id
+            INNER JOIN cdb_notifications_users nu ON nu.notification_id = n.notification_id
             WHERE nu.user_id = :uid {$extra}");
         $db->bind(':uid', $userId);
         $db->cdp_execute();
         $total = (int)($db->cdp_registro()->total ?? 0);
 
         $db->cdp_query("
-            SELECT n.id, n.notification_description, n.shipping_type,
-                   n.notification_date, nu.read_status
+            SELECT n.notification_id AS id, n.notification_description, n.shipping_type,
+                   n.notification_date, nu.notification_read AS read_status
             FROM cdb_notifications n
-            INNER JOIN cdb_notifications_users nu ON nu.notification_id = n.id
+            INNER JOIN cdb_notifications_users nu ON nu.notification_id = n.notification_id
             WHERE nu.user_id = :uid {$extra}
-            ORDER BY n.id DESC
+            ORDER BY n.notification_id DESC
             LIMIT {$offset}, {$perPage}
         ");
         $db->bind(':uid', $userId);
@@ -54,7 +54,7 @@ class NotificationsHandler
         $userId   = (int)$authUser->id;
 
         $db = new Conexion();
-        $db->cdp_query("UPDATE cdb_notifications_users SET read_status = 1
+        $db->cdp_query("UPDATE cdb_notifications_users SET notification_read = 1
             WHERE notification_id = :id AND user_id = :uid");
         $db->bind(':id',  $id);
         $db->bind(':uid', $userId);
@@ -75,7 +75,7 @@ class NotificationsHandler
         $userId   = (int)$authUser->id;
 
         $db = new Conexion();
-        $db->cdp_query("UPDATE cdb_notifications_users SET read_status = 1 WHERE user_id = :uid");
+        $db->cdp_query("UPDATE cdb_notifications_users SET notification_read = 1 WHERE user_id = :uid");
         $db->bind(':uid', $userId);
         $db->cdp_execute();
 
