@@ -76,7 +76,7 @@ class ShipmentsHandler
             SELECT a.order_id, a.order_prefix, a.order_no, a.order_date,
                    a.sender_id, a.receiver_id, a.agency, a.origin_off,
                    a.order_courier, a.order_service_options, a.order_deli_time,
-                   a.order_payment_method, a.order_pay_mode, a.driver_id,
+                   a.order_payment_method, a.order_pay_mode, a.driver_id, a.recipient_type,
                    a.status_courier, a.status_invoice, a.is_pickup, a.is_consolidate,
                    a.total_weight, a.sub_total, a.total_tax, a.total_tax_insurance,
                    a.total_tax_discount, a.total_tax_custom_tariffis, a.total_reexp,
@@ -130,6 +130,7 @@ class ShipmentsHandler
             'order_payment_method'  => 'required|integer',
             'status_courier'        => 'required|integer',
             'order_date'            => 'required|date',
+            'recipient_type'        => 'nullable|in:user,recipient,sender',
         ]);
 
         if (!empty($errors)) {
@@ -164,6 +165,9 @@ class ShipmentsHandler
             'recipient_id'          => (int)$data['recipient_id'],
             'sender_address_id'     => (int)$data['sender_address_id'],
             'recipient_address_id'  => (int)$data['recipient_address_id'],
+            // recipient_type discriminator: 'recipient' = separate cdb_recipients row (default),
+            // 'user' = sender is their own recipient, 'sender' = pre-alert-originated shipment.
+            'recipient_type'        => cdp_sanitize($data['recipient_type'] ?? 'recipient'),
             'order_date'            => $saleDate,
             'agency'                => (int)$data['agency'],
             'origin_off'            => (int)$data['origin_off'],
@@ -267,7 +271,7 @@ class ShipmentsHandler
         $tracking = $db->cdp_registros();
 
         $result               = self::formatRow($row);
-        $result['packages']   = $lines ?: [];
+        $result['packages']   = array_map([self::class, 'formatPackageLine'], $lines ?: []);
         $result['tracking']   = $tracking ?: [];
 
         ApiResponse::success($result);
@@ -277,7 +281,7 @@ class ShipmentsHandler
 
     public function updateStatus(int $id): void
     {
-        $authUser = ApiAuth::requirePermission(['edit_shipment', 'edit_shipment_status']);
+        $authUser = ApiAuth::requirePermission(['edit_shipment', 'select_change_status_courier']);
         $data     = ApiResponse::getRequestData();
 
         $errors = ApiValidator::validate($data, [
@@ -360,6 +364,7 @@ class ShipmentsHandler
             'sender_name'          => $row->sender_name ?? null,
             'receiver_id'          => (int)$row->receiver_id,
             'receiver_name'        => $row->receiver_name ?? null,
+            'recipient_type'       => $row->recipient_type ?? null,
             'agency'               => (int)($row->agency ?? 0),
             'origin_off'           => (int)($row->origin_off ?? 0),
             'order_courier'        => (int)($row->order_courier ?? 0),
@@ -385,6 +390,28 @@ class ShipmentsHandler
             'total_order'          => (float)($row->total_order ?? 0),
             'due_date'             => $row->due_date ?? null,
             'order_incomplete'     => (bool)(int)($row->order_incomplete ?? 0),
+        ];
+    }
+
+    /**
+     * Normalise a cdb_add_order_item row into the public package-line shape,
+     * keeping the create/show contracts symmetric.
+     */
+    public static function formatPackageLine($row): array
+    {
+        if (!$row) {
+            return [];
+        }
+        return [
+            'id'             => (int)($row->order_item_id ?? 0),
+            'description'    => $row->order_item_description ?? null,
+            'qty'            => (float)($row->order_item_quantity ?? 0),
+            'weight'         => (float)($row->order_item_weight ?? 0),
+            'length'         => (float)($row->order_item_length ?? 0),
+            'width'          => (float)($row->order_item_width ?? 0),
+            'height'         => (float)($row->order_item_height ?? 0),
+            'fixed_value'    => (float)($row->order_item_fixed_value ?? 0),
+            'declared_value' => (float)($row->order_item_declared_value ?? 0),
         ];
     }
 }
