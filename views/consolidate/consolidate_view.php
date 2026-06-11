@@ -966,15 +966,14 @@ if ($row_order->status_invoice == 1) {
                                     <table class="table table-hover" id="tabla-items">
                                         <thead class="bg-inverse text-white">
                                             <tr>
-                                                <th colspan="3"><b><?php echo $lang['packager']; ?></b></th>
-                                                <th></th>
-                                                <th colspan="3"><b><?php echo $lang['ltracking']; ?></b></th>
-                                                <th colspan="3" class="text-right"><b><?php echo 'Qty' ?></b></th>
-                                                <th colspan="3"><b><?php echo $lang['contents']; ?></b></th>
-                                                <th></th>
+                                                <th><b><?php echo $lang['packager']; ?></b></th>
+                                                <th><b><?php echo 'Package Status'; ?></b></th>
+                                                <th><b><?php echo $lang['ltracking']; ?></b></th>
+                                                <th class="text-right"><b><?php echo 'Qty' ?></b></th>
+                                                <th><b><?php echo $lang['contents']; ?></b></th>
+                                                
                                                 <th colspan="3"><b><?php echo $lang['left215']; ?></b></th>
                                                 <th colspan="3"><b><?php echo $lang['ship-all5']; ?></b></th>
-                                                <th></th>
                                             </tr>
                                         </thead>
                                         <tbody id="projects-tbl">
@@ -1029,31 +1028,35 @@ if ($row_order->status_invoice == 1) {
                                                     $sender_name = $sender->fname . ' ' . $sender->lname;
 
                                                     // Fetch package total price
-                                                    $db->cdp_query("SELECT total_order, order_id FROM cdb_add_order WHERE order_no='" . $row_order_item->order_no . "'");
+                                                    $db->cdp_query("SELECT total_order, order_id, status_courier FROM cdb_add_order WHERE order_no='" . $row_order_item->order_no . "'");
                                                     $order_details = $db->cdp_registro();
 
                                                     // Fetch items (quantity + description)
                                                     $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id = '" . $order_details->order_id . "'");
                                                     $items = $db->cdp_registros();
+
+                                                    $db->cdp_query("SELECT * FROM cdb_styles where id='" . $order_details->status_courier . "'");
+						                            $package_style = $db->cdp_registro();
+
                                                     ?>
                                                     <tr class="card-hover">
-                                                        <td colspan="3"><b><?php echo $sender_name; ?></b></td>
-                                                        <td></td>
-                                                        <td colspan="3"><b><?php echo $row_order_item->order_prefix . $row_order_item->order_no; ?></b></td>
-                                                        <td colspan="3" class="text-right">
+                                                        <td><b><?php echo $sender_name; ?></b></td>
+                                                        <td><span class="label" style="background-color: <?php echo $package_style->color; ?>"><?php echo $package_style->mod_style; ?></span></td>
+                                                        <td><b><?php echo $row_order_item->order_prefix . $row_order_item->order_no; ?></b></td>
+
+                                                        <td class="text-right">
                                                             <?php foreach ($items as $item) { ?>
                                                                 <b><?php echo (int) $item->order_item_quantity; ?></b><br>
                                                             <?php } ?>
                                                         </td>
-                                                        <td colspan="3">
+                                                        <td>
                                                             <?php foreach ($items as $item) { ?>
                                                                 <b><?php echo $item->order_item_description; ?></b><br>
                                                             <?php } ?>
                                                         </td>
-                                                        <td></td>
+                                                        
                                                         <td colspan="3"><?php echo number_format($row_order_item->weight, 2, '.', ''); ?></td>
                                                         <td colspan="3"><?php echo cdb_money_format($order_details->total_order); ?></td>
-                                                        <td></td>
                                                     </tr>
                                                 <?php }
 
