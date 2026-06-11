@@ -32,9 +32,9 @@ $("#driver_update").on('submit', function (event) {
 
 
 $('#modalDriver').on('show.bs.modal', function (event) {
-  var button = $(event.relatedTarget) // Button that triggered the modal
-  var id_shipment = button.data('id_shipment') // Extract info from data-* attributes
-  var id_sender = button.data('id_sender') // Extract info from data-* attributes
+  var button = $(event.relatedTarget)
+  var id_shipment = button.data('id_shipment')
+  var id_sender = button.data('id_sender')
   var modal = $(this)
   $('#id_shipment').val(id_shipment)
   $('#id_senderclient_driver_update').val(id_sender)
@@ -64,10 +64,10 @@ $("#send_email").on('submit', function (event) {
 })
 
 $('#myModal').on('show.bs.modal', function (event) {
-  var button = $(event.relatedTarget) // Button that triggered the modal
-  var order = button.data('order') // Extract info from data-* attributes
-  var id = button.data('id') // Extract info from data-* attributes
-  var email = button.data('email') // Extract info from data-* attributes
+  var button = $(event.relatedTarget)
+  var order = button.data('order')
+  var id = button.data('id')
+  var email = button.data('email')
   var modal = $(this)
   $('#subject').val("#" + order)
   $('#id').val(id)
@@ -77,16 +77,16 @@ $('#myModal').on('show.bs.modal', function (event) {
 
 
 $('#detail_payment_packages').on('show.bs.modal', function (event) {
-  var button = $(event.relatedTarget) // Button that triggered the modal
-  var id = button.data('id') // Extract info from data-* attributes
-  var customer = button.data('customer') // Extract info from data-* attributes
+  var button = $(event.relatedTarget)
+  var id = button.data('id')
+  var customer = button.data('customer')
 
   $('#order_id_confirm_payment').val(id);
   $('#customer_id_confirm_payment').val(customer);
 
   $(".resultados_ajax_payment_data").html('');
 
-  cdp_load_payment_detail(id);//Cargas los pagos 
+  cdp_load_payment_detail(id);
 
 })
 
@@ -102,10 +102,6 @@ function cdp_load_payment_detail(id) {
     }
   });
 }
-
-
-
-
 
 
 $("#send_payment").on('submit', function (event) {
@@ -137,3 +133,76 @@ $("#send_payment").on('submit', function (event) {
   event.preventDefault();
 
 })
+
+document.getElementById('export-order-btn').addEventListener('click', function (ev) {
+    const card = ev.currentTarget.closest('.card');
+    if (!card) return alert('Card not found.');
+
+    const tables = Array.from(card.querySelectorAll('table'));
+    if (tables.length === 0) return alert('No tables found in this card.');
+
+    let doc = '<!DOCTYPE html><html><head>';
+    doc += '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />';
+    doc += '<style>td,th{border:1px solid #000;padding:4px;font-family:Arial,Helvetica,sans-serif;font-size:11px;} table{border-collapse:collapse;}</style>';
+    doc += '</head><body>';
+
+    tables.forEach(tbl => {
+        const clone = tbl.cloneNode(true);
+
+        // Reveal all hidden rows so the export always contains the full dataset
+        clone.querySelectorAll('tbody tr').forEach(function (tr) {
+            tr.style.display = '';
+        });
+
+        clone.querySelectorAll('p').forEach(p => {
+            const br = document.createElement('span');
+            br.innerHTML = p.innerHTML + '<br/>';
+            p.parentNode.replaceChild(br, p);
+        });
+
+        doc += clone.outerHTML;
+        doc += '<div style="height:10px;"></div>';
+    });
+
+    doc += '</body></html>';
+
+    const blob = new Blob(["\uFEFF", doc], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const orderId = card.dataset.orderId || ('order_' + Date.now());
+    a.download = orderId + '.xls';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+});
+
+function cdp_load(page) {
+    var per_page = $("#filter_rows").val();
+
+    if (!per_page || per_page === "0") per_page = 10;
+    if (per_page === "show_all")       per_page = 99999;
+
+    var parametros = {
+        page:     page,
+        per_page: parseInt(per_page, 10),
+        id:       cdp_consolidate_id
+    };
+
+    $("#tabla-items tbody").css("opacity", "0.4");
+
+    $.ajax({
+        type: "GET",
+        url:  "ajax/consolidate/consolidate_items_ajax.php",
+        data: parametros,
+        success: function (data) {
+            $("#tabla-items tbody").css("opacity", "1").html(data);
+        }
+    });
+}
+
+function cdp_filterByRows() {
+    if ($("#filter_rows").val() === "0") return;
+    cdp_load(1);
+}
