@@ -22,10 +22,24 @@ $db = new Conexion;
 $db->cdp_query("SELECT * FROM cdb_info_ship_default where id= '1'");
 $infoship = $db->cdp_registro();
 
+// Pre-alert conversion mode (?prealert_id=N): prefill the sender and carry the
+// purchase details through a hidden field to add_courier_ajax.php.
+$prealert_conv = null;
+$prealert_customer = null;
+if (isset($_GET['prealert_id']) && intval($_GET['prealert_id']) > 0) {
+    $pa_res = cdp_getPreAlert(intval($_GET['prealert_id']));
+    $prealert_conv = is_array($pa_res) ? ($pa_res['data'] ?? null) : $pa_res;
+    if ($prealert_conv) {
+        $db->cdp_query("SELECT * FROM cdb_users where id = :uid");
+        $db->bind(':uid', (int) $prealert_conv->customer_id);
+        $prealert_customer = $db->cdp_registro();
+    }
+}
+
 $db->cdp_query("SELECT * FROM cdb_category where id= '" . $infoship->logistics_default1 . "'");
 $s_logistics = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_delivery_time where id = 12");
+$db->cdp_query("SELECT * FROM cdb_delivery_time where id = 14");
 $delivery_times = $db->cdp_registro();
 
 $db->cdp_query("SELECT * FROM cdb_met_payment where id= '" . $infoship->pay_default6 . "'");
@@ -271,13 +285,32 @@ $categories   = $core->cdp_getCategoriesById(27);
 
                                 <?php } ?>
 
+                                <?php if ($prealert_conv) { ?>
+                                    <input type="hidden" name="prealert_id" id="prealert_id" value="<?php echo (int) $prealert_conv->pre_alert_id; ?>">
+                                    <div class="alert alert-info">
+                                        <b>Pre-Alert #<?php echo (int) $prealert_conv->pre_alert_id; ?></b> &mdash;
+                                        Tracking: <b><?php echo htmlspecialchars((string) $prealert_conv->tracking, ENT_QUOTES, 'UTF-8'); ?></b>
+                                        | Provider: <?php echo htmlspecialchars((string) $prealert_conv->provider_shop, ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php if (!empty($prealert_conv->package_description)) { ?>
+                                            | <?php echo htmlspecialchars((string) $prealert_conv->package_description, ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php } ?>
+                                        <br><small>The purchase details above will be attached to this shipment automatically.</small>
+                                    </div>
+                                <?php } ?>
+
                                 <div class="row">
                                     <!-- Remitente -->
                                     <div class="col-md-6">
                                         <label class="control-label col-form-label"><?php echo $lang['sender_search_title'] ?></label>
                                         <div class="row">
                                             <div class="col-md-10">
-                                                <select class="select2 form-control custom-select" id="sender_id" name="sender_id" style="width:100%"></select>
+                                                <select class="select2 form-control custom-select" id="sender_id" name="sender_id" style="width:100%">
+                                                    <?php if ($prealert_customer) { ?>
+                                                        <option value="<?php echo (int) $prealert_customer->id; ?>" selected>
+                                                            <?php echo htmlspecialchars(trim($prealert_customer->fname . ' ' . $prealert_customer->lname) . (!empty($prealert_customer->email) ? ' (' . $prealert_customer->email . ')' : ''), ENT_QUOTES, 'UTF-8'); ?>
+                                                        </option>
+                                                    <?php } ?>
+                                                </select>
                                             </div>
                                             <div class="col-md-2">
                                               <button type="button" class="btn btn-default" data-type_user="user_customer" data-toggle="modal" data-target="#myModalAddUser"><i class="fa fa-plus"></i></button>
@@ -287,7 +320,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                         <label class="control-label col-form-label mt-3"><?php echo $lang['sender_search_address_title'] ?></label>
                                         <div class="row">
                                             <div class="col-md-10">
-                                                <select class="select2 form-control" id="sender_address_id" name="sender_address_id" disabled style="width:100%"></select>
+                                                <select class="select2 form-control" id="sender_address_id" name="sender_address_id" <?php echo $prealert_customer ? '' : 'disabled'; ?> style="width:100%"></select>
                                             </div>
                                             <div class="col-md-2">
                                                 <button type="button" id="add_address_sender" data-type_user="user_customer" data-toggle="modal" data-target="#myModalAddUserAddresses" class="btn btn-default" disabled><i class="fa fa-plus"></i></button>
@@ -300,7 +333,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                         <label class="control-label col-form-label"><?php echo $lang['recipient_search_title'] ?></label>
                                         <div class="row">
                                             <div class="col-md-10">
-                                                <select class="select2 form-control custom-select" id="recipient_id" name="recipient_id" disabled style="width:100%"></select>
+                                                <select class="select2 form-control custom-select" id="recipient_id" name="recipient_id" <?php echo $prealert_customer ? '' : 'disabled'; ?> style="width:100%"></select>
                                             </div>
                                             <div class="col-md-2">
                                                 <button type="button" id="add_recipient" data-type_user="user_recipient" data-toggle="modal" data-target="#myModalAddRecipient" class="btn btn-default" disabled><i class="fa fa-plus"></i></button>
@@ -827,7 +860,8 @@ $categories   = $core->cdp_getCategoriesById(27);
     <?php include('helpers/languages/translate_to_js.php'); ?>
     <script src="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="assets/template/assets/libs/select2/dist/js/select2.min.js"></script>
+    <!-- select2.min.js intentionally NOT loaded: loading it after the full build
+         overrides full-build modules and degrades the ajax selects. -->
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
     <script src="assets/template/dist/js/app-style-switcher.js"></script>
