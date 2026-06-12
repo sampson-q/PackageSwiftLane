@@ -173,6 +173,19 @@ if (empty($errors)) {
         }
     }
 
+    // The add form does not always submit service/category — fall back to the
+    // admin-configured defaults so the stored row (and every message built from
+    // it) carries real values instead of 0/N/A.
+    $infoship_defaults = cdp_getInfoShipDefault();
+    $order_service_options_in = intval($_POST["order_service_options"] ?? 0);
+    if ($order_service_options_in <= 0) {
+        $order_service_options_in = (int) ($infoship_defaults->service_default4 ?? 0);
+    }
+    $order_item_category_in = intval($_POST["order_item_category"] ?? 0);
+    if ($order_item_category_in <= 0) {
+        $order_item_category_in = (int) ($infoship_defaults->logistics_default1 ?? 0);
+    }
+
     $dataShipment = array(
         'user_id'              => $_SESSION['userid'],
         'order_prefix'         => $code_prefix,
@@ -188,9 +201,9 @@ if (empty($errors)) {
         'agency'               => $agencyId,
         'origin_off'           => cdp_sanitize(intval($_POST["origin_off"])),
         'order_package'        => cdp_sanitize(intval($_POST["order_package"])),
-        'order_item_category'  => cdp_sanitize(intval($_POST["order_item_category"])),
+        'order_item_category'  => $order_item_category_in,
         'order_courier'        => cdp_sanitize(intval($_POST["order_courier"])),
-        'order_service_options'=> cdp_sanitize(intval($_POST["order_service_options"])),
+        'order_service_options'=> $order_service_options_in,
         'order_deli_time'      => cdp_sanitize(intval($_POST["order_deli_time"])),
         'order_payment_method' => cdp_sanitize(intval($_POST["order_payment_method"])),
         'status_courier'       => cdp_sanitize(intval($_POST["status_courier"])),
@@ -202,11 +215,32 @@ if (empty($errors)) {
         'tracking_number' => cdp_sanitize(intval($_POST['tracking_number'])),
         'estimated_eta' => cdp_sanitize($_POST['estimated_eta']),
         'recipient_type' => cdp_sanitize($_POST['recipient_type'] ?? 'recipient'),
+        'notify_whatsapp_sender' => (isset($_POST['notify_whatsapp_sender']) && intval($_POST['notify_whatsapp_sender']) === 1) ? 1 : 0,
     );
+
+    // Pre-alert conversion (air): carry the purchase details onto the shipment.
+    $prealert_id = intval($_POST['prealert_id'] ?? 0);
+    if ($prealert_id > 0) {
+        $prealert_res = cdp_getPreAlert($prealert_id);
+        $prealert_row = is_array($prealert_res) ? ($prealert_res['data'] ?? null) : $prealert_res;
+        if ($prealert_row) {
+            $dataShipment['tracking_purchase'] = $prealert_row->tracking;
+            $dataShipment['provider_purchase'] = $prealert_row->provider_shop;
+            $dataShipment['price_purchase']    = $prealert_row->purchase_price;
+        }
+    }
 
     $shipment_id = cdp_insertCourierShipment($dataShipment);
 
     if ($shipment_id !== null) {
+
+        // Mark the pre-alert as converted into a shipment.
+        if ($prealert_id > 0) {
+            $db_pa = new Conexion;
+            $db_pa->cdp_query("UPDATE cdb_pre_alert SET is_package = 1 WHERE pre_alert_id = :id");
+            $db_pa->bind(':id', $prealert_id);
+            $db_pa->cdp_execute();
+        }
 
         if (isset($_POST["packages"])) {
 
@@ -422,7 +456,10 @@ if (empty($errors)) {
         cdp_insertCourierShipmentTrack($dataTrack);
 
         $sender_data   = cdp_getSenderCourier(intval($_POST["sender_id"]));
-        $receiver_data = cdp_getRecipientCourier(intval($_POST["recipient_id"]));
+        // recipient_type='user': the sender doubles as recipient (cdb_users), not cdb_recipients.
+        $receiver_data = ((cdp_sanitize($_POST['recipient_type'] ?? 'recipient')) === 'user')
+            ? cdp_getSenderCourier(intval($_POST["recipient_id"]))
+            : cdp_getRecipientCourier(intval($_POST["recipient_id"]));
 
         $fullshipment = $code_prefix . $_POST["order_no"];
 
@@ -431,7 +468,7 @@ if (empty($errors)) {
 
         $date_ship = date("Y-m-d H:i:s a");
 
-        $app_url = $settings->site_url . 'track.php?order_track=' . $fullshipment;
+        $app_url = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
         $subject = $lang['notification_shipment2'] . $lang['notification_shipment6'] . $fullshipment;
 
         $email_template = cdp_getEmailTemplatesdg1i4(16);
@@ -658,30 +695,65 @@ if (empty($errors)) {
                         $office_obj = $db_office->cdp_registro();
                         $origin_office = $office_obj ? $office_obj->name_off : 'N/A';
 
+                        // Extra, well-sourced details: pieces / weight / dims /
+                        // carrier tracking / ETA — only lines we actually have.
+                        $extra_lines = array();
+                        if (isset($_POST['packages'])) {
+                            $pkgs_wa = json_decode($_POST['packages']);
+                            if (is_array($pkgs_wa) && count($pkgs_wa) > 0) {
+                                $pieces_wa = 0;
+                                $weight_wa = 0.0;
+                                $dims_wa = array();
+                                foreach ($pkgs_wa as $p_wa) {
+                                    $qty_wa = max(1, (int) ($p_wa->qty ?? 1));
+                                    $pieces_wa += $qty_wa;
+                                    $weight_wa += (float) ($p_wa->weight ?? 0) * $qty_wa;
+                                    $dims_wa[] = (0 + ($p_wa->length ?? 0)) . 'x' . (0 + ($p_wa->width ?? 0)) . 'x' . (0 + ($p_wa->height ?? 0));
+                                }
+                                $weight_unit_wa = trim((string) ($settings->weight_p ?? 'lb'));
+                                $dim_unit_wa = trim((string) ($settings->units ?? ''));
+                                $extra_lines[] = '• Pieces: ' . $pieces_wa;
+                                $extra_lines[] = '• Total weight: ' . (0 + round($weight_wa, 2)) . ' ' . $weight_unit_wa;
+                                $extra_lines[] = '• Dimensions: ' . implode(' | ', $dims_wa) . ($dim_unit_wa !== '' ? ' ' . $dim_unit_wa : '');
+                            }
+                        }
+                        $postal_tracking_wa = trim((string) ($_POST['tracking_number'] ?? ''));
+                        if ($postal_tracking_wa !== '' && $postal_tracking_wa !== '0') {
+                            $extra_lines[] = '• Carrier tracking #: ' . $postal_tracking_wa;
+                        }
+                        $eta_wa = trim((string) ($_POST['estimated_eta'] ?? ''));
+                        if ($eta_wa !== '') {
+                            $extra_lines[] = '• Estimated arrival: ' . $eta_wa;
+                        }
+                        $extra_details_wa = $extra_lines ? implode("\n", $extra_lines) . "\n" : '';
+                        $track_url_wa = rtrim((string) ($settings->site_url ?? ''), '/') . '/track.php?order_track=' . rawurlencode($fullshipment);
+
                         $whatsapp_body = str_replace(
                             [
                                 '[CUSTOMER_FULLNAME]',
                                 '[TRACKING_NUMBER]',
                                 '[PROVIDER_NAME]',
-                                '[PRICE_PURCHASE]',
                                 '[COURIER_NAME]',
                                 '[PACKAGE_TYPE]',
                                 '[SERVICE_TYPE]',
                                 '[DELIVERY_TIME]',
                                 '[ORIGIN_OFFICE]',
+                                '[EXTRA_DETAILS]',
+                                '[TRACK_URL]',
                                 '[COMPANY_SITE_URL]',
                                 '[COMPANY_NAME]'
                             ],
                             [
                                 ucfirst(trim(($sender_data->fname ?? '') . ' ' . ($sender_data->lname ?? ''))),
                                 $fullshipment,
-                                $dataShipment['provider_purchase'],
-                                number_format((float)$dataShipment['price_purchase'], 2),
+                                (string) ($dataShipment['provider_purchase'] ?? ''),
                                 $courier_name,
                                 $package_type,
                                 $service_type,
                                 $delivery_time,
                                 $origin_office,
+                                $extra_details_wa,
+                                $track_url_wa,
                                 !empty($settings->site_url) ? $settings->site_url : 'www.company.com',
                                 !empty($settings->site_name) ? $settings->site_name : 'Our Company'
                             ],
