@@ -25,7 +25,7 @@ require_once('helpers/querys.php');
 require_once("helpers/phpmailer/class.phpmailer.php");
 require_once("helpers/phpmailer/class.smtp.php");
 require_once("ajax/notify_sms/api_sms_consolidate_service.php");
-require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
+require_once("ajax/notify_whatsapp/api_whatsapp_service_v2.php");
 
 
 $userData = $user->cdp_getUserData();
@@ -49,7 +49,12 @@ if (isset($userData->userlevel) && (int)$userData->userlevel === 6) {
 
 $row = $data['data'];
 
-$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row->receiver_id . "'");
+// recipient_type='user': the sender doubles as recipient (cdb_users), not cdb_recipients.
+if (($row->recipient_type ?? 'recipient') === 'user') {
+    $db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row->receiver_id) . "'");
+} else {
+    $db->cdp_query("SELECT * FROM cdb_recipients where id= '" . intval($row->receiver_id) . "'");
+}
 $receiver_data = $db->cdp_registro();
 
 $office = $core->cdp_getOffices();
@@ -114,7 +119,13 @@ if (isset($_POST['person_receives'])) {
 
 
     if (empty($errors)) {
-        $db->cdp_query('UPDATE cdb_consolidate SET    
+        // Previous status — delivery alerts go out only on an actual change.
+        $db->cdp_query('SELECT status_courier FROM cdb_consolidate WHERE consolidate_id = :id');
+        $db->bind(':id', $id);
+        $row_status_wa = $db->cdp_registro();
+        $old_status_courier_wa = $row_status_wa ? (int) $row_status_wa->status_courier : null;
+
+        $db->cdp_query('UPDATE cdb_consolidate SET
                 status_courier =:status_courier,
                 person_receives=:person_receives,
                 photo_delivered=:photo_delivered
@@ -280,7 +291,7 @@ if (isset($_POST['person_receives'])) {
         $fullshipment = $row->c_prefix . $row->c_no;
         $date_ship   = date("Y-m-d H:i:s a");
 
-        $app_url = $settings->site_url . 'track.php?order_track=' . $fullshipment;
+        $app_url = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
         $subject = $lang['notification_shipment14'] . $lang['notification_shipment3'] . $fullshipment;
         $status_courier_deliver =  $lang['filter73'];
 
@@ -375,25 +386,26 @@ if (isset($_POST['person_receives'])) {
             }
         }
 
-        if (!empty($sender_data->phone)) {
-            try {
-                // Get template 3 for package delivery
-                $tpl = getTemplateWhatsApp(3);
-
-                if ($tpl) {
-                    // Format the message with tracking number placeholder
-                    $whatsapp_body = str_replace(
-                        '[TRACKING_NUMBER]',
-                        $fullshipment,
-                        $tpl->body
-                    );
-
-                    // Send via v2 API
-                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+        // Delivery WhatsApp — only when the consolidation wasn't already delivered.
+        if ($old_status_courier_wa !== 8) {
+            if (!empty($sender_data->phone)) {
+                try {
+                    $settings_wa = cdp_getSettingsCourier();
+                    $whatsapp_body = cdp_renderWhatsAppTemplate(3, array(
+                        '[CUSTOMER_FULLNAME]' => ucfirst(trim(($sender_data->fname ?? '') . ' ' . ($sender_data->lname ?? ''))),
+                        '[TRACKING_NUMBER]'   => $fullshipment,
+                        '[COMPANY_NAME]'      => !empty($settings_wa->site_name) ? $settings_wa->site_name : 'Our team',
+                    ));
+                    if ($whatsapp_body !== null) {
+                        sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                    }
+                } catch (Exception $e) {
+                    error_log('Error sending WhatsApp v2 notification to sender on delivery: ' . $e->getMessage());
                 }
-            } catch (Exception $e) {
-                error_log('Error sending WhatsApp v2 notification to sender on delivery: ' . $e->getMessage());
             }
+
+            // Tell the owner of every package still inside: it was delivered.
+            cdp_notifyConsolidationPackageSenders('consolidate', (int) $id, $fullshipment, cdp_wa_lookupName('cdb_styles', 'mod_style', 8));
         }
 
 
