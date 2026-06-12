@@ -150,12 +150,15 @@ if (empty($errors)) {
         insertCourierShipmentTrack($dataTrack);
 
         $sender_data = cdp_getSenderCourier(intval($shipment->sender_id));
-        $receiver_data = cdp_getRecipientCourier(intval($shipment->receiver_id));
+        // recipient_type='user': the sender doubles as recipient (cdb_users), not cdb_recipients.
+        $receiver_data = (($shipment->recipient_type ?? 'recipient') === 'user')
+            ? cdp_getSenderCourier(intval($shipment->receiver_id))
+            : cdp_getRecipientCourier(intval($shipment->receiver_id));
 
         $fullshipment = $shipment->order_prefix . $shipment->order_no;
         $date_ship   = date("Y-m-d H:i:s a");
 
-        $app_url = $settings->site_url . 'track.php?order_track=' . $fullshipment;
+        $app_url = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
         $subject = $lang['notification_shipment14'] . $lang['notification_shipment3'] . $fullshipment;
 
         // Obtener el ID del estado del envio desde el POST SMS
