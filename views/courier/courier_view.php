@@ -117,8 +117,8 @@ $consolidate_status_courier = $db->cdp_registro() -> status_courier;
 $db->cdp_query("SELECT * FROM cdb_styles where id='" . $consolidate_status_courier . "'");
 $consolidate_style = $db->cdp_registro();
 
-$db->cdp_query("SELECT tracking_number, estimated_eta FROM cdb_package_tracking_number WHERE order_id='" . $_GET['id'] . "'");
-$postal_tracking = $db->cdp_registro();
+// Legacy-aware: old-system orders kept the postal tracking on cdb_add_order.tracking_num.
+$postal_tracking = cdp_getPackageTrackingLegacyAware((int) $_GET['id']);
 
 
 $dias_ = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
