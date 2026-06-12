@@ -270,6 +270,291 @@ if (!function_exists('cdp_isWhatsAppNumber')) {
     }
 }
 
+if (!function_exists('cdp_wa_requireV2')) {
+    /** Lazy-load the v2 sender (circular-safe: it require_once's this file). */
+    function cdp_wa_requireV2()
+    {
+        if (!function_exists('sendNotificationWhatsApp_v2')) {
+            require_once dirname(__DIR__) . '/ajax/notify_whatsapp/api_whatsapp_service_v2.php';
+        }
+    }
+}
+
+if (!function_exists('cdp_renderWhatsAppTemplate')) {
+    /**
+     * Load a whatsapp_templates row and fill its placeholders.
+     * @return string|null null when the template is missing (caller should skip).
+     */
+    function cdp_renderWhatsAppTemplate($templateId, array $placeholders)
+    {
+        $tpl = getTemplateWhatsApp((int) $templateId);
+        if (!$tpl || $tpl->body === null || $tpl->body === '') {
+            cdp_wa_log("template {$templateId} missing/empty — message skipped");
+            return null;
+        }
+        return str_replace(array_keys($placeholders), array_values($placeholders), $tpl->body);
+    }
+}
+
+if (!function_exists('cdp_wa_lookupName')) {
+    /** Single-column reference lookup with N/A fallback (name_com/ship_mode/delitime/name_off...). */
+    function cdp_wa_lookupName($table, $column, $id)
+    {
+        if ((int) $id <= 0) {
+            return 'N/A';
+        }
+        $db = new Conexion;
+        $db->cdp_query("SELECT {$column} AS v FROM {$table} WHERE id = :id LIMIT 1");
+        $db->bind(':id', (int) $id);
+        $r = $db->cdp_registro();
+        return ($r && $r->v !== null && $r->v !== '') ? $r->v : 'N/A';
+    }
+}
+
+if (!function_exists('cdp_sendShipmentRegisteredWhatsApp')) {
+    /**
+     * "Your shipment is registered" message (template 4) — shared by the air/sea
+     * add+accept flows. Text only by design: the old PDF attachment was the
+     * invoice, and money details are excluded from sender alerts.
+     *
+     * @param object $sender     cdb_users row (the package owner)
+     * @param string $tracking   full tracking number (prefix + number)
+     * @param array  $ids        ['courier'=>id,'service'=>id,'delitime'=>id,'office'=>id]
+     *                           Service/category fall back to cdb_info_ship_default when 0.
+     * @param array  $extraLines pre-rendered "• ..." detail lines (pieces, weight,
+     *                           carrier tracking, ETA — never money)
+     */
+    function cdp_sendShipmentRegisteredWhatsApp($sender, $tracking, array $ids = [], array $extraLines = [])
+    {
+        cdp_wa_requireV2();
+        $settings = cdp_getSettingsCourier();
+
+        // Forms don't always submit the service — use the admin default rather
+        // than rendering N/A.
+        $service_id = (int) ($ids['service'] ?? 0);
+        if ($service_id <= 0 && function_exists('cdp_getInfoShipDefault')) {
+            $defaults = cdp_getInfoShipDefault();
+            $service_id = (int) ($defaults->service_default4 ?? 0);
+        }
+
+        $track_url = rtrim((string) ($settings->site_url ?? ''), '/') . '/track.php?order_track=' . rawurlencode($tracking);
+
+        $body = cdp_renderWhatsAppTemplate(4, [
+            '[CUSTOMER_FULLNAME]' => ucfirst(trim(($sender->fname ?? '') . ' ' . ($sender->lname ?? ''))),
+            '[TRACKING_NUMBER]'   => $tracking,
+            '[SERVICE_TYPE]'      => cdp_wa_lookupName('cdb_shipping_mode', 'ship_mode', $service_id),
+            '[COURIER_NAME]'      => cdp_wa_lookupName('cdb_courier_com', 'name_com', $ids['courier'] ?? 0),
+            '[DELIVERY_TIME]'     => cdp_wa_lookupName('cdb_delivery_time', 'delitime', $ids['delitime'] ?? 0),
+            '[ORIGIN_OFFICE]'     => cdp_wa_lookupName('cdb_offices', 'name_off', $ids['office'] ?? 0),
+            '[EXTRA_DETAILS]'     => $extraLines ? implode("\n", $extraLines) . "\n" : '',
+            '[TRACK_URL]'         => $track_url,
+            '[COMPANY_SITE_URL]'  => !empty($settings->site_url) ? $settings->site_url : '',
+            '[COMPANY_NAME]'      => !empty($settings->site_name) ? $settings->site_name : 'Our Company',
+        ]);
+        if ($body === null) {
+            return ['success' => false, 'skipped' => true, 'message' => 'WhatsApp template 4 not found.'];
+        }
+        return sendNotificationWhatsApp_v2($sender, $body);
+    }
+}
+
+if (!function_exists('cdp_wa_buildShipmentExtraLines')) {
+    /**
+     * Extra detail lines for the "shipment registered" message, sourced from the
+     * submitting form's POST: pieces / total weight / dimensions (packages json),
+     * carrier tracking number and ETA. Never money. Returns [] when none apply.
+     */
+    function cdp_wa_buildShipmentExtraLines()
+    {
+        $settings = cdp_getSettingsCourier();
+        $lines = array();
+
+        if (isset($_POST['packages'])) {
+            $pkgs = json_decode($_POST['packages']);
+            if (is_array($pkgs) && count($pkgs) > 0) {
+                $pieces = 0;
+                $weight = 0.0;
+                $dims = array();
+                foreach ($pkgs as $p) {
+                    $qty = max(1, (int) ($p->qty ?? 1));
+                    $pieces += $qty;
+                    $weight += (float) ($p->weight ?? 0) * $qty;
+                    $dims[] = (0 + ($p->length ?? 0)) . 'x' . (0 + ($p->width ?? 0)) . 'x' . (0 + ($p->height ?? 0));
+                }
+                $dimUnit = trim((string) ($settings->units ?? ''));
+                $lines[] = '• Pieces: ' . $pieces;
+                $lines[] = '• Total weight: ' . (0 + round($weight, 2)) . ' ' . trim((string) ($settings->weight_p ?? 'lb'));
+                $lines[] = '• Dimensions: ' . implode(' | ', $dims) . ($dimUnit !== '' ? ' ' . $dimUnit : '');
+            }
+        }
+        $pt = trim((string) ($_POST['tracking_number'] ?? ''));
+        if ($pt !== '' && $pt !== '0') {
+            $lines[] = '• Carrier tracking #: ' . $pt;
+        }
+        $eta = trim((string) ($_POST['estimated_eta'] ?? ''));
+        if ($eta !== '') {
+            $lines[] = '• Estimated arrival: ' . $eta;
+        }
+        return $lines;
+    }
+}
+
+if (!function_exists('cdp_sendStatusUpdateWhatsApp')) {
+    /**
+     * "Your shipment status changed" message (template 11) for a single package.
+     *
+     * @param object      $sender      cdb_users row
+     * @param string      $tracking    full tracking number
+     * @param string      $statusLabel current status name (cdb_styles.mod_style)
+     * @param string|null $appUrl      tracking link; defaults to site track page
+     */
+    function cdp_sendStatusUpdateWhatsApp($sender, $tracking, $statusLabel, $appUrl = null)
+    {
+        cdp_wa_requireV2();
+        $settings = cdp_getSettingsCourier();
+        if ($appUrl === null) {
+            $appUrl = rtrim((string) ($settings->site_url ?? ''), '/') . '/track.php?order_track=' . rawurlencode($tracking);
+        }
+
+        $body = cdp_renderWhatsAppTemplate(11, [
+            '[CUSTOMER_FULLNAME]' => ucfirst(trim(($sender->fname ?? '') . ' ' . ($sender->lname ?? ''))),
+            '[TRACKING_NUMBER]'   => $tracking,
+            '[CURR_STATUS]'       => (string) $statusLabel,
+            '[APP_URL]'           => $appUrl,
+            '[COMPANY_NAME]'      => !empty($settings->site_name) ? $settings->site_name : 'Our Company',
+        ]);
+        if ($body === null) {
+            return ['success' => false, 'skipped' => true, 'message' => 'WhatsApp template 11 not found.'];
+        }
+        return sendNotificationWhatsApp_v2($sender, $body);
+    }
+}
+
+if (!function_exists('cdp_notifyConsolidationPackageSenders')) {
+    /**
+     * Fan-out: tell the sender of every package inside a consolidation that the
+     * consolidation's status changed. The consolidation status has display
+     * priority over the package's own status, so this IS the package update —
+     * except for packages that already left the consolidation.
+     *
+     * Skip rules (per product decision):
+     *   - package pulled out: is_consolidate = 0
+     *   - own status says it's out: 8 Delivered, 15 Picked up, 16 Not Picked Up,
+     *     21 Cancelled, 27 Returned to Vendor, 32 Ready for PickUp
+     * NOTE: the per-order notify_whatsapp_sender flag is intentionally NOT a
+     * blocker here — every existing row carries the column default (0), so it
+     * has never represented a real opt-out decision.
+     *
+     * Callers are responsible for the actual-change guard (only call when the
+     * consolidation's status really changed) and must never call this for
+     * money/invoice-only events.
+     *
+     * @param string     $module                'consolidate' (air) | 'consolidate_packages' (sea)
+     * @param int        $consolidate_id
+     * @param string     $consolidationTracking c_prefix . c_no
+     * @param string     $statusLabel           e.g. "Consolidated", "In_Transit", "Delivered"
+     * @param array|null $onlyOrderIds          restrict to these package order_ids (e.g. newly added)
+     * @param bool       $applySkipRules        false when the caller already filtered $onlyOrderIds
+     *                                          by PRIOR package state (needed when the same request
+     *                                          just flipped packages out, e.g. the status-32 carve-out)
+     * @return array ['sent' => int, 'skipped' => int]
+     */
+    function cdp_notifyConsolidationPackageSenders($module, $consolidate_id, $consolidationTracking, $statusLabel, $onlyOrderIds = null, $applySkipRules = true)
+    {
+        cdp_wa_requireV2();
+
+        $tables = array(
+            'consolidate'          => array('detail' => 'cdb_consolidate_detail',          'orders' => 'cdb_add_order'),
+            'consolidate_packages' => array('detail' => 'cdb_consolidate_packages_detail', 'orders' => 'cdb_customers_packages'),
+        );
+        if (!isset($tables[$module])) {
+            cdp_wa_log("fan-out: unknown module '{$module}'");
+            return array('sent' => 0, 'skipped' => 0);
+        }
+        $detailTable = $tables[$module]['detail'];
+        $ordersTable = $tables[$module]['orders'];
+        $outOfConsolidationStatuses = array(8, 15, 16, 21, 27, 32);
+
+        $settings = cdp_getSettingsCourier();
+
+        $db = new Conexion;
+        $db->cdp_query("SELECT d.order_id, o.order_prefix, o.order_no, o.sender_id, o.status_courier, o.is_consolidate
+            FROM {$detailTable} d
+            INNER JOIN {$ordersTable} o ON o.order_id = d.order_id
+            WHERE d.consolidate_id = :cid");
+        $db->bind(':cid', (int) $consolidate_id);
+        $packages = $db->cdp_registros();
+
+        $sent = 0;
+        $skipped = 0;
+        $only = ($onlyOrderIds === null) ? null : array_map('intval', (array) $onlyOrderIds);
+
+        foreach ($packages as $pkg) {
+            try {
+                if ($only !== null && !in_array((int) $pkg->order_id, $only, true)) {
+                    continue;
+                }
+                if ($applySkipRules
+                    && ((int) $pkg->is_consolidate === 0
+                        || in_array((int) $pkg->status_courier, $outOfConsolidationStatuses, true))) {
+                    $skipped++;
+                    continue;
+                }
+                $sender = cdp_getSenderCourier((int) $pkg->sender_id);
+                if (!$sender || empty($sender->phone)) {
+                    $skipped++;
+                    continue;
+                }
+
+                $tracking = $pkg->order_prefix . $pkg->order_no;
+                $body = cdp_renderWhatsAppTemplate(17, array(
+                    '[CUSTOMER_FULLNAME]'      => ucfirst(trim(($sender->fname ?? '') . ' ' . ($sender->lname ?? ''))),
+                    '[TRACKING_NUMBER]'        => $tracking,
+                    '[CONSOLIDATION_TRACKING]' => (string) $consolidationTracking,
+                    '[CURR_STATUS]'            => (string) $statusLabel,
+                    '[APP_URL]'                => rtrim((string) ($settings->site_url ?? ''), '/') . '/track.php?order_track=' . rawurlencode($tracking),
+                    '[COMPANY_NAME]'           => !empty($settings->site_name) ? $settings->site_name : 'Our Company',
+                ));
+                if ($body === null) {
+                    // Template missing: nothing will render for any package — stop.
+                    return array('sent' => $sent, 'skipped' => $skipped + 1);
+                }
+
+                $res = sendNotificationWhatsApp_v2($sender, $body);
+                if (!empty($res['success'])) {
+                    $sent++;
+                } else {
+                    $skipped++;
+                    cdp_wa_log("fan-out skip/fail for {$tracking}: " . ($res['message'] ?? ''));
+                }
+            } catch (Exception $e) {
+                $skipped++;
+                cdp_wa_log('fan-out error for order_id ' . $pkg->order_id . ': ' . $e->getMessage());
+            }
+        }
+
+        return array('sent' => $sent, 'skipped' => $skipped);
+    }
+}
+
+if (!function_exists('cdp_personalizeWhatsAppBody')) {
+    /** Fill the generic placeholders in an admin-typed broadcast body. */
+    function cdp_personalizeWhatsAppBody($body, $sender, $tracking = null)
+    {
+        $settings = cdp_getSettingsCourier();
+        return str_replace(
+            ['[CUSTOMER_FULLNAME]', '[COMPANY_NAME]', '[COMPANY_SITE_URL]', '[TRACKING_NUMBER]'],
+            [
+                ucfirst(trim(($sender->fname ?? '') . ' ' . ($sender->lname ?? ''))),
+                (string) ($settings->site_name ?? ''),
+                (string) ($settings->site_url ?? ''),
+                (string) $tracking,
+            ],
+            (string) $body
+        );
+    }
+}
+
 if (!function_exists('cdp_wa_resolveSendTarget')) {
     /**
      * Shared gate used by every WhatsApp send path. Returns the number to send
