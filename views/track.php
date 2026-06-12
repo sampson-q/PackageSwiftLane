@@ -65,7 +65,12 @@ if ($track != null) {
 	$db->cdp_execute();
 	$sender_data = $db->cdp_registro();
 
-	$db->cdp_query("SELECT * FROM cdb_recipients where id=:receiver_id");
+	// recipient_type='user': the sender doubles as recipient (cdb_users), not cdb_recipients.
+	if (($track->recipient_type ?? 'recipient') === 'user') {
+		$db->cdp_query("SELECT * FROM cdb_users where id=:receiver_id");
+	} else {
+		$db->cdp_query("SELECT * FROM cdb_recipients where id=:receiver_id");
+	}
 	$db->bind(':receiver_id', (int)$track->receiver_id);
 	$db->cdp_execute();
 	$receiver_data = $db->cdp_registro();
