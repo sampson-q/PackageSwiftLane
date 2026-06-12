@@ -153,7 +153,7 @@ if (empty($errors)) {
         $fullshipment = $shipment->order_prefix . $shipment->order_no;
         $date_ship   = date("Y-m-d H:i:s a");
 
-        $app_url = $settings->site_url . 'track.php?order_track=' . $fullshipment;
+        $app_url = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
         $subject = $lang['notification_shipment14'] . $lang['notification_shipment3'] . $fullshipment;
 
         // Obtener el ID del estado del envio desde el POST SMS
