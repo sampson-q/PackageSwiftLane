@@ -62,34 +62,11 @@ foreach ($data as $key) {
             $sender_data = cdp_getSenderCourier(intval($courier->sender_id));
 
             if (!empty($sender_data->phone)) {
-                // Get template 11 for package status update
-                $tpl = getTemplateWhatsApp(11);
-
-                if ($tpl) {
-                    // Get settings for URLs and company name
-                    $settings = cdp_getSettingsCourier();
-                    $app_url = $settings->site_url . 'track.php?order_track=' . $tracking;
-
-                    // Format the message with all placeholders
-                    $whatsapp_body = str_replace(
-                        [
-                            '[CUSTOMER_FULLNAME]',
-                            '[TRACKING_NUMBER]',
-                            '[APP_URL]',
-                            '[COMPANY_NAME]'
-                        ],
-                        [
-                            ucfirst("{$sender_data->fname} {$sender_data->lname}"),
-                            $tracking,
-                            $app_url,
-                            $settings->site_name
-                        ],
-                        $tpl->body
-                    );
-
-                    // Send via v2 API
-                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
-                }
+                cdp_sendStatusUpdateWhatsApp(
+                    $sender_data,
+                    $tracking,
+                    cdp_wa_lookupName('cdb_styles', 'mod_style', (int) $status)
+                );
             }
         } catch (Exception $e) {
             error_log('Error sending WhatsApp v2 notification for bulk update: ' . $e->getMessage());
