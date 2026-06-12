@@ -182,7 +182,7 @@ if ($numrows > 0) { ?>
 										if ($user->cdp_hasPermission('invoice_prealert')) {
 											if ($row->is_package == 0) {
 										?>
-												<a class="dropdown-item" href="customer_packages_add_from_prealert.php?id=<?php echo $row->pre_alert_id; ?>"><i style="color:#343a40" class="ti-package"></i>&nbsp;<?php echo $lang['customer-packages-text4'] ?></a>
+												<a class="dropdown-item" href="courier_add.php?prealert_id=<?php echo $row->pre_alert_id; ?>"><i style="color:#343a40" class="ti-package"></i>&nbsp;<?php echo $lang['customer-packages-text4'] ?></a>
 
 										<?php }
 										}
