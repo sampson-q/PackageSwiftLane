@@ -30,7 +30,7 @@ require_permission('view_pickup_list');
 require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
-require_once("../notify_whatsapp/api_whatsapp_service.php");
+require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 
 $user = new User;
 $core = new Core;
@@ -274,7 +274,7 @@ if (empty($errors)) {
         $add_status =   intval($status);
         $date_ship   = date("Y-m-d H:i:s a");
 
-        $app_url = $settings->site_url . 'track.php?order_track=' . $fullshipment;
+        $app_url = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
         $subject = $lang['notification_shipment2'] . $lang['notification_shipment6'] .  $fullshipment;
 
         $email_template = cdp_getEmailTemplatesdg1i4(16);
