@@ -38,7 +38,12 @@ if (isset($_GET['data'])) {
 		$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
 		$sender_data = $db->cdp_registro();
 
-		$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row->receiver_id . "'");
+		// recipient_type='user': the sender doubles as recipient (cdb_users), not cdb_recipients.
+		if (($row->recipient_type ?? 'recipient') === 'user') {
+			$db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row->receiver_id) . "'");
+		} else {
+			$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . intval($row->receiver_id) . "'");
+		}
 		$receiver_data = $db->cdp_registro();
 
 		$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row->order_prefix . $row->order_no . "'");

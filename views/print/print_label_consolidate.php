@@ -41,7 +41,12 @@ $order_service_options = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->sender_id . "'");
 $sender_data = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row_order->receiver_id . "'");
+// recipient_type='user': the sender doubles as recipient (cdb_users), not cdb_recipients.
+if (($row_order->recipient_type ?? 'recipient') === 'user') {
+    $db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row_order->receiver_id) . "'");
+} else {
+    $db->cdp_query("SELECT * FROM cdb_recipients where id= '" . intval($row_order->receiver_id) . "'");
+}
 $receiver_data = $db->cdp_registro();
 
 
