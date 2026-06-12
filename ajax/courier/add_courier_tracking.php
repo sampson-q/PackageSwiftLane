@@ -164,7 +164,7 @@ if (empty($errors)) {
         $fullshipment = $shipment->order_prefix . $shipment->order_no;
         $date_ship   = date("Y-m-d H:i:s a");
 
-        $app_url = $settings->site_url . 'track.php?order_track=' . $fullshipment;
+        $app_url = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
         $subject = $lang['notification_shipment9'] . ' ' . $lang['notification_shipment6'] .  $fullshipment;
 
         $status_courier_deliver = "" . $_POST['status_courier'] . "";
