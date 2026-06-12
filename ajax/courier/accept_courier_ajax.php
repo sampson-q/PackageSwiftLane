@@ -30,7 +30,7 @@ require_permission('view_shipment_list');
 require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
-require_once("../notify_whatsapp/api_whatsapp_service.php");
+require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 
 $user = new User;
 $core = new Core;
@@ -64,9 +64,7 @@ if (empty($_POST['order_no']))
 
     $errors['order_no'] = $lang['validate_field_ajax150'];
 
-if (empty($_POST['order_item_category']))
-
-    $errors['order_item_category'] = $lang['validate_field_ajax151'];
+// order_item_category falls back to the admin default when not posted.
 
 if (empty($_POST['order_package']))
 
@@ -76,8 +74,7 @@ if (empty($_POST['order_courier']))
 
     $errors['order_courier'] = $lang['validate_field_ajax153'];
 
-if (empty($_POST['order_service_options']))
-    $errors['order_service_options'] = $lang['validate_field_ajax154'];
+// order_service_options falls back to the admin default when not posted.
 
 if (empty($_POST['order_deli_time']))
     $errors['order_deli_time'] = $lang['validate_field_ajax155'];
@@ -118,9 +115,9 @@ if (empty($errors)) {
         'agency' =>  cdp_sanitize(intval($_POST["agency"])),
         'origin_off' =>  cdp_sanitize(intval($_POST["origin_off"])),
         'order_package' =>  cdp_sanitize(intval($_POST["order_package"])),
-        'order_item_category' =>  cdp_sanitize(intval($_POST["order_item_category"])),
+        'order_item_category' => (intval($_POST["order_item_category"] ?? 0) > 0) ? intval($_POST["order_item_category"]) : (int) (cdp_getInfoShipDefault()->logistics_default1 ?? 0),
         'order_courier' =>  cdp_sanitize(intval($_POST["order_courier"])),
-        'order_service_options' =>  cdp_sanitize(intval($_POST["order_service_options"])),
+        'order_service_options' => (intval($_POST["order_service_options"] ?? 0) > 0) ? intval($_POST["order_service_options"]) : (int) (cdp_getInfoShipDefault()->service_default4 ?? 0),
         'order_deli_time' =>  cdp_sanitize(intval($_POST["order_deli_time"])),
         'order_payment_method' =>  cdp_sanitize(intval($_POST["order_payment_method"])),
         'status_courier' =>  cdp_sanitize(intval($_POST["status_courier"])),
@@ -133,7 +130,10 @@ if (empty($errors)) {
 
     $updateShip = cdp_updateCourierShipmentFromCustomer($dataShipment);
     $sender_data = cdp_getSenderCourier(intval($_POST["sender_id"]));
-    $receiver_data = cdp_getRecipientCourier(intval($_POST["recipient_id"]));
+    // recipient_type='user': the sender doubles as recipient (cdb_users), not cdb_recipients.
+    $receiver_data = ((cdp_sanitize($_POST['recipient_type'] ?? 'recipient')) === 'user')
+        ? cdp_getSenderCourier(intval($_POST["recipient_id"]))
+        : cdp_getRecipientCourier(intval($_POST["recipient_id"]));
 
     $shipment_id =  cdp_sanitize(intval($_POST["order_id"]));
 
@@ -326,12 +326,22 @@ if (empty($errors)) {
         //NOTIFY WHATSAPP API
 
         if (isset($_POST['notify_whatsapp_sender']) && $_POST['notify_whatsapp_sender'] == 1) {
-            sendNotificationWhatsAppWithPDF($sender_data, $shipment_id, 3);
+            $wa_extra_lines = array();
+            if (trim((string) ($_POST['tracking_number'] ?? '')) !== '') {
+                $wa_extra_lines[] = '• Carrier tracking #: ' . cdp_sanitize($_POST['tracking_number']);
+            }
+            if (trim((string) ($_POST['estimated_eta'] ?? '')) !== '') {
+                $wa_extra_lines[] = '• Estimated arrival: ' . cdp_sanitize($_POST['estimated_eta']);
+            }
+            cdp_sendShipmentRegisteredWhatsApp($sender_data, $order_track, array(
+                'courier'  => intval($_POST['order_courier'] ?? 0),
+                'service'  => intval($_POST['order_service_options'] ?? 0),
+                'delitime' => intval($_POST['order_deli_time'] ?? 0),
+                'office'   => intval($_POST['origin_off'] ?? 0),
+            ), $wa_extra_lines);
         }
 
-        if (isset($_POST['notify_whatsapp_receiver']) && $_POST['notify_whatsapp_receiver'] == 1) {
-            sendNotificationWhatsAppWithPDF($receiver_data, $shipment_id, 3);
-        }
+        // WhatsApp notifications are sender-only by design; receivers are not messaged.
         $messages[] = $lang['message_ajax_success_add_shipment'];
     } else {
         $errors['critical_error'] = $lang['message_ajax_error2'];
