@@ -134,7 +134,7 @@ if (empty($errors)) {
         'order_package'         => cdp_sanitize(intval($_POST["order_package"])),
         'order_item_category'   => cdp_sanitize(intval($_POST["order_item_category"] ?? 0)),
         'order_courier'         => cdp_sanitize(intval($_POST["order_courier"])),
-        'order_service_options' => cdp_sanitize(intval($_POST["order_service_options"] ?? 0)),
+        'order_service_options' => (intval($_POST["order_service_options"] ?? 0) > 0) ? intval($_POST["order_service_options"]) : (int) ($old_shipment->order_service_options ?? 0),
         'order_deli_time'       => cdp_sanitize(intval($_POST["order_deli_time"])),
         'order_payment_method'  => cdp_sanitize(intval($_POST["order_payment_method"])),
         'status_courier'        => cdp_sanitize(intval($_POST["status_courier"])),
@@ -392,11 +392,14 @@ if (empty($errors)) {
         // RESOLVE NEW LABELS + BUILD DIFF
         // =======================
         $sender_data   = cdp_getSenderCourier(intval($_POST["sender_id"]));
-        $receiver_data = cdp_getRecipientCourier(intval($_POST["recipient_id"]));
+        // recipient_type='user': the sender doubles as recipient (cdb_users), not cdb_recipients.
+        $receiver_data = ((cdp_sanitize($_POST['recipient_type'] ?? 'recipient')) === 'user')
+            ? cdp_getSenderCourier(intval($_POST["recipient_id"]))
+            : cdp_getRecipientCourier(intval($_POST["recipient_id"]));
         $fullshipment  = $shipment->order_prefix . $shipment->order_no;
         $name_status   = cdp_getCourierstatusApi(intval($_POST["status_courier"]));
         $add_status    = $name_status->mod_style;
-        $app_url       = $settings->site_url . 'track.php?order_track=' . $fullshipment;
+        $app_url       = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
 
         $db_new = new Conexion;
 
@@ -599,21 +602,38 @@ if (empty($errors)) {
 
         if (!empty($sender_data->phone)) {
             try {
-                $tpl = getTemplateWhatsApp(13);
-                if ($tpl) {
-                    $current_status_name = $add_status;
-                    $invoice_status      = $shipment->status_invoice == 1 ? 'Paid' : 'Pending';
-                    $order_date_fmt      = date('M d, Y', strtotime($shipment->order_datetime));
-                    $recipient_name      = $receiver_data ? ($receiver_data->fname . ' ' . $receiver_data->lname) : 'N/A';
-                    $origin              = $final_sender_city_name . ', ' . $final_sender_state_name;
-                    $destination         = $final_recipient_city_name . ', ' . $final_recipient_state_name;
+                // Plain-text "what changed" list for WhatsApp. Money excluded.
+                $wa_changes_lines = array();
+                if (isset($changed_fields) && is_array($changed_fields)) {
+                    foreach ($changed_fields as $label_cf => $diff_cf) {
+                        if ($label_cf === '_packages_updated') {
+                            $wa_changes_lines[] = '• Package details (weight/dimensions) updated';
+                            continue;
+                        }
+                        if ($label_cf === 'Order Total') {
+                            continue; // money is excluded from sender alerts
+                        }
+                        $wa_changes_lines[] = '• ' . $label_cf . ': ' . ($diff_cf['old'] ?? '') . ' ➜ ' . ($diff_cf['new'] ?? '');
+                    }
+                }
 
-                    $whatsapp_body = str_replace(
-                        ['[CUSTOMER_FULLNAME]','[TRACKING_NUMBER]','[PREV_STATUS]','[CURR_STATUS]','[INV_STATUS]','[ORD_DATE]','[RECIPIENT]','[ORIGIN]','[DESTINATION]','[APP_URL]','[COMPANY_NAME]'],
-                        [ucfirst("{$sender_data->fname} {$sender_data->lname}"), $fullshipment, 'N/A', $current_status_name, $invoice_status, $order_date_fmt, $recipient_name, $origin, $destination, $app_url, $settings->site_name],
-                        $tpl->body
-                    );
-                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                // Send only when something actually changed.
+                if (!empty($wa_changes_lines)) {
+                    $tpl = getTemplateWhatsApp(13);
+                    if ($tpl) {
+                        $current_status_name = $add_status;
+                        $order_date_fmt      = date('M d, Y', strtotime($shipment->order_datetime));
+                        $recipient_name      = $receiver_data ? ($receiver_data->fname . ' ' . $receiver_data->lname) : 'N/A';
+                        $origin              = $final_sender_city_name . ', ' . $final_sender_state_name;
+                        $destination         = $final_recipient_city_name . ', ' . $final_recipient_state_name;
+
+                        $whatsapp_body = str_replace(
+                            ['[CUSTOMER_FULLNAME]','[TRACKING_NUMBER]','[PREV_STATUS]','[CURR_STATUS]','[CHANGES]','[ORD_DATE]','[RECIPIENT]','[ORIGIN]','[DESTINATION]','[APP_URL]','[COMPANY_NAME]'],
+                            [ucfirst("{$sender_data->fname} {$sender_data->lname}"), $fullshipment, $old_status_label ?: $current_status_name, $current_status_name, implode("\n", $wa_changes_lines), $order_date_fmt, $recipient_name, $origin, $destination, $app_url, $settings->site_name],
+                            $tpl->body
+                        );
+                        sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                    }
                 }
             } catch (Exception $e) { error_log('WhatsApp edit error: ' . $e->getMessage()); }
         }
