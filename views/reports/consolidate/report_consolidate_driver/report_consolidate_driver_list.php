@@ -205,7 +205,6 @@ $driverrow = $user->cdp_userAllDriver();
     <script src="assets/template/assets/libs/moment/moment.min.js"></script>
     <script src="assets/template/assets/libs/daterangepicker/daterangepicker.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="assets/template/assets/libs/select2/dist/js/select2.min.js"></script>
 
     <script src="dataJs/report_consolidate_driver.js"></script>
 

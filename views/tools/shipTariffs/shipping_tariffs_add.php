@@ -345,7 +345,6 @@ $ship_modes = $db->cdp_registro();
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="assets/template/assets/libs/select2/dist/js/select2.min.js"></script>
     <script src="dataJs/shipping_tariffs_add.js"></script>  
 </body>
 

@@ -162,7 +162,6 @@ $code_currency = $core->cdp_getCodeCountries();
     <script src="assets/template/assets/libs/summernote/dist/summernote-bs4.min.js"></script>
     <script src="assets/template/assets/libs/claviska/jquery-minicolors/jquery.minicolors.min.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="assets/template/assets/libs/select2/dist/js/select2.min.js"></script>
 
     <script src="dataJs/config_general.js"></script>
     <script src="dataJs/config.js"></script>

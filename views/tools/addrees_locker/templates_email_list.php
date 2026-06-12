@@ -197,7 +197,6 @@ $userData = $user->cdp_getUserData();
 		<!--Custom JavaScript -->
 		<script src="assets/js/custom.min.js"></script>
 		<script src="assets/select2/dist/js/select2.full.min.js"></script>
-		<script src="assets/select2/dist/js/select2.min.js"></script>
 
 		<script src="dataJs/templates_email.js"></script>
 		<script src="assets/js/pages/email/email.js"></script>
