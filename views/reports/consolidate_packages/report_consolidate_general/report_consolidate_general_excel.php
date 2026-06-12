@@ -87,7 +87,7 @@ if (!empty($range)) {
 	$sWhere .= " and  a.c_date between '" . $fecha_inicio . "'  and '" . $fecha_fin . "'";
 }
 
-$sql = "SELECT a.total_weight, a.total_tax_discount, a.sub_total, a.total_tax_insurance, a.total_tax_custom_tariffis, a.total_tax,   a.total_order, a.consolidate_id, a.c_prefix, a.c_no, a.c_date, a.sender_id, a.order_courier,a.status_courier,  b.mod_style, b.color FROM cdb_consolidate_packages as a
+$sql = "SELECT a.total_weight, a.total_tax_discount, a.sub_total, a.total_tax_insurance, a.total_tax_custom_tariffis, a.total_tax,   a.total_order, a.consolidate_id, a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.recipient_type, a.order_courier,a.status_courier,  b.mod_style, b.color FROM cdb_consolidate_packages as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 $sWhere
 			  and a.status_courier!=14
@@ -153,7 +153,12 @@ if ($numrows > 0) {
 		$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
 		$sender_data = $db->cdp_registro();
 
-		$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row->receiver_id . "'");
+		// recipient_type='user': the sender doubles as recipient (cdb_users), not cdb_recipients.
+		if (($row->recipient_type ?? 'recipient') === 'user') {
+			$db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row->receiver_id) . "'");
+		} else {
+			$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . intval($row->receiver_id) . "'");
+		}
 		$receiver_data = $db->cdp_registro();
 
 
