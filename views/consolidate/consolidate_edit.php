@@ -334,6 +334,26 @@ if (isset($_POST["total_item"])) {
     // DELETE AND INSERT DETAIL ROWS
     // ═════════════════════════════════════════════════════════════════════
 
+    // Snapshot BEFORE rewriting details: which packages were already in the
+    // consolidation, and which are still eligible for alerts (their PRIOR own
+    // status doesn't put them out of the consolidation). Needed because the
+    // status-32 carve-out below mutates package state before the fan-out runs.
+    $db->cdp_query("SELECT order_id FROM cdb_consolidate_detail WHERE consolidate_id = :cid_wa");
+    $db->bind(':cid_wa', (int) $order_id);
+    $previous_detail_ids_wa = array_map(function ($r) { return (int) $r->order_id; }, $db->cdp_registros());
+
+    $posted_ids_wa = array_map('intval', (array) ($_POST['order_id'] ?? array()));
+    $prior_eligible_wa = array();
+    if (!empty($posted_ids_wa)) {
+        $in_wa = implode(',', $posted_ids_wa);
+        $db->cdp_query("SELECT order_id, status_courier FROM cdb_add_order WHERE order_id IN ({$in_wa})");
+        foreach ($db->cdp_registros() as $r_wa) {
+            if (!in_array((int) $r_wa->status_courier, array(8, 15, 16, 21, 27, 32), true)) {
+                $prior_eligible_wa[] = (int) $r_wa->order_id;
+            }
+        }
+    }
+
     $db->cdp_query("DELETE FROM cdb_consolidate_detail WHERE consolidate_id='" . $order_id . "'");
     $db->cdp_execute();
 
@@ -370,65 +390,24 @@ if (isset($_POST["total_item"])) {
             $db->cdp_execute();
         }
 
-        // ═════════════════════════════════════════════════════════════════
-        // WhatsApp Notification per Package
-        // ═════════════════════════════════════════════════════════════════
+    }
 
-        try {
-            $package_order_id = intval($_POST["order_id"][$count]);
-            $package_prefix = cdp_sanitize($_POST["prefix"][$count]);
-            $package_order_no = cdp_sanitize($_POST["order_no_item"][$count]);
-            $package_tracking = $package_prefix . $package_order_no;
+    // ═════════════════════════════════════════════════════════════════════
+    // WhatsApp fan-out — only when something actually changed.
+    //  - status changed: alert every still-eligible package owner (prior-state
+    //    filtered, so a 32 "Ready for PickUp" transition still notifies)
+    //  - status unchanged: alert only the owners of newly added packages
+    // ═════════════════════════════════════════════════════════════════════
+    $new_status_id_wa = intval(cdp_sanitize($_POST["status_courier"] ?? 0));
+    $old_status_id_wa = isset($_before_edit->status_courier) ? (int) $_before_edit->status_courier : null;
+    $added_ids_wa = array_values(array_diff($posted_ids_wa, $previous_detail_ids_wa));
+    $consolidation_tracking_wa = $row_order->c_prefix . $row_order->c_no;
+    $new_status_label_wa = cdp_wa_lookupName('cdb_styles', 'mod_style', $new_status_id_wa);
 
-            $db_pkg = new Conexion;
-            $db_pkg->cdp_query("SELECT sender_id, receiver_id FROM cdb_add_order WHERE order_id = :id");
-            $db_pkg->bind(':id', $package_order_id);
-            $db_pkg->cdp_execute();
-            $package_data = $db_pkg->cdp_registro();
-
-            if ($package_data) {
-                $package_sender = cdp_getSenderCourier(intval($package_data->sender_id));
-
-                if (!empty($package_sender->phone)) {
-                    $tpl = getTemplateWhatsApp(13);
-
-                    if ($tpl) {
-                        $db_pkg_detail = new Conexion;
-                        $db_pkg_detail->cdp_query("SELECT order_datetime, status_courier FROM cdb_add_order WHERE order_id = :id");
-                        $db_pkg_detail->bind(':id', $package_order_id);
-                        $db_pkg_detail->cdp_execute();
-                        $pkg_detail = $db_pkg_detail->cdp_registro();
-
-                        $db_settings = new Conexion;
-                        $db_settings->cdp_query("SELECT * FROM cdb_settings LIMIT 1");
-                        $db_settings->cdp_execute();
-                        $settings = $db_settings->cdp_registro();
-
-                        $consolidation_status = "Consolidated";
-                        $invoice_status = "Pending";
-                        $order_date = $pkg_detail ? date('M d, Y', strtotime($pkg_detail->order_datetime)) : 'N/A';
-
-                        $package_receiver = cdp_getRecipientCourier(intval($package_data->receiver_id));
-                        $recipient_name = $package_receiver ? ($package_receiver->fname . ' ' . $package_receiver->lname) : 'N/A';
-
-                        $origin = $final_sender_city->name . ', ' . $final_sender_state->name;
-                        $destination = $final_recipient_city->name . ', ' . $final_recipient_state->name;
-
-                        $package_app_url = $settings->site_url . 'track.php?order_track=' . $package_tracking;
-
-                        $whatsapp_body = str_replace(
-                            ['[CUSTOMER_FULLNAME]', '[TRACKING_NUMBER]', '[PREV_STATUS]', '[CURR_STATUS]', '[INV_STATUS]', '[ORD_DATE]', '[RECIPIENT]', '[ORIGIN]', '[DESTINATION]', '[APP_URL]', '[COMPANY_NAME]'],
-                            [ucfirst("{$package_sender->fname} {$package_sender->lname}"), $package_tracking, 'In Transit', $consolidation_status, $invoice_status, $order_date, $recipient_name, $origin, $destination, $package_app_url, $settings->site_name],
-                            $tpl->body
-                        );
-
-                        sendNotificationWhatsApp_v2($package_sender, $whatsapp_body);
-                    }
-                }
-            }
-        } catch (Exception $e) {
-            error_log('Error sending WhatsApp v2 notification for consolidation edit package: ' . $e->getMessage());
-        }
+    if ($new_status_id_wa > 0 && $old_status_id_wa !== null && $new_status_id_wa !== $old_status_id_wa) {
+        cdp_notifyConsolidationPackageSenders('consolidate', (int) $order_id, $consolidation_tracking_wa, $new_status_label_wa, $prior_eligible_wa, false);
+    } elseif (!empty($added_ids_wa)) {
+        cdp_notifyConsolidationPackageSenders('consolidate', (int) $order_id, $consolidation_tracking_wa, $new_status_label_wa, array_values(array_intersect($added_ids_wa, $prior_eligible_wa)), false);
     }
 
     // ═════════════════════════════════════════════════════════════════════
@@ -1015,7 +994,6 @@ if (isset($_POST["total_item"])) {
 
     <script src="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="assets/template/assets/libs/select2/dist/js/select2.min.js"></script>
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
     <?php if (isset($success_script)): ?>
