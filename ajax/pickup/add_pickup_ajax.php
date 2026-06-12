@@ -64,9 +64,7 @@ if (empty($_POST['order_no']))
 
     $errors['order_no'] = $lang['validate_field_ajax150'];
 
-if (empty($_POST['order_item_category']))
-
-    $errors['order_item_category'] = $lang['validate_field_ajax151'];
+// order_item_category falls back to the admin default when not posted.
 
 if (empty($_POST['order_package']))
 
@@ -76,8 +74,7 @@ if (empty($_POST['order_courier']))
 
     $errors['order_courier'] = $lang['validate_field_ajax153'];
 
-if (empty($_POST['order_service_options']))
-    $errors['order_service_options'] = $lang['validate_field_ajax154'];
+// order_service_options falls back to the admin default when not posted.
 
 if (empty($_POST['order_deli_time']))
     $errors['order_deli_time'] = $lang['validate_field_ajax155'];
@@ -158,7 +155,7 @@ if (empty($errors)) {
         'order_package' =>  cdp_sanitize(intval($_POST["order_package"])),
         'order_item_category' =>  cdp_sanitize(intval($_POST["order_item_category"])),
         'order_courier' =>  cdp_sanitize(intval($_POST["order_courier"])),
-        'order_service_options' =>  cdp_sanitize(intval($_POST["order_service_options"])),
+        'order_service_options' => (intval($_POST["order_service_options"] ?? 0) > 0) ? intval($_POST["order_service_options"]) : (int) (cdp_getInfoShipDefault()->service_default4 ?? 0),
         'order_deli_time' =>  cdp_sanitize(intval($_POST["order_deli_time"])),
         'order_payment_method' =>  cdp_sanitize(intval($_POST["order_payment_method"])),
         'status_courier' =>  cdp_sanitize(intval($_POST["status_courier"])),
@@ -339,7 +336,7 @@ if (empty($errors)) {
         $add_status = $name_status->mod_style;
         $date_ship   = date("Y-m-d H:i:s a");
 
-        $app_url = $settings->site_url . 'track.php?order_track=' . $fullshipment;
+        $app_url = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
         $subject = $lang['notification_shipment2'] . $lang['notification_shipment6'] .  $fullshipment;
 
         $email_template = cdp_getEmailTemplatesdg1i4(16);
@@ -503,85 +500,17 @@ if (empty($errors)) {
                 $sender_data = $db_sender->cdp_registro();
 
                 if ($sender_data && !empty($sender_data->phone)) {
-                    $tpl = getTemplateWhatsApp(4);
+                    // Shared template-4 path: defaults the service, adds
+                    // pieces/weight/dims/carrier-tracking/ETA, valid track URL.
+                    $wa_result = cdp_sendShipmentRegisteredWhatsApp($sender_data, $fullshipment, array(
+                        'courier'  => intval($dataShipment['order_courier'] ?? 0),
+                        'service'  => intval($dataShipment['order_service_options'] ?? 0),
+                        'delitime' => intval($dataShipment['order_deli_time'] ?? 0),
+                        'office'   => intval($dataShipment['origin_off'] ?? 0),
+                    ), cdp_wa_buildShipmentExtraLines());
 
-                    if ($tpl && !empty($tpl->body)) {
-
-                        // Courier name
-                        $db_courier = new Conexion;
-                        $db_courier->cdp_query("SELECT name_com FROM cdb_courier_com WHERE id = :id LIMIT 1");
-                        $db_courier->bind(':id', intval($dataShipment['order_courier']));
-                        $db_courier->cdp_execute();
-                        $courier_obj = $db_courier->cdp_registro();
-                        $courier_name = $courier_obj ? $courier_obj->name_com : 'N/A';
-
-                        // Service type
-                        $db_service = new Conexion;
-                        $db_service->cdp_query("SELECT ship_mode FROM cdb_shipping_mode WHERE id = :id LIMIT 1");
-                        $db_service->bind(':id', intval($dataShipment['order_service_options']));
-                        $db_service->cdp_execute();
-                        $service_obj = $db_service->cdp_registro();
-                        $service_type = $service_obj ? $service_obj->ship_mode : 'N/A';
-
-                        // Delivery time
-                        $db_delivery = new Conexion;
-                        $db_delivery->cdp_query("SELECT delitime FROM cdb_delivery_time WHERE id = :id LIMIT 1");
-                        $db_delivery->bind(':id', intval($dataShipment['order_deli_time']));
-                        $db_delivery->cdp_execute();
-                        $delivery_obj = $db_delivery->cdp_registro();
-                        $delivery_time = $delivery_obj ? $delivery_obj->delitime : 'N/A';
-
-                        // Package type
-                        $db_package = new Conexion;
-                        $db_package->cdp_query("SELECT name_pack FROM cdb_pack WHERE id = :id LIMIT 1");
-                        $db_package->bind(':id', intval($dataShipment['order_package']));
-                        $db_package->cdp_execute();
-                        $package_obj = $db_package->cdp_registro();
-                        $package_type = $package_obj ? $package_obj->name_pack : 'N/A';
-
-                        // Origin office
-                        $db_office = new Conexion;
-                        $db_office->cdp_query("SELECT name_off FROM cdb_offices WHERE id = :id LIMIT 1");
-                        $db_office->bind(':id', intval($dataShipment['origin_off']));
-                        $db_office->cdp_execute();
-                        $office_obj = $db_office->cdp_registro();
-                        $origin_office = $office_obj ? $office_obj->name_off : 'N/A';
-
-                        $whatsapp_body = str_replace(
-                            [
-                                '[CUSTOMER_FULLNAME]',
-                                '[TRACKING_NUMBER]',
-                                '[PROVIDER_NAME]',
-                                '[PRICE_PURCHASE]',
-                                '[COURIER_NAME]',
-                                '[PACKAGE_TYPE]',
-                                '[SERVICE_TYPE]',
-                                '[DELIVERY_TIME]',
-                                '[ORIGIN_OFFICE]',
-                                '[COMPANY_SITE_URL]',
-                                '[COMPANY_NAME]'
-                            ],
-                            [
-                                ucfirst(trim(($sender_data->fname ?? '') . ' ' . ($sender_data->lname ?? ''))),
-                                $fullshipment,
-                                $dataShipment['provider_purchase'],
-                                number_format((float)$dataShipment['price_purchase'], 2),
-                                $courier_name,
-                                $package_type,
-                                $service_type,
-                                $delivery_time,
-                                $origin_office,
-                                !empty($settings->site_url) ? $settings->site_url : 'www.company.com',
-                                !empty($settings->site_name) ? $settings->site_name : 'Our Company'
-                            ],
-                            $tpl->body
-                        );
-
-                        $wa_result = sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
-
-                        if (!$wa_result['success']) {
-                            error_log("WhatsApp notification failed for shipment {$fullshipment}: " . $wa_result['message']);
-                        }
+                    if (empty($wa_result['success'])) {
+                        error_log("WhatsApp notification failed for shipment {$fullshipment}: " . ($wa_result['message'] ?? ''));
                     }
                 }
             } catch (Exception $e) {
