@@ -79,7 +79,7 @@ foreach ($data as $key) {
 
         // Get sender details
         $sender_data = cdp_getSenderCourier((int)$courier->sender_id);
-        $app_url     = $msite_url . 'track_online_shopping.php?order_track=' . $tracking;
+        $app_url     = rtrim((string) $msite_url, '/') . '/track_online_shopping.php?order_track=' . $tracking;
 
         // =====================
         // EMAIL NOTIFICATION
