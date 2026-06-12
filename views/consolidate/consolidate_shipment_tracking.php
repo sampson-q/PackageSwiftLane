@@ -23,7 +23,7 @@
 require_once('helpers/querys.php');
 require_once("helpers/phpmailer/class.phpmailer.php");
 require_once("helpers/phpmailer/class.smtp.php");
-require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
+require_once("ajax/notify_whatsapp/api_whatsapp_service_v2.php");
 
 $userData = $user->cdp_getUserData();
 
@@ -46,7 +46,12 @@ if (isset($userData->userlevel) && (int)$userData->userlevel === 6) {
 
 $row = $data['data'];
 
-$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row->receiver_id . "'");
+// recipient_type='user': the sender doubles as recipient (cdb_users), not cdb_recipients.
+if (($row->recipient_type ?? 'recipient') === 'user') {
+    $db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row->receiver_id) . "'");
+} else {
+    $db->cdp_query("SELECT * FROM cdb_recipients where id= '" . intval($row->receiver_id) . "'");
+}
 $receiver_data = $db->cdp_registro();
 
 $office = $core->cdp_getOffices();
@@ -89,11 +94,16 @@ if (isset($_POST['address'])) {
 
     if (empty($errors)) {
 
+        // Previous status — fan-out fires only on an actual status change.
+        $db->cdp_query('SELECT status_courier FROM cdb_consolidate WHERE consolidate_id = :id');
+        $db->bind(':id', $id);
+        $row_status_wa = $db->cdp_registro();
+        $old_status_courier_wa = $row_status_wa ? (int) $row_status_wa->status_courier : null;
 
-        $db->cdp_query('UPDATE cdb_consolidate SET    
-                         
-                status_courier =:status_courier               
-                where  consolidate_id=:id      
+        $db->cdp_query('UPDATE cdb_consolidate SET
+
+                status_courier =:status_courier
+                where  consolidate_id=:id
             ');
 
 
@@ -262,7 +272,7 @@ if (isset($_POST['address'])) {
         $fullshipment = $row->c_prefix . $row->c_no;
         $date_ship   = date("Y-m-d H:i:s a");
 
-        $app_url = $settings->site_url . 'track.php?order_track=' . $fullshipment;
+        $app_url = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
         $subject = $lang['notification_shipment9'] . ' ' . $lang['notification_shipment6'] .  $fullshipment;
         $status_courier_deliver = "" . $_POST['status_courier'] . "";
 
@@ -394,6 +404,17 @@ if (isset($_POST['address'])) {
             } catch (Exception $e) {
                 error_log('consolidate_tracking.php – WhatsApp error for ' . $fullshipment . ': ' . $e->getMessage());
             }
+        }
+
+        // Fan-out to package owners — only when the status actually changed.
+        $new_status_id_wa = intval(cdp_sanitize($_POST['status_courier']));
+        if ($old_status_courier_wa !== $new_status_id_wa) {
+            cdp_notifyConsolidationPackageSenders(
+                'consolidate',
+                (int) $id,
+                $fullshipment,
+                cdp_wa_lookupName('cdb_styles', 'mod_style', $new_status_id_wa)
+            );
         }
 
         header("location:consolidate_view.php?id=$id");
@@ -638,7 +659,6 @@ if (isset($_POST['address'])) {
 
     <script src="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="assets/template/assets/libs/select2/dist/js/select2.min.js"></script>
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
     <script src="assets/template/dist/js/app-style-switcher.js"></script>
