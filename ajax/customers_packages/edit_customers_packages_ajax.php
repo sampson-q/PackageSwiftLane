@@ -40,7 +40,7 @@ if (empty($_POST['origin_off'])) $errors['origin_off'] = $lang['validate_field_a
 if (empty($_POST['order_item_category'])) $errors['order_item_category'] = $lang['validate_field_ajax151'];
 if (empty($_POST['order_package'])) $errors['order_package'] = $lang['validate_field_ajax152'];
 if (empty($_POST['order_courier'])) $errors['order_courier'] = $lang['validate_field_ajax153'];
-if (empty($_POST['order_service_options'])) $errors['order_service_options'] = $lang['validate_field_ajax154'];
+// order_service_options keeps its stored value when not posted (the form's select is disabled).
 if (empty($_POST['order_deli_time'])) $errors['order_deli_time'] = $lang['validate_field_ajax155'];
 
 if (empty($_POST['status_courier'])) $errors['status_courier'] = $lang['validate_field_ajax157'];
@@ -130,7 +130,7 @@ if (empty($errors)) {
         'order_package'          => cdp_sanitize((int)$_POST["order_package"]),
         'order_item_category'    => cdp_sanitize((int)$_POST["order_item_category"]),
         'order_courier'          => cdp_sanitize((int)$_POST["order_courier"]),
-        'order_service_options'  => cdp_sanitize((int)$_POST["order_service_options"]),
+        'order_service_options'  => (intval($_POST["order_service_options"] ?? 0) > 0) ? intval($_POST["order_service_options"]) : (int) ($old_shipment->order_service_options ?? 0),
         'order_deli_time'        => cdp_sanitize((int)$_POST["order_deli_time"]),
         'status_courier'         => cdp_sanitize((int)$_POST["status_courier"]),
         'order_id'               => $shipment_id,
@@ -255,7 +255,9 @@ if (empty($errors)) {
         $shipment    = cdp_getCustomerPackage($shipment_id);
         $order_track = $shipment->order_prefix . $shipment->order_no;
 
-        cdp_updatePackageTracking($shipment_id, NULL, cdp_sanitize($_POST['estimated_eta']));
+        // Signature: (order_id, user_id, tracking_number, estimated_eta) — the ETA
+        // was previously passed in the tracking_number slot.
+        cdp_updatePackageTracking($shipment_id, $_SESSION['userid'] ?? null, null, cdp_sanitize($_POST['estimated_eta']));
 
         // =====================
         // DELETE EXISTING FILES
@@ -417,7 +419,7 @@ if (empty($errors)) {
         $new_status_label = $new_status_obj ? $new_status_obj->mod_style : 'N/A';
         $new_eta          = cdp_sanitize($_POST['estimated_eta']);
 
-        $app_url = $settings->site_url . 'track_online_shopping.php?order_track=' . $fullshipment;
+        $app_url = rtrim((string) $settings->site_url, '/') . '/track_online_shopping.php?order_track=' . $fullshipment;
 
         // =====================
         // BUILD CHANGED FIELDS DIFF
@@ -584,40 +586,41 @@ if (empty($errors)) {
         if (!empty($sender_data->phone) && (int)($dataShipment['notify_whatsapp_sender']) === 1) {
             try {
 
-                // Build changed lines for WhatsApp
+                // Build changed lines for WhatsApp (old ➜ new; money excluded).
                 $wa_changes = '';
                 foreach ($changed_fields as $label => $diff) {
-                    if ($label === '_packages_updated') continue;
-                    $wa_changes .= "- *{$label}:* {$diff['new']}\n";
+                    if ($label === '_packages_updated') {
+                        $wa_changes .= "• Package details (weight/dimensions) updated\n";
+                        continue;
+                    }
+                    if ($label === 'Order Total') continue; // money is excluded from sender alerts
+                    $wa_changes .= "• {$label}: " . ($diff['old'] ?? '') . " ➜ " . ($diff['new'] ?? '') . "\n";
                 }
 
-                // Build packages block for WhatsApp (only if updated)
+                // Build packages block for WhatsApp (only if updated; no money)
                 $wa_packages = '';
                 if (isset($changed_fields['_packages_updated']) && isset($packages) && is_array($packages) && count($packages) > 0) {
                     $wa_packages = "\n*Package Breakdown:*\n";
                     foreach ($packages as $index => $package) {
                         $wa_packages .= ($index + 1) . ". " . $package->description . "\n" .
                             "   Weight: " . $package->weight . " lbs\n" .
-                            "   Dimensions: " . $package->length . " x " . $package->width . " x " . $package->height . " inches\n" .
-                            "   Declared Value: $" . number_format($package->declared_value, 2) . "\n";
+                            "   Dimensions: " . $package->length . " x " . $package->width . " x " . $package->height . " inches\n";
                     }
                 }
 
-                if (empty($wa_changes) && empty($wa_packages)) {
-                    $wa_changes = "Your shipment details have been reviewed and updated by our team.\n";
+                // Send only when something actually changed.
+                if (!empty($wa_changes)) {
+                    $whatsapp_body =
+                        "Hello {$sender_data->fname} {$sender_data->lname},\n\n" .
+                        "Your shipment *{$fullshipment}* has been updated.\n\n" .
+                        "*What changed:*\n{$wa_changes}" .
+                        $wa_packages .
+                        "\nTrack your shipment at any time:\n" .
+                        $app_url . "\n\n" .
+                        "Thank you, *{$msnames}* Team";
+
+                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
                 }
-
-                $whatsapp_body =
-                    "Hello {$sender_data->fname} {$sender_data->lname},\n\n" .
-                    "Your shipment *{$fullshipment}* has been updated.\n\n" .
-                    (!empty($wa_changes) ? "*What changed:*\n{$wa_changes}" : '') .
-                    $wa_packages .
-                    "\n*Order Total: $" . number_format($total_envio, 2) . "*\n\n" .
-                    "Track your shipment at any time:\n" .
-                    $app_url . "\n\n" .
-                    "Thank you, *{$msnames}* Team";
-
-                sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
 
             } catch (Exception $e) {
                 error_log('Error sending WhatsApp update notification: ' . $e->getMessage());
