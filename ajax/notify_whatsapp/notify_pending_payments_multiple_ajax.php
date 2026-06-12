@@ -27,7 +27,7 @@ require_login();
 require_permission('view_dashboard');
 
 require_once("../../helpers/querys.php");
-require_once("../notify_whatsapp/api_whatsapp_service.php");
+require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 
 
 $db = new Conexion;
@@ -51,7 +51,8 @@ if (empty($errors)) {
         $package = getCustomerPackageForOrderNo($key);
         if ($package) {
             $sender = getSenderCourier($package->sender_id);
-            $notification_result =  sendNotificationWhatsApp($sender, null, $template_whatsapp_body);
+            $personal_body = cdp_personalizeWhatsAppBody($template_whatsapp_body, $sender, $package->order_prefix . $package->order_no);
+            $notification_result = sendNotificationWhatsApp_v2($sender, $personal_body);
 
             if ($notification_result['success']) {
                 $messages = $notification_result['message'];
