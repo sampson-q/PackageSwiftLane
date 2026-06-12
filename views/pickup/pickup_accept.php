@@ -54,7 +54,12 @@ $order_items = $db->cdp_registros();
 $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->sender_id . "'");
 $sender_data = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_recipients where id= '" . $row_order->receiver_id . "'");
+// recipient_type='user': the sender doubles as recipient (cdb_users), not cdb_recipients.
+if (($row_order->recipient_type ?? 'recipient') === 'user') {
+    $db->cdp_query("SELECT * FROM cdb_users where id= '" . intval($row_order->receiver_id) . "'");
+} else {
+    $db->cdp_query("SELECT * FROM cdb_recipients where id= '" . intval($row_order->receiver_id) . "'");
+}
 $receiver_data = $db->cdp_registro();
 
 
@@ -930,7 +935,6 @@ $address_order = $db->cdp_registro();
 
     <script src="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="assets/template/assets/libs/select2/dist/js/select2.min.js"></script>
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
     <script src="dataJs/pickup_accept.js"></script>
