@@ -141,7 +141,7 @@ if (empty($errors)) {
     );
 
     $shipment_id = cdp_insertCustomerPackages($dataShipment);
-    cdp_insertPackageTracking($shipment_id, $_SESSION['userid'], cdp_sanitize($_POST["estimated_sdfasdfa sdfeta"]), cdp_sanitize($_POST["estimated_eta"]));
+    cdp_insertPackageTracking($shipment_id, $_SESSION['userid'], null, cdp_sanitize($_POST["estimated_eta"]));
 
     if ($shipment_id !== null) {
 
@@ -293,7 +293,7 @@ if (empty($errors)) {
         $add_status =   intval($status_courier);
         $date_ship   = date("Y-m-d H:i:s a");
 
-        $app_url = $settings->site_url . 'track.php?order_track=' . $fullshipment;
+        $app_url = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
         $subject = $lang['notification_shipment2'] . $lang['notification_shipment6'] .  $fullshipment;
 
         $email_template = cdp_getEmailTemplatesdg1i4(33);
