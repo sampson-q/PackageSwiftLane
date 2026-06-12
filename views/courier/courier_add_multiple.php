@@ -380,15 +380,6 @@ $order_prefix = $settings->prefix;
                                     <?php
                                     if ($core->active_whatsapp == 1) {
                                     ?>
-                                        <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
-                                            <input type="checkbox" class="custom-control-input" name="notify_whatsapp_receiver" id="notify_whatsapp_receiver" value="1" checked>
-                                            <b>
-                                                <?php echo $lang['leftorder14443']; ?>
-
-                                                <i class="mdi mdi-whatsapp" style="font-size: 22px; color:#07bc4c;"></i>
-                                            </b>
-                                            <span class="custom-control-indicator"></span>
-                                        </label>
                                     <?php } ?>
 
                                     <?php
@@ -976,7 +967,6 @@ $order_prefix = $settings->prefix;
 
     <script src="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="assets/template/assets/libs/select2/dist/js/select2.min.js"></script>
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
     <script src="assets/template/dist/js/app-style-switcher.js"></script>
