@@ -82,7 +82,11 @@ foreach ($users as $row) {
 ------------------------------------
 */
 
-$excludeEmail = $sender_email !== '' ? " AND email != '" . addslashes($sender_email) . "'" : '';
+// NULL-safe: `email != 'x'` evaluates to NULL for rows without an email and
+// silently hid those recipients from the dropdown (261 rows affected).
+$excludeEmail = $sender_email !== ''
+    ? " AND (email IS NULL OR email = '' OR email != '" . addslashes($sender_email) . "')"
+    : '';
 
 $sql = "SELECT * FROM cdb_recipients
         WHERE sender_id = $sender_id
