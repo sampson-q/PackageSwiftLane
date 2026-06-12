@@ -3572,7 +3572,7 @@ function cdp_getCourierTrack($order_track)
     $db = new Conexion;
 
 
-    $db->cdp_query("SELECT  a.photo_delivered, a.volumetric_percentage,  a.order_datetime, a.order_deli_time, a.status_invoice,  a.is_consolidate, a.is_pickup,  a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM
+    $db->cdp_query("SELECT  a.photo_delivered, a.volumetric_percentage,  a.order_datetime, a.order_deli_time, a.status_invoice,  a.is_consolidate, a.is_pickup,  a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.receiver_id, a.recipient_type, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM
              cdb_add_order as a
              INNER JOIN cdb_styles as b ON a.status_courier = b.id
              
@@ -4204,7 +4204,7 @@ function cdp_getCustomersPackagesTrack($order_track)
     $db = new Conexion;
 
 
-    $db->cdp_query("SELECT  a.photo_delivered, a.volumetric_percentage,  a.order_datetime, a.order_deli_time, a.status_invoice, a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM cdb_customers_packages as a
+    $db->cdp_query("SELECT  a.photo_delivered, a.volumetric_percentage,  a.order_datetime, a.order_deli_time, a.status_invoice, a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.receiver_id, a.recipient_type, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM cdb_customers_packages as a
          INNER JOIN cdb_styles as b ON a.status_courier = b.id
          
          WHERE CONCAT(a.order_prefix,a.order_no)=:order_track
@@ -5954,7 +5954,11 @@ function cdp_insertCourierShipment($datos)
         status_invoice,
         order_incomplete,
         manual_tariff,
-        recipient_type           
+        recipient_type,
+        tracking_purchase,
+        provider_purchase,
+        price_purchase,
+        notify_whatsapp_sender
         )
     VALUES
         (
@@ -5983,7 +5987,11 @@ function cdp_insertCourierShipment($datos)
         :status_invoice,
         :order_incomplete,
         :manual_tariff,
-        :recipient_type
+        :recipient_type,
+        :tracking_purchase,
+        :provider_purchase,
+        :price_purchase,
+        :notify_whatsapp_sender
         )
 ");
 
@@ -6013,6 +6021,11 @@ function cdp_insertCourierShipment($datos)
     $db->bind(':due_date',   $datos["due_date"]);
     $db->bind(':status_invoice',   $datos["status_invoice"]);
     $db->bind(':volumetric_percentage',   $datos["volumetric_percentage"]);
+    // Optional fields (pre-alert conversion / opt-in flag); harmless null/0 elsewhere.
+    $db->bind(':tracking_purchase', $datos['tracking_purchase'] ?? null);
+    $db->bind(':provider_purchase', $datos['provider_purchase'] ?? null);
+    $db->bind(':price_purchase',    $datos['price_purchase'] ?? null);
+    $db->bind(':notify_whatsapp_sender', (int) ($datos['notify_whatsapp_sender'] ?? 0), PDO::PARAM_INT);
 
     $db->cdp_execute();
     return $db->dbh->lastInsertId();
@@ -6291,8 +6304,7 @@ function cdp_insertCourierShipmentPackages($datos)
     return  $db->cdp_execute();
 }
 
-function cdp_getPaymentMethodCourier($id)
-{
+function cdp_getPaymentMethodCourier($id) {
     $db = new Conexion;
 
     $db->cdp_query('SELECT * FROM cdb_payment_methods WHERE id=:id');
@@ -7401,6 +7413,36 @@ function cdp_getPackageTracking($order_id) {
     $db->bind(':order_id', $order_id);
 
     return $db->cdp_registro();
+}
+
+/**
+ * Package tracking row for an AIR shipment, falling back to the legacy
+ * cdb_add_order.tracking_num column when no cdb_package_tracking_number row
+ * exists (old-system data, ~40k orders). Reads only — writes keep going to the
+ * new table via cdp_updatePackageTracking, which inserts a row on first edit.
+ */
+function cdp_getPackageTrackingLegacyAware($order_id)
+{
+    $row = cdp_getPackageTracking((int) $order_id);
+
+    if (!$row) {
+        $row = (object) array(
+            'order_id'        => (int) $order_id,
+            'user_id'         => null,
+            'tracking_number' => null,
+            'estimated_eta'   => null,
+        );
+    }
+    if (empty($row->tracking_number)) {
+        $db = new Conexion;
+        $db->cdp_query('SELECT tracking_num FROM cdb_add_order WHERE order_id = :order_id LIMIT 1');
+        $db->bind(':order_id', (int) $order_id);
+        $legacy = $db->cdp_registro();
+        if ($legacy && !empty($legacy->tracking_num)) {
+            $row->tracking_number = $legacy->tracking_num;
+        }
+    }
+    return $row;
 }
 
 /**
