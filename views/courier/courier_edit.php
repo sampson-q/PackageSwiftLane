@@ -41,8 +41,8 @@ $receiver_data = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row_order->order_prefix . $row_order->order_no . "'");
 $address_order = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_package_tracking_number WHERE order_id='" . (int) cdp_sanitize($_GET['id']) . "'");
-$tracking_row = $db->cdp_registro();
+// Legacy-aware: old-system orders kept the postal tracking on cdb_add_order.tracking_num.
+$tracking_row = cdp_getPackageTrackingLegacyAware((int) cdp_sanitize($_GET['id']));
 
 $ctx               = cdp_getAgencyContext();
 $agency_default_id = ($ctx['is_restricted'] && $ctx['agency_id'] !== null) ? (int)$ctx['agency_id'] : 0;
@@ -60,7 +60,7 @@ $moderow       = $core->cdp_getShipmode();
 $driverrow     = $user->cdp_userAllDriver();
 $categories    = $core->cdp_getCategoriesById(28);
 
-$db->cdp_query("SELECT * FROM cdb_delivery_time where id = 12");
+$db->cdp_query("SELECT * FROM cdb_delivery_time where id = 14");
 $delivery_times = $db->cdp_registro();
 
 
@@ -740,7 +740,8 @@ $numrows     = $db->cdp_rowCount();
     <?php include('helpers/languages/translate_to_js.php'); ?>
     <script src="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="assets/template/assets/libs/select2/dist/js/select2.min.js"></script>
+    <!-- select2.min.js intentionally NOT loaded: loading it after the full build
+         overrides full-build modules and degrades the ajax selects. -->
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
     <script src="assets/template/dist/js/app-style-switcher.js"></script>
