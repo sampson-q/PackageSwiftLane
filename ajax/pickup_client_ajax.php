@@ -35,7 +35,7 @@ $sql = "SELECT
             a.person_receives,
             a.order_datetime,
             b.order_item_description,
-            c.tracking_number,
+            COALESCE(NULLIF(c.tracking_number, ''), a.tracking_num) AS tracking_number,
             c.estimated_eta
         FROM
             cdb_add_order AS a

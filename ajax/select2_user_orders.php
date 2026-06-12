@@ -53,7 +53,7 @@ if ($ship_from !== '' && $ship_to !== '') {
 }
 
 // Query: fetch orders where the DB's sender_id = selected sender and optional date filters apply
-$sql = "SELECT o.order_id, o.order_prefix, o.order_no, COALESCE(pt.tracking_number, '') AS postal_tracking
+$sql = "SELECT o.order_id, o.order_prefix, o.order_no, COALESCE(NULLIF(pt.tracking_number, ''), o.tracking_num, '') AS postal_tracking
         FROM cdb_add_order o
         LEFT JOIN cdb_package_tracking_number pt ON pt.order_id = o.order_id
         WHERE o.sender_id = :sender_id

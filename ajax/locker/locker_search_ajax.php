@@ -50,7 +50,7 @@ $sql = "SELECT
             a.order_service_options,
             b.mod_style,
             b.color,
-            c.tracking_number,
+            COALESCE(NULLIF(c.tracking_number, ''), a.tracking_num) AS tracking_number,
             c.estimated_eta
         FROM
             cdb_add_order AS a
