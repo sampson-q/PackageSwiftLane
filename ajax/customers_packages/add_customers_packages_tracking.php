@@ -31,7 +31,7 @@ require_once("../../helpers/querys.php");
 require_once("../../helpers/functions.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
-require_once("../notify_whatsapp/api_whatsapp_service.php");
+require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 require_once("../notify_sms/api_sms_service.php");
 
 
@@ -158,7 +158,7 @@ if (empty($errors)) {
         $fullshipment = $shipment->order_prefix . $shipment->order_no;
         $date_ship   = date("Y-m-d H:i:s a");
 
-        $app_url = $settings->site_url . 'track.php?order_track=' . $fullshipment;
+        $app_url = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
         $subject = $lang['notification_shipment9'] . ' ' . $lang['notification_shipment6'] .  $fullshipment;
 
         $status_courier_deliver = "" . $_POST['status_courier'] . "";
@@ -269,7 +269,7 @@ if (empty($errors)) {
         //NOTIFY WHATSAPP API
 
         if (isset($_POST['notify_whatsapp']) && intval($_POST['notify_whatsapp']) == 1) {
-            $notification_result =  sendNotificationWhatsApp($sender_data, 4, null, $fullshipment);
+            $notification_result = cdp_sendStatusUpdateWhatsApp($sender_data, $fullshipment, $add_status, $app_url);
         }
 
 
