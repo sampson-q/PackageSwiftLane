@@ -345,42 +345,13 @@ $history = $db->cdp_registros();
                                                                                                 echo 'selected';
                                                                                             } ?>><?php echo $lang['leftorder165'] ?></option>
 
-                                                                        <option value="RIC" <?php if ($row->document_type == 'RIC') {
-                                                                                                echo 'selected';
-                                                                                            } ?>><?php echo $lang['leftorder166'] ?></option>
-
-                                                                        <option value="CI" <?php if ($row->document_type == 'CI') {
-                                                                                                echo 'selected';
-                                                                                            } ?>><?php echo $lang['leftorder167'] ?></option>
-
-                                                                        <option value="CIE" <?php if ($row->document_type == 'CIE') {
-                                                                                                echo 'selected';
-                                                                                            } ?>><?php echo $lang['leftorder168'] ?></option>
-
-                                                                        <option value="CIN" <?php if ($row->document_type == 'CIN') {
-                                                                                                echo 'selected';
-                                                                                            } ?>><?php echo $lang['leftorder169'] ?></option>
-
-                                                                        <option value="CIE" <?php if ($row->document_type == 'CIE') {
-                                                                                                echo 'selected';
-                                                                                            } ?>><?php echo $lang['leftorder170'] ?></option>
-
                                                                         <option value="CC" <?php if ($row->document_type == 'CC') {
                                                                                                 echo 'selected';
-                                                                                            } ?>><?php echo $lang['leftorder171'] ?></option>
-
-                                                                        <option value="TI" <?php if ($row->document_type == 'TI') {
-                                                                                                echo 'selected';
-                                                                                            } ?>><?php echo $lang['leftorder172'] ?></option>
+                                                                                            } ?>><?php echo $lang['leftorder171'] . ' (Ghana Card)' ?></option>
 
                                                                         <option value="PSP" <?php if ($row->document_type == 'PSP') {
                                                                                                 echo 'selected';
                                                                                             } ?>><?php echo $lang['leftorder174'] ?></option>
-
-
-                                                                        <option value="NIT" <?php if ($row->document_type == 'NIT') {
-                                                                                                echo 'selected';
-                                                                                            } ?>><?php echo $lang['leftorder1745'] ?></option>
                                                                     </select>
                                                                 </div>
                                                             </div>
