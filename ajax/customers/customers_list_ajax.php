@@ -131,6 +131,9 @@ if ($numrows > 0) { ?>
                             <a href="newsletter.php?email=<?php echo $user->email; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien45'] ?>">
                                 <i style="color:#F5590D" class="ti-email"></i>
                             </a>
+                            <a href="customer_view.php?user=<?php echo $user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo "View Customer" ?>">
+                                <i style="color:#AA080C" class="ti-eye"></i>
+                            </a>
                             <?php if ($user->id == 1) : ?>
                                 <a data-rel="<?php echo $user->username; ?>">
                                     <button type="button" data-toggle="tooltip" data-original-title="Master Admin">
