@@ -7,8 +7,11 @@
 var deleted_file_ids = [];
 
 // Estado de paquetes en memoria
+// qty defaults to 0 on purpose: the submit gate rejects qty 0/blank, forcing
+// staff to set a real quantity per item instead of lumping counts into the
+// description ("1 perfume, 3 yogurts").
 var packagesItems = [
-  { qty: 1, description: "", length: 0, width: 0, height: 0, weight: 0, declared_value: 0, fixed_value: 0 }
+    { qty: 0, description: "", weight: 0, custom_price: 0, use_custom_price: false, declared_value: 0, fixed_value: 0 }
 ];
 
 // Última cotización obtenida (endpoint). Si no hay, se usa el price_lb del formulario.
@@ -132,7 +135,7 @@ let autoFetchTimer = null;
   // Cambios en la tabla de paquetes
   $("#packages_table").on(
     "input change",
-    "input.qty, input.weight, input.length, input.width, input.height, input[name='description']",
+    "input.qty, input.weight, input.custom-price-input, input[name='description']",
     function () { changePackage(this); }
   );
 
@@ -428,82 +431,151 @@ function cdp_formatAdressSelection(repo) {
    Paquetes (tabla)
    ========================== */
 function loadPackages() {
-  var $table = $("#packages_table");
-  if (!$table.length) return;
+    var $table = $("#packages_table");
+    if (!$table.length) return;
 
-  var $tbody = $table.find("tbody");
-  if (!$tbody.length) {
-    $tbody = $("<tbody/>");
-    $table.append($tbody);
-  }
+    var $tbody = $table.find("tbody");
+    if (!$tbody.length) { $tbody = $("<tbody/>"); $table.append($tbody); }
 
-  $tbody.empty();
+    $tbody.empty();
 
-  packagesItems.forEach(function (item, index) {
-    var tr = `
-      <tr id="row_id_${index}">
-        <td style="width: 3%;"><input type="text" class="form-control form-control-sm qty"    name="qty"    id="qty_${index}"    value="${item.qty}"    onkeypress="return isNumberKey(event,this)"></td>
-        <td style="width: 75%;">
-          <input type="text" class="form-control form-control-sm" name="description" id="description_${index}" value="${item.description || ''}" placeholder="${typeof translate_description!=='undefined'?translate_description:'Description'}">
-          <input type="hidden" name="fixed_value"     id="fixedValue_${index}"     value="${Number(item.fixed_value || 0)}">
-          <input type="hidden" name="declared_value"  id="declaredValue_${index}"  value="${Number(item.declared_value || 0)}">
-          <input type="hidden" name="weightVol"       id="weightVol_${index}"      value="0">
-        </td>
-        <td style="width: 7%;"><input type="text" class="form-control form-control-sm weight" name="weight" id="weight_${index}" value="${item.weight}" onkeypress="return isNumberKey(event,this)"></td>
-        <td style="width: 7%;"><input type="text" class="form-control form-control-sm length" name="length" id="length_${index}" value="${item.length}" onkeypress="return isNumberKey(event,this)"></td>
-        <td style="width: 7%;"><input type="text" class="form-control form-control-sm width"  name="width"  id="width_${index}"  value="${item.width}"  onkeypress="return isNumberKey(event,this)"></td>
-        <td style="width: 7%;"><input type="text" class="form-control form-control-sm height" name="height" id="height_${index}" value="${item.height}" onkeypress="return isNumberKey(event,this)"></td>
-        
-        <td style class="text-center">
-          ${index > 0 ? `<button type="button" class="btn btn-outline-danger btn-sm" onclick="deletePackage(${index})"><i class="fa fa-trash"></i></button>` : ``}
-        </td>
-      </tr>`;
-    $tbody.append(tr);
-  });
+    var priceLb = nf($("#price_lb").val(), 0);
 
-  // Botón agregar fila (id antiguo y nuevo)
-  $("#add_rows, #add_row")
-    .off("click.addPkg")
-    .on("click.addPkg", function (e) {
-      e.preventDefault();
-      addPackage();
+    packagesItems.forEach(function (item, index) {
+        var useCustom = !!item.use_custom_price;
+        var lineTotal = computeLineTotal(item, priceLb);
+
+        var tr = `
+            <tr id="row_id_${index}">
+                <td><input type="text" class="form-control form-control-sm qty"
+                    name="qty" id="qty_${index}" value="${nf(item.qty,1)}"
+                    onkeypress="return isNumberKey(event,this)"
+                    oninput="changePackage(this)"></td>
+
+                <td>
+                    <input type="text" class="form-control form-control-sm"
+                        name="description" id="description_${index}"
+                        value="${item.description || ''}"
+                        placeholder="${typeof translate_description!=='undefined'?translate_description:'Description'}"
+                        oninput="changePackage(this)">
+                    <input type="hidden" name="fixed_value"    id="fixedValue_${index}"    value="${nf(item.fixed_value,0)}">
+                    <input type="hidden" name="declared_value" id="declaredValue_${index}" value="${nf(item.declared_value,0)}">
+                    <input type="hidden" name="use_custom_price" id="useCustomPrice_${index}" value="${useCustom ? '1' : '0'}">
+                </td>
+
+                <td>
+                    <div class="btn-group btn-group-sm pricing-mode-toggle" role="group" aria-label="Pricing mode">
+                        <button type="button" id="modeWeight_${index}"
+                            class="btn ${useCustom ? 'btn-outline-dark' : 'btn-dark'}"
+                            onclick="setPricingMode(${index}, false)">
+                            <i class="fa fa-balance-scale"></i> Weight
+                        </button>
+                        <button type="button" id="modeCustom_${index}"
+                            class="btn ${useCustom ? 'btn-success' : 'btn-outline-success'}"
+                            onclick="setPricingMode(${index}, true)">
+                            <i class="fa fa-dollar-sign"></i> Custom
+                        </button>
+                    </div>
+                </td>
+
+                <td class="${useCustom ? 'pkg-disabled-cell' : ''}">
+                    <input type="text"
+                        class="form-control form-control-sm weight"
+                        name="weight" id="weight_${index}"
+                        value="${useCustom ? '' : nf(item.weight,0) || ''}"
+                        placeholder="${useCustom ? '—' : 'Weight (lbs)'}"
+                        ${useCustom ? 'disabled' : ''}
+                        onkeypress="return isNumberKey(event,this)"
+                        oninput="changePackage(this)">
+                </td>
+
+                <td class="${useCustom ? '' : 'pkg-disabled-cell'}">
+                    <input type="text"
+                        class="form-control form-control-sm custom-price-input"
+                        name="custom_price" id="customPrice_${index}"
+                        value="${useCustom ? nf(item.custom_price,0) || '' : ''}"
+                        placeholder="${useCustom ? 'USD' : '—'}"
+                        ${!useCustom ? 'disabled' : ''}
+                        onkeypress="return isNumberKey(event,this)"
+                        oninput="changePackage(this)">
+                </td>
+
+                <td class="text-center">
+                    <span id="lineTotal_${index}" class="font-weight-bold text-success"
+                        style="font-size:0.95rem; white-space:nowrap;">
+                        ${r2(lineTotal)}
+                    </span>
+                </td>
+
+                <td class="text-center">
+                    ${index > 0
+                        ? `<button type="button" class="btn btn-outline-danger btn-sm"
+                               onclick="deletePackage(${index})"><i class="fa fa-trash"></i></button>`
+                        : ''}
+                </td>
+            </tr>`;
+
+        $tbody.append(tr);
     });
 
-  calculateFinalTotal();
-  if (!$("#tariff_mode").is(":checked")) scheduleAutoFetch();
+    $("#add_rows, #add_row").off("click.addPkg").on("click.addPkg", function (e) {
+        e.preventDefault();
+        addPackage();
+    });
+
+    calculateFinalTotal();
+    if (!$("#tariff_mode").is(":checked")) scheduleAutoFetch();
 }
+
 function addPackage() {
-  packagesItems.push({ qty: 1, description: "", length: 0, width: 0, height: 0, weight: 0, declared_value: 0, fixed_value: 0 });
-  var index = packagesItems.length - 1;
-  loadPackages();
-  $("#row_id_" + index).css({ backgroundColor: "#18BC9C" });
-  setTimeout(function () {
-    $("#row_id_" + index).css({ backgroundColor: "" });
-  }, 900);
-  $("#create_invoice").prop("disabled", false);
-}
-function deletePackage(index) {
-  packagesItems = packagesItems.filter(function(_, i){ return i !== index; });
-  $("#row_id_" + index).fadeOut(300, function () {
-    $(this).remove();
+    packagesItems.push({
+        qty: 0, description: "", weight: 0,
+        custom_price: 0, use_custom_price: false,
+        declared_value: 0, fixed_value: 0
+    });
+    var index = packagesItems.length - 1;
     loadPackages();
+    // $("#row_id_" + index).css({ backgroundColor: "#81aaa2" });
+    setTimeout(function () { $("#row_id_" + index).css({ backgroundColor: "" }); }, 900);
+    $("#qty_" + index).trigger("focus"); // ready to accept the quantity immediately
     $("#create_invoice").prop("disabled", false);
-  });
 }
+
+function deletePackage(index) {
+    packagesItems = packagesItems.filter(function(_, i){ return i !== index; });
+    $("#row_id_" + index).fadeOut(300, function () {
+        $(this).remove();
+        loadPackages();
+        $("#create_invoice").prop("disabled", false);
+    });
+}
+
 function changePackage(el) {
-  var parts = el.id.split("_");
-  var idx = parseInt(parts[1], 10);
-  var field = el.name;
+    var parts = el.id.split("_");
+    var idx   = parseInt(parts[parts.length - 1], 10);
+    var field = el.name;
 
-  packagesItems = packagesItems.map(function (item, i) {
-    if (i === idx) {
-      item[field] = el.value || 0;
+    var val = el.value;
+
+    packagesItems = packagesItems.map(function (item, i) {
+        if (i === idx) {
+            if (field === "qty")          item.qty          = nf(val, 1);
+            if (field === "description")  item.description  = val;
+            if (field === "weight")       item.weight       = nf(val, 0);
+            if (field === "custom_price") item.custom_price = nf(val, 0);
+        }
+        return item;
+    });
+
+    // Update just this row's line total live without re-rendering the whole table
+    var priceLb   = nf($("#price_lb").val(), 0);
+    var lineTotal = computeLineTotal(packagesItems[idx], priceLb);
+    $("#lineTotal_" + idx).text(r2(lineTotal));
+
+    calculateFinalTotal();
+    if (!$("#tariff_mode").is(":checked") && (field === "weight" || field === "qty")) {
+        scheduleAutoFetch();
     }
-    return item;
-  });
-
-  calculateFinalTotal();
-  if (!$("#tariff_mode").is(":checked")) scheduleAutoFetch();
 }
 
 /* ==========================
@@ -642,178 +714,122 @@ function r2(v) {
   var n = parseFloat(v);
   return (isNaN(n) || !isFinite(n)) ? "0.00" : n.toFixed(2);
 }
+
 function collectPackages() {
-  return (packagesItems || []).map(function(p){
-    return {
-      qty: nf(p.qty, 1),
-      description: p.description || "",
-      weight: nf(p.weight),
-      length: nf(p.length),
-      width: nf(p.width),
-      height: nf(p.height),
-      declared_value: nf(p.declared_value),
-      fixed_value: nf(p.fixed_value)
-    };
-  });
+    return (packagesItems || []).map(function (p) {
+        return {
+            qty:             Math.max(1, nf(p.qty, 1)),
+            description:     p.description || "",
+            weight:          nf(p.weight, 0),
+            custom_price:    nf(p.custom_price, 0),
+            use_custom_price: p.use_custom_price ? 1 : 0,
+            declared_value:  nf(p.declared_value, 0),
+            fixed_value:     nf(p.fixed_value, 0)
+        };
+    });
 }
 
 function calculateFinalTotal(element) {
-  if (element && !element.value) { $(element).val(0); }
+    if (element && !element.value) { $(element).val(0); }
 
-  var tariffs_value              = nf($("#tariffs_value").val());
-  var declared_value_tax         = nf($("#declared_value_tax").val());
-  var insurance_value            = nf($("#insurance_value").val());
-  var tax_value                  = nf($("#tax_value").val());
-  var discount_value             = nf($("#discount_value").val());
-  var reexpedicion_value         = nf($("#reexpedicion_value").val());
-  var price_lb                   = nf($("#price_lb").val());
-  var insured_value              = nf($("#insured_value").val());
-  var core_meter                 = nf($("#core_meter").val());
-  var core_min_cost_tax          = nf($("#core_min_cost_tax").val());
-  var core_min_cost_declared_tax = nf($("#core_min_cost_declared_tax").val());
+    var tariffs_value              = nf($("#tariffs_value").val());
+    var declared_value_tax         = nf($("#declared_value_tax").val());
+    var insurance_value            = nf($("#insurance_value").val());
+    var tax_value                  = nf($("#tax_value").val());
+    var discount_value             = nf($("#discount_value").val());
+    var reexpedicion_value         = nf($("#reexpedicion_value").val());
+    var price_lb                   = nf($("#price_lb").val());
+    var insured_value              = nf($("#insured_value").val());
+    var core_min_cost_tax          = nf($("#core_min_cost_tax").val());
+    var core_min_cost_declared_tax = nf($("#core_min_cost_declared_tax").val());
 
-  var isManual = $("#tariff_mode").is(":checked");
+    var isManual = $("#tariff_mode").is(":checked");
 
-  var sum_weight_real = 0;
-  var sum_weight_vol  = 0;
-  var sum_declared    = 0;
-  var sum_fixed       = 0;
+    var sum_weight_real  = 0;
+    var sum_declared     = 0;
+    var sum_fixed        = 0;
+    var sum_lines_usd    = 0; // sum of all per-row line totals (USD)
 
-  (packagesItems || []).forEach(function (item, i) {
-    var qty     = Math.max(1, nf(item.qty, 1));
-    var weight  = nf(item.weight);
+    (packagesItems || []).forEach(function (item, i) {
+        var qty    = Math.max(1, nf(item.qty, 1));
+        var weight = nf(item.weight, 0);
 
-    var $lengthEl = $("#length_" + i);
-    var $widthEl  = $("#width_" + i);
-    var $heightEl = $("#height_" + i);
+        sum_weight_real += weight * qty;
+        sum_declared    += nf(item.declared_value, 0) * qty;
+        sum_fixed       += nf(item.fixed_value, 0) * qty;
 
-    var lengthRaw = $.trim($lengthEl.val() || "");
-    var widthRaw  = $.trim($widthEl.val() || "");
-    var heightRaw = $.trim($heightEl.val() || "");
+        var lineTotal = computeLineTotal(item, price_lb);
+        sum_lines_usd += lineTotal;
 
-    var length = nf(lengthRaw);
-    var width  = nf(widthRaw);
-    var height = nf(heightRaw);
+        // Update the row's live display
+        $("#lineTotal_" + i).text(r2(lineTotal));
+    });
 
-    var fixed   = nf(item.fixed_value);
-    var decl    = nf(item.declared_value);
-
-    function isDimensionEmpty(val) {
-        return (
-            val === "" ||
-            val === null ||
-            val === undefined ||
-            val === "0" ||
-            Number(val) === 0
-        );
+    // chargeable weight for auto-tariff display (volumetric gone)
+    var chargeable = sum_weight_real;
+    if ($("#chargeable_weight").length) {
+        $("#chargeable_weight").val(r2(chargeable));
     }
 
-    var hasAnyDimension =
-        !isDimensionEmpty(lengthRaw) ||
-        !isDimensionEmpty(widthRaw) ||
-        !isDimensionEmpty(heightRaw);
-
-    if (hasAnyDimension) {
-
-        $lengthEl.css(
-            "border",
-            isDimensionEmpty(lengthRaw)
-                ? "1px solid red"
-                : ""
-        );
-
-        $widthEl.css(
-            "border",
-            isDimensionEmpty(widthRaw)
-                ? "1px solid red"
-                : ""
-        );
-
-        $heightEl.css(
-            "border",
-            isDimensionEmpty(heightRaw)
-                ? "1px solid red"
-                : ""
-        );
-
+    // BASE FLETE (USD — courier_add never converts to GHS; that happens later
+    // at the customer/payment/messaging stage).
+    // Manual mode: use the per-row line totals sum (weight*rate + custom_price).
+    // Auto mode: use tariff engine result (price_lb already set by fetchTariff).
+    var base_flete = 0;
+    if (isManual) {
+        base_flete = sum_lines_usd;
     } else {
-
-        $lengthEl.css("border", "");
-        $widthEl.css("border", "");
-        $heightEl.css("border", "");
+        if (window.lastQuote && window.lastQuote.success) {
+            if (typeof window.lastQuote.total_tarifa !== "undefined") {
+                base_flete = parseFloat(window.lastQuote.total_tarifa);
+            } else {
+                base_flete = chargeable * price_lb;
+            }
+        } else {
+            base_flete = sum_lines_usd;
+        }
     }
 
-    var vol_piece = 0;
-    if (core_meter > 0 && length > 0 && width > 0 && height > 0) {
-      vol_piece = (length * width * height) / core_meter;
+    // TAX
+    var total_impuesto = 0;
+    if (base_flete > core_min_cost_tax) {
+        total_impuesto = (base_flete * tax_value) / 100;
     }
 
-    if ($("#weightVol_" + i).length) $("#weightVol_" + i).val(r2(vol_piece));
-
-    sum_weight_real += weight * qty;
-    sum_weight_vol  += vol_piece * qty;
-    sum_declared    += decl * qty;
-    sum_fixed       += fixed * qty;
-  });
-
-  var chargeable = Math.max(nf(sum_weight_real.toFixed(2)), nf(sum_weight_vol.toFixed(2)));
-  if ($("#chargeable_weight").length) {
-    $("#chargeable_weight").val(r2(chargeable));
-  }
-
-  var base_flete = 0;
-  if (isManual) {
-    base_flete = chargeable * price_lb;
-  } else {
-    if (window.lastQuote && window.lastQuote.success) {
-      if (typeof window.lastQuote.total_tarifa !== "undefined") {
-        base_flete = parseFloat(window.lastQuote.total_tarifa);
-      } else if (window.lastQuote.data && typeof window.lastQuote.data.price !== "undefined") {
-        base_flete = chargeable * nf(window.lastQuote.data.price, price_lb);
-      } else {
-        base_flete = chargeable * price_lb;
-      }
-    } else {
-      base_flete = chargeable * price_lb;
+    // DECLARED VALUE
+    var total_declared = 0;
+    if (sum_declared > core_min_cost_declared_tax) {
+        total_declared = (sum_declared * declared_value_tax) / 100;
     }
-  }
 
-  var total_impuesto = 0;
-  if (base_flete > core_min_cost_tax) {
-    total_impuesto = (base_flete * tax_value) / 100;
-  }
+    // DISCOUNT — percentage of the base, or a flat amount (USD), per the toggle.
+    var discount_type = $("#discount_type").val() || "percent";
+    var total_desc = (discount_type === "amount") ? discount_value : (base_flete * discount_value) / 100;
+    if (total_desc > base_flete || discount_value < 0) {
+        $("#discount_value").val(0);
+        total_desc = 0;
+    }
 
-  var total_declared = 0;
-  if (sum_declared > core_min_cost_declared_tax) {
-    total_declared = (sum_declared * declared_value_tax) / 100;
-  }
+    var total_seguro = (insured_value * insurance_value) / 100;
+    var total_aduana = (sum_weight_real * tariffs_value) / 100;
 
-  var total_desc = (base_flete * discount_value) / 100;
-  if (total_desc > base_flete || discount_value < 0) {
-    $("#discount_value").val(0);
-    total_desc = 0;
-  }
+    var total = base_flete - total_desc + total_seguro + total_impuesto + total_aduana + total_declared + sum_fixed + reexpedicion_value;
+    if (!isFinite(total) || total < 0) total = 0;
 
-  var total_seguro = (insured_value * insurance_value) / 100;
-  var total_aduana = ((sum_weight_real + sum_weight_vol) * tariffs_value) / 100;
+    $("#table-totals").removeClass("d-none");
+    $("#subtotal").html(r2(base_flete));
+    $("#discount").html(r2(total_desc));
+    $("#impuesto").html(r2(total_impuesto));
+    $("#declared_value_label").html(r2(total_declared));
+    $("#fixed_value_label").html(r2(sum_fixed));
+    $("#insurance").html(r2(total_seguro));
+    $("#total_impuesto_aduanero").html(r2(total_aduana));
+    $("#total_envio").html(r2(total));
 
-  var total = base_flete - total_desc + total_seguro + total_impuesto + total_aduana + total_declared + sum_fixed + reexpedicion_value;
-  if (!isFinite(total) || total < 0) total = 0;
-
-  $("#table-totals").removeClass("d-none");
-  $("#subtotal").html(r2(base_flete));
-  $("#discount").html(r2(total_desc));
-  $("#impuesto").html(r2(total_impuesto));
-  $("#declared_value_label").html(r2(total_declared));
-  $("#fixed_value_label").html(r2(sum_fixed));
-  $("#insurance").html(r2(total_seguro));
-  $("#total_impuesto_aduanero").html(r2(total_aduana));
-  $("#total_envio").html(r2(total));
-
-  $("#total_weight").html(r2(sum_weight_real));
-  $("#total_vol_weight").html(r2(sum_weight_vol));
-  if ($("#total_fixed").length) $("#total_fixed").html(r2(sum_fixed));
-  if ($("#total_declared").length) $("#total_declared").html(r2(sum_declared));
+    $("#total_weight").html(r2(sum_weight_real));
+    $("#total_vol_weight").html("—"); // volumetric removed
+    if ($("#total_fixed").length)    $("#total_fixed").html(r2(sum_fixed));
+    if ($("#total_declared").length) $("#total_declared").html(r2(sum_declared));
 }
 
 
@@ -821,56 +837,44 @@ function calculateFinalTotal(element) {
    Submit — Crear envío
    ========================== */
 $("#invoice_form").on("submit", function (event) {
-  event.preventDefault();
+    event.preventDefault();
 
-  if (cdp_validateZiseFiles() === true) {
-    alert("error files");
-    return false;
-  }
+    if (cdp_validateZiseFiles() === true) {
+        alert("error files");
+        return false;
+    }
 
-  // Validación de filas de paquetes
-  for (var i = 0; i < packagesItems.length; i++) {
-    if ($.trim($("#description_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_description, icon: "error", confirmButtonText: "Ok" });
-      $("#description_" + i).focus();
-      return false;
+    // Validación de filas de paquetes
+    for (var i = 0; i < packagesItems.length; i++) {
+        if ($.trim($("#description_" + i).val()).length === 0) {
+            Swal.fire({ text: validation_description, icon: "error", confirmButtonText: "Ok" });
+            $("#description_" + i).focus();
+            return false;
+        }
+        var qty_val = $.trim($("#qty_" + i).val());
+        if (!qty_val || qty_val === "0") {
+            Swal.fire({ text: "Enter quantity for row " + (i+1), icon: "error", confirmButtonText: "Ok" });
+            $("#qty_" + i).focus();
+            return false;
+        }
+
+        var useCustom = packagesItems[i].use_custom_price;
+        if (useCustom) {
+            var cp = nf($("#customPrice_" + i).val(), 0);
+            if (cp <= 0) {
+                Swal.fire({ text: "Enter a custom price (USD) for row " + (i+1), icon: "error", confirmButtonText: "Ok" });
+                $("#customPrice_" + i).focus();
+                return false;
+            }
+        } else {
+            var wt = nf($("#weight_" + i).val(), 0);
+            if (wt <= 0) {
+                Swal.fire({ text: "Enter weight for row " + (i+1), icon: "error", confirmButtonText: "Ok" });
+                $("#weight_" + i).focus();
+                return false;
+            }
+        }
     }
-    if ($.trim($("#qty_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_quantity, icon: "error", confirmButtonText: "Ok" });
-      $("#qty_" + i).focus();
-      return false;
-    }
-    if ($.trim($("#weight_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_weight, icon: "error", confirmButtonText: "Ok" });
-      $("#weight_" + i).focus();
-      return false;
-    }
-    if ($.trim($("#length_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_length, icon: "error", confirmButtonText: "Ok" });
-      $("#length_" + i).focus();
-      return false;
-    }
-    if ($.trim($("#width_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_width, icon: "error", confirmButtonText: "Ok" });
-      $("#width_" + i).focus();
-      return false;
-    }
-    if ($.trim($("#height_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_height, icon: "error", confirmButtonText: "Ok" });
-      $("#height_" + i).focus();
-      return false;
-    }
-    if ($.trim($("#fixedValue_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_charge, icon: "error", confirmButtonText: "Ok" });
-      $("#fixedValue_" + i).focus();
-      return false;
-    }
-    if ($.trim($("#declaredValue_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_declared, icon: "error", confirmButtonText: "Ok" });
-      $("#declaredValue_" + i).focus();
-      return false;
-    }
-  }
 
     var tracking_number = $("#tracking_number").val();
     var estimated_eta = $("#estimated_eta").val();
@@ -919,6 +923,8 @@ $("#invoice_form").on("submit", function (event) {
   var rate_provider  = $("#rate_provider").val() || "internal";
   var distance_miles = $("#distance_miles").val() || 0;
 
+  var courier_notes = $("#courier_notes").val() || "";
+
   var data = new FormData();
 
   // paquetes en JSON
@@ -949,12 +955,15 @@ $("#invoice_form").on("submit", function (event) {
   if (insured_value)        data.append("insured_value", insured_value);
   if (reexpedicion_value)   data.append("reexpedicion_value", reexpedicion_value);
   if (discount_value)       data.append("discount_value", discount_value);
+  data.append("discount_type", $("#discount_type").val() || "percent");
   if (tax_value)            data.append("tax_value", tax_value);
   if (declared_value_tax)   data.append("declared_value_tax", declared_value_tax);
   if (tariffs_value)        data.append("tariffs_value", tariffs_value);
   if (insurance_value)      data.append("insurance_value", insurance_value);
     if (tracking_number)    data.append("tracking_number", tracking_number);
     if (estimated_eta)      data.append("estimated_eta", estimated_eta);
+    if (courier_notes)      data.append("courier_notes", courier_notes);
+    data.append("package_total_weight", $("#package_total_weight").val() || "");
   
 
   // motor tarifas (siempre enviar para que el backend calcule cuando manual_tariff=0)
@@ -995,6 +1004,7 @@ $("#invoice_form").on("submit", function (event) {
 
   data.append('_csrf_token', $('input[name="_csrf_token"]').val());
   data.append('recipient_type', window.recipient_type || 'recipient');
+  data.append("exchange_rate", $("#core_exchange_rate").val() || "1");
 
   $.ajax({
     type: "POST",
@@ -1556,4 +1566,62 @@ function removeFileFromInputByName(inputEl, filename) {
     });
     inputEl.files = dt.files;
   } catch (e) { console.warn('removeFileFromInputByName failed', e); }
+}
+
+/**
+ * Switch a row between the two mutually-exclusive pricing modes.
+ * @param {number}  index     Row index.
+ * @param {boolean} useCustom true = custom price (USD); false = weight-based.
+ *
+ * Clearing the unused field guarantees an item never carries both a weight and
+ * a custom price (enforced again on the backend). A full re-render keeps the
+ * segmented toggle's active/inactive button styling in sync.
+ */
+function setPricingMode(index, useCustom) {
+    useCustom = !!useCustom;
+    if (packagesItems[index].use_custom_price === useCustom) return;
+
+    packagesItems[index].use_custom_price = useCustom;
+    if (useCustom) {
+        packagesItems[index].weight = 0;
+    } else {
+        packagesItems[index].custom_price = 0;
+    }
+
+    loadPackages();
+    calculateFinalTotal();
+    if (!$("#tariff_mode").is(":checked")) scheduleAutoFetch();
+
+    // Put the cursor in the now-active field for fast data entry.
+    $("#" + (useCustom ? "customPrice_" : "weight_") + index).trigger("focus");
+}
+
+/**
+ * Toggle the discount between a percentage of the base and a flat USD amount.
+ */
+function setDiscountType(type) {
+    type = (type === "amount") ? "amount" : "percent";
+    $("#discount_type").val(type);
+    $("#discount_type_percent")
+        .toggleClass("btn-dark", type === "percent")
+        .toggleClass("btn-outline-dark", type !== "percent");
+    $("#discount_type_amount")
+        .toggleClass("btn-dark", type === "amount")
+        .toggleClass("btn-outline-dark", type !== "amount");
+    calculateFinalTotal();
+}
+
+/**
+ * Compute a single row's line total in USD (courier_add never converts to GHS).
+ * Weight mode : weight * qty * price_lb   (price_lb = system rate, e.g. $8/kilo)
+ * Custom mode : custom_price * qty        (custom_price already entered in USD)
+ */
+function computeLineTotal(item, priceLb) {
+    var qty = Math.max(1, nf(item.qty, 1));
+
+    if (item.use_custom_price) {
+        return nf(item.custom_price, 0) * qty;
+    } else {
+        return nf(item.weight, 0) * qty * priceLb;
+    }
 }
