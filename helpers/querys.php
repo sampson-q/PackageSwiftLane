@@ -499,7 +499,8 @@ function cdp_updateConfigGeneral0gqr5($datos)
             cformat =:cformat,
             dec_point =:dec_point,
             thousands_sep =:thousands_sep,
-            timezone =:timezone            
+            timezone =:timezone,
+            exchange_rate =:exchange_rate
             
         ');
 
@@ -512,6 +513,7 @@ function cdp_updateConfigGeneral0gqr5($datos)
     $db->bind(':dec_point', $datos['dec_point']);
     $db->bind(':thousands_sep', $datos['thousands_sep']);
     $db->bind(':timezone', $datos['timezone']);
+    $db->bind(':exchange_rate', $datos['exchange_rate']);
 
 
 
@@ -5315,6 +5317,7 @@ function cdp_updateCustomers($datos, $approve = null) {
         phone =:phone,
         gender =:gender,
         newsletter =:newsletter,
+        company = :company,
         active =:active' . ($approve ? $approveQ : '') . '
 
         where id = :id
@@ -5331,6 +5334,7 @@ function cdp_updateCustomers($datos, $approve = null) {
     $db->bind(':active', $datos['active']);
     $db->bind(':document_type', $datos['document_type']);
     $db->bind(':document_number', $datos['document_number']);
+    $db->bind(':company', $datos['company']);
     $db->bind(':id', $datos['id']);
 
     return $db->cdp_execute();
@@ -5958,7 +5962,8 @@ function cdp_insertCourierShipment($datos)
         tracking_purchase,
         provider_purchase,
         price_purchase,
-        notify_whatsapp_sender
+        notify_whatsapp_sender,
+        courier_notes
         )
     VALUES
         (
@@ -5991,7 +5996,8 @@ function cdp_insertCourierShipment($datos)
         :tracking_purchase,
         :provider_purchase,
         :price_purchase,
-        :notify_whatsapp_sender
+        :notify_whatsapp_sender,
+        :courier_notes
         )
 ");
 
@@ -6026,6 +6032,7 @@ function cdp_insertCourierShipment($datos)
     $db->bind(':provider_purchase', $datos['provider_purchase'] ?? null);
     $db->bind(':price_purchase',    $datos['price_purchase'] ?? null);
     $db->bind(':notify_whatsapp_sender', (int) ($datos['notify_whatsapp_sender'] ?? 0), PDO::PARAM_INT);
+    $db->bind(':courier_notes', $datos['courier_notes']);
 
     $db->cdp_execute();
     return $db->dbh->lastInsertId();
@@ -6180,7 +6187,8 @@ function cdp_updateCourierShipment($datos)
         status_courier =:status_courier,
         due_date=:due_date,
         status_invoice=:status_invoice,
-        manual_tariff=:manual_tariff
+        manual_tariff=:manual_tariff,
+        courier_notes=:courier_notes
 
         WHERE
         order_id=:order_id
@@ -6204,6 +6212,7 @@ function cdp_updateCourierShipment($datos)
     $db->bind(':status_courier',  $datos["status_courier"]);
     $db->bind(':due_date',   $datos["due_date"]);
     $db->bind(':status_invoice',   $datos["status_invoice"]);
+    $db->bind(':courier_notes', $datos["courier_notes"]);
 
     return $db->cdp_execute();
 }
@@ -6258,13 +6267,176 @@ function cdp_updateCourierShipmentTotals($datos)
     return $db->cdp_execute();
 }
 
-function cdp_insertCourierShipmentPackages($datos)
+/**
+ * Recompute and persist a courier shipment's money totals from its current
+ * items + the rate/tax settings stored on the order. USD throughout (no GHS).
+ * Mirrors the manual-mode math in add_courier_ajax.php / edit_courier_ajax.php.
+ * Used by the Financial Sheet when an item's weight/custom price is edited.
+ * The original (manual) total_weight is preserved.
+ *
+ * @return array{total_order:float, sub_total:float}|false
+ */
+function cdp_recalcCourierShipmentTotals($order_id)
 {
+    $order_id = (int) $order_id;
+    $db = new Conexion;
+
+    $db->cdp_query("SELECT value_weight, tax_value, tax_discount, discount_type,
+                           tax_insurance_value, total_insured_value, tax_custom_tariffis_value,
+                           declared_value, total_reexp, total_weight
+                    FROM cdb_add_order WHERE order_id = :oid LIMIT 1");
+    $db->bind(':oid', $order_id);
+    $db->cdp_execute();
+    $o = $db->cdp_registro();
+    if (!$o) return false;
+
+    $core = new Core;
+    $min_cost_tax          = (float) $core->min_cost_tax;
+    $min_cost_declared_tax = (float) $core->min_cost_declared_tax;
+
+    $price_lb           = (float) $o->value_weight;
+    $tax_value          = (float) $o->tax_value;
+    $discount_value     = (float) $o->tax_discount;
+    $discount_type      = (isset($o->discount_type) && $o->discount_type === 'amount') ? 'amount' : 'percent';
+    $insurance_value    = (float) $o->tax_insurance_value;
+    $insured_value      = (float) $o->total_insured_value;
+    $tariffs_value      = (float) $o->tax_custom_tariffis_value;
+    $declared_value_tax = (float) $o->declared_value;
+    $reexpedicion_value = (float) $o->total_reexp;
+
+    $db->cdp_query("SELECT order_item_quantity, order_item_weight, custom_price,
+                           order_item_declared_value, order_item_fixed_value
+                    FROM cdb_add_order_item WHERE order_id = :oid");
+    $db->bind(':oid', $order_id);
+    $db->cdp_execute();
+    $items = $db->cdp_registros();
+
+    $base_packages = 0.0; $sum_weight_real = 0.0; $sum_declared = 0.0; $sum_fixed = 0.0;
+    foreach ($items as $it) {
+        $qty    = (float) $it->order_item_quantity; if ($qty <= 0) $qty = 1;
+        $weight = (float) $it->order_item_weight;
+        $custom = isset($it->custom_price) ? (float) $it->custom_price : 0.0;
+        if ($custom > 0) { $base_packages += $custom * $qty; }
+        else            { $base_packages += $weight * $qty * $price_lb; }
+        $sum_weight_real += $weight * $qty;
+        $sum_declared    += (float) $it->order_item_declared_value * $qty;
+        $sum_fixed       += (float) $it->order_item_fixed_value * $qty;
+    }
+    $base_packages   = round($base_packages, 2);
+    $sum_weight_real = round($sum_weight_real, 2);
+    $sumador_total   = $base_packages;
+
+    $total_impuesto        = ($sumador_total > $min_cost_tax) ? $sumador_total * ($tax_value / 100) : 0.0;
+    $total_valor_declarado = ($sum_declared > $min_cost_declared_tax) ? $sum_declared * ($declared_value_tax / 100) : 0.0;
+    $total_descuento       = ($discount_type === 'amount') ? $discount_value : $sumador_total * ($discount_value / 100);
+    if ($discount_value < 0 || $total_descuento > $sumador_total) { $total_descuento = 0; }
+    $total_seguro            = $insured_value * ($insurance_value / 100);
+    $total_impuesto_aduanero = $sum_weight_real * ($tariffs_value / 100);
+
+    $total_envio = round($sumador_total - $total_descuento + $total_seguro + $total_impuesto
+        + $total_impuesto_aduanero + $total_valor_declarado + $sum_fixed + $reexpedicion_value, 2);
+    if ($total_envio < 0) $total_envio = 0;
+
+    cdp_updateCourierShipmentTotals(array(
+        'order_id'                  => $order_id,
+        'value_weight'              => $price_lb,
+        'sub_total'                 => $sumador_total,
+        'tax_discount'              => $discount_value,
+        'total_insured_value'       => $insured_value,
+        'tax_insurance_value'       => $insurance_value,
+        'tax_custom_tariffis_value' => $tariffs_value,
+        'tax_value'                 => $tax_value,
+        'declared_value'            => $declared_value_tax,
+        'total_reexp'               => $reexpedicion_value,
+        'total_declared_value'      => $total_valor_declarado,
+        'total_fixed_value'         => $sum_fixed,
+        'total_tax_discount'        => $total_descuento,
+        'total_tax_insurance'       => $total_seguro,
+        'total_tax_custom_tariffis' => $total_impuesto_aduanero,
+        'total_tax'                 => $total_impuesto,
+        'total_weight'              => (float) $o->total_weight, // preserve original manual weight
+        'total_order'               => $total_envio,
+    ));
+
+    return array('total_order' => $total_envio, 'sub_total' => $sumador_total);
+}
+
+if (!defined('CDP_EDIT_LOCK_TTL')) {
+    define('CDP_EDIT_LOCK_TTL', 120); // seconds a package stays locked without a heartbeat
+}
+
+/** Auto-create the per-package edit-lock table (once per request). */
+function cdp_fsEnsureLockTable()
+{
+    static $done = false;
+    if ($done) return;
+    $db = new Conexion;
+    $db->cdp_query("CREATE TABLE IF NOT EXISTS cdb_package_edit_locks (
+        order_id INT NOT NULL PRIMARY KEY,
+        locked_by INT NOT NULL,
+        locked_by_name VARCHAR(150) NULL,
+        locked_at DATETIME NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->cdp_execute();
+    $done = true;
+}
+
+/** Current active lock holder for a package, or null. Clears expired locks. */
+function cdp_fsLockHolder($order_id)
+{
+    cdp_fsEnsureLockTable();
+    $db = new Conexion;
+    $db->cdp_query("DELETE FROM cdb_package_edit_locks WHERE locked_at < (NOW() - INTERVAL " . (int) CDP_EDIT_LOCK_TTL . " SECOND)");
+    $db->cdp_execute();
+    $db->cdp_query("SELECT locked_by, locked_by_name FROM cdb_package_edit_locks WHERE order_id = :oid LIMIT 1");
+    $db->bind(':oid', (int) $order_id);
+    $db->cdp_execute();
+    return $db->cdp_registro();
+}
+
+/**
+ * Try to acquire (or refresh) the edit lock for a package.
+ * @return array{ok:bool, by?:string}  ok=false when another user holds it.
+ */
+function cdp_fsAcquireLock($order_id, $user_id, $user_name)
+{
+    $holder = cdp_fsLockHolder($order_id);
+    if ($holder && (int) $holder->locked_by !== (int) $user_id) {
+        return ['ok' => false, 'by' => $holder->locked_by_name];
+    }
+    $db = new Conexion;
+    if ($holder) {
+        $db->cdp_query("UPDATE cdb_package_edit_locks SET locked_at = NOW() WHERE order_id = :oid");
+        $db->bind(':oid', (int) $order_id);
+        $db->cdp_execute();
+    } else {
+        $db->cdp_query("INSERT INTO cdb_package_edit_locks (order_id, locked_by, locked_by_name, locked_at)
+                        VALUES (:oid, :uid, :uname, NOW())");
+        $db->bind(':oid', (int) $order_id);
+        $db->bind(':uid', (int) $user_id);
+        $db->bind(':uname', $user_name);
+        $db->cdp_execute();
+    }
+    return ['ok' => true];
+}
+
+/** Release a package lock (only if held by this user). */
+function cdp_fsReleaseLock($order_id, $user_id)
+{
+    cdp_fsEnsureLockTable();
+    $db = new Conexion;
+    $db->cdp_query("DELETE FROM cdb_package_edit_locks WHERE order_id = :oid AND locked_by = :uid");
+    $db->bind(':oid', (int) $order_id);
+    $db->bind(':uid', (int) $user_id);
+    $db->cdp_execute();
+}
+
+function cdp_insertCourierShipmentPackages($datos) {
 
     $db = new Conexion;
 
     $db->cdp_query("
-    INSERT INTO cdb_add_order_item 
+    INSERT INTO cdb_add_order_item
     (
     order_id,
     order_item_description,
@@ -6274,7 +6446,8 @@ function cdp_insertCourierShipmentPackages($datos)
     order_item_width,
     order_item_height,
     order_item_fixed_value,
-    order_item_declared_value
+    order_item_declared_value,
+    custom_price
                     
     )
     VALUES 
@@ -6287,7 +6460,8 @@ function cdp_insertCourierShipmentPackages($datos)
     :order_item_width,
     :order_item_height,
     :order_item_fixed_value,
-    :order_item_declared_value               
+    :order_item_declared_value,
+    :custom_price
     )
   ");
 
@@ -6300,6 +6474,7 @@ function cdp_insertCourierShipmentPackages($datos)
     $db->bind(':order_item_height',  $datos["height"]);
     $db->bind(':order_item_fixed_value',  $datos["fixed_value"]);
     $db->bind(':order_item_declared_value',  $datos["declared_value"]);
+    $db->bind(':custom_price', isset($datos['custom_price']) ? (float) $datos['custom_price'] : null);
 
     return  $db->cdp_execute();
 }
@@ -7421,8 +7596,7 @@ function cdp_getPackageTracking($order_id) {
  * exists (old-system data, ~40k orders). Reads only — writes keep going to the
  * new table via cdp_updatePackageTracking, which inserts a row on first edit.
  */
-function cdp_getPackageTrackingLegacyAware($order_id)
-{
+function cdp_getPackageTrackingLegacyAware($order_id) {
     $row = cdp_getPackageTracking((int) $order_id);
 
     if (!$row) {
