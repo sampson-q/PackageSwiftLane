@@ -309,12 +309,6 @@ if ($row_order->status_invoice == 1) {
                                         <span class="label" style="background-color: <?php echo $status_courier->color; ?>"><?php echo $status_courier->mod_style; ?>
                                         </span>
                                     </div>
-
-                                    <div class=" col-sm-12 col-md-6 mb-2">
-                                        <b class=""><?php echo $lang['left533020022'] ?></b>
-                                        <span class="label <?php echo $label_class; ?>"><?php echo $text_status; ?>
-                                        </span>
-                                    </div>
                                 </div>
                                 <br>
 
