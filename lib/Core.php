@@ -91,6 +91,7 @@ class Core
   public $units;
   public $c_tariffs;
   public $currency;
+  public $exchange_rate;
   public $for_currency;
   public $for_symbol;
   public $for_decimal;
@@ -120,8 +121,7 @@ class Core
   public $og_url;
   public $og_image;
 
-  function __construct()
-  {
+  function __construct() {
     $this->db = new Conexion;
     $this->cdp_getSettings();
     $this->cdp_getSeometa();
@@ -130,11 +130,9 @@ class Core
   /**
    * Core::cdp_getSettings()
    */
-  private function cdp_getSettings()
-  {
+  private function cdp_getSettings() {
 
     $this->db->cdp_query('SELECT * FROM cdb_settings');
-
 
     $this->db->cdp_execute();
     $settings = $this->db->cdp_registro();
@@ -204,6 +202,7 @@ class Core
     $this->units = $settings->units;
     $this->c_tariffs = $settings->c_tariffs;
     $this->currency = $settings->currency;
+    $this->exchange_rate = $settings->exchange_rate;
     $this->for_currency = $settings->for_currency;
     $this->for_symbol = $settings->for_symbol;
     $this->for_decimal = $settings->for_decimal;
@@ -257,6 +256,13 @@ class Core
   }
 
 
+    public function cdp_getNewUsers(): int {
+        $this->db->cdp_query("SELECT COUNT(*) AS new_users FROM cdb_users WHERE userlevel = 1 AND active = 0");
+        $this->db->cdp_execute();
+        $result = $this->db->cdp_registro();
+
+        return (int) $result->new_users;
+    }
 
 
   /**
@@ -273,8 +279,6 @@ class Core
 
     return $row;
   }
-
-
 
 
   /**
