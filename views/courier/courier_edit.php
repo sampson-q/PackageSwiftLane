@@ -100,6 +100,9 @@ $numrows     = $db->cdp_rowCount();
         .table-packages thead th {background:#212529;color:#fff;border-color:#343a40;font-weight:500;font-size:0.85rem;text-transform:uppercase;}
         .table-packages tbody td {vertical-align:middle;}
         .weight-summary {background:#f8f9fa;border-radius:.5rem;padding:.75rem 1rem;border:1px dashed #d1d5db;}
+        .pricing-mode-toggle {width:100%;}
+        .pricing-mode-toggle .btn {padding:.2rem .4rem;font-size:.78rem;font-weight:600;}
+        td.pkg-disabled-cell {background:#f3f4f6;}
     </style>
 </head>
 <body>
@@ -273,10 +276,20 @@ $numrows     = $db->cdp_rowCount();
                         <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title mb-3">
-                                        <i class="mdi mdi-cube-scan" style="color:#20c997"></i>
-                                        2) <?php echo $lang['left212'] ?>
-                                    </h4>
+                                    <div class="row">
+                                        <div class="col-5">
+                                            <h4 class="card-title mb-3">
+                                                <i class="mdi mdi-cube-scan" style="color:#20c997"></i>
+                                                2) <?php echo $lang['left212'] ?>
+                                            </h4>
+                                        </div>
+                                        <div class="col-1 text-right text-muted">
+                                            <h5>Notes:</h5>
+                                        </div>
+                                        <div class="col-6">
+                                            <input class="form-control" type="text" id="courier_notes" name="courier_notes" placeholder=". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ." value="<?php echo $row_order->courier_notes ;?>" />
+                                        </div>
+                                    </div>
 
                                     <!-- Rate box: modo tarifa + campos de envío -->
                                     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3">
@@ -424,11 +437,11 @@ $numrows     = $db->cdp_rowCount();
                                             <thead>
                                                 <tr>
                                                     <th style="width:70px;"><?php echo $lang['courier_table_qty']; ?></th>
-                                                    <th class="text-center" style="min-width:140px;"><?php echo $lang['left213']; ?></th>
-                                                    <th><?php echo 'Weight (TRW)'; ?></th>
-                                                    <th class="text-center"><?php echo $lang['left216'] . ' (TVW)'; ?></th>
-                                                    <th class="text-center"><?php echo $lang['left217'] . ' (TVW)'; ?></th>
-                                                    <th class="text-center"><?php echo $lang['left218'] . ' (TVW)'; ?></th>
+                                                    <th style="min-width:140px;"><?php echo $lang['left213']; ?></th>
+                                                    <th style="width:170px;">Pricing mode</th>
+                                                    <th style="width:110px;">Weight</th>
+                                                    <th style="width:130px;">Custom Price</th>
+                                                    <th style="width:110px;">Line Total</th>
                                                     <th style="width:60px;"><?php echo $lang['courier_table_remove']; ?></th>
                                                 </tr>
                                             </thead>
@@ -442,14 +455,15 @@ $numrows     = $db->cdp_rowCount();
                                     <div class="row mt-3">
                                         <div class="col-md-6">
                                             <div class="weight-summary mb-2 mb-md-0">
-                                                <small class="text-muted d-block"><?php echo $lang['courier_weight_total']; ?></small>
+                                                <small class="text-muted d-block"><?php echo $lang['courier_weight_total']; ?> <span class="text-muted">(items, auto)</span></small>
                                                 <span class="h5 mb-0" id="total_weight">0.00</span>
+                                                <span class="d-none" id="total_vol_weight">0.00</span>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="weight-summary">
-                                                <small class="text-muted d-block"><?php echo $lang['courier_vol_weight_total']; ?></small>
-                                                <span class="h5 mb-0" id="total_vol_weight">0.00</span>
+                                                <small class="text-muted d-block">Original total weight <span class="text-muted">(actual package weight)</span></small>
+                                                <input type="text" class="form-control form-control-sm" id="package_total_weight" name="package_total_weight" value="<?php echo htmlspecialchars((string)($row_order->total_weight ?? ''), ENT_QUOTES, 'UTF-8'); ?>" placeholder="total weight of the package" onkeypress="return isNumberKey(event,this)">
                                             </div>
                                         </div>
                                     </div>
@@ -578,10 +592,18 @@ $numrows     = $db->cdp_rowCount();
 
                                                     <div class="col-sm-6 col-md-2">
                                                         <div class="form-group mb-2">
-                                                            <label class="control-label col-form-label-sm"><?php echo $lang['leftorder21']; ?> <?php echo $lang['leftorder222221']; ?></label>
+                                                            <?php $edit_discount_type = (isset($row_order->discount_type) && $row_order->discount_type === 'amount') ? 'amount' : 'percent'; ?>
+                                                            <label class="control-label col-form-label-sm d-flex align-items-center justify-content-between">
+                                                                <span><?php echo $lang['leftorder21']; ?></span>
+                                                                <span class="btn-group btn-group-sm discount-type-toggle" role="group" aria-label="Discount type">
+                                                                    <button type="button" id="discount_type_percent" class="btn <?php echo $edit_discount_type === 'percent' ? 'btn-dark' : 'btn-outline-dark'; ?> py-0 px-2" onclick="setDiscountType('percent')">%</button>
+                                                                    <button type="button" id="discount_type_amount" class="btn <?php echo $edit_discount_type === 'amount' ? 'btn-dark' : 'btn-outline-dark'; ?> py-0 px-2" onclick="setDiscountType('amount')">$</button>
+                                                                </span>
+                                                            </label>
                                                             <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event,this)"
                                                                    value="<?php echo $row_order->tax_discount; ?>"
                                                                    name="discount_value" id="discount_value" class="form-control form-control-sm">
+                                                            <input type="hidden" name="discount_type" id="discount_type" value="<?php echo $edit_discount_type; ?>">
                                                             <small>
                                                                 <?php if ($core->for_symbol !== null): ?><b><?php echo $core->for_symbol; ?></b><?php endif; ?>
                                                                 <span id="discount"> 0.00</span>
