@@ -110,6 +110,7 @@ if (CDP_APP_MODE_DEMO === true) {
             'for_currency' => cdp_sanitize($_POST['for_currency']),
             'for_symbol' => cdp_sanitize($_POST['for_symbol']),
             'for_decimal' => cdp_sanitize($_POST['for_decimal']),
+            'exchange_rate' => cdp_sanitize($_POST['exchange_rate']),
             'cformat' => $cform,
             'dec_point' => $decpoint,
             'thousands_sep' => $thousandssep,
