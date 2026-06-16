@@ -157,6 +157,16 @@ $statusrow = $core->cdp_getStatusByType(1);
                                         </select>
                                     </div>
                                 </div>
+
+                                <div class=" col-sm-12 col-md-2 mb-2">
+                                    <div class="input-group">
+                                        <select onchange="cdp_load(1);" class="form-control custom-select" id="per_page" name="per_page">
+                                            <option value="25">25 rows</option>
+                                            <option value="50">50 rows</option>
+                                            <option value="100">100 rows</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
 
 
