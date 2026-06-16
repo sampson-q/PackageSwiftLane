@@ -26,6 +26,8 @@
     <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <link rel="stylesheet" type="text/css" href="assets/template/assets/libs/select2/dist/css/select2.min.css">
 
+    <link href="assets/css_main_deprixa/css/dashboard-swiftlane.css" rel="stylesheet" type="text/css" />
+
     <script type="text/javascript" src="assets/js/jquery.js"></script>
     <script type="text/javascript" src="assets/js/jquery-ui.js"></script>
     <script src="assets/js/jquery.ui.touch-punch.js"></script>
@@ -128,12 +130,21 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-12">
+                                            <div class="col-6">
                                                 <div class="mb-3">
                                                     <label class="form-label"><?php echo $lang['left144'] ?> <span class="text-danger">*</span></label>
                                                     <div class="form-icon position-relative">
                                                         <i data-feather="users" class="fea icon-sm icons"></i>
                                                         <input type="text" class="form-control ps-5" placeholder="<?php echo $lang['left145'] ?>" name="username" id="username">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label"><?php echo 'Company' ?></label>
+                                                    <div class="form-icon position-relative">
+                                                        <i data-feather="briefcase" class="fea icon-sm icons"></i>
+                                                        <input type="text" class="form-control ps-5" placeholder="<?php echo 'Company Name' ?>" name="company" id="company">
                                                     </div>
                                                 </div>
                                             </div>
