@@ -31,6 +31,30 @@ if (empty($_POST['order_deli_time']))      $errors['order_deli_time']      = $la
 if (empty($_POST['status_courier']))       $errors['status_courier']       = $lang['validate_field_ajax157'];
 if (empty($_POST['order_payment_method'])) $errors['order_payment_method'] = $lang['validate_field_ajax158'];
 
+// -------------------------------------------------------------------------
+// Package-item validation (weight XOR custom price). Runs BEFORE the existing
+// items are deleted/re-inserted so an invalid payload can never wipe the rows.
+// -------------------------------------------------------------------------
+$packages_in = isset($_POST['packages']) ? json_decode($_POST['packages']) : null;
+if (!is_array($packages_in) || count($packages_in) === 0) {
+    $errors['packages'] = isset($lang['validate_field_packages_required'])
+        ? $lang['validate_field_packages_required']
+        : 'Add at least one package item.';
+} else {
+    foreach ($packages_in as $vi => $vp) {
+        $rown    = $vi + 1;
+        $vdesc   = isset($vp->description) ? trim((string) $vp->description) : '';
+        $vqty    = isset($vp->qty) ? (float) $vp->qty : 0;
+        $vweight = isset($vp->weight) ? (float) $vp->weight : 0;
+        $vcustom = isset($vp->custom_price) ? (float) $vp->custom_price : 0;
+
+        if ($vdesc === '')                       { $errors["pkg_desc_$vi"] = "Row $rown: description is required."; }
+        if ($vqty <= 0)                          { $errors["pkg_qty_$vi"]  = "Row $rown: quantity must be greater than 0."; }
+        if ($vweight > 0 && $vcustom > 0)        { $errors["pkg_excl_$vi"] = "Row $rown: use either weight OR custom price, not both."; }
+        if ($vweight <= 0 && $vcustom <= 0)      { $errors["pkg_none_$vi"] = "Row $rown: enter a weight or a custom price."; }
+    }
+}
+
 if (empty($errors)) {
 
     $settings = cdp_getSettingsCourier();
@@ -141,6 +165,7 @@ if (empty($errors)) {
         'due_date'              => $due_date,
         'status_invoice'        => $status_invoice,
         'manual_tariff'         => $tariff_mode,
+        'courier_notes'         => cdp_sanitize($_POST["courier_notes"]),
     );
 
     $updateShip = cdp_updateCourierShipment($dataShipment);
@@ -179,14 +204,26 @@ if (empty($errors)) {
             cdp_deleteCourierPackages($shipment_id);
             $packages = json_decode($_POST['packages']);
 
+            $base_packages = 0.0; // USD base = Σ(weight*qty*rate) + Σ(custom_price*qty)
+
             if ($packages && is_array($packages)) {
                 foreach ($packages as $package) {
                     $qty      = isset($package->qty)            ? floatval($package->qty)            : 1;
                     if ($qty <= 0) $qty = 1;
+
+                    // New pricing model: weight XOR custom price. Force-clear the
+                    // unused field so a row can never carry both.
+                    $weight       = isset($package->weight)       ? floatval($package->weight)       : 0;
+                    $custom_price = isset($package->custom_price) ? floatval($package->custom_price) : 0;
+                    $use_custom   = isset($package->use_custom_price)
+                        ? (int) $package->use_custom_price
+                        : ($custom_price > 0 ? 1 : 0);
+                    if ($use_custom) { $weight = 0.0; } else { $custom_price = 0.0; }
+
+                    // Dimensions retired; keep columns zero-filled (guarded).
                     $length   = isset($package->length)         ? floatval($package->length)         : 0;
                     $width    = isset($package->width)          ? floatval($package->width)          : 0;
                     $height   = isset($package->height)         ? floatval($package->height)         : 0;
-                    $weight   = isset($package->weight)         ? floatval($package->weight)         : 0;
                     $declared = isset($package->declared_value) ? floatval($package->declared_value) : 0;
                     $fixed    = isset($package->fixed_value)    ? floatval($package->fixed_value)    : 0;
                     $descr    = isset($package->description)    ? trim($package->description)        : '';
@@ -201,29 +238,42 @@ if (empty($errors)) {
                         'weight'         => $weight,
                         'declared_value' => $declared,
                         'fixed_value'    => $fixed,
+                        'custom_price'   => $use_custom ? $custom_price : null,
                     ));
 
-                    $vol_unit = ($core_meter > 0) ? (($length * $width * $height) / $core_meter) : 0.0;
+                    // Per-item USD line total (mirrors computeLineTotal in courier_edit.js).
+                    if ($use_custom) {
+                        $base_packages += $custom_price * $qty;
+                    } else {
+                        $base_packages += $weight * $qty * $price_lb;
+                    }
 
                     $sum_weight_real += $weight   * $qty;
-                    $sum_weight_vol  += $vol_unit * $qty;
                     $sum_declared    += $declared * $qty;
                     $sum_fixed       += $fixed    * $qty;
                 }
             }
 
             $sum_weight_real = round($sum_weight_real, 2);
-            $sum_weight_vol  = round($sum_weight_vol, 2);
+            $sum_weight_vol  = 0.0; // volumetric retired
             $sum_declared    = round($sum_declared, 2);
             $sum_fixed       = round($sum_fixed, 2);
+            $base_packages   = round($base_packages, 2);
 
-            $calculate_weight = max($sum_weight_real, $sum_weight_vol);
-            $total_peso       = $sum_weight_real + $sum_weight_vol;
+            $calculate_weight = $sum_weight_real; // chargeable = real weight
+            $total_peso       = $sum_weight_real;
 
-            $meter_edit = (float)($settings->meter ?? $core_meter);
-            if ($tariff_mode == 0 && $meter_edit > 0) {
+            // Original total weight: actual package weight entered by staff
+            // (display/record only; tariff still uses the summed item weight).
+            // Falls back to the summed weight when left blank.
+            $package_total_weight = (isset($_POST['package_total_weight']) && $_POST['package_total_weight'] !== '')
+                ? floatval($_POST['package_total_weight'])
+                : $total_peso;
+
+            if ($tariff_mode == 0) {
                 $distance_miles_edit = (float)($_POST['distance_miles'] ?? 0);
                 $order_svc_edit      = (int)($_POST['order_service_options'] ?? 0);
+                $meter_edit          = (float)($settings->meter ?? $core_meter);
                 $tariffEdit = cdp_calculateTariffServerSide(
                     intval($_POST['sender_id']),
                     intval($_POST['sender_address_id']),
@@ -238,10 +288,11 @@ if (empty($errors)) {
                     $sum_total_flete = $tariffEdit['total_tarifa'];
                     $price_lb        = $tariffEdit['price_lb_derived'];
                 } else {
-                    $sum_total_flete = $calculate_weight * $price_lb;
+                    $sum_total_flete = $base_packages;
                 }
             } else {
-                $sum_total_flete = $calculate_weight * $price_lb;
+                // Manual mode (default): per-item USD base = weight*rate + custom price.
+                $sum_total_flete = $base_packages;
             }
 
             if ($sum_total_flete > $min_cost_tax) {
@@ -251,7 +302,10 @@ if (empty($errors)) {
                 $total_valor_declarado = $sum_declared * $declared_value_tax / 100;
             }
 
-            $total_descuento = $sum_total_flete * $discount_value / 100;
+            $discount_type = (isset($_POST['discount_type']) && $_POST['discount_type'] === 'amount') ? 'amount' : 'percent';
+            $total_descuento = ($discount_type === 'amount')
+                ? $discount_value
+                : $sum_total_flete * $discount_value / 100;
             if ($total_descuento > $sum_total_flete || $discount_value < 0) { $total_descuento = 0; }
 
             $total_seguro            = $insured_value * $insurance_value / 100;
@@ -288,9 +342,16 @@ if (empty($errors)) {
             'total_tax_insurance'        => floatval($total_seguro),
             'total_tax_custom_tariffis'  => floatval($total_impuesto_aduanero),
             'total_tax'                  => floatval($total_impuesto),
-            'total_weight'               => floatval($total_peso),
+            'total_weight'               => floatval($package_total_weight ?? $total_peso),
             'total_order'                => floatval($total_envio),
         ));
+
+        // Persist the discount mode (percent vs flat amount) in its own column.
+        $db_dt = new Conexion;
+        $db_dt->cdp_query("UPDATE cdb_add_order SET discount_type = :dt WHERE order_id = :oid");
+        $db_dt->bind(':dt', $discount_type ?? 'percent');
+        $db_dt->bind(':oid', $shipment_id);
+        $db_dt->cdp_execute();
 
         // =======================
         // TRACKING NUMBER / ETA
@@ -502,10 +563,16 @@ if (empty($errors)) {
             if (isset($changed_fields['_packages_updated']) && isset($packages) && is_array($packages) && count($packages) > 0) {
                 $pkg_rows = '';
                 foreach ($packages as $index => $pkg) {
-                    $pkg_rows .= ($index + 1) . ". " . htmlspecialchars($pkg->description) . "\n" .
-                        "   Weight: " . $pkg->weight . " lbs\n" .
-                        "   Dimensions: " . $pkg->length . " x " . $pkg->width . " x " . $pkg->height . " inches\n" .
-                        "   Declared Value: $" . number_format($pkg->declared_value, 2) . "\n\n";
+                    $pkg_custom = isset($pkg->custom_price) ? (float) $pkg->custom_price : 0;
+                    $pkg_use_custom = isset($pkg->use_custom_price)
+                        ? (int) $pkg->use_custom_price
+                        : ($pkg_custom > 0 ? 1 : 0);
+                    $pkg_price_line = $pkg_use_custom
+                        ? "   Custom Price: $" . number_format($pkg_custom, 2) . " (USD)\n"
+                        : "   Weight: " . (isset($pkg->weight) ? $pkg->weight : 0) . " lbs\n";
+                    $pkg_rows .= ($index + 1) . ". " . htmlspecialchars($pkg->description ?? '') . "\n" .
+                        $pkg_price_line .
+                        "   Declared Value: $" . number_format($pkg->declared_value ?? 0, 2) . "\n\n";
                 }
                 $packages_section_html = '
                 <p style="margin:0 0 8px 0;font-size:14px;font-weight:700;color:#1a1a1a;font-family:Roboto,Arial,Helvetica,sans-serif;">Package Breakdown</p>
