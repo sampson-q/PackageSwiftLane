@@ -82,7 +82,13 @@ $address_order = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_courier_com where id= '" . $row_order->order_courier . "'");
 $courier_com = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_category where id = 27");
+// Item category from the order itself. Was hardcoded to 27 (Ocean Freight),
+// which mislabeled every air shipment. Air courier is never legitimately
+// "Ocean Freight" (27) — that was the erroneous legacy default — so coerce
+// 27/none to "Air Freight" (26). New shipments store 26 from add_courier_ajax.
+$fs_cat_id = (int) ($row_order->order_item_category ?? 0);
+if ($fs_cat_id <= 0 || $fs_cat_id === 27) $fs_cat_id = 26;
+$db->cdp_query("SELECT * FROM cdb_category where id = " . $fs_cat_id);
 $category = $db->cdp_registro();
 
 // $db->cdp_query("SELECT * FROM cdb_shipping_mode where id= '" . $row_order->order_service_options . "'");
