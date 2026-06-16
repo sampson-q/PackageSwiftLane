@@ -47,7 +47,7 @@
 					<?php } ?>
 					<?php if ($user->cdp_hasPermission('edit_company_config')) { ?>
 					<li class="list-group-item sidebar-item">
-						<a href="tools.php?list=config" class="list-group-item-action"><iconify-icon icon="solar:building-2-linear" class="tools-menu-icon"></iconify-icon> <?php echo $lang['setcompany'] ?></a>
+						<a href="tools.php?list=config" class="list-group-item-action"><iconify-icon icon="solar:buildings-linear" class="tools-menu-icon"></iconify-icon> <?php echo $lang['setcompany'] ?></a>
 					</li>
 					<?php } ?>
 					<?php if ($user->cdp_hasPermission('edit_seo_config')) { ?>
