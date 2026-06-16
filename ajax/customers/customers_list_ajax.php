@@ -47,22 +47,34 @@ if ($ctx['is_restricted'] && $ctx['agency_id'] !== null) {
 }
 
 if ($search != null) {
-
 	$sWhere .= " and (username LIKE '%" . $search . "%' or fname LIKE '%" . $search . "%' or lname LIKE '%" . $search . "%' or locker LIKE '%" . $search . "%' or email LIKE '%" . $search . "%' or phone LIKE '%" . $search . "%')";
 }
 
+// 1. Handle Active Status Filter
+if (isset($_REQUEST['filterby_active']) && intval($_REQUEST['filterby_active']) > 0) {
+    $filterby_active = intval($_REQUEST['filterby_active']);
+    
+    if ($filterby_active == 1) {
+        $sWhere .= " AND active = 1 ";
+    } elseif ($filterby_active == 2) {
+        $sWhere .= " AND active = 0 ";
+    }
+}
 
-$filterby = intval($_REQUEST['filterby']);
+// 2. Handle Approval Status Filter
+if (isset($_REQUEST['filterby_approve']) && intval($_REQUEST['filterby_approve']) > 0) {
+    $filterby_approve = intval($_REQUEST['filterby_approve']);
+    
+    if ($filterby_approve == 3) {
+        $sWhere .= " AND approve = 1 ";
+    } elseif ($filterby_approve == 4) {
+        $sWhere .= " AND approve = 0 ";
+    }
+}
 
-if ($filterby > 0) {
-
-	if ($filterby == 1) {
-		$is_pickup_filter = 1;
-	} else {
-		$is_pickup_filter = 0;
-	}
-
-	$sWhere .= " and  active = '" . $is_pickup_filter . "'";
+// 3. Handle "New Users" filter (last 30 days) — overrides active/approve filters
+if (isset($_REQUEST['filterby_new']) && intval($_REQUEST['filterby_new']) == 1) {
+    $sWhere .= " AND created >= DATE_SUB(NOW(), INTERVAL 30 DAY) ";
 }
 
 
@@ -97,7 +109,6 @@ if ($numrows > 0) { ?>
 				<th class="text-center"><b><?php echo $lang['user-account21000'] ?></b></th>
 				<th class="text-center"><b><?php echo $lang['edit-clien40'] ?></b></th>
 				<th class="text-center"><b><?php echo 'Approval Status' ?></b></th>
-				<th class="text-center"><b><?php echo $lang['edit-clien42'] ?></b></th>
 				<th class="text-center"><b><?php echo $lang['edit-clien43'] ?></b></th>
 				<th class="text-center"><b><?php echo 'Admin Actions' ?></b></th>
 			</tr>
@@ -121,7 +132,6 @@ if ($numrows > 0) { ?>
 					<td class="text-center"><?php echo $user->locker; ?></td>
 					<td class="text-center"><?php echo cdp_userStatus($user->active, $user->id, $lang); ?></td>
 					<td class="text-center"><?php echo $user->approve ? '✔ Approved' : 'Unapproved'; ?></td>
-					<td class="text-center"><?php echo ($user->adate) ? $user->adate : "-/-"; ?></td>
 					
                     <td class="text-center">
                         <div class="action-buttons">
