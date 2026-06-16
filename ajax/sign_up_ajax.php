@@ -100,6 +100,7 @@ if (empty($error)) {
         'city'            => cdp_sanitize($_POST['city']),
         'state'           => cdp_sanitize($_POST['state']),
         'postal'          => cdp_sanitize($_POST['postal']),
+        'company'         => cdp_sanitize($_POST['company']),
     ];
 
     // user_id=0 placeholder — real row doesn't exist yet.
