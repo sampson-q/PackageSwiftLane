@@ -431,10 +431,10 @@ $lang = array(
 	"message_ajax_success_send_modal_email" => "The message has been sent successfully!",
 	"message_ajax_success_payment" => "Payment added successfully!",
 
-	"translate_search_sender" => "Search sender name",
-	"translate_search_sender_address" => "Search sender address",
+	"translate_search_sender" => "Search Sender Name / Locker ID",
+	"translate_search_sender_address" => "Search Sender Address",
 	"translate_search_recipient" => "Search Recipient Name",
-	"translate_search_recipient_address" => "Search recipient address",
+	"translate_search_recipient_address" => "Search Recipient Address",
 
 	"translate_search_country" => "Search Country",
 	"translate_search_state" => "Search State",
