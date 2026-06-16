@@ -67,10 +67,14 @@
 							<span class="badge badge-notify badge-sm up badge-light pull-top-xs" id="countNotifications">0</span>
 						</a>
 
+                        <a class="sidebar-link waves-effect waves-dark" href="customers_list.php" aria-expanded="false">
+                            <iconify-icon icon="gridicons:multiple-users" height="32" class="text-success"></iconify-icon>
+                            <span class="badge badge-notify badge-sm up badge-light pull-top-xs" id=""><?php echo $core->cdp_getNewUsers(); ?></span>
+                        </a>
+                        
 						<div class="dropdown-menu dropdown-menu-right mailbox animated bounceInDown">
 							<div id="ajax_response"></div>
 						</div>
-
 					</li>
 					<?php if (isset($show_dashboard_new_header) && $show_dashboard_new_header) { ?>
 					<li class="nav-item d-none d-md-block"><a class="nav-link waves-effect waves-dark text-body" href="javascript:void(0)"><iconify-icon icon="solar:settings-outline" class="font-22"></iconify-icon></a></li>
