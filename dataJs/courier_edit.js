@@ -404,17 +404,11 @@ $("#invoice_form").on("submit", function (event) {
       $("#qty_" + i).focus(); return false;
     }
 
-    // Mutually exclusive: an item is priced by weight OR custom price.
-    if (packagesItems[i].use_custom_price) {
-      if (nf($("#customPrice_" + i).val(), 0) <= 0) {
-        Swal.fire({ icon: "error", text: "Enter a custom price (USD) for row " + (i + 1), confirmButtonText: "Ok" });
-        $("#customPrice_" + i).focus(); return false;
-      }
-    } else {
-      if (nf($("#weight_" + i).val(), 0) <= 0) {
-        Swal.fire({ icon: "error", text: (typeof validation_weight !== "undefined" ? validation_weight : "Enter weight for row " + (i + 1)), confirmButtonText: "Ok" });
-        $("#weight_" + i).focus(); return false;
-      }
+    // Pricing (weight OR custom) is optional — set incrementally by staff.
+    // Only guard against an item carrying BOTH at once.
+    if (nf($("#weight_" + i).val(), 0) > 0 && nf($("#customPrice_" + i).val(), 0) > 0) {
+      Swal.fire({ icon: "error", text: "Row " + (i + 1) + ": use either weight OR custom price, not both.", confirmButtonText: "Ok" });
+      return false;
     }
   }
 
