@@ -13,7 +13,8 @@ function cdp_load(page) {
   var search = $("#search").val();
   var status_courier = $("#status_courier").val();
   var filterby = $("#filterby").val();
-  var parametros = { "page": page, 'search': search, 'status_courier': status_courier, 'filterby': filterby };
+  var per_page = $("#per_page").val() || 25;
+  var parametros = { "page": page, 'search': search, 'status_courier': status_courier, 'filterby': filterby, 'per_page': per_page };
   $("#loader").fadeIn('slow');
   $.ajax({
     url: './ajax/courier/courier_list_ajax.php',
