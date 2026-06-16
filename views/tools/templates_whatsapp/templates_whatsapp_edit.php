@@ -19,23 +19,16 @@
 // *                                                                       *
 // *************************************************************************
 
-
-
 require_once('helpers/querys.php');
 $userData = $user->cdp_getUserData();
 
 if (isset($_GET['id'])) {
-
 	$row = getWhatAppTemplates($_GET['id']);
 }
 
-
 if (!isset($_GET['id']) or $row == null) {
-
 	cdp_redirect_to("templates_whatsapp.php");
 }
-
-
 ?>
 
 
@@ -71,7 +64,6 @@ if (!isset($_GET['id']) or $row == null) {
 	<!-- ============================================================== -->
 	<!-- Preloader - style you can find in spinners.css -->
 	<!-- ============================================================== -->
-
 
 	<?php include 'views/inc/preloader.php'; ?>
 	<!-- ============================================================== -->
@@ -144,6 +136,7 @@ if (!isset($_GET['id']) or $row == null) {
 						                <div><hr><br></div>
 
 										<form class="form-horizontal form-material" id="update_data" name="update_data" method="post">
+                                            <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 											<input name="id" id="id" type="hidden" value="<?php echo $_GET['id']; ?>" />
 
 
