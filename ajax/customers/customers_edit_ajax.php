@@ -79,7 +79,8 @@ if (CDP_APP_MODE_DEMO === true) {
             'phone' => cdp_sanitize($_POST['phone']),
             'gender' => cdp_sanitize($_POST['gender']),
             'active' => cdp_sanitize($_POST['active']),
-            'id' => cdp_sanitize($_POST['id'])
+            'id' => cdp_sanitize($_POST['id']),
+            'company' => cdp_sanitize($_POST['company']) ?? ''
         );
 
         if (cdp_sanitize($_POST['active']) == 1 && $approve == 0) {
