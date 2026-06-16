@@ -75,7 +75,7 @@ $db->cdp_execute();
 // 21 = Cancelled
 // 23 = Pending_payment
 // 25 = Not Shipped
-$warehouse_statuses = implode(',', [1, 4, 15, 16, 23,32, 33]);
+$warehouse_statuses = implode(',', [1, 4, 8, 15, 16, 23,32, 33]);
 
 $sql = "SELECT a.order_incomplete, a.status_invoice, a.is_consolidate, a.is_pickup, a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options, b.mod_style, b.color
         FROM cdb_add_order AS a
@@ -110,9 +110,8 @@ if ($numrows > 0) { ?>
                         <th><b><?php echo $lang['lorigin'] ?></b></th>
                     <?php } ?>
                     <th><b><?php echo $lang['ldestination'] ?></b></th>
-                    <th><b><?php echo $lang['lpayment'] ?></b></th>
-                    <th><b><?php echo $lang['lstatusshipment'] ?></b></th>
-                    <th><b><?php echo $lang['ship-all5'] ?></b></th>
+                    <th><b><?php echo $lang['lstatusshipment']?></b></th>
+                    
                     <th></th>
                     <th><b><?php echo $lang['global-3'] ?></b></th>
                     <th></th>
@@ -197,8 +196,6 @@ if ($numrows > 0) { ?>
 
                             <td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
 
-                            <td><?php echo isset($met_payment->name_pay) ? $met_payment->name_pay : 'N/A'; ?></td>
-
                             <td>
                                 <span style="background: <?php echo $row->is_consolidate ? $consolidate_style->color : $row->color; ?>;" class="label label-large">
                                     <?php echo $row->is_consolidate ? $consolidate_style->mod_style . 'd' : $row->mod_style; ?>
@@ -226,10 +223,6 @@ if ($numrows > 0) { ?>
                             </td>
 
                             <td>
-                                <b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
-                            </td>
-
-                            <td>
                                 <?php if ($row->status_invoice == 2 && $userData->userlevel == 1) { ?>
                                     <a style="background: #34e89e;" class="label label" href="add_payment_gateways_courier.php?id_order=<?php echo $row->order_id; ?>">
                                         <i style="color:#343a40" class="fas fa-dollar-sign"></i>
@@ -242,6 +235,23 @@ if ($numrows > 0) { ?>
                                 <span class="label label-large <?php echo $label_class; ?>"><?php echo $text_status; ?></span>
                             </td>
 
+                            <?php if ($row->status_courier != 8) { ?>}
+                            <td align='center'>
+							    <div class="btn-group">
+							        <button class="btn btn-block btn-outline-dark btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							            <i class="fas fa-ellipsis-v"></i> <!-- Utiliza el icono de puntos suspensivos -->
+							        </button>
+							        <div class="dropdown-menu" style="overflow-y: auto; max-height: 200px;">
+							            <!-- VER DETALLES DE ENVÍO PERMISO -->
+							            <?php if ($user->cdp_hasPermission('courier_deliver_shipment')) { ?>
+							                <a class="dropdown-item" href="courier_deliver_shipment.php?id=<?php echo $row->order_id; ?>" title="<?php echo 'Deliver Package' ?>">
+							                    <i style="color:#343a40" class="fa fa-box"></i>&nbsp;<?php echo 'Deliver Package' ?>
+							                </a>
+							            <?php } ?>
+							        </div>
+							    </div>
+							</td>
+                            <?php } ?>
                         </tr>
                     <?php $count++; } ?>
 
