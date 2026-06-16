@@ -377,6 +377,7 @@ $("#edit_user").on("submit", function (event) {
     var total_address = $("#total_address").val();
     var id = $("#id").val();
     var approve = $("#approve").val();
+    var company = $("#company").val();
 
     var address = document.getElementsByName("address[]");
     var country = document.getElementsByName("country[]");
@@ -431,6 +432,7 @@ $("#edit_user").on("submit", function (event) {
     data.append("total_address", total_address);
     data.append("id", id);
     data.append("approve", approve);
+    data.append("company", company);
 
     for (var a of address) {
       data.append("address[]", a.value);
@@ -520,9 +522,40 @@ $("#edit_user").on("submit", function (event) {
   event.preventDefault();
 });
 
-$(document).ready(function() {
-    $('#edit_avatar_form').on('submit', function(event) {
-        event.preventDefault(); // Evita que el formulario se envíe de forma convencional
+$(document).ready(function () {
+    // --- Avatar: preview + enable button on file select ---
+    $('#avatarInput').on('change', function () {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('#avatarPreview').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(file);
+            $('#avatarSubmitBtn').prop('disabled', false).css('cursor', 'pointer');
+            $('#avatarSubmitBtn').prop('title', 'Click to upload avatar').css('cursor', 'pointer');
+        }
+    });
+
+    // --- Document: preview + enable button on file select ---
+    $('#documentInput').on('change', function () {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('#documentPreview').attr('src', e.target.result);
+                // Also update the View button href to preview the newly selected file
+                $('#documentViewBtn').attr('href', e.target.result);
+            };
+            reader.readAsDataURL(file);
+            $('#documentSubmitBtn').prop('disabled', false).css('cursor', 'pointer');
+            $('#documentSubmitBtn').prop('title', 'Click to upload document').css('cursor', 'pointer');
+        }
+    });
+
+    // --- Avatar form submit ---
+    $('#edit_avatar_form').on('submit', function (event) {
+        event.preventDefault();
         updateAvatar();
     });
 
@@ -535,29 +568,24 @@ $(document).ready(function() {
             data: formData,
             contentType: false,
             processData: false,
-            success: function(response) {
-                // Manejar la respuesta del servidor
-                 if (response.success) {
-                    // Mostrar SweetAlert2 de éxito
+            success: function (response) {
+                if (response.success) {
                     Swal.fire({
                         type: 'success',
                         title: 'Avatar updated',
                         text: response.message
                     }).then(() => {
-                        // Redirigir al mismo sitio
                         window.location.href = window.location.href;
                     });
                 } else {
-                    // Mostrar SweetAlert2 de error
                     Swal.fire({
-                         type: 'error',
+                        type: 'error',
                         title: 'Avatar Update Error',
                         text: response.message
                     });
                 }
             },
-            error: function() {
-                // Manejar errores de conexión u otros errores
+            error: function () {
                 Swal.fire({
                     type: 'error',
                     title: 'Error',
@@ -567,8 +595,9 @@ $(document).ready(function() {
         });
     }
 
-    $('#edit_document_form').on('submit', function(event) {
-        event.preventDefault(); // Evita que el formulario se envíe de forma convencional
+    // --- Document form submit ---
+    $('#edit_document_form').on('submit', function (event) {
+        event.preventDefault();
         updateDocument();
     });
 
@@ -581,29 +610,24 @@ $(document).ready(function() {
             data: formData,
             contentType: false,
             processData: false,
-            success: function(response) {
-                // Manejar la respuesta del servidor
+            success: function (response) {
                 if (response.success) {
-                    // Mostrar SweetAlert2 de éxito
                     Swal.fire({
                         type: 'success',
                         title: 'Document Updated',
                         text: response.message
                     }).then(() => {
-                        // Redirigir al mismo sitio
                         window.location.href = window.location.href;
                     });
                 } else {
-                    // Mostrar SweetAlert2 de error
                     Swal.fire({
-                         type: 'error',
+                        type: 'error',
                         title: 'Document Update Error',
                         text: response.message
                     });
                 }
             },
-            error: function() {
-                // Manejar errores de conexión u otros errores
+            error: function () {
                 Swal.fire({
                     type: 'error',
                     title: 'Error',
