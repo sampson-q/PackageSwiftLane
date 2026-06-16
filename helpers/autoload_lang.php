@@ -69,6 +69,72 @@ function cdb_money_format_bar($amount)
 
 
 
+/**
+ * Status id for "Ready for PickUp" (cdb_styles). The customer handling fee is
+ * only charged once a package/consolidation reaches this stage.
+ */
+if (!defined('CDP_STATUS_READY_FOR_PICKUP')) {
+    define('CDP_STATUS_READY_FOR_PICKUP', 32);
+}
+
+/**
+ * Convert a USD amount to GHS using the system exchange rate.
+ * courier_add/edit/view stay in USD; conversion only happens here, at the
+ * customer/payment/messaging stage.
+ *
+ * @param float      $usd
+ * @param float|null $rate  Pass cdb_settings.exchange_rate when you already have
+ *                          it; null fetches it once.
+ */
+function cdp_usdToGhs($usd, $rate = null)
+{
+    if ($rate === null) {
+        $db = new Conexion;
+        $db->cdp_query('SELECT exchange_rate FROM cdb_settings LIMIT 1');
+        $db->cdp_execute();
+        $row  = $db->cdp_registro();
+        $rate = $row ? (float) $row->exchange_rate : 1.0;
+    }
+    $rate = ((float) $rate > 0) ? (float) $rate : 1.0;
+    return (float) $usd * $rate;
+}
+
+/**
+ * Handling fee (GHS) for a given GHS amount, per the tiered schedule.
+ * Computed on the fly — never stored.
+ */
+function cdp_handlingFeeGhs($ghs_amount)
+{
+    $a = (float) $ghs_amount;
+    if ($a < 300)   return 20.0;
+    if ($a < 2000)  return 50.0;
+    if ($a < 4000)  return 100.0;
+    if ($a < 6000)  return 150.0;
+    if ($a < 8000)  return 200.0;
+    if ($a < 9000)  return 300.0;
+    if ($a < 11000) return 400.0;
+    if ($a < 13000) return 450.0;
+    if ($a < 15000) return 500.0;
+    if ($a < 17000) return 600.0;
+    if ($a < 20000) return 800.0;
+    return 1000.0;
+}
+
+/**
+ * Customer amount payable in GHS for a single shipment.
+ * Converts the stored USD total to GHS and, when $apply_handling_fee is true
+ * (i.e. status = Ready for PickUp and the fee has not already been counted for
+ * this consolidation), adds the tiered handling fee.
+ *
+ * @return array{ghs:float, handling_fee:float, total:float}
+ */
+function cdp_customerPayableGhs($usd_total, $apply_handling_fee, $rate = null)
+{
+    $ghs = cdp_usdToGhs($usd_total, $rate);
+    $fee = $apply_handling_fee ? cdp_handlingFeeGhs($ghs) : 0.0;
+    return ['ghs' => $ghs, 'handling_fee' => $fee, 'total' => $ghs + $fee];
+}
+
 function cdp_redirect_to($location)
 {
 	if (!headers_sent()) {
