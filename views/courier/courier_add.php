@@ -153,6 +153,11 @@ $categories   = $core->cdp_getCategoriesById(27);
         padding: .75rem 1rem;
         border: 1px dashed #d1d5db;
     }
+
+    /* Selector de modo de precio por fila (peso vs. precio personalizado) */
+    .pricing-mode-toggle { width: 100%; }
+    .pricing-mode-toggle .btn { padding: .2rem .4rem; font-size: .78rem; font-weight: 600; }
+    td.pkg-disabled-cell { background: #f3f4f6; }
 </style>
 
 </head>
@@ -360,11 +365,20 @@ $categories   = $core->cdp_getCategoriesById(27);
                         <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-body">
-
-                                    <h4 class="card-title mb-3">
-                                        <i class="mdi mdi-cube-scan" style="color:#20c997"></i>
-                                        2) <?php echo $lang['left212'] ?>
-                                    </h4>
+                                    <div class="row">
+                                        <div class="col-5">
+                                            <h4 class="card-title mb-3">
+                                                <i class="mdi mdi-cube-scan" style="color:#20c997"></i>
+                                                2) <?php echo $lang['left212'] ?>
+                                            </h4>
+                                        </div>
+                                        <div class="col-1 text-right text-muted">
+                                            <h5>Notes:</h5>
+                                        </div>
+                                        <div class="col-6">
+                                            <input class="form-control" type="text" id="courier_notes" name="courier_notes" placeholder=". . . . . . . . . . . . . . . . . . . . . . . ." value="<?php echo $row_order->courier_notes ;?>" />
+                                        </div>
+                                    </div>
 
                                     <!-- Línea superior: tarifa manual + botón añadir paquete -->
                                     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3">
@@ -515,22 +529,32 @@ $categories   = $core->cdp_getCategoriesById(27);
                                     </div>
 
                                     <!-- Tabla de paquetes -->
-                                     <div class="text-md-right">
-                                            <button type="button" onclick="addPackage()" name="add_rows" id="add_rows" class="btn btn-outline-dark">
-                                                <span class="fa fa-plus"></span> <?php echo $lang['left231'] ?>
-                                            </button>
+                                    <div class="row">
+                                        <div class="col-2">
+                                            <small class="text-muted d-block">Original Total Weight <span class="text-muted">(actual package weight)</span></small>
+                                            <div class="text-md-left">
+                                                <input type="text" class="form-control form-control-sm" id="package_total_weight" name="package_total_weight" value="" placeholder="Total weight of this package" onkeypress="return isNumberKey(event,this)">
+                                            </div>
                                         </div>
+                                        <div class="col-10">
+                                            <div class="text-right">
+                                                <button type="button" onclick="addPackage()" name="add_rows" id="add_rows" class="btn btn-outline-dark">
+                                                    <span class="fa fa-plus"></span> <?php echo $lang['left231'] ?>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="table-responsive mt-2">
                                         <table class="table table-sm table-bordered table-hover table-packages mb-0" id="packages_table">
                                             <thead>
                                                 <tr>
-                                                    <th style="width:70px;"><?php echo $lang['courier_table_qty']; ?></th>
-                                                    <th class="text-center" style="min-width:140px;"><?php echo $lang['left213']; ?></th>
-                                                    <th><?php echo 'Weight (TRW)'; ?></th>
-                                                    <th class="text-center"><?php echo $lang['left216'] . ' (TVW)'; ?></th>
-                                                    <th class="text-center"><?php echo $lang['left217'] . ' (TVW)'; ?></th>
-                                                    <th class="text-center"><?php echo $lang['left218'] . ' (TVW)'; ?></th>
-                                                    <th style="width:60px;"><?php echo $lang['courier_table_remove']; ?></th>
+                                                    <th style="width:60px;"><?php echo $lang['courier_table_qty']; ?></th>
+                                                    <th style="min-width:160px;"><?php echo $lang['left213']; ?></th>
+                                                    <th style="width:170px;">Pricing mode</th>
+                                                    <th style="width:110px;">Weight</th>
+                                                    <th style="width:130px;">Custom Price (USD)</th>
+                                                    <th style="width:110px;">Line Total (USD)</th>
+                                                    <th style="width:50px;"><?php echo $lang['courier_table_remove']; ?></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -648,16 +672,23 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                             </div>
                                                         </div>
 
-                                                        <!-- Descuento % -->
+                                                        <!-- Descuento (% o monto fijo) -->
                                                         <div class="col-sm-6 col-md-2">
                                                             <div class="form-group mb-2">
-                                                                <label class="control-label col-form-label-sm"><?php echo $lang['leftorder21']; ?> <?php echo $lang['leftorder222221']; ?></label>
+                                                                <label class="control-label col-form-label-sm d-flex align-items-center justify-content-between">
+                                                                    <span><?php echo $lang['leftorder21']; ?></span>
+                                                                    <span class="btn-group btn-group-sm discount-type-toggle" role="group" aria-label="Discount type">
+                                                                        <button type="button" id="discount_type_percent" class="btn btn-dark py-0 px-2" onclick="setDiscountType('percent')">%</button>
+                                                                        <button type="button" id="discount_type_amount" class="btn btn-outline-dark py-0 px-2" onclick="setDiscountType('amount')">$</button>
+                                                                    </span>
+                                                                </label>
                                                                 <input type="text"
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event, this)"
                                                                        value="0"
                                                                        name="discount_value" id="discount_value"
                                                                        class="form-control form-control-sm">
+                                                                <input type="hidden" name="discount_type" id="discount_type" value="percent">
                                                                 <small>
                                                                     <?php if ($core->for_symbol !== null): ?>
                                                                         <b><?php echo $core->for_symbol; ?></b>
@@ -844,6 +875,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                     <input type="hidden" name="translate_quantity" id="translate_quantity" value="<?php echo $lang['left1103'] ?>" />
                     <!-- Peso cobrable que rellena el JS -->
                     <input type="hidden" id="chargeable_weight" name="chargeable_weight" value="0">
+                    <input type="hidden" id="core_exchange_rate" name="core_exchange_rate" value="<?php echo floatval($core->exchange_rate ?? 1); ?>" />
                 </div>
 
                 <?php include('views/modals/modal_add_user_shipment.php'); ?>
