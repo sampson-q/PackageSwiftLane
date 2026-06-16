@@ -25,7 +25,7 @@
 
 				<div class="d-md-flex align-items-center">
                     <div>
-                        <h3 class="card-title"><span><?php echo $lang['tools-config33'] ?></span></h3>
+                        <h3 class="card-title"><span><?php echo "Extra Configurations" ?></span></h3>
                     </div>
                 </div>
                 <div><hr><br></div>
@@ -559,7 +559,7 @@
 						    </div>
 
 
-							<div class="col-md-6">
+							<div class="col-md-3">
 								<div class="form-group">
 									<label for="phoneNumber1"><?php echo $lang['tools-config94'] ?></label>
 
@@ -568,6 +568,13 @@
 									<input id="id" type="hidden" class="form-control" placeholder="id" />
 									<input id="currency" type="hidden" class="form-control" name="currency" value="<?php echo $core->currency; ?>" />
 
+								</div>
+							</div>
+							
+                            <div class="col-md-3">
+								<div class="form-group">
+									<label for="phoneNumber1"><?php echo 'Exchange Rate (USD to GHS)' ?></label>
+									<input type="text" class="form-control" id="exchange_rate" name="exchange_rate" value="<?php echo $core->exchange_rate; ?>" required="required">
 								</div>
 							</div>
 						</div>
