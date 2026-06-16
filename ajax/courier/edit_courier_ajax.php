@@ -51,7 +51,7 @@ if (!is_array($packages_in) || count($packages_in) === 0) {
         if ($vdesc === '')                       { $errors["pkg_desc_$vi"] = "Row $rown: description is required."; }
         if ($vqty <= 0)                          { $errors["pkg_qty_$vi"]  = "Row $rown: quantity must be greater than 0."; }
         if ($vweight > 0 && $vcustom > 0)        { $errors["pkg_excl_$vi"] = "Row $rown: use either weight OR custom price, not both."; }
-        if ($vweight <= 0 && $vcustom <= 0)      { $errors["pkg_none_$vi"] = "Row $rown: enter a weight or a custom price."; }
+        // Pricing is optional here too — items may be priced incrementally by different staff.
     }
 }
 
