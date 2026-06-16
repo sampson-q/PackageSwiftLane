@@ -426,9 +426,8 @@ $categories   = $core->cdp_getCategoriesById(27);
                                             <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label mb-1"><?php echo $lang['payment_methods'] ?></label>
                                                 <select class="select2 form-control custom-select" id="order_payment_method" name="order_payment_method" required style="width:100%">
-                                                    <option value="<?php echo $payment_methods->id; ?>"><?php echo $payment_methods->label; ?></option>
                                                     <?php foreach ($paymethodrow as $row): ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->label; ?></option>
+                                                        <option value="<?php echo $row->id; ?>" <?php echo ((int)$row->id === 9) ? 'selected' : ''; ?>><?php echo $row->label; ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -478,7 +477,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                         <select class="custom-select col-12" id="driver_id" name="driver_id">
                                                             <option value="0">--<?php echo $lang['left209'] ?>--</option>
                                                             <?php foreach ($driverrow as $row): ?>
-                                                                <option value="<?php echo $row->id; ?>"><?php echo $row->fname . ' ' . $row->lname; ?></option>
+                                                                <option value="<?php echo $row->id; ?>" <?php echo ((int)$row->id === 211) ? 'selected' : ''; ?>><?php echo $row->fname . ' ' . $row->lname; ?></option>
                                                             <?php endforeach; ?>
                                                         </select>
                                                     </div>
@@ -531,7 +530,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                     <!-- Tabla de paquetes -->
                                     <div class="row">
                                         <div class="col-2">
-                                            <small class="text-muted d-block">Original Total Weight <span class="text-muted">(actual package weight)</span></small>
+                                            <small class="text-muted d-block">Original Total Weight</small>
                                             <div class="text-md-left">
                                                 <input type="text" class="form-control form-control-sm" id="package_total_weight" name="package_total_weight" value="" placeholder="Total weight of this package" onkeypress="return isNumberKey(event,this)">
                                             </div>
@@ -573,8 +572,9 @@ $categories   = $core->cdp_getCategoriesById(27);
                                         </div>
                                         <div class="col-md-6">
                                             <div class="weight-summary">
-                                                <small class="text-muted d-block"><?php echo $lang['courier_vol_weight_total']; ?></small>
-                                                <span class="h5 mb-0" id="total_vol_weight">0.00</span>
+                                                <small class="text-muted d-block">Total Custom Price (USD)</small>
+                                                <span class="h5 mb-0" id="total_custom_price">0.00</span>
+                                                <span class="d-none" id="total_vol_weight">0.00</span>
                                             </div>
                                         </div>
                                     </div>
@@ -659,9 +659,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                         <!-- Precio por lb/kg -->
                                                         <div class="col-sm-6 col-md-2">
                                                             <div class="form-group mb-2">
-                                                                <label class="control-label col-form-label-sm">
-                                                                    <?php echo $lang['left905']; ?>&nbsp;<?php echo $core->weight_p; ?>
-                                                                </label>
+                                                                <label class="control-label col-form-label-sm">Default Weight (lbs)</label>
                                                                 <input type="text"
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event, this)"
@@ -698,29 +696,29 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                             </div>
                                                         </div>
 
-                                                        <!-- Valor asegurado -->
-                                                        <div class="col-sm-6 col-md-2">
+                                                        <!-- Valor asegurado (hidden — not used for courier_add) -->
+                                                        <div class="col-sm-6 col-md-2" style="display:none">
                                                             <div class="form-group mb-2">
                                                                 <label class="control-label col-form-label-sm"><?php echo $lang['leftorder22']; ?></label>
                                                                 <input type="text"
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event, this)"
                                                                        class="form-control form-control-sm"
-                                                                       value="100"
+                                                                       value="0"
                                                                        name="insured_value" id="insured_value">
                                                                 <small id="insured_label"></small>
                                                             </div>
                                                         </div>
 
-                                                        <!-- Seguro de envío % -->
-                                                        <div class="col-sm-6 col-md-2">
+                                                        <!-- Seguro de envío % (hidden) -->
+                                                        <div class="col-sm-6 col-md-2" style="display:none">
                                                             <div class="form-group mb-2">
                                                                 <label class="control-label col-form-label-sm"><?php echo $lang['leftorder24']; ?> <?php echo $lang['leftorder222221']; ?></label>
                                                                 <input type="text"
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event, this)"
                                                                        class="form-control form-control-sm"
-                                                                       value="<?php echo $core->insurance; ?>"
+                                                                       value="0"
                                                                        name="insurance_value" id="insurance_value">
                                                                 <small>
                                                                     <?php if ($core->for_symbol !== null): ?>
@@ -731,15 +729,15 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                             </div>
                                                         </div>
 
-                                                        <!-- Aranceles aduaneros % -->
-                                                        <div class="col-sm-6 col-md-2">
+                                                        <!-- Aranceles aduaneros % (hidden) -->
+                                                        <div class="col-sm-6 col-md-2" style="display:none">
                                                             <div class="form-group mb-2">
                                                                 <label class="control-label col-form-label-sm"><?php echo $lang['leftorder25']; ?> <?php echo $lang['leftorder222221']; ?></label>
                                                                 <input type="text"
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event, this)"
                                                                        class="form-control form-control-sm"
-                                                                       value="<?php echo $core->c_tariffs; ?>"
+                                                                       value="0"
                                                                        name="tariffs_value" id="tariffs_value">
                                                                 <small>
                                                                     <?php if ($core->for_symbol !== null): ?>
@@ -750,14 +748,14 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                             </div>
                                                         </div>
 
-                                                        <!-- Impuesto % -->
-                                                        <div class="col-sm-6 col-md-2">
+                                                        <!-- Impuesto % (hidden) -->
+                                                        <div class="col-sm-6 col-md-2" style="display:none">
                                                             <div class="form-group mb-2">
                                                                 <label class="control-label col-form-label-sm"><?php echo $lang['leftorder67']; ?> <?php echo $lang['leftorder222221']; ?></label>
                                                                 <input type="text"
                                                                        onchange="calculateFinalTotal(this);"
                                                                        class="form-control form-control-sm"
-                                                                       value="<?php echo $core->tax; ?>"
+                                                                       value="0"
                                                                        name="tax_value" id="tax_value">
                                                                 <small>
                                                                     <?php if ($core->for_symbol !== null): ?>
@@ -769,17 +767,17 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                         </div>
                                                     </div>
 
-                                                    <!-- Fila 2: Valor declarado / Re expedición -->
+                                                    <!-- Fila 2: Valor declarado / Re expedición (hidden) -->
                                                     <div class="row mt-2">
-                                                        <!-- Valor declarado % -->
-                                                        <div class="col-sm-6 col-md-3">
+                                                        <!-- Valor declarado % (hidden) -->
+                                                        <div class="col-sm-6 col-md-3" style="display:none">
                                                             <div class="form-group mb-2">
                                                                 <label class="control-label col-form-label-sm"><?php echo $lang['leftorder66']; ?> <?php echo $lang['leftorder222221']; ?></label>
                                                                 <input type="text"
                                                                        onchange="calculateFinalTotal(this);"
                                                                        onkeypress="return isNumberKey(event, this)"
                                                                        class="form-control form-control-sm"
-                                                                       value="<?php echo $core->declared_tax; ?>"
+                                                                       value="0"
                                                                        name="declared_value_tax" id="declared_value_tax">
                                                                 <small>
                                                                     <?php if ($core->for_symbol !== null): ?>
@@ -790,8 +788,8 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                             </div>
                                                         </div>
 
-                                                        <!-- Re expedición -->
-                                                        <div class="col-sm-6 col-md-3">
+                                                        <!-- Re expedición (hidden) -->
+                                                        <div class="col-sm-6 col-md-3" style="display:none">
                                                             <div class="form-group mb-2">
                                                                 <label class="control-label col-form-label-sm"><?php echo $lang['langs_048']; ?></label>
                                                                 <input type="text"
