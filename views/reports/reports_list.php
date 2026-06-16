@@ -102,82 +102,7 @@ $userData = $user->cdp_getUserData();
                 <div class="row mb-4 d-flex">
                     <!-- ONLINE SHIPPING -->
                     
-                    <?php 
-
-                        $perModule = [
-                        'view_module_package_reports',    
-                        'view_general_package_records',
-                        'view_package_by_employees',
-                        'view_package_by_agencies',
-                        'view_package_by_drivers',
-                        'view_top_users_air',
-                        ];
-                        if ($user->cdp_hasPermission($perModule)) {
-
-                    ?>
-                    <div class="col-sm-12 col-md-6 col-lg-4">
-
-                        <div class="card ">
-                            <div class="card-body">
-                                <!-- title -->
-                                <div class="d-md-flex align-items-center">
-                                    <div>
-                                        <h4 class="card-title"><span class="display-7"><iconify-icon icon="glyphs:plane-departure-bold"  style="color:#9B9B8C"></iconify-icon></span> <?php echo 'Air Shipments' ?></h4>
-                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo 'Advanced Air Shipping Reports' ?></h5>
-                                    </div>
-
-                                </div>
-                                <!-- title -->
-                                <table class="tablesaw table-hover table no-border">
-                                    <tbody>
-
-                                        <?php if ($user->cdp_hasPermission('view_general_package_records')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_packages_registered.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general03'] ?></a></td>
-                                        </tr>
-                                        <?php } ?>
-                                        <?php if ($user->cdp_hasPermission('view_package_by_employees')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_packages_registered_employee.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general04'] ?></a></td>
-                                        </tr>
-                                        <?php } ?>
-                                        <?php if ($user->cdp_hasPermission('view_package_by_agencies')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_packages_registered_agency.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general05'] ?></a></td>
-                                        </tr>
-                                        <?php } ?>
-                                        <?php if ($user->cdp_hasPermission('view_package_by_drivers')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_packages_registered_driver.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general06'] ?></a></td>
-                                        </tr>
-                                        <?php } ?>
-                                        <?php if ($user->cdp_hasPermission('view_top_users_air')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_top_users_air.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo 'Top Users' ?></a></td>
-                                        </tr>
-                                        <?php } ?>
-                                        <?php if ($user->cdp_hasPermission('view_shipment_by_agencies')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="financial_sheet.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo 'Financial Sheet' ?></a></td>
-                                        </tr>
-                                        <?php } ?>
-                                        <tr>
-                                            <td class="title"></td>
-                                        </tr>
-                                        <br>
-
-                                    </tbody>
-                                </table>
-
-                            </div>
-                        </div>
-                    </div>
-                    <?php } ?>
-                    <!-- ONLINE SHOPPING-->
-
-
-                    <!-- SHIPMENT -->
-                    <?php 
+                    <?php
 
                         $perModule = [
                         'view_module_shipping_reports',    
@@ -198,13 +123,13 @@ $userData = $user->cdp_getUserData();
                                 <!-- title -->
                                 <div class="d-md-flex align-items-center">
                                     <div>
-                                        <h4 class="card-title"><span class="display-7"><iconify-icon icon="mingcute:ship-fill"  style="color:#9B9B8C"></iconify-icon></span> <?php echo 'Sea Shipments' ?></h4>
-                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo 'Advanced Sea Shipping Reports' ?></h5>
+                                        <h4 class="card-title"><span class="display-7"><iconify-icon icon="glyphs:plane-departure-bold"  style="color:#9B9B8C"></iconify-icon></span> <?php echo 'Air Shipments' ?></h4>
+                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo 'Advanced Air Shipping Reports' ?></h5>
                                     </div>
 
                                 </div>
                                 <!-- title -->
-                                <table class="tablesaw table-hover table no-border">
+                                 <table class="tablesaw table-hover table no-border">
                                     <tbody>
                                         <?php if ($user->cdp_hasPermission('view_general_shipments')) { ?>
                                         <tr>
@@ -238,7 +163,73 @@ $userData = $user->cdp_getUserData();
                                         <?php } ?>
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+                    </div>
+                    <?php } ?>
+                    <!-- ONLINE SHOPPING-->
 
+                    <!-- SHIPMENT -->
+                    <?php 
+
+                        $perModule = [
+                        'view_module_package_reports',    
+                        'view_general_package_records',
+                        'view_package_by_employees',
+                        'view_package_by_agencies',
+                        'view_package_by_drivers',
+                        'view_top_users_air',
+                        ];
+                        if ($user->cdp_hasPermission($perModule)) {
+
+                    ?>
+                    <div class="col-sm-12 col-md-6 col-lg-4">
+
+                        <div class="card ">
+                            <div class="card-body">
+                                <!-- title -->
+                                <div class="d-md-flex align-items-center">
+                                    <div>
+                                        <h4 class="card-title"><span class="display-7"><iconify-icon icon="mingcute:ship-fill"  style="color:#9B9B8C"></iconify-icon></span> <?php echo 'Sea Shipments' ?></h4>
+                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo 'Advanced Sea Shipping Reports' ?></h5>
+                                    </div>
+
+                                </div>
+                                <!-- title -->
+                                <table class="tablesaw table-hover table no-border">
+                                    <tbody>
+                                        <?php if ($user->cdp_hasPermission('view_general_package_records')) { ?>
+                                        <tr>
+                                            <td class="title"><a class="link" href="report_packages_registered.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general03'] ?></a></td>
+                                        </tr>
+                                        <?php } ?>
+                                        <?php if ($user->cdp_hasPermission('view_package_by_employees')) { ?>
+                                        <tr>
+                                            <td class="title"><a class="link" href="report_packages_registered_employee.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general04'] ?></a></td>
+                                        </tr>
+                                        <?php } ?>
+                                        <?php if ($user->cdp_hasPermission('view_package_by_agencies')) { ?>
+                                        <tr>
+                                            <td class="title"><a class="link" href="report_packages_registered_agency.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general05'] ?></a></td>
+                                        </tr>
+                                        <?php } ?>
+                                        <?php if ($user->cdp_hasPermission('view_package_by_drivers')) { ?>
+                                        <tr>
+                                            <td class="title"><a class="link" href="report_packages_registered_driver.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general06'] ?></a></td>
+                                        </tr>
+                                        <?php } ?>
+                                        <?php if ($user->cdp_hasPermission('view_top_users_air')) { ?>
+                                        <tr>
+                                            <td class="title"><a class="link" href="report_top_users_air.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo 'Top Users' ?></a></td>
+                                        </tr>
+                                        <?php } ?>
+                                        <?php if ($user->cdp_hasPermission('view_shipment_by_agencies')) { ?>
+                                        <tr>
+                                            <td class="title"><a class="link" href="financial_sheet.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo 'Financial Sheet' ?></a></td>
+                                        </tr>
+                                        <?php } ?>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
