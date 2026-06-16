@@ -749,6 +749,7 @@ function calculateFinalTotal(element) {
     var sum_declared     = 0;
     var sum_fixed        = 0;
     var sum_lines_usd    = 0; // sum of all per-row line totals (USD)
+    var sum_custom_usd   = 0; // sum of custom-priced lines (USD)
 
     (packagesItems || []).forEach(function (item, i) {
         var qty    = Math.max(1, nf(item.qty, 1));
@@ -757,6 +758,10 @@ function calculateFinalTotal(element) {
         sum_weight_real += weight * qty;
         sum_declared    += nf(item.declared_value, 0) * qty;
         sum_fixed       += nf(item.fixed_value, 0) * qty;
+
+        if (item.use_custom_price) {
+            sum_custom_usd += nf(item.custom_price, 0) * qty;
+        }
 
         var lineTotal = computeLineTotal(item, price_lb);
         sum_lines_usd += lineTotal;
@@ -827,6 +832,7 @@ function calculateFinalTotal(element) {
     $("#total_envio").html(r2(total));
 
     $("#total_weight").html(r2(sum_weight_real));
+    if ($("#total_custom_price").length) $("#total_custom_price").html(r2(sum_custom_usd));
     $("#total_vol_weight").html("—"); // volumetric removed
     if ($("#total_fixed").length)    $("#total_fixed").html(r2(sum_fixed));
     if ($("#total_declared").length) $("#total_declared").html(r2(sum_declared));
@@ -857,22 +863,14 @@ $("#invoice_form").on("submit", function (event) {
             $("#qty_" + i).focus();
             return false;
         }
-
-        var useCustom = packagesItems[i].use_custom_price;
-        if (useCustom) {
-            var cp = nf($("#customPrice_" + i).val(), 0);
-            if (cp <= 0) {
-                Swal.fire({ text: "Enter a custom price (USD) for row " + (i+1), icon: "error", confirmButtonText: "Ok" });
-                $("#customPrice_" + i).focus();
-                return false;
-            }
-        } else {
-            var wt = nf($("#weight_" + i).val(), 0);
-            if (wt <= 0) {
-                Swal.fire({ text: "Enter weight for row " + (i+1), icon: "error", confirmButtonText: "Ok" });
-                $("#weight_" + i).focus();
-                return false;
-            }
+        // Pricing (weight OR custom) is set LATER by the Ghana-side updaters — the
+        // adder only enters qty + description. So we don't require it here; we only
+        // guard against an item carrying BOTH at once.
+        var wt = nf($("#weight_" + i).val(), 0);
+        var cp = nf($("#customPrice_" + i).val(), 0);
+        if (wt > 0 && cp > 0) {
+            Swal.fire({ text: "Row " + (i+1) + ": use either weight OR custom price, not both.", icon: "error", confirmButtonText: "Ok" });
+            return false;
         }
     }
 
@@ -1119,20 +1117,39 @@ function cdp_showError(errors) {
     confirmButtonText: "Ok"
   });
 }
+
 function cdp_showSuccess(message, shipment_id) {
-  Swal.fire({
-    title: message || "OK",
-    icon: "success",
-    allowOutsideClick: false,
-    confirmButtonText: "Ok"
-  }).then(function (result) {
-    if (result.isConfirmed) {
-      setTimeout(function () {
-        window.location = "courier_view.php?id=" + shipment_id;
-      }, 2000);
-    }
-  });
+    // 1. Save flag and message to storage
+    localStorage.setItem('cdp_alert_pending', 'true');
+    localStorage.setItem('cdp_alert_message', message || "OK");
+    
+    // Optional: If you need shipment_id later on the reloaded page, uncomment below
+    // localStorage.setItem('cdp_alert_shipment_id', shipment_id || "");
+
+    // 2. Perform reload
+    window.location.reload();
 }
+
+// Add this globally so it executes every time the page loads up fresh
+$(document).ready(function() {
+    if (localStorage.getItem('cdp_alert_pending') === 'true') {
+        var savedMessage = localStorage.getItem('cdp_alert_message');
+
+        Swal.fire({
+            position: "top-end",
+            icon: "success",
+            title: savedMessage,
+            showConfirmButton: false,
+            timer: 250
+        });
+
+        // Clean up keys immediately so it doesn't loop on future manual refreshes
+        localStorage.removeItem('cdp_alert_pending');
+        localStorage.removeItem('cdp_alert_message');
+        // localStorage.removeItem('cdp_alert_shipment_id'); // Uncomment if used above
+    }
+});
+
 
 /* ==========================
    intlTelInput
