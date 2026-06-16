@@ -403,6 +403,16 @@
 						</a>
 					</li>
 					<?php } ?>
+                    <li class="sidebar-item">----------------------------------------</li>
+                    <?php if ($user->cdp_hasPermission('financial_sheet')) { ?>
+					<!-- financial sheet-->
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="financial_sheet.php" aria-expanded="false">
+							<iconify-icon icon="mdi:file-document-outline" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo "Financial Sheet" ?></span>
+						</a>
+					</li>
+					<?php } ?>
 
 					<?php 
 
