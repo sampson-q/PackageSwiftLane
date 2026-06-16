@@ -179,53 +179,66 @@ $history = $db->cdp_registros();
                                             </form>
                                         </div>
                                     </div>
-                                    <div><hr><br></div>
+                                    <div><hr></div>
+                                    
+                                    <div class="text-muted">
+                                        <h6>Click of both images to upload new ones</h6>
+                                    </div>
 
                                     <div style="display: flex; justify-content: center; align-items: center; gap: 100px; margin-top: 30px;" class="mb-30">
                                         <!-- Left Section (Profile Image) -->
                                         <div style="text-align: center;">
-                                            <label for="avatarInput">
-                                                <img src="assets/<?php echo ($row->avatar) ? $row->avatar : "/uploads/blank.png"; ?>" class="rounded-circle" width="120" height="120" />
-                                            </label>
                                             <form class="form-horizontal form-material" id="edit_avatar_form" name="edit_avatar_form" method="post" enctype="multipart/form-data">
-                                                <div class="mb-3">
-                                                    <div class="form-group" style="display: none;">
-                                                        <input class="form-control" id="avatarInput" name="avatar" type="file" />
-                                                    </div>
+                                                <label for="avatarInput" style="cursor: pointer; display: inline-block;" title="Click to change avatar">
+                                                    <img id="avatarPreview"
+                                                        src="assets/<?php echo ($row->avatar) ? $row->avatar : '/uploads/blank.png'; ?>"
+                                                        class="rounded-circle"
+                                                        width="120" height="120"
+                                                        style="cursor: pointer; transition: opacity 0.2s;"
+                                                        onmouseover="this.style.opacity='0.75'"
+                                                        onmouseout="this.style.opacity='1'" />
+                                                </label>
+                                                <div class="form-group" style="display: none;">
+                                                    <input class="form-control" id="avatarInput" name="avatar" type="file" accept="image/*" />
                                                 </div>
-                                                <div class="mb-3">
-                                                    <button type="submit" class="btn btn-outline-warning btn-confirmation">
+                                                <div class="mb-3 mt-2">
+                                                    <button type="submit" class="btn btn-outline-warning btn-confirmation" id="avatarSubmitBtn" title="First select an image" disabled style="cursor: not-allowed;">
                                                         <?php echo $lang['messageerrorform13'] ?>
                                                     </button>
                                                 </div>
                                                 <input name="id" id="id" type="hidden" value="<?php echo $row->id; ?>" />
                                                 <input name="approve" id="approve" type="hidden" value="<?php echo $row->approve; ?>" />
-                                                <input name="current_avatar" id="current_avatar" type="hidden" value="<?php echo ($row->avatar) ? $row->avatar : "/uploads/blankID.jpg"; ?>" />
+                                                <input name="current_avatar" id="current_avatar" type="hidden" value="<?php echo ($row->avatar) ? $row->avatar : '/uploads/blankID.jpg'; ?>" />
                                             </form>
                                         </div>
 
                                         <!-- Right Section (Document Image) -->
                                         <div style="text-align: center;">
-                                            <label for="documentInput">
-                                                <img src="assets/<?php echo ($row->document_photo) ? $row->document_photo : "/uploads/blankID.jpg"; ?>" style="border-radius: 15px;" height="120" />
-                                            </label>
                                             <form class="form-horizontal form-material" id="edit_document_form" name="edit_document_form" method="post" enctype="multipart/form-data">
-                                                <div class="mb-3">
-                                                    <div class="form-group" style="display: none;">
-                                                        <input class="form-control" id="documentInput" name="document" type="file" accept="image/*" />
-                                                    </div>
+                                                <label for="documentInput" style="cursor: pointer; display: inline-block;" title="Click to change document">
+                                                    <img id="documentPreview"
+                                                        src="assets/<?php echo ($row->document_photo) ? $row->document_photo : '/uploads/blankID.jpg'; ?>"
+                                                        style="border-radius: 15px; cursor: pointer; transition: opacity 0.2s;"
+                                                        height="120"
+                                                        onmouseover="this.style.opacity='0.75'"
+                                                        onmouseout="this.style.opacity='1'" />
+                                                </label>
+                                                <div class="form-group" style="display: none;">
+                                                    <input class="form-control" id="documentInput" name="document" type="file" accept="image/*" />
                                                 </div>
-                                                <div class="mb-3">
-                                                    <button type="submit" class="btn btn-outline-warning btn-confirmation">
+                                                <div class="mb-3 mt-2">
+                                                    <button type="submit" class="btn btn-outline-warning btn-confirmation" id="documentSubmitBtn" title="First select a document" disabled style="cursor: not-allowed;">
                                                         <?php echo $lang['documentUpdate'] ?>
                                                     </button>
-
-                                                    <a href="assets/<?php echo ($row->document_photo) ? $row->document_photo : "/uploads/blankID.jpg"; ?>" target="_blank" class="btn btn-outline-warning btn-confirmation">
+                                                    <a href="assets/<?php echo ($row->document_photo) ? $row->document_photo : '/uploads/blankID.jpg'; ?>"
+                                                    target="_blank"
+                                                    id="documentViewBtn"
+                                                    class="btn btn-outline-warning btn-confirmation">
                                                         <?php echo $lang['documentView']; ?>
                                                     </a>
                                                 </div>
                                                 <input name="id" id="id" type="hidden" value="<?php echo $row->id; ?>" />
-                                                <input name="current_document" id="current_document" type="hidden" value="<?php echo ($row->document_photo) ? $row->document_photo : "/uploads/blankID.jpg"; ?>" />
+                                                <input name="current_document" id="current_document" type="hidden" value="<?php echo ($row->document_photo) ? $row->document_photo : '/uploads/blankID.jpg'; ?>" />
                                             </form>
                                         </div>
                                     </div>
@@ -414,6 +427,13 @@ $history = $db->cdp_registros();
                                                                                                     echo 'selected';
                                                                                                 } ?>><?php echo $lang['leftorder180'] ?></option>
                                                                     </select>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label for="phoneNumber1"><?php echo "Company" ?></label>
+                                                                    <input type="text" class="form-control" id="company" name="company" value="<?php echo $row->company; ?>" placeholder="Company">
                                                                 </div>
                                                             </div>
                                                         </div>
