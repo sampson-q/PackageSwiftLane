@@ -84,7 +84,7 @@ if ($filterby == 3) {
 
 // // pagination variables
 $page = (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) ? $_REQUEST['page'] : 1;
-$per_page = 10; //how much records you want to show
+$per_page = (isset($_REQUEST['per_page']) && in_array((int)$_REQUEST['per_page'], [25, 50, 100])) ? (int)$_REQUEST['per_page'] : 25; //how much records you want to show
 $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
@@ -247,7 +247,7 @@ if ($numrows > 0) { ?>
 								</td>
 							<?php } ?>
 							<td><b><a href="courier_view.php?id=<?php echo $row->order_id; ?>"><?php echo $row->order_prefix . $row->order_no; ?></a></b></td>
-							<td><?php echo $postal_tracking->tracking_number; ?></td>
+							<td><?php echo $postal_tracking->tracking_number ? $postal_tracking->tracking_number : 'N/A'; ?></td>
 							<td>
 								<?php echo $row->order_date; ?>
 							</td>
