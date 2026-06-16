@@ -292,12 +292,14 @@ $("input[type=file]").on("change", function () {
 //Cargar datos AJAX
 function cdp_load(page) {
   var search = $("#search").val();
-  var status_courier = $("#status_courier").val();
+  var status_courier = $("#fs_filter_status").val() || 0; // modal package-status filter
+  var per_page = $("#fs_per_page").val() || 50;
   var filterby = $("#filterby").val();
   var parametros = {
     page: page,
     search: search,
     status_courier: status_courier,
+    per_page: per_page,
     filterby: filterby,
   };
   $("#loader").fadeIn("slow");
