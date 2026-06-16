@@ -674,7 +674,7 @@ if (empty($errors)) {
                 if (isset($changed_fields) && is_array($changed_fields)) {
                     foreach ($changed_fields as $label_cf => $diff_cf) {
                         if ($label_cf === '_packages_updated') {
-                            $wa_changes_lines[] = '• Package details (weight/dimensions) updated';
+                            $wa_changes_lines[] = '• Package item details (weight / custom price) updated';
                             continue;
                         }
                         if ($label_cf === 'Order Total') {
