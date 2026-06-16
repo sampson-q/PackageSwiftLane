@@ -14,18 +14,22 @@ $(function () {
 function cdp_load(page) {
     localStorage.setItem('currentTablePage-Customers', page);
     var search = $("#search").val();
-    var filterby = $("#filterby").val();
+    var filterby_active = $("#filterby_active").val();
+    var filterby_approve = $("#filterby_approve").val();
+    var filterby_new = $("#filterby_new").val();
     var per_page = $("#per_page").val();
-    
+
     localStorage.setItem('currentPerPage-Customers', per_page);
-    
-    var parametros = { 
-        "page": page, 
-        'search': search, 
-        'filterby': filterby,
+
+    var parametros = {
+        "page": page,
+        'search': search,
+        'filterby_active': filterby_active,
+        'filterby_approve': filterby_approve,
+        'filterby_new': filterby_new,
         'per_page': per_page
     };
-    
+
     $("#loader").fadeIn('slow');
     $.ajax({
         url: './ajax/customers/customers_list_ajax.php',
@@ -320,4 +324,67 @@ function approveUser(id) {
             $("#resultados_ajax").html('<div class="alert alert-danger">An error occurred while processing the request.</div>');
         }
     });
+}
+
+// Toggle "new users (last 30 days)" filter from stat card
+var filterCardMap = {
+    'active':     { hidden: 'filterby_active',  val: '1', card: 'card-active-users',    badge: 'filter-badge-active' },
+    'inactive':   { hidden: 'filterby_active',  val: '2', card: 'card-inactive-users',  badge: 'filter-badge-inactive' },
+    'approved':   { hidden: 'filterby_approve', val: '3', card: 'card-approved-users',  badge: 'filter-badge-approved' },
+    'unapproved': { hidden: 'filterby_approve', val: '4', card: 'card-unapproved-users',badge: 'filter-badge-unapproved' }
+};
+
+function cdp_toggleFilter(type) {
+    var cfg = filterCardMap[type];
+    var current = $('#' + cfg.hidden).val();
+    var isActive = (current === cfg.val);
+
+    // If this filter is already on → turn it off
+    if (isActive) {
+        $('#' + cfg.hidden).val('0');
+        $('#' + cfg.card).removeClass('filter-active');
+        $('#' + cfg.badge).hide();
+    } else {
+        // If the sibling card on the same hidden input is active, deactivate it first
+        if (type === 'active' && current === '2')   { _deactivateCard('inactive'); }
+        if (type === 'inactive' && current === '1') { _deactivateCard('active'); }
+        if (type === 'approved' && current === '4') { _deactivateCard('unapproved'); }
+        if (type === 'unapproved' && current === '3'){ _deactivateCard('approved'); }
+
+        $('#' + cfg.hidden).val(cfg.val);
+        $('#' + cfg.card).addClass('filter-active');
+        $('#' + cfg.badge).show();
+    }
+    cdp_load(1);
+}
+
+function _deactivateCard(type) {
+    var cfg = filterCardMap[type];
+    $('#' + cfg.card).removeClass('filter-active');
+    $('#' + cfg.badge).hide();
+}
+
+function cdp_toggleNewFilter() {
+    var isActive = $('#filterby_new').val() === '1';
+
+    if (isActive) {
+        // Turn off new-users filter, unlock all cards
+        $('#filterby_new').val('0');
+        $('#card-new-users').removeClass('filter-active');
+        $('#new-filter-badge').hide();
+        $('.stat-card-clickable').not('#card-new-users').removeClass('filter-locked');
+    } else {
+        // Turn on new-users filter — reset & lock all other card filters
+        $('#filterby_active').val('0');
+        $('#filterby_approve').val('0');
+        Object.keys(filterCardMap).forEach(function(type) {
+            _deactivateCard(type);
+        });
+        $('#filterby_new').val('1');
+        $('#card-new-users').addClass('filter-active');
+        $('#new-filter-badge').show();
+        // Lock the other four cards visually
+        $('.stat-card-clickable').not('#card-new-users').addClass('filter-locked');
+    }
+    cdp_load(1);
 }
