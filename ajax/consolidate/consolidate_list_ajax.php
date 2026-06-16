@@ -111,8 +111,8 @@ if ($numrows > 0) { ?>
 					<!-- <th><b><?php echo $lang['ldestination'] ?></b></th> -->
 					<!-- <th><b><?php echo $lang['left533020007'] ?></b></th> -->
 					<th class=""><b><?php echo $lang['ship-all5'] ?></b></th>
+					<th><b><?php echo 'Total Weight' ?></b></th>
 					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
-					<th><b><?php echo $lang['global-3'] ?></b></th>
 					<th></th>
 				</tr>
 			</thead>
@@ -181,6 +181,16 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row->c_prefix . $row->c_no . "'");
 						$address_order = $db->cdp_registro();
 
+						// Real consolidation figures = sum over its member packages.
+						// (detail links by tracking prefix+no, not the numeric order_id)
+						$db->cdp_query("SELECT COALESCE(SUM(a.total_order),0) AS t, COALESCE(SUM(a.total_weight),0) AS w
+										FROM cdb_consolidate_detail d
+										INNER JOIN cdb_add_order a ON a.order_prefix = d.order_prefix AND a.order_no = d.order_no
+										WHERE d.consolidate_id = '" . intval($row->consolidate_id) . "'");
+						$consol_sums   = $db->cdp_registro();
+						$consol_total  = $consol_sums ? (float) $consol_sums->t : 0;
+						$consol_weight = $consol_sums ? (float) $consol_sums->w : 0;
+
 					?>
 						<tr class="card-hovera">
 							<?php if ($user->cdp_hasPermission('select_multiple_conso_courier')) { ?>
@@ -221,26 +231,16 @@ if ($numrows > 0) { ?>
 									echo $driver_data->fname; ?> <?php echo $driver_data->lname;
 																} ?></td> -->
 							<td>
-								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
+								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($consol_total); ?>
+							</td>
+
+							<td>
+								<?php echo number_format($consol_weight, 2); ?>
 							</td>
 
 							<td class="">
 
 								<span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->mod_style; ?></span>
-
-							</td>
-							<td>
-								<span class="label label-large <?php echo $label_class; ?>"><?php echo $text_status; ?></span>
-								<br>
-								<?php if ($row->status_invoice == 2) { ?>
-									<?php if ($userData->userlevel == 1) { ?>
-									
-									<a style="background: #34e89e;" class="label label" href="add_payment_gateways_consolidate.php?id_order=<?php echo $row->consolidate_id; ?>">
-										<i style="color:#343a40" class="fas fa-dollar-sign"></i>
-										&nbsp;<?php echo $lang['leftorder35'] ?>
-									</a>
-									<?php } ?>
-								<?php } ?>
 
 							</td>
 
