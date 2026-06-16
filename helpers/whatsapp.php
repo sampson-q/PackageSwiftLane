@@ -373,18 +373,29 @@ if (!function_exists('cdp_wa_buildShipmentExtraLines')) {
             $pkgs = json_decode($_POST['packages']);
             if (is_array($pkgs) && count($pkgs) > 0) {
                 $pieces = 0;
-                $weight = 0.0;
-                $dims = array();
+                $summedWeight = 0.0;
+                $contents = array();
                 foreach ($pkgs as $p) {
                     $qty = max(1, (int) ($p->qty ?? 1));
                     $pieces += $qty;
-                    $weight += (float) ($p->weight ?? 0) * $qty;
-                    $dims[] = (0 + ($p->length ?? 0)) . 'x' . (0 + ($p->width ?? 0)) . 'x' . (0 + ($p->height ?? 0));
+                    $summedWeight += (float) ($p->weight ?? 0) * $qty;
+                    $desc = trim((string) ($p->description ?? ''));
+                    if ($desc !== '') {
+                        $contents[] = $qty . ' x ' . $desc;
+                    }
                 }
-                $dimUnit = trim((string) ($settings->units ?? ''));
+                $weightUnit = trim((string) ($settings->weight_p ?? 'lb'));
+                // Original total weight (entered by staff) wins; else summed item weights.
+                $ptw = (isset($_POST['package_total_weight']) && $_POST['package_total_weight'] !== '')
+                    ? (float) $_POST['package_total_weight'] : 0.0;
+                $totalWeight = $ptw > 0 ? $ptw : round($summedWeight, 2);
+
                 $lines[] = '• Pieces: ' . $pieces;
-                $lines[] = '• Total weight: ' . (0 + round($weight, 2)) . ' ' . trim((string) ($settings->weight_p ?? 'lb'));
-                $lines[] = '• Dimensions: ' . implode(' | ', $dims) . ($dimUnit !== '' ? ' ' . $dimUnit : '');
+                $lines[] = '• Total weight: ' . (0 + $totalWeight) . ($weightUnit !== '' ? ' ' . $weightUnit : '');
+                if ($contents) {
+                    $lines[] = '• Contents: ' . implode('; ', $contents);
+                }
+                // Dimensions intentionally dropped — the length/width/height model is retired.
             }
         }
         $pt = trim((string) ($_POST['tracking_number'] ?? ''));
