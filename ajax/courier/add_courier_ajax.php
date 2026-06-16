@@ -105,9 +105,8 @@ if (!is_array($packages_in) || count($packages_in) === 0) {
         if ($vweight > 0 && $vcustom > 0) {
             $errors["pkg_excl_$vi"] = "Row $rown: use either weight OR custom price, not both.";
         }
-        if ($vweight <= 0 && $vcustom <= 0) {
-            $errors["pkg_none_$vi"] = "Row $rown: enter a weight or a custom price.";
-        }
+        // Pricing (weight/custom) is intentionally NOT required at creation — the
+        // adder only records qty + description; pricing is set later in Ghana.
     }
 }
 
@@ -217,7 +216,9 @@ if (empty($errors)) {
     }
     $order_item_category_in = intval($_POST["order_item_category"] ?? 0);
     if ($order_item_category_in <= 0) {
-        $order_item_category_in = (int) ($infoship_defaults->logistics_default1 ?? 0);
+        // Courier is AIR: default to "Air Freight" (cdb_category 26). The system
+        // logistics_default1 is the sea/Ocean Freight default and must not leak here.
+        $order_item_category_in = 26;
     }
 
     $dataShipment = array(
