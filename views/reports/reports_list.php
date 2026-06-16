@@ -156,6 +156,11 @@ $userData = $user->cdp_getUserData();
                                             <td class="title"><a class="link" href="report_top_users_air.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo 'Top Users' ?></a></td>
                                         </tr>
                                         <?php } ?>
+                                        <?php if ($user->cdp_hasPermission('view_shipment_by_agencies')) { ?>
+                                        <tr>
+                                            <td class="title"><a class="link" href="financial_sheet.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo 'Financial Sheet' ?></a></td>
+                                        </tr>
+                                        <?php } ?>
                                         <tr>
                                             <td class="title"></td>
                                         </tr>
