@@ -118,7 +118,33 @@ $pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 10
         .customers-stats-card .stat-value { font-size: 1.75rem; font-weight: 700; line-height: 1.2; color: #2d3748; margin: 0 0 0.15rem 0; letter-spacing: -0.02em; }
         .customers-stats-card .stat-badge { font-size: 0.8125rem; font-weight: 600; margin-right: 0.25rem; }
         .customers-stats-card .stat-label { font-size: 0.8125rem; color: #a1acb8; margin: 0; line-height: 1.4; }
-        .customers-stats-section-title { font-size: 0.8rem; font-weight: 600; color: #566a7f; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.02em; }
+        /* Clickable stat cards */
+        .stat-card-clickable { cursor: pointer; transition: box-shadow .2s, border .2s; border: 2px solid transparent !important; }
+        .stat-card-clickable:hover { box-shadow: 0 4px 16px rgba(0,0,0,.10) !important; }
+        .stat-card-hint { font-size: 0.72rem; color: #c0c9d4; margin: 0.35rem 0 0; display: block; }
+
+        /* Active states per card color */
+        #card-active-users.filter-active   { border: 2px solid #28c76f !important; box-shadow: 0 0 0 3px rgba(40,199,111,.15) !important; }
+        #card-inactive-users.filter-active { border: 2px solid #a0a0a0 !important; box-shadow: 0 0 0 3px rgba(105,108,117,.15) !important; }
+        #card-approved-users.filter-active { border: 2px solid #7367f0 !important; box-shadow: 0 0 0 3px rgba(115,103,240,.15) !important; }
+        #card-unapproved-users.filter-active { border: 2px solid #ea5455 !important; box-shadow: 0 0 0 3px rgba(234,84,85,.15) !important; }
+        #card-new-users.filter-active      { border: 2px solid #ff9f43 !important; box-shadow: 0 0 0 3px rgba(255,159,67,.18) !important; }
+
+        #card-active-users.filter-active .stat-icon-module     { background: rgba(40,199,111,.30) !important; }
+        #card-inactive-users.filter-active .stat-icon-module   { background: rgba(105,108,117,.28) !important; }
+        #card-approved-users.filter-active .stat-icon-module   { background: rgba(115,103,240,.28) !important; }
+        #card-unapproved-users.filter-active .stat-icon-module { background: rgba(234,84,85,.28) !important; }
+        #card-new-users.filter-active .stat-icon-module        { background: rgba(255,159,67,.35) !important; }
+
+        /* Disabled dimming when new-users filter is active */
+        .stat-card-clickable.filter-locked { opacity: .42; pointer-events: none; }
+        #card-new-users.filter-active {
+            border: 2px solid #ff9f43 !important;
+            box-shadow: 0 0 0 3px rgba(255,159,67,.18) !important;
+        }
+        #card-new-users.filter-active .stat-icon-module {
+            background: rgba(255,159,67,.35) !important;
+        }
     </style>
 
 </head>
@@ -170,6 +196,7 @@ $pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 10
             </div>
             <div><br></div>
             <div class="row mb-4">
+                <!-- Total (non-clickable) -->
                 <div class="col-12 col-sm-6 col-lg-2 mb-3 mb-lg-0">
                     <div class="card customers-stats-card h-100">
                         <div class="card-body">
@@ -187,8 +214,10 @@ $pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 10
                         </div>
                     </div>
                 </div>
+
+                <!-- Active Users (clickable) -->
                 <div class="col-12 col-sm-6 col-lg-2 mb-3 mb-lg-0">
-                    <div class="card customers-stats-card h-100">
+                    <div class="card customers-stats-card stat-card-clickable h-100" id="card-active-users" onclick="cdp_toggleFilter('active')">
                         <div class="card-body">
                             <div class="stat-top">
                                 <h6 class="stat-title"><?php echo isset($lang['filter84']) ? $lang['filter84'] : 'Activos'; ?></h6>
@@ -198,31 +227,43 @@ $pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 10
                             </div>
                             <h4 class="stat-value"><?php echo number_format($stats_active); ?></h4>
                             <?php if ($stats_total > 0): ?>
-                                <span class="stat-badge text-success">(<?php echo $pct_active; ?>%)</span>
+                                <span class="stat-badge text-success" id="badge-active-users"></span>
                             <?php endif; ?>
-                            <p class="stat-label"><?php echo isset($lang['filter84']) ? $lang['filter84'] : 'Cuentas activas'; ?></p>
+                            <p class="stat-label">
+                                <?php echo isset($lang['filter84']) ? $lang['filter84'] : 'Cuentas activas'; ?>
+                                <span id="filter-badge-active" style="display:none;" class="badge badge-success text-white ms-1">Active</span>
+                            </p>
+                            <span class="stat-card-hint">Click to filter</span>
                         </div>
                     </div>
                 </div>
+
+                <!-- Inactive Users (clickable) -->
                 <div class="col-12 col-sm-6 col-lg-2 mb-3 mb-lg-0">
-                    <div class="card customers-stats-card h-100">
+                    <div class="card customers-stats-card stat-card-clickable h-100" id="card-inactive-users" onclick="cdp_toggleFilter('inactive')">
                         <div class="card-body">
                             <div class="stat-top">
                                 <h6 class="stat-title"><?php echo isset($lang['filter85']) ? $lang['filter85'] : 'Inactivos'; ?></h6>
                                 <div class="stat-icon-module bg-label-secondary">
-                                <iconify-icon icon="solar:user-minus-linear"></iconify-icon>
+                                    <iconify-icon icon="solar:user-minus-linear"></iconify-icon>
                                 </div>
                             </div>
                             <h4 class="stat-value"><?php echo number_format($stats_inactive); ?></h4>
                             <?php if ($stats_total > 0): ?>
-                                <span class="stat-badge text-danger">(<?php echo $pct_inactive; ?>%)</span>
+                                <span class="stat-badge text-danger" id="badge-inactive-users"></span>
                             <?php endif; ?>
-                            <p class="stat-label"><?php echo isset($lang['filter85']) ? $lang['filter85'] : 'Cuentas inactivas'; ?></p>
+                            <p class="stat-label">
+                                <?php echo isset($lang['filter85']) ? $lang['filter85'] : 'Cuentas inactivas'; ?>
+                                <span id="filter-badge-inactive" style="display:none;" class="badge badge-secondary text-white ms-1">Active</span>
+                            </p>
+                            <span class="stat-card-hint">Click to filter</span>
                         </div>
                     </div>
                 </div>
+
+                <!-- Approved Users (clickable) -->
                 <div class="col-12 col-sm-6 col-lg-2 mb-3 mb-lg-0">
-                    <div class="card customers-stats-card h-100">
+                    <div class="card customers-stats-card stat-card-clickable h-100" id="card-approved-users" onclick="cdp_toggleFilter('approved')">
                         <div class="card-body">
                             <div class="stat-top">
                                 <h6 class="stat-title">Approved Users</h6>
@@ -232,43 +273,59 @@ $pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 10
                             </div>
                             <h4 class="stat-value"><?php echo number_format($stats_approve); ?></h4>
                             <?php if ($stats_total > 0): ?>
-                                <span class="stat-badge text-success">(<?php echo $pct_approve; ?>%)</span>
+                                <span class="stat-badge text-primary" id="badge-approved-users"></span>
                             <?php endif; ?>
-                            <p class="stat-label">Approved Users</p>
+                            <p class="stat-label">
+                                Approved accounts
+                                <span id="filter-badge-approved" style="display:none;" class="badge badge-primary text-white ms-1">Active</span>
+                            </p>
+                            <span class="stat-card-hint">Click to filter</span>
                         </div>
                     </div>
                 </div>
+
+                <!-- Unapproved Users (clickable) -->
                 <div class="col-12 col-sm-6 col-lg-2 mb-3 mb-lg-0">
-                    <div class="card customers-stats-card h-100">
+                    <div class="card customers-stats-card stat-card-clickable h-100" id="card-unapproved-users" onclick="cdp_toggleFilter('unapproved')">
                         <div class="card-body">
                             <div class="stat-top">
                                 <h6 class="stat-title">Unapproved Users</h6>
                                 <div class="stat-icon-module bg-label-danger">
-                                    <iconify-icon icon="solar:user-minus-linear"></iconify-icon>
+                                    <iconify-icon icon="solar:user-block-linear"></iconify-icon>
                                 </div>
                             </div>
                             <h4 class="stat-value"><?php echo number_format($stats_unapprove); ?></h4>
                             <?php if ($stats_total > 0): ?>
-                                <span class="stat-badge text-success">(<?php echo $pct_unapprove; ?>%)</span>
+                                <span class="stat-badge text-danger" id="badge-unapproved-users"></span>
                             <?php endif; ?>
-                            <p class="stat-label">Unapproved Users</p>
+                            <p class="stat-label">
+                                Pending approval
+                                <span id="filter-badge-unapproved" style="display:none;" class="badge badge-danger text-white ms-1">Active</span>
+                            </p>
+                            <span class="stat-card-hint">Click to filter</span>
                         </div>
                     </div>
                 </div>
+
+                <!-- New Users / Last 30 days (clickable) -->
                 <div class="col-12 col-sm-6 col-lg-2 mb-3 mb-lg-0">
-                    <div class="card customers-stats-card h-100">
+                    <div class="card customers-stats-card stat-card-clickable h-100" id="card-new-users" onclick="cdp_toggleNewFilter()">
                         <div class="card-body">
                             <div class="stat-top">
-                                <h6 class="stat-title">News</h6>
+                                <h6 class="stat-title">New Users</h6>
                                 <div class="stat-icon-module bg-label-warning">
                                     <iconify-icon icon="solar:user-heart-linear"></iconify-icon>
                                 </div>
                             </div>
                             <h4 class="stat-value"><?php echo number_format($stats_new); ?></h4>
                             <?php if ($stats_total > 0): ?>
-                                <span class="stat-badge text-success">(<?php echo $pct_new; ?>%)</span>
+                                <span class="stat-badge text-warning" id="badge-new-users"></span>
                             <?php endif; ?>
-                            <p class="stat-label">Last 30 days</p>
+                            <p class="stat-label">
+                                Last 30 days
+                                <span id="new-filter-badge" style="display:none;" class="badge badge-warning text-white ms-1">Active</span>
+                            </p>
+                            <span class="stat-card-hint">Click to filter</span>
                         </div>
                     </div>
                 </div>
@@ -283,45 +340,34 @@ $pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 10
                             start Contact
                         ---------------- -->
                     <div class="card card-body">
-                        
-
-                      <div class="row">
-                            <div class="col-md-8 col-xl-4">
-                                <div class="col-sm-12 col-md-6 pull-right m-b-1">
-                                    <div class="input-group input-group">
-                                        <div class="input-group-append">
-                                            <button type="submit" class="btn btn-danger"><iconify-icon icon="solar:magnifer-linear"></iconify-icon></button>
-                                        </div>
-                                        <input type="text" name="search" id="search" class="form-control input-sm float-right" placeholder="<?php echo $lang['filter82']; ?>" onkeyup="cdp_load(1);">
+                        <div class="row align-items-center g-2">
+                            <!-- Search Input -->
+                            <div class="col-sm-12 col-md-6 col-xl-7">
+                                <div class="input-group">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-danger">
+                                            <iconify-icon icon="solar:magnifer-linear"></iconify-icon>
+                                        </button>
                                     </div>
-                                </div><!-- /.col -->
-
-                                <div class="col-sm-12 col-md-6 pull-right m-b-1 mb-2"> <!-- Agregado mb-2 para el espacio -->
-                                    <div class="input-group">
-                                        <select onchange="cdp_load(1);" class="form-control custom-select" id="filterby" name="filterby">
-                                            <option value="0"><?php echo $lang['filter83']; ?></option>
-                                            <option value="1"><?php echo $lang['filter84']; ?></option>
-                                            <option value="2"><?php echo $lang['filter85']; ?></option>
-                                        </select>
-                                    </div>
-                                </div>   
+                                    <input type="text" name="search" id="search" class="form-control" placeholder="<?php echo $lang['filter82']; ?>" onkeyup="cdp_load(1);">
+                                </div>
                             </div>
-                        <div
-                          class="
-                            col-md-4 col-xl-4
-                            text-end
-                            d-flex
-                            justify-content-md-end justify-content-center
-                            mt-3 mt-md-0
-                          "
-                        >
-                          <a href="customers_add.php" id="btn-add-contact" class="btn btn-danger">
-                            <i data-feather="users" class="feather-sm fill-white me-1"> </i>
-                            <?php echo $lang['rolesp47']; ?></a
-                          >
+
+                            <!-- Hidden filter states -->
+                            <input type="hidden" id="filterby_active" value="0">
+                            <input type="hidden" id="filterby_approve" value="0">
+                            <input type="hidden" id="filterby_new" value="0">
+
+                            <!-- Action Button -->
+                            <div class="col-sm-12 col-md-6 col-xl-5 text-md-end text-center mt-2 mt-md-0">
+                                <a href="customers_add.php" id="btn-add-contact" class="btn btn-danger w-100 w-md-auto">
+                                    <i data-feather="users" class="feather-sm fill-white me-1"></i>
+                                    <?php echo $lang['rolesp47']; ?>
+                                </a>
+                            </div>
                         </div>
-                      </div>
                     </div>
+
                     <!-- ---------------------
                                 end Contact
                         ---------------- -->
