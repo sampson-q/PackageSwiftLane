@@ -380,14 +380,14 @@ $lang = array(
 	"validation-js-7" => "The discount cannot be greater than the subtotal",
 	"validation-js-8" => "Discount cannot be less than 0",
 
-	"validation-js-9" => "Enter description",
-	"validation-js-10" => "Enter amount",
-	"validation-js-11" => "Enter weight",
-	"validation-js-12" => "Enter long",
-	"validation-js-13" => "Enter width",
-	"validation-js-14" => "Enter height",
-	"validation-js-15" => "Enter fixed charge value",
-	"validation-js-16" => "Enter declared value",
+	"validation-js-9" => "Enter Description",
+	"validation-js-10" => "Enter Amount",
+	"validation-js-11" => "Enter Weight",
+	"validation-js-12" => "Enter Long",
+	"validation-js-13" => "Enter Width",
+	"validation-js-14" => "Enter Height",
+	"validation-js-15" => "Enter Fixed Charge Value",
+	"validation-js-16" => "Enter Declared Value",
 
 	"message_error_consolidate_add_packages" => "Error! This package is already selected in the list.",
 
@@ -1265,7 +1265,7 @@ $lang = array(
 	"left211" => "Package Category",
 	"left212" => "Package Information",
 	"left213" => "Description",
-	"left214" => "Amount",
+	"left214" => "Qty",
 	"left21550" => "Update Status",
 	"left21551" => "the tracking number",
     "left21552" => "the locker id",
@@ -2791,7 +2791,7 @@ $lang = array(
 	"filter3" => "User Management",
 	"filter4" => "Edit Client",
 	"filter5" => "Add Client",
-	"filter6" => "Client management",
+	"filter6" => "Client Management",
 	"filter7" => "System Settings",
 	"filter8" => "Database maintenance",
 	"filter9" => "System Maintenance",
@@ -2809,7 +2809,7 @@ $lang = array(
 	"filter21" => "Create container",
 	"filter22" => "Add container",
 	"filter23" => "Container",
-	"filter24" => "Add messenger",
+	"filter24" => "Add Messenger",
 	"filter26" => "Edit Shipments",
 	"filter27" => "Edit Container",
 	"filter28" => "Status shipments",
@@ -3642,5 +3642,7 @@ $lang = array(
     //package details update
     'packager' => "Account Name",
     "contents" => "Contents",
+
+    'customTracking' => "Custom Tracking",
 
 );
