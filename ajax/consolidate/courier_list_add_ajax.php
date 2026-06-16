@@ -42,16 +42,16 @@ if ($search != null) {
 
 	$sWhere .= " and  CONCAT(a.order_prefix,a.order_no) LIKE '%" . $search . "%'";
 }
-// if ($status_courier > 0) {
+if ($status_courier > 0) {
 
-// 	$sWhere .= " and  a.status_courier = '" . $status_courier . "'";
-// }
+	$sWhere .= " and  a.status_courier = '" . $status_courier . "'";
+}
 
 
 
 // // pagination variables
 $page = (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) ? $_REQUEST['page'] : 1;
-$per_page = 5; //how much records you want to show
+$per_page = (isset($_REQUEST['per_page']) && in_array((int)$_REQUEST['per_page'], [50, 100])) ? (int)$_REQUEST['per_page'] : 50; //how much records you want to show
 $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
@@ -85,7 +85,6 @@ if ($numrows > 0) { ?>
 					<th><b><?php echo 'Contents' ?></b></th>
 					<th><b><?php echo $lang['left215'] ?></b></th>
 					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
-					<th><b><?php echo $lang['ship-all5'] ?></b></th>
 					<th class="text-right"><button class="btn btn-primary btn-xs" id="add_all">Add All</button></th>
 				</tr>
 			</thead>
@@ -186,10 +185,6 @@ if ($numrows > 0) { ?>
 								?>
 							</td>
 
-							<td>
-								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
-							</td>
-
 							<td class="text-right">
 								<button type="button" name="add_row" id="add_row" 
 									onclick="cdp_add_item('<?php echo $row->order_id; ?>','<?php echo $total_metric; ?>', '<?php echo $weight; ?>', '<?php echo $length; ?>', '<?php echo $width; ?>', '<?php echo $height; ?>', '<?php echo $tracking; ?>', '<?php echo $row->order_no; ?>','<?php echo $row->order_prefix; ?>', '<?php echo $sender->fname . ' ' . $sender->lname; ?>', '<?php echo $description->order_item_description; ?>', '<?php echo cdb_money_format(($row->total_order)); ?>', '<?php echo $quantity->order_item_quantity; ?>'); 
@@ -206,6 +201,11 @@ if ($numrows > 0) { ?>
 			</tbody>
 
 		</table>
+
+		<div class="pull-right">
+			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, ''); ?>
+		</div>
+		<div class="clearfix"></div>
 
 		<script>
 			var count = 0;
