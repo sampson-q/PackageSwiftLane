@@ -1,6 +1,6 @@
 <?php
 $userData = $user->cdp_getUserData();
-$statusrow = $core->cdp_getStatusMultiple(1, 4, 15, 16, 23, 32, 33);
+$statusrow = $core->cdp_getStatusMultiple(1, 4, 8, 15, 16, 23, 32, 33);
 
 // $warehouse_status_ids = [1, 4, 16, 32, 33];
 // $statusrow = array_filter($statusrow, function($row) use ($warehouse_status_ids) {
