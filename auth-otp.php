@@ -18,6 +18,11 @@ $otpRedirect = 'index.php';
 $sessionKey  = 'otp_' . $flow . '_challenge';
 $challengeId = isset($_SESSION[$sessionKey]) ? (int) $_SESSION[$sessionKey] : 0;
 
+// Passed to JS so the timer can resume correctly after a page reload/resend
+// Holds the Unix timestamp (seconds) when the current challenge was created,
+// or 0 if there is no active challenge yet.
+$challengeCreatedAt = 0;
+
 /**
  * Move a file from the temp folder to the real uploads folder.
  * Returns the final relative path, or '' if no temp file was set.
@@ -58,15 +63,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($flow === 'signup' && !empty($_SESSION['pending_signup'])) {
             $pending   = $_SESSION['pending_signup'];
             $challenge = $otp->createChallenge(0, 'signup', ['email' => $pending['email']]);
-            $_SESSION[$sessionKey] = $challenge['id'];
-            $challengeId = $challenge['id'];
-            $otp->sendOtpEmail(
-                $pending['email'],
-                $pending['fname'] . ' ' . $pending['lname'],
-                $challenge['code'],
-                'signup'
-            );
-            $message = 'A new OTP has been sent.';
+
+            if (!empty($challenge['blocked'])) {
+                $error = $challenge['error'];
+            } else {
+                $_SESSION[$sessionKey] = $challenge['id'];
+                $challengeId           = $challenge['id'];
+                $otp->sendOtpEmail(
+                    $pending['email'],
+                    $pending['fname'] . ' ' . $pending['lname'],
+                    $challenge['code'],
+                    'signup'
+                );
+                $message = 'A new OTP has been sent.';
+            }
 
         } elseif ($challengeId > 0) {
             $db->cdp_query("SELECT user_id FROM cdb_auth_otp_challenges WHERE id=:id LIMIT 1");
@@ -85,14 +95,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $challenge = $otp->createChallenge($u->id, $flow, [
                     'remember_me' => !empty($_SESSION['otp_login_remember']),
                 ]);
-                $_SESSION[$sessionKey] = $challenge['id'];
-                $challengeId = $challenge['id'];
 
-                $purpose = ($flow === 'forgot') ? 'password reset' : $flow;
-                $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $purpose);
-                $otp->sendOtpWhatsApp($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $purpose);
+                if (!empty($challenge['blocked'])) {
+                    $error = $challenge['error'];
+                } else {
+                    $_SESSION[$sessionKey] = $challenge['id'];
+                    $challengeId           = $challenge['id'];
 
-                $message = 'A new OTP has been sent to your email and WhatsApp.';
+                    $purpose = ($flow === 'forgot') ? 'password reset' : $flow;
+                    $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $purpose);
+                    $otp->sendOtpWhatsApp($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $purpose);
+
+                    $message = 'A new OTP has been sent to your email and WhatsApp.';
+                }
             }
         }
 
@@ -138,10 +153,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $db->cdp_query('INSERT INTO cdb_users
                         (username, password, locker, userlevel, email, fname, lname,
-                         document_number, document_type, created, phone, active, terms, avatar, document_photo)
+                         document_number, document_type, created, phone, active, terms, avatar, document_photo, company)
                         VALUES
                         (:username, :password, :locker, :userlevel, :email, :fname, :lname,
-                         :document_number, :document_type, :created, :phone, :active, :terms, :avatar, :document_photo)');
+                         :document_number, :document_type, :created, :phone, :active, :terms, :avatar, :document_photo, :company)');
 
                     $db->bind(':username',        $pending['username']);
                     $db->bind(':password',        $pending['password']);
@@ -158,6 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->bind(':terms',           $pending['terms']);
                     $db->bind(':avatar',          '../' . $avatarPath);
                     $db->bind(':document_photo',  '../' . $documentPhotoPath);
+                    $db->bind(':company',         $pending['company']);
                     $db->cdp_execute();
 
                     $user_created_id = $db->dbh->lastInsertId();
@@ -200,6 +216,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// ── Fetch the created_at of the active challenge so the JS timer can resume ──
+if ($challengeId > 0) {
+    $db->cdp_query("SELECT created_at FROM cdb_auth_otp_challenges
+        WHERE id=:id AND status='pending' LIMIT 1");
+    $db->bind(':id', $challengeId);
+    $activeChallenge = $db->cdp_registro();
+    if ($activeChallenge) {
+        $challengeCreatedAt = strtotime($activeChallenge->created_at);
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -240,6 +267,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .otp-box.filled {
             border-color: #336aea;
+        }
+        #resend-timer {
+            font-size: 0.82rem;
+            color: #6c757d;
+            margin-top: 6px;
+        }
+        #resendBtn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -342,7 +379,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                     <div class="col-12 text-center">
                                         <p class="mb-0 mt-3">
-                                            <button type="submit" name="resend" value="1" class="btn btn-link p-0 text-dark fw-bold align-baseline">Resend code</button>
+                                            <button type="submit" name="resend" value="1"
+                                                class="btn btn-link p-0 text-dark fw-bold align-baseline"
+                                                id="resendBtn" disabled>
+                                                Resend code
+                                            </button>
+                                        </p>
+                                        <p id="resend-timer" style="display:none;">
+                                            You can request a new code in <strong id="timer-countdown"></strong>
                                         </p>
                                     </div>
                                 </div>
@@ -363,12 +407,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
     (function () {
-        /**
-         * Wire up a group of single-digit boxes so they behave as one OTP input.
-         *
-         * @param {string} containerId  - id of the wrapper element (WITHOUT #)
-         * @param {string} hiddenId     - id of the hidden <input> to sync into (WITHOUT #)
-         */
         function initOtpBoxes(containerId, hiddenId) {
             var $boxes  = $('#' + containerId + ' .otp-box');
             var $hidden = $('#' + hiddenId);
@@ -424,7 +462,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         }
 
-        // ── Modal OTP boxes (used elsewhere in the app) ────────────────────────
         if ($('#force_otp_boxes').length) {
             initOtpBoxes('force_otp_boxes', 'force_phone_otp_code');
             $('#userUpdatePhoneOtp').on('show.bs.modal', function () {
@@ -434,27 +471,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         }
 
-        // ── Standalone OTP page ────────────────────────────────────────────────
         if ($('#otp_boxes').length) {
-            /*
-             * FIX: the hidden input now has id="otp_code_hidden" so we pass a plain
-             * ID here instead of the attribute-selector string that was used before.
-             * The old code passed "input[name='otp_code']" as the second argument but
-             * initOtpBoxes prepends '#' to it — meaning jQuery looked for
-             * #input[name='otp_code'] which never matches anything, so syncHidden()
-             * silently wrote to nothing and the field was always empty on submit.
-             */
             initOtpBoxes('otp_boxes', 'otp_code_hidden');
 
-            // Belt-and-suspenders: also sync immediately before the form is submitted
             $('#otp-form').on('submit', function () {
                 var val = $('#otp_boxes .otp-box').map(function () { return $(this).val(); }).get().join('');
                 $('#otp_code_hidden').val(val);
             });
 
-            // Focus first box on page load
             setTimeout(function () { $('#otp_boxes .otp-box').first().focus(); }, 100);
         }
+
+        // ── Resend cooldown timer ─────────────────────────────────────────────
+        // The server tells us when the active challenge was created (Unix seconds).
+        // From that we derive the exact moment the 4-minute cooldown expires and
+        // count down to it — so the timer survives page reloads perfectly.
+        var COOLDOWN_SEC     = 240; // must match createChallenge() rate-limit window
+        var challengeCreated = <?php echo (int) $challengeCreatedAt; ?>; // 0 if none
+
+        var $resendBtn   = $('#resendBtn');
+        var $timerWrap   = $('#resend-timer');
+        var $countdown   = $('#timer-countdown');
+        var _interval    = null;
+
+        function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+        function startCountdown(endTimeSec) {
+            clearInterval(_interval);
+            $resendBtn.prop('disabled', true);
+            $timerWrap.show();
+
+            _interval = setInterval(function () {
+                var remaining = endTimeSec - Math.floor(Date.now() / 1000);
+
+                if (remaining <= 0) {
+                    clearInterval(_interval);
+                    $resendBtn.prop('disabled', false);
+                    $timerWrap.hide();
+                    return;
+                }
+
+                var m = Math.floor(remaining / 60);
+                var s = remaining % 60;
+                $countdown.text(m + ':' + pad(s));
+            }, 500);
+
+            // Tick immediately so there is no 500 ms blank flash
+            var r = endTimeSec - Math.floor(Date.now() / 1000);
+            if (r > 0) {
+                $countdown.text(Math.floor(r / 60) + ':' + pad(r % 60));
+            }
+        }
+
+        if (challengeCreated > 0) {
+            var endTimeSec = challengeCreated + COOLDOWN_SEC;
+            var nowSec     = Math.floor(Date.now() / 1000);
+
+            if (endTimeSec > nowSec) {
+                // Cooldown still running — resume from the real remaining time
+                startCountdown(endTimeSec);
+            } else {
+                // Cooldown already expired — button is immediately available
+                $resendBtn.prop('disabled', false);
+                $timerWrap.hide();
+            }
+        } else {
+            // No active challenge (page arrived without one) — button stays disabled
+            // until a challenge exists; nothing to count down to
+            $resendBtn.prop('disabled', true);
+            $timerWrap.hide();
+        }
+
     })();
     </script>
 
