@@ -131,19 +131,14 @@ if ($numrows > 0) { ?>
 					<?php
 					}
 					?>
-					<th><b><?php echo $lang['ltracking'] ?></b></th>
+					<th><b><?php echo 'Swift Tracking' ?></b></th>
+					<th><b><?php echo 'Tracking' ?></b></th>
 					<th><b><?php echo $lang['ddate'] ?></b></th>
 					<?php
 					if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
 						<th><b><?php echo $lang['left498'] ?></b></th>
-
 					<?php } ?>
 					<th><b><?php echo $lang['left499'] ?></b></th>
-
-					<?php
-					if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-						<th><b><?php echo $lang['lorigin'] ?></b></th>
-					<?php } ?>
 
 					<th><b><?php echo $lang['ldestination'] ?></b></th>
 					<th><b><?php echo $lang['lpayment'] ?></b></th>
@@ -199,6 +194,7 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_styles where id= '13'");
 						$status_style_consolidate = $db->cdp_registro();
 
+                        $postal_tracking = cdp_getPackageTrackingLegacyAware((int) $row->order_id);
 
 						if ($row->status_invoice == 1) {
 
@@ -251,6 +247,7 @@ if ($numrows > 0) { ?>
 								</td>
 							<?php } ?>
 							<td><b><a href="courier_view.php?id=<?php echo $row->order_id; ?>"><?php echo $row->order_prefix . $row->order_no; ?></a></b></td>
+							<td><?php echo $postal_tracking->tracking_number; ?></td>
 							<td>
 								<?php echo $row->order_date; ?>
 							</td>
@@ -263,11 +260,6 @@ if ($numrows > 0) { ?>
 							<td>
 								<?php echo $receiver_data->fname; ?> <?php echo $receiver_data->lname; ?>
 							</td>
-
-							<?php
-							if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-								<td><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
-							<?php } ?>
 
 							<td><?php echo $recipient_type == 'user' ? $address_order->sender_country : $address_order->recipient_country; ?>-<?php echo $recipient_type == 'user' ? $address_order->sender_city : $address_order->recipient_city; ?></td>
 
