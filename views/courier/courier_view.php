@@ -448,6 +448,15 @@ if ($row_order->status_invoice == 1) {
                                             </p>
                                         </div>
                                     </div>
+                                    
+                                    <div class=" col-sm-12 col-md-4 mb-2">
+                                        <div class="">
+                                            <h5> &nbsp;<b><?php echo 'Notes' ?></b></h5>
+                                            <p class="text-muted  m-l-5">
+                                                <?php echo $row_order->courier_notes != null ? $row_order->courier_notes : 'N/A'; ?>
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <div class="row">
@@ -638,7 +647,7 @@ if ($row_order->status_invoice == 1) {
 
                                         <div class=" col-sm-12 col-md-4 mb-2">
                                             <div class="">
-                                                <h5> &nbsp;<b> <?php echo $lang['leftorder52'] ?></b></h5>
+                                                <h5> &nbsp;<b> <?php echo 'Recipient Name' ?></b></h5>
                                                 <p class="text-muted  m-l-5"><?php echo $user_delivered->fname . ' ' . $user_delivered->lname; ?></p>
                                             </div>
                                         </div>
@@ -657,15 +666,15 @@ if ($row_order->status_invoice == 1) {
                                     <div class="row">
                                         <div class=" col-sm-12 col-md-6 mb-2">
                                             <h5> &nbsp;<b> <?php echo $lang['leftorder54'] ?></b></h5>
-                                            <img src="doc_signs/shipments_courier/<?php echo $row_order->order_id; ?>.png" style="max-width:100%;width:auto;height:auto;">
+                                            <img src="doc_signs/shipments_courier/<?php echo $row_order->order_id; ?>.png" style="max-width:50%;width:auto;height:auto;">
                                         </div>
                                         <?php
 
                                         if (!empty($row_order->photo_delivered)) { ?>
 
                                             <div class=" col-sm-12 col-md-6 mb-2">
-                                                <h5> &nbsp;<b> <?php echo $lang['leftorder55'] ?></b></h5>
-                                                <img src="<?php echo $row_order->photo_delivered; ?>" width="400" height="250" style="max-width:100%;width:auto;height:auto;">
+                                                <h5> &nbsp;<b> <?php echo 'Delivery Image' ?></b></h5>
+                                                <img src="<?php echo $row_order->photo_delivered; ?>" width="400" height="250" style="max-width:50%;width:auto;height:auto;">
                                             </div>
                                         <?php
                                         } ?>
@@ -993,12 +1002,10 @@ if ($row_order->status_invoice == 1) {
                                             <tr>
                                                 <th><b><?php echo $lang['left214'] ?></b></th>      <!-- Cantidad -->
                                                 <th><b><?php echo $lang['left213'] ?></b></th>      <!-- Descripción -->
-                                                <th><b></b></th>
+                                                <th><b>Pricing mode</b></th>
                                                 <th><b><?php echo $lang['left215'] ?></b></th>      <!-- Peso -->
-                                                <th><b><?php echo $lang['left216'] ?></b></th>      <!-- Largo -->
-                                                <th><b><?php echo $lang['left217'] ?></b></th>      <!-- Ancho -->
-                                                <th><b><?php echo $lang['left218'] ?></b></th>      <!-- Alto -->
-                                                <th><b><?php echo $lang['left219'] ?></b></th>      <!-- Peso vol. (pieza) -->
+                                                <th><b>Custom Price</b></th>
+                                                <th><b>Line Total</b></th>
                                                 <th><b><?php echo $lang['left231c9'] ?></b></th>    <!-- Cargo fijo -->
                                                 <th><b><?php echo $lang['left239'] ?></b></th>      <!-- Valor declarado -->
                                             </tr>
@@ -1013,7 +1020,8 @@ if ($row_order->status_invoice == 1) {
                                                 $sumador_fixed_charge    = 0.0; // suma cargos fijos
                                                 $max_fixed_charge        = 0.0; // mismo que arriba, para total
                                                 $sumador_libras          = 0.0; // peso real total
-                                                $sumador_volumetric      = 0.0; // peso volumétrico total
+                                                $sumador_volumetric      = 0.0; // volumétrico retirado (siempre 0)
+                                                $base_packages           = 0.0; // base de paquetes en USD (peso*tarifa + precio personalizado)
                                                 $total_impuesto          = 0.0;
                                                 $total_seguro            = 0.0;
                                                 $total_peso              = 0.0;
@@ -1044,33 +1052,40 @@ if ($row_order->status_invoice == 1) {
                                                         $qty = 1;
                                                     }
 
-                                                    $description_item = $row_order_item->order_item_description;
-                                                    $weight_item      = (float) $row_order_item->order_item_weight;
-                                                    $length_item      = (float) $row_order_item->order_item_length;
-                                                    $width_item       = (float) $row_order_item->order_item_width;
-                                                    $height_item      = (float) $row_order_item->order_item_height;
+                                                    $description_item  = $row_order_item->order_item_description;
+                                                    $weight_item       = (float) $row_order_item->order_item_weight;
+                                                    $custom_price_item = isset($row_order_item->custom_price) ? (float) $row_order_item->custom_price : 0.0;
+                                                    $use_custom_item   = $custom_price_item > 0 ? 1 : 0;
 
-                                                    // Peso volumétrico por pieza
-                                                    $total_metric = ($length_item * $width_item * $height_item) / $meter;
-                                                    $total_metric = round($total_metric, 2);
+                                                    // Per-item line total in USD (mirrors computeLineTotal in the JS):
+                                                    //   weight item -> weight * qty * rate ; custom item -> custom_price * qty
+                                                    if ($use_custom_item) {
+                                                        $line_total_item = $custom_price_item * $qty;
+                                                    } else {
+                                                        $line_total_item = $weight_item * $qty * $price_lb;
+                                                    }
 
-                                                    // Acumulados (igual que en JS/PHP de alta)
+                                                    // Acumulados
                                                     $sumador_libras          += $weight_item * $qty;
-                                                    $sumador_volumetric      += $total_metric * $qty;
+                                                    $base_packages           += $line_total_item;
                                                     $sumador_valor_declarado += (float)$row_order_item->order_item_declared_value * $qty;
                                                     $sumador_fixed_charge    += (float)$row_order_item->order_item_fixed_value * $qty;
                                                     $max_fixed_charge        += (float)$row_order_item->order_item_fixed_value * $qty;
                                             ?>
 
                                                     <tr class="card-hover">
-                                                        <td><?php echo $row_order_item->order_item_quantity; ?></td>
+                                                        <td><?php echo (int) $row_order_item->order_item_quantity; ?></td>
                                                         <td><?php echo $description_item; ?></td>
-                                                        <td></td>
-                                                        <td><?php echo $weight_item; ?></td>
-                                                        <td><?php echo $row_order_item->order_item_length; ?></td>
-                                                        <td><?php echo $row_order_item->order_item_width; ?></td>
-                                                        <td><?php echo $row_order_item->order_item_height; ?></td>
-                                                        <td><?php echo $total_metric; ?></td>
+                                                        <td>
+                                                            <?php if ($use_custom_item) { ?>
+                                                                <span class="badge badge-success">Custom</span>
+                                                            <?php } else { ?>
+                                                                <span class="badge badge-dark">Weight</span>
+                                                            <?php } ?>
+                                                        </td>
+                                                        <td><?php echo $use_custom_item ? '—' : $weight_item; ?></td>
+                                                        <td class="text-center"><?php echo $use_custom_item ? number_format($custom_price_item, 2) : '—'; ?></td>
+                                                        <td class="text-center"><?php echo number_format($line_total_item, 2); ?></td>
                                                         <td class="text-center"><?php echo $row_order_item->order_item_fixed_value; ?></td>
                                                         <td class="text-center"><?php echo $row_order_item->order_item_declared_value; ?></td>
                                                     </tr>
@@ -1080,14 +1095,14 @@ if ($row_order->status_invoice == 1) {
                                                 // ====== POST-PROCESO DE SUMAS (igual que en calculateFinalTotal) ======
 
                                                 $sumador_libras     = round($sumador_libras, 2);
-                                                $sumador_volumetric = round($sumador_volumetric, 2);
+                                                $sumador_volumetric = 0.0; // volumétrico retirado
 
-                                                // Peso cobrable = mayor entre real y volumétrico
-                                                $calculate_weight = max($sumador_libras, $sumador_volumetric);
+                                                // Peso cobrable = peso real (volumétrico retirado)
+                                                $calculate_weight = $sumador_libras;
 
-                                                // Flete base: SIEMPRE peso_cobrable * value_weight
-                                                // (el modo manual solo define de dónde sale value_weight, no la fórmula)
-                                                $sumador_total = $calculate_weight * $price_lb;
+                                                // Flete base (USD): suma de líneas por ítem
+                                                // (peso*tarifa para ítems por peso + precio personalizado*qty)
+                                                $sumador_total = round($base_packages, 2);
 
                                                 // Impuesto (IVA o similar)
                                                 if ($sumador_total > $core->min_cost_tax) {
@@ -1099,8 +1114,11 @@ if ($row_order->status_invoice == 1) {
                                                     $total_valor_declarado = $sumador_valor_declarado * ($declared_value_tax / 100);
                                                 }
 
-                                                // Descuento
-                                                $total_descuento = $sumador_total * ($tax_discount / 100);
+                                                // Descuento (porcentaje del base o monto fijo en USD)
+                                                $discount_type = (isset($row_order->discount_type) && $row_order->discount_type === 'amount') ? 'amount' : 'percent';
+                                                $total_descuento = ($discount_type === 'amount')
+                                                    ? $tax_discount
+                                                    : $sumador_total * ($tax_discount / 100);
                                                 if ($tax_discount < 0 || $total_descuento > $sumador_total) {
                                                     $total_descuento = 0;
                                                 }
@@ -1144,59 +1162,38 @@ if ($row_order->status_invoice == 1) {
                                         <tfoot>
                                             <!-- Tarifa por unidad de peso y subtotal -->
                                             <tr class="card-hover">
-                                                <td colspan="3">
+                                                <td colspan="4">
                                                     <b><?php echo $lang['left905'] ?> &nbsp; <?php echo $core->weight_p; ?>:</b>
                                                     <?php echo $row_order->value_weight; ?>
                                                 </td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td colspan="2" class="text-right">
-                                                    <b><?php echo $lang['leftorder2021'] ?></b>
+                                                <td colspan="3" class="text-right">
+                                                    <b><?php echo $lang['leftorder2021'] ?> (USD)</b>
                                                 </td>
                                                 <td class="text-center"><?php echo $sumador_total; ?></td>
                                             </tr>
 
                                             <!-- Peso real y descuento -->
                                             <tr class="card-hover">
-                                                <td colspan="3">
+                                                <td colspan="4">
                                                     <b><?php echo $lang['left232'] ?></b>
                                                     <span id="total_libras">: <?php echo $sumador_libras; ?></span>
                                                 </td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td colspan="2" class="text-right">
-                                                    <b><?php echo $lang['leftorder21'] ?> <?php echo $row_order->tax_discount; ?> <?php echo $lang['leftorder222221'] ?> </b>
+                                                <td colspan="3" class="text-right">
+                                                    <b><?php echo $lang['leftorder21'] ?> <?php echo $row_order->tax_discount; ?> <?php echo (($discount_type ?? 'percent') === 'amount') ? '(' . $core->currency . ')' : $lang['leftorder222221']; ?> </b>
                                                 </td>
                                                 <td class="text-center"><?php echo $total_descuento; ?></td>
                                             </tr>
 
-                                            <!-- Peso volumétrico -->
+                                            <!-- Peso total (items) y peso original del paquete -->
                                             <tr>
-                                                <td colspan="3">
-                                                    <b><?php echo $lang['left234'] ?></b>
-                                                    <span id="total_volumetrico">: <?php echo $sumador_volumetric; ?></span>
+                                                <td colspan="7">
+                                                    <b><?php echo $lang['left236'] ?> <span class="text-muted">(items)</span></b>
+                                                    <span id="total_peso"> : <?php echo $total_peso; ?></span>
+                                                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                                                    <b>Original total weight</b>
+                                                    : <?php echo htmlspecialchars((string) ($row_order->total_weight ?? '—'), ENT_QUOTES, 'UTF-8'); ?>
                                                 </td>
                                                 <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td colspan="3" class="text-right"></td>
-                                            </tr>
-
-                                            <!-- Peso total -->
-                                            <tr>
-                                                <td colspan="3">
-                                                    <b><?php echo $lang['left236'] ?></b>
-                                                    <span id="total_peso"> :<?php echo $total_peso; ?></span>
-                                                </td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td colspan="3" class="text-right"></td>
                                             </tr>
 
                                         </tfoot>
