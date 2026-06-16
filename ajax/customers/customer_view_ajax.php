@@ -74,7 +74,65 @@ if (!$orders) {
     echo '<div class="alert alert-warning">No orders found for this locker.</div>';
     exit;
 }
+
+// ---------------------------------------------------------------------------
+// Total amount payable (GHS) — ONLY packages at "Ready for PickUp" (status 32)
+// count, across all pages. Each such package's stored USD total is converted to
+// GHS and added; the tiered handling fee is added once per consolidation (on
+// the consolidation's combined GHS total) and individually for non-consolidated
+// packages.  e.g. A,B,C,D ready-for-pickup with B+C in one consolidation =>
+//   (A + handling(A)) + (D + handling(D)) + (B + C + handling(B+C))
+// ---------------------------------------------------------------------------
+$rate_ghs = (float) ($core->exchange_rate ?? 1);
+
+$db->cdp_query("SELECT order_id, total_order, status_courier, is_consolidate
+                FROM cdb_add_order WHERE sender_id = :uid");
+$db->bind(':uid', $userId);
+$db->cdp_execute();
+$all_pkgs = $db->cdp_registros();
+
+$payable_ghs_subtotal   = 0.0;      // Σ GHS cost of ready-for-pickup packages
+$payable_handling_total = 0.0;      // handling portion only
+$consolidation_groups   = array();  // consolidate_id => combined GHS cost of its ready-for-pickup packages
+
+$dbc = new Conexion;
+foreach ($all_pkgs as $p) {
+    // Only "Ready for PickUp" packages are payable here.
+    if ((int) $p->status_courier !== CDP_STATUS_READY_FOR_PICKUP) continue;
+
+    $pkg_ghs = cdp_usdToGhs($p->total_order, $rate_ghs);
+    $payable_ghs_subtotal += $pkg_ghs;
+
+    if ((int) $p->is_consolidate === 1) {
+        // Group by consolidation so the handling fee is charged once for B+C.
+        $dbc->cdp_query("SELECT consolidate_id FROM cdb_consolidate_detail WHERE order_id = :oid LIMIT 1");
+        $dbc->bind(':oid', $p->order_id);
+        $dbc->cdp_execute();
+        $crow = $dbc->cdp_registro();
+        $key  = $crow ? ('c' . (int) $crow->consolidate_id) : ('o' . $p->order_id);
+        if (!isset($consolidation_groups[$key])) $consolidation_groups[$key] = 0.0;
+        $consolidation_groups[$key] += $pkg_ghs;
+    } else {
+        // Non-consolidated: handling fee on this package's own GHS total.
+        $payable_handling_total += cdp_handlingFeeGhs($pkg_ghs);
+    }
+}
+// One handling fee per consolidation, on its combined GHS total.
+foreach ($consolidation_groups as $grp_total) {
+    $payable_handling_total += cdp_handlingFeeGhs($grp_total);
+}
+$total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
 ?>
+
+<div class="d-flex justify-content-end mb-2">
+    <div class="text-right rate-box" style="background:#f8f9fa;border-radius:.5rem;padding:.5rem 1rem;border:1px solid #e3e6ea;">
+        <small class="text-muted d-block">Total Amount Payable</small>
+        <span class="h4 mb-0 text-success"><b>GHS <?php echo cdb_money_format_bar($total_amount_payable_ghs); ?></b></span>
+        <?php if ($payable_handling_total > 0): ?>
+            <small class="text-muted d-block">incl. handling fee GHS <?php echo cdb_money_format_bar($payable_handling_total); ?></small>
+        <?php endif; ?>
+    </div>
+</div>
 
 <div class="table-responsive">
     <table id="zero_config" class="table table-condensed table-hover table-striped custom-table-checkbox">
@@ -189,6 +247,9 @@ if (!$orders) {
                         <td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
                         <td>
                             <b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
+                            <?php if ((int) $row->status_courier === CDP_STATUS_READY_FOR_PICKUP): ?>
+                                <br><small class="text-muted" title="A handling fee is included in the total amount payable"><i class="fas fa-info-circle"></i> + handling fee</small>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->mod_style; ?></span>
