@@ -780,6 +780,7 @@ if (isset($_POST["total_item"])) {
                                                     <th></th>
                                                     <th><b><?php echo $lang['ship-all5'] ?></b></th>
                                                     <th></th>
+                                                    <th></th>
                                                 </tr>
                                             </thead>
                                             <tbody id="projects-tbl">
@@ -938,17 +939,19 @@ if (isset($_POST["total_item"])) {
                                                     <td class="text-right" id="total_envio"><?php echo $total_envio; ?></td>
                                                     <td></td>
                                                 </tr>
-                                                <tr class="card-hover">
+                                                <tr class="">
                                                     <td colspan="4" class="text-right"><b>Total Weight:</b></td>
-                                                    <td class="text-center" id="total_weight_sum">0.00</td>
+                                                    <td class="" id="total_weight_sum">0.00</td>
+                                                    <td></td>
                                                     <td></td>
                                                     <td></td>
                                                     <td></td>
                                                 </tr>
-                                                <tr class="card-hover">
-                                                    <td colspan="4" class="text-right"><b>Total Cost:</b></td>
-                                                    <td colspan="2"></td>
-                                                    <td class="text-center" id="total_cost_sum">0.00</td>
+                                                <tr class="">
+                                                    <td></td>
+                                                    <td colspan="5" class="text-right"><b>Total Cost:</b></td>
+                                                    <td id="total_cost_sum">0.00</td>
+                                                    <td></td>
                                                     <td></td>
                                                 </tr>
                                             </tfoot>
