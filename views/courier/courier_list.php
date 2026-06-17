@@ -114,7 +114,7 @@ $statusrow = $core->cdp_getStatusByType(1);
                                     $add_courier_url = ($user->cdp_hasPermission('courier_add_client')) ? "courier_add.php" : "courier_add_client.php";
                                 ?>
 
-                                <div class="col-sm-12 col-md-3 mb-2">
+                                <div class="col-sm-12 col-md-4 mb-2">
                                     <div class="form-group">
                                         <a href="<?php echo $add_courier_url; ?>">
                                             <button type="button" class="btn btn-outline-danger">
@@ -125,17 +125,17 @@ $statusrow = $core->cdp_getStatusByType(1);
                                     </div>
                                 </div>
 
-                                <div class=" col-sm-12 col-md-4 mb-2">
+                                <div class=" col-sm-12 col-md-2 mb-2">
                                     <div class="input-group">
                                         <input type="text" name="search" id="search" class="form-control input-sm float-right" placeholder="<?php echo $lang['left21551'] ?>" onkeyup="cdp_load(1);">
                                         <div class="input-group-append input-sm">
-                                            <button type="submit" class="btn btn-outline-danger"><i class="fa fa-search"></i></button>
+                                            <!-- <button type="submit" class="btn btn-outline-danger"><i class="fa fa-search"></i></button> -->
                                         </div>
 
                                     </div>
                                 </div><!-- /.col -->
 
-                                <div class=" col-sm-12 col-md-3 mb-2">
+                                <div class=" col-sm-12 col-md-2 mb-2">
                                     <div class="input-group">
                                         <select onchange="cdp_load(1);" class="form-control custom-select" id="status_courier" name="status_courier">
                                             <option value="0">--<?php echo $lang['left210'] ?>--</option>

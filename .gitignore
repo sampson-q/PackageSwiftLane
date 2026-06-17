@@ -41,3 +41,8 @@ migrate_v2.php
 loader.php
 
 .gitignore
+
+api/v1/docs/7uERR3XTYWW.md
+doc_signs/
+files/
+sql/
