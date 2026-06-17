@@ -217,10 +217,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// ── Fetch the created_at of the active challenge so the JS timer can resume ──
+// ── Fetch the created_at of the current challenge so the JS timer can resume ──
+// NOTE: no status filter on purpose. The resend cooldown is keyed off when the
+// code was *sent*, which is what the server rate-limit enforces too — so even
+// after the code expires or the challenge gets locked, the timer must keep
+// counting down and then re-enable Resend, instead of leaving it stuck disabled.
 if ($challengeId > 0) {
     $db->cdp_query("SELECT created_at FROM cdb_auth_otp_challenges
-        WHERE id=:id AND status='pending' LIMIT 1");
+        WHERE id=:id LIMIT 1");
     $db->bind(':id', $challengeId);
     $activeChallenge = $db->cdp_registro();
     if ($activeChallenge) {
@@ -484,9 +488,9 @@ if ($challengeId > 0) {
 
         // ── Resend cooldown timer ─────────────────────────────────────────────
         // The server tells us when the active challenge was created (Unix seconds).
-        // From that we derive the exact moment the 4-minute cooldown expires and
+        // From that we derive the exact moment the 1-minute cooldown expires and
         // count down to it — so the timer survives page reloads perfectly.
-        var COOLDOWN_SEC     = 240; // must match createChallenge() rate-limit window
+        var COOLDOWN_SEC     = 60; // must match createChallenge() rate-limit window
         var challengeCreated = <?php echo (int) $challengeCreatedAt; ?>; // 0 if none
 
         var $resendBtn   = $('#resendBtn');
