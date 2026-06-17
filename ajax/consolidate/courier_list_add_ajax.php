@@ -33,25 +33,18 @@ $core = new Core;
 $userData = $user->cdp_getUserData();
 
 $search = cdp_sanitize($_REQUEST['search']);
-$status_courier = intval($_REQUEST['status_courier']);
 
 $sWhere = "";
 
-
 if ($search != null) {
-
 	$sWhere .= " and  CONCAT(a.order_prefix,a.order_no) LIKE '%" . $search . "%'";
 }
-if ($status_courier > 0) {
-
-	$sWhere .= " and  a.status_courier = '" . $status_courier . "'";
-}
 
 
 
-// // pagination variables
+// pagination variables
 $page = (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) ? $_REQUEST['page'] : 1;
-$per_page = (isset($_REQUEST['per_page']) && in_array((int)$_REQUEST['per_page'], [50, 100])) ? (int)$_REQUEST['per_page'] : 50; //how much records you want to show
+$per_page = 50; // default 50 rows
 $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
@@ -60,7 +53,7 @@ $sql = "SELECT a.volumetric_percentage, a.is_pickup,  a.total_order, a.order_id,
 			 cdb_add_order as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 $sWhere
-			  and a.status_courier!=14  and a.status_courier!=8 and a.status_courier!=21 and a.is_consolidate=0
+			  and a.status_courier = 10 and a.is_consolidate = 0
 			 order by a.order_id desc";
 
 
@@ -77,15 +70,25 @@ $total_pages = ceil($numrows / $per_page);
 
 if ($numrows > 0) { ?>
 	<div class="table-responsive">
+		<div id="selection_bar" style="display:none; margin-bottom: 10px;">
+			<button type="button" id="add_checked_packages" class="btn btn-success btn-sm"><i class="fa fa-plus"></i> Add Selected</button>
+			<span id="selection_count" class="ml-3" style="font-weight: bold; color: #333;"></span>
+		</div>
+
 		<table id="zero_config" class="table table-condensed custom-table-checkbox">
 			<thead>
 				<tr>
+					<th style="width: 40px;">
+						<div class="custom-control custom-checkbox">
+							<input type="checkbox" class="custom-control-input sl-all" id="select_all_packages">
+							<label class="custom-control-label" for="select_all_packages"></label>
+						</div>
+					</th>
 					<th><b><?php echo 'Sender Name' ?></b></th>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
 					<th><b><?php echo 'Contents' ?></b></th>
 					<th><b><?php echo $lang['left215'] ?></b></th>
 					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
-					<th class="text-right"><button class="btn btn-primary btn-xs" id="add_all">Add All</button></th>
 				</tr>
 			</thead>
 			<tbody id="projects-tbl">
@@ -93,9 +96,9 @@ if ($numrows > 0) { ?>
 
 				<?php if (!$data) { ?>
 					<tr>
-						<td colspan="6">
+						<td colspan="7">
 							<?php echo "
-				<i align='center' class='display-3 text-warning d-block'><img src='assets/images/alert/ohh_shipment.png' width='150' /></i>								
+				<i align='center' class='display-3 text-warning d-block'><img src='assets/images/alert/ohh_shipment.png' width='150' /></i>
 				", false; ?>
 						</td>
 					</tr>
@@ -162,6 +165,12 @@ if ($numrows > 0) { ?>
                             data-total-order="<?php echo cdb_money_format($row->total_order); ?>"
                             >
 
+								<td style="width: 40px;">
+									<div class="custom-control custom-checkbox">
+										<input type="checkbox" class="custom-control-input pkg-checkbox" value="<?php echo $row->order_id; ?>" id="pkg_<?php echo $row->order_id; ?>">
+										<label class="custom-control-label" for="pkg_<?php echo $row->order_id; ?>"></label>
+									</div>
+								</td>
 							<td><?php echo $sender->fname . ' ' . $sender->lname; ?></td>
 
 							<td><?php echo $row->order_prefix . $row->order_no; ?></td>
@@ -210,83 +219,40 @@ if ($numrows > 0) { ?>
 		<script>
 			var count = 0;
 
-			$(".sl-all").on('click', function() {
-
-				$('.custom-table-checkbox input:checkbox').not(this).prop('checked', this.checked);
-
-				if ($('.custom-table-checkbox input:checkbox').is(':checked')) {
-
-					$('.custom-table-checkbox').find('tr > td:first-child').find('input[type=checkbox]').parents('tr').css('background', '#fff8e1');
-
+			function updateSelectionBar() {
+				var $checkboxes = $('.pkg-checkbox:checked');
+				var checkedCount = $checkboxes.length;
+				if (checkedCount > 0) {
+					$('#selection_bar').show();
+					$('#selection_count').html('Select: ' + checkedCount);
 				} else {
-
-					$('.custom-table-checkbox input:checkbox').parents('tr').css('background', '');
-
+					$('#selection_bar').hide();
 				}
+			}
 
-				var $checkboxes = $('.custom-table-checkbox').find('tr > td:first-child').find('input[type=checkbox]');
-
-				count = $checkboxes.filter(':checked').length;
-
-				if (count > 0) {
-
-					$('#div-actions-checked').removeClass('hide');
-					$('#countChecked').removeClass('hide');
-
-				} else {
-
-					$('#div-actions-checked').addClass('hide');
-					$('#countChecked').addClass('hide');
-				}
-
-				$('#countChecked').html(count);
-
-
+			// Row click to toggle checkbox
+			$('#projects-tbl tr').not(':has(img)').on('click', function(e) {
+				if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return; // Don't toggle if clicking the checkbox itself
+				var checkbox = $(this).find('.pkg-checkbox');
+				checkbox.prop('checked', !checkbox.is(':checked')).trigger('change');
 			});
 
+			$(".sl-all").on('click', function() {
+				$('.custom-table-checkbox input:checkbox').not(this).prop('checked', this.checked);
+				$('.pkg-checkbox').trigger('change');
+			});
 
-
-			$('.custom-table-checkbox').find('tr > td:first-child').find('input[type=checkbox]').on('change', function() {
-
+			$('.pkg-checkbox').on('change', function() {
 				if ($(this).is(':checked')) {
-
 					$(this).parents('tr').css('background', '#fff8e1');
-
 				} else {
-
 					$(this).parents('tr').css('background', '');
 				}
-
-
+				updateSelectionBar();
 			});
 
-
-
-
 			$(document).ready(function() {
-
-				var $checkboxes = $('.custom-table-checkbox').find('tr > td:first-child').find('input[type=checkbox]');
-
-				$checkboxes.change(function() {
-
-					count = $checkboxes.filter(':checked').length;
-
-					if (count > 0) {
-
-						$('#div-actions-checked').removeClass('hide');
-						$('#countChecked').removeClass('hide');
-
-					} else {
-
-						$('#div-actions-checked').addClass('hide');
-						$('#countChecked').addClass('hide');
-					}
-
-
-					$('#countChecked').html(count);
-
-				});
-
+				updateSelectionBar();
 			});
 		</script>
 
@@ -367,33 +333,6 @@ if ($numrows > 0) { ?>
 			}
 		</script>
 
-		<script>
-			document.getElementById("add_all").addEventListener("click", function(event) {
-				event.preventDefault(); // Prevent default behavior (useful if inside a form)
-
-				document.querySelectorAll("tbody#projects-tbl tr").forEach(function(row) {
-					let orderId = row.getAttribute("data-order-id");
-					let totalMetric = row.getAttribute("data-total-metric");
-					let weight = row.getAttribute("data-weight");
-					let length = row.getAttribute("data-length");
-					let width = row.getAttribute("data-width");
-					let height = row.getAttribute("data-height");
-					let tracking = row.getAttribute("data-tracking");
-					let orderNo = row.getAttribute("data-order-no");
-					let orderPrefix = row.getAttribute("data-order-prefix");
-                    let sender = row.getAttribute("data-sender");
-                    let description = row.getAttribute("data-description");
-                    let totalOrder = row.getAttribute("data-total-order");
-
-					// Ensure values exist before calling function
-					if (orderId) {
-						cdp_add_item(orderId, totalMetric, weight, length, width, height, tracking, orderNo, orderPrefix, sender, description, totalOrder);
-						row.classList.add("marked-row");
-						row.style.display = "none"; // Hide row after adding
-					}
-				});
-			});
-		</script>
 
 	</div>
 <?php } else { ?>
