@@ -66,9 +66,10 @@ class OtpService {
 
     public function createChallenge($userId, $purpose, array $metadata = [], $ttlSeconds = 300) {
 
-        // ── Rate-limit: block if any challenge was issued less than 4 minutes ago ──
+        // ── Rate-limit: block if any challenge was issued less than 1 minute ago ──
         // Checks ALL statuses, not just pending — a locked/expired challenge still
         // counts against the cooldown so the user can't bypass it by exhausting attempts.
+        // NOTE: this window must match COOLDOWN_SEC in auth-otp.php's resend timer.
         $this->db->cdp_query("SELECT created_at FROM cdb_auth_otp_challenges
             WHERE user_id   = :user_id
               AND purpose   = :purpose
@@ -77,11 +78,11 @@ class OtpService {
             LIMIT 1");
         $this->db->bind(':user_id', (int) $userId);
         $this->db->bind(':purpose', $purpose);
-        $this->db->bind(':cutoff',  date('Y-m-d H:i:s', time() - 240));
+        $this->db->bind(':cutoff',  date('Y-m-d H:i:s', time() - 60));
         $recent = $this->db->cdp_registro();
 
         if ($recent) {
-            $waitSec = 240 - (time() - strtotime($recent->created_at));
+            $waitSec = 60 - (time() - strtotime($recent->created_at));
             return [
                 'id'       => 0,
                 'code'     => null,
