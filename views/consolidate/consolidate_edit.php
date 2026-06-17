@@ -569,7 +569,7 @@ if (isset($_POST["total_item"])) {
         if (!function_exists('cdp_getAgencyBranchIdForUser')) { require_once(__DIR__ . '/../../helpers/querys.php'); }
         $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel === 6) ? (int) cdp_getAgencyBranchIdForUser($userData->name_off ?? '') : 0; ?>
         <?php $courierrow = $core->cdp_getCouriercom(); ?>
-        <?php $statusrow = $core->cdp_getStatusByType(2); ?>
+        <?php $statusrow = $core->cdp_getStatusByType(1); ?>
         <?php $packrow = $core->cdp_getPack(); ?>
         <?php $payrow = $core->cdp_getPayment(); ?>
         <?php $itemrow = $core->cdp_getItem(); ?>
@@ -614,13 +614,60 @@ if (isset($_POST["total_item"])) {
                                                 <input name="seals" id="seals" value="<?php echo $row_order->seals_package; ?>" class="form-control" placeholder="00-00000">
                                             </div>
                                         </div>
+
+                                        <div class="form-group col-md-3">
+                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['langs_039'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
+                                            <div class="input-group">
+                                                <select class="custom-select col-12" id="status_courier" name="status_courier">
+                                                    <option value="0">--<?php echo $lang['left210'] ?>--</option>
+                                                    <?php foreach ($statusrow as $row) : ?>
+                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->status_courier == $row->id) { echo 'selected'; } ?>><?php echo $row->mod_style; ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group col-md-3">
+                                            <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
+                                            <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" value="<?php echo isset($package_tracking_data->estimated_eta) ? $package_tracking_data->estimated_eta : ''; ?>" />
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div>
+                                                <label class="control-label" id="selectItem">
+                                                    <?php echo $lang['leftorder15']; ?>
+                                                </label>
+                                            </div>
+    
+                                            <input class="custom-file-input" id="filesMultiple" name="filesMultiple[]" multiple="multiple" type="file" style="display: none;" onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
+                                            <button type="button" id="openMultiFile" class="btn btn-default pull-left mb-4">
+                                                <i class='fa fa-paperclip' style="font-size:18px; cursor:pointer;"></i>
+                                                <?php echo $lang['leftorder16']; ?>
+                                            </button>
+                                        </div>
+                                    </div>
+    
+                                    <div class="col-md-12 row" id="image_preview"></div>
+    
+                                    <div class="col-md-4 mt-4">
+                                        <div id="clean_files" class="hide">
+                                            <button type="button" id="clean_file_button" class="btn btn-danger ml-3">
+                                                <i class='fa fa-trash' style="font-size:18px; cursor:pointer;"></i>
+                                                <?php echo $lang['leftorder17']; ?>
+                                            </button>
+                                        </div>
+                                    </div>
+    
+                                    <div class="row">
+                                        <div class="resultados_file col-md-4 pull-right mt-4"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="row">
+                    <div class="row" style="display: none;">
                         <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-body">
@@ -643,18 +690,6 @@ if (isset($_POST["total_item"])) {
                                         </div>
 
                                         <div class="form-group col-md-3">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['langs_039'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
-                                            <div class="input-group">
-                                                <select class="custom-select col-12" id="status_courier" name="status_courier">
-                                                    <option value="0">--<?php echo $lang['left210'] ?>--</option>
-                                                    <?php foreach ($statusrow as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>" <?php if ($row_order->status_courier == $row->id) { echo 'selected'; } ?>><?php echo $row->mod_style; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group col-md-3">
                                             <label for="inputname" class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
                                             <div class="input-group mb-3">
                                                 <div class="input-group-prepend">
@@ -668,42 +703,6 @@ if (isset($_POST["total_item"])) {
                                                 </select>
                                             </div>
                                         </div>
-
-                                        <div class="form-group col-md-3">
-                                            <label class="control-label col-form-label"><?php echo 'Estimated Time of Arrival' ?></label>
-                                            <input type='date' class="form-control" id="estimated_eta" name="estimated_eta" value="<?php echo isset($package_tracking_data->estimated_eta) ? $package_tracking_data->estimated_eta : ''; ?>" />
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div>
-                                                <label class="control-label" id="selectItem">
-                                                    <?php echo $lang['leftorder15']; ?>
-                                                </label>
-                                            </div>
-
-                                            <input class="custom-file-input" id="filesMultiple" name="filesMultiple[]" multiple="multiple" type="file" style="display: none;" onchange="cdp_validateZiseFiles(); cdp_preview_images();" />
-                                            <button type="button" id="openMultiFile" class="btn btn-default pull-left mb-4">
-                                                <i class='fa fa-paperclip' style="font-size:18px; cursor:pointer;"></i>
-                                                <?php echo $lang['leftorder16']; ?>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-12 row" id="image_preview"></div>
-
-                                    <div class="col-md-4 mt-4">
-                                        <div id="clean_files" class="hide">
-                                            <button type="button" id="clean_file_button" class="btn btn-danger ml-3">
-                                                <i class='fa fa-trash' style="font-size:18px; cursor:pointer;"></i>
-                                                <?php echo $lang['leftorder17']; ?>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="resultados_file col-md-4 pull-right mt-4"></div>
                                     </div>
                                 </div>
                             </div>
