@@ -570,7 +570,7 @@ function cdp_cal_final_total() {
   });
 
   $("#total_weight_sum").html(total_weight_sum.toFixed(2));
-  $("#total_cost_sum").html(total_cost_sum.toFixed(2));
+  $("#total_cost_sum").html(typeof format_currency !== 'undefined' ? format_currency(total_cost_sum) : total_cost_sum.toFixed(2));
 }
 
 function cdp_add_item(id, total_vol, weight, length, width, height, tracking, order_no, order_prefix, sender, description, total_price, quantity, total_price_raw) {

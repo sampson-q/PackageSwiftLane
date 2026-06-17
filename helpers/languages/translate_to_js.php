@@ -1,4 +1,35 @@
 <script>
+    <?php
+    $db = new Conexion;
+    $db->cdp_query('SELECT for_symbol, dec_point, thousands_sep, for_decimal FROM cdb_settings LIMIT 1');
+    $db->cdp_execute();
+    $currency_settings = $db->cdp_registro();
+    $curr_symbol = $currency_settings->for_symbol ?? '$';
+    $curr_point = $currency_settings->dec_point ?? '.';
+    $curr_sep = $currency_settings->thousands_sep ?? ',';
+    $curr_decimal = $currency_settings->for_decimal ?? 'true';
+    ?>
+    var currency_symbol = "<?php echo $curr_symbol; ?>";
+    var currency_dec_point = "<?php echo $curr_point; ?>";
+    var currency_thousands_sep = "<?php echo $curr_sep; ?>";
+    var currency_show_decimals = <?php echo ($curr_decimal === 'true') ? 'true' : 'false'; ?>;
+
+    function format_currency(amount) {
+        amount = parseFloat(amount) || 0;
+        var decimal_places = currency_show_decimals ? 2 : 0;
+        var formatted = amount.toLocaleString('en-US', {
+            minimumFractionDigits: decimal_places,
+            maximumFractionDigits: decimal_places
+        });
+        // Replace standard separators with configured ones
+        if (currency_dec_point !== '.') {
+            formatted = formatted.replace('.', '|').replace(',', currency_thousands_sep).replace('|', currency_dec_point);
+        } else if (currency_thousands_sep !== ',') {
+            formatted = formatted.replace(',', currency_thousands_sep);
+        }
+        return currency_symbol + formatted;
+    }
+
     var translate_quantity = "<?php echo $lang['left226'] ?>"
     var translate_attach_files = "<?php echo isset($lang['leftorder15']) ? $lang['leftorder15'] : 'Attach files'; ?>"
     var translate_attached_files_count = "<?php echo isset($lang['courier_attached_files_count']) ? $lang['courier_attached_files_count'] : 'attached files'; ?>"
