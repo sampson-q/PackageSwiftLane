@@ -60,7 +60,8 @@ $(function () {
 //Cargar datos AJAX
 function cdp_load(page) {
 
-  var parametros = { "page": page };
+  var per_page = $("#per_page").val() || 50;
+  var parametros = { "page": page, "per_page": per_page };
   $("#loader").fadeIn('slow');
   $.ajax({
     url: './ajax/dashboard/shipments/load_shipments_ajax.php',
@@ -68,7 +69,7 @@ function cdp_load(page) {
     beforeSend: function (objeto) {
     },
     success: function (data) {
-      $(".outer_div").html(data).fadeIn('slow');
+      $(".outer_divx").html(data).fadeIn('slow');
     }
   })
 }
