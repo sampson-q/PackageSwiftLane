@@ -13,7 +13,7 @@
 
 						<div class="row mb-3 ml-2">
 
-							<div class="col-sm-12 col-md-5">
+							<div class="col-sm-12 col-md-8">
 
 								<div class="input-group">
 									<input type="text" name="search" id="search" class="form-control input-sm float-right" placeholder="<?php echo $lang['left21551'] ?>" onkeyup="cdp_load(1);">
@@ -22,27 +22,6 @@
 									</div>
 
 								</div>
-							</div><!-- /.col -->
-
-							<div class="col-sm-6 col-md-4">
-								<select id="fs_filter_status" class="form-control form-control-sm" onchange="cdp_load(1);">
-									<option value="0"><?php echo 'All package statuses'; ?></option>
-									<?php
-										$fs_status_list = method_exists($core, 'cdp_getStatus') ? $core->cdp_getStatus() : array();
-										foreach ($fs_status_list as $fs_st) {
-											// Skip statuses the modal already excludes (pickup/delivered/cancelled).
-											if (in_array((int)$fs_st->id, [8, 14, 21])) continue;
-											echo '<option value="' . (int)$fs_st->id . '">' . htmlspecialchars($fs_st->mod_style) . '</option>';
-										}
-									?>
-								</select>
-							</div><!-- /.col -->
-
-							<div class="col-sm-6 col-md-3">
-								<select id="fs_per_page" class="form-control form-control-sm" onchange="cdp_load(1);">
-									<option value="50">50 rows</option>
-									<option value="100">100 rows</option>
-								</select>
 							</div><!-- /.col -->
 						</div>
 
