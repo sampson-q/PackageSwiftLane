@@ -323,10 +323,16 @@ function cdp_load(page) {
           let description = row.getAttribute("data-description");
           let quantity = row.getAttribute("data-quantity");
           let totalOrder = row.getAttribute("data-total-order");
+          let totalOrderRaw = row.getAttribute("data-total-order-raw");
 
-          cdp_add_item(orderId, totalMetric, weight, length, width, height, tracking, orderNo, orderPrefix, sender, description, totalOrder, quantity);
-          checkbox.checked = false; // uncheck after adding
+          cdp_add_item(orderId, totalMetric, weight, length, width, height, tracking, orderNo, orderPrefix, sender, description, totalOrder, quantity, totalOrderRaw);
+
+          // Remove the row completely from the DOM
+          row.remove();
         });
+
+        // Update selection bar
+        updateSelectionBar();
       });
     },
   });
@@ -522,6 +528,22 @@ $(document).ready(function () {
 });
 
 function cdp_cal_final_total() {
+  var total_weight_sum = 0;
+  var total_cost_sum = 0;
+
+  selected.forEach(function (orderId) {
+    var weight = parseFloat($("#weight_" + orderId).val()) || 0;
+    var totalPrice = parseFloat($("#total_price_" + orderId).val()) || 0;
+
+    total_weight_sum += weight;
+    total_cost_sum += totalPrice;
+  });
+
+  $("#total_weight_sum").html(total_weight_sum.toFixed(2));
+  $("#total_cost_sum").html(total_cost_sum.toFixed(2));
+}
+
+function cdp_cal_final_total_old() {
   var count = $("#total_item").val();
   console.log(count);
 
@@ -655,7 +677,7 @@ function cdp_cal_final_total() {
   $("#total_envio_input").val(total_envio.toFixed(2));
 }
 
-function cdp_add_item(id, total_vol, weight, length, width, height, tracking, order_no, order_prefix, sender, description, total_price, quantity) {
+function cdp_add_item(id, total_vol, weight, length, width, height, tracking, order_no, order_prefix, sender, description, total_price, quantity, total_price_raw) {
   if (selected.includes(id)) {
     Swal.fire({
       title: "Error!",
@@ -681,12 +703,13 @@ function cdp_add_item(id, total_vol, weight, length, width, height, tracking, or
     html_code += '<td><b>' + weight + "</b></td>";
     html_code += '<td></td>';
     html_code += '<td><b>' + total_price + "</b></td>";
-    // html_code += '<td>' + total_vol + "</td>";
+    html_code += '<td></td>';
 
     html_code += '<input type="hidden"  id="total_vol_' + id + '"  value="' + total_vol + '" name="weight_vol[]">';
     html_code += '<input type="hidden"   value="' + order_prefix + '" name="prefix[]">';
     html_code += '<input type="hidden"   value="' + order_no + '" name="order_no_item[]">';
     html_code += '<input type="hidden" id="weight_' + id + '"   value="' + weight + '" name="weight[]">';
+    html_code += '<input type="hidden" id="total_price_' + id + '"   value="' + (total_price_raw || total_price) + '" name="total_price[]">';
 
     html_code += '<input type="hidden" id="length_' + id + '"   value="' + length + '" name="length[]">';
     html_code += '<input type="hidden" id="height_' + id + '"   value="' + height + '" name="height[]">';

@@ -938,6 +938,19 @@ if (isset($_POST["total_item"])) {
                                                     <td class="text-right" id="total_envio"><?php echo $total_envio; ?></td>
                                                     <td></td>
                                                 </tr>
+                                                <tr class="card-hover">
+                                                    <td colspan="4" class="text-right"><b>Total Weight:</b></td>
+                                                    <td class="text-center" id="total_weight_sum">0.00</td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                </tr>
+                                                <tr class="card-hover">
+                                                    <td colspan="4" class="text-right"><b>Total Cost:</b></td>
+                                                    <td colspan="2"></td>
+                                                    <td class="text-center" id="total_cost_sum">0.00</td>
+                                                    <td></td>
+                                                </tr>
                                             </tfoot>
                                             <input type="hidden" name="total_item" id="total_item" value="<?php echo $count_item; ?>" />
                                         <?php

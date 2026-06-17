@@ -163,6 +163,7 @@ if ($numrows > 0) { ?>
                             data-description="<?php echo $description->order_item_description; ?>"
                             data-quantity="<?php echo $quantity->order_item_quantity; ?>"
                             data-total-order="<?php echo cdb_money_format($row->total_order); ?>"
+                            data-total-order-raw="<?php echo $row->total_order; ?>"
                             >
 
 								<td style="width: 40px;">
@@ -195,9 +196,9 @@ if ($numrows > 0) { ?>
 							</td>
 
 							<td class="text-right">
-								<button type="button" name="add_row" id="add_row" 
-									onclick="cdp_add_item('<?php echo $row->order_id; ?>','<?php echo $total_metric; ?>', '<?php echo $weight; ?>', '<?php echo $length; ?>', '<?php echo $width; ?>', '<?php echo $height; ?>', '<?php echo $tracking; ?>', '<?php echo $row->order_no; ?>','<?php echo $row->order_prefix; ?>', '<?php echo $sender->fname . ' ' . $sender->lname; ?>', '<?php echo $description->order_item_description; ?>', '<?php echo cdb_money_format(($row->total_order)); ?>', '<?php echo $quantity->order_item_quantity; ?>'); 
-									$('#tb_row_id_<?php echo $row->order_id; ?>').addClass('marked-row').hide();" 
+								<button type="button" name="add_row" id="add_row"
+									onclick="cdp_add_item('<?php echo $row->order_id; ?>','<?php echo $total_metric; ?>', '<?php echo $weight; ?>', '<?php echo $length; ?>', '<?php echo $width; ?>', '<?php echo $height; ?>', '<?php echo $tracking; ?>', '<?php echo $row->order_no; ?>','<?php echo $row->order_prefix; ?>', '<?php echo $sender->fname . ' ' . $sender->lname; ?>', '<?php echo $description->order_item_description; ?>', '<?php echo cdb_money_format(($row->total_order)); ?>', '<?php echo $quantity->order_item_quantity; ?>', '<?php echo $row->total_order; ?>');
+									$('#tb_row_id_<?php echo $row->order_id; ?>').remove();"
 									class="btn btn-outline-success btn-sm add_row">
 									<i class="fa fa-plus"></i>
 								</button>

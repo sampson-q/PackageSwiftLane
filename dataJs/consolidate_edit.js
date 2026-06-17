@@ -377,10 +377,16 @@ function cdp_load(page) {
           let description = row.getAttribute("data-description");
           let quantity = row.getAttribute("data-quantity");
           let totalOrder = row.getAttribute("data-total-order");
+          let totalOrderRaw = row.getAttribute("data-total-order-raw");
 
-          cdp_add_item(orderId, totalMetric, weight, length, width, height, tracking, orderNo, orderPrefix, sender, description, totalOrder, quantity);
-          checkbox.checked = false; // uncheck after adding
+          cdp_add_item(orderId, totalMetric, weight, length, width, height, tracking, orderNo, orderPrefix, sender, description, totalOrder, quantity, totalOrderRaw);
+
+          // Remove the row completely from the DOM
+          row.remove();
         });
+
+        // Update selection bar
+        updateSelectionBar();
       });
     },
   });
@@ -552,104 +558,22 @@ $(function () {
 });
 
 function cdp_cal_final_total() {
-  var count = $("#total_item").val();
+  var total_weight_sum = 0;
+  var total_cost_sum = 0;
 
-  var sumador_total = 0;
-  var sumador_libras = 0;
-  var sumador_volumetric = 0;
+  selected.forEach(function (orderId) {
+    var weight = parseFloat($("#weight_" + orderId).val()) || 0;
+    var totalPrice = parseFloat($("#total_price_" + orderId).val()) || 0;
 
-  var precio_total = 0;
-  var total_impuesto = 0;
-  var total_descuento = 0;
-  var total_seguro = 0;
-  var total_peso = 0;
-  var total_impuesto_aduanero = 0;
-
-  var order_volumetric_percentage = $("#order_volumetric_percentage").val();
-  var order_min_cost_tax = $("#order_min_cost_tax").val();
-  var order_tax_value = $("#order_tax_value").val();
-  var order_tax_discount = $("#order_tax_discount").val();
-  var order_tax_insurance_value = $("#order_tax_insurance_value").val();
-  var order_insured_value = $("#order_insured_value").val();
-  var order_tax_custom_tariffis_value = $("#order_tax_custom_tariffis_value").val();
-
-  var price_lb = $("#price_lb").val();
-
-  price_lb = parseFloat(price_lb);
-
-  console.log(selected);
-
-  selected.forEach(function (valor, indice, array) {
-    var weight = $("#weight_" + valor).val();
-    weight = parseFloat(weight);
-
-    var height = $("#height_" + valor).val();
-    height = parseFloat(height);
-
-    var length = $("#length_" + valor).val();
-    length = parseFloat(length);
-
-    var width = $("#width_" + valor).val();
-    width = parseFloat(width);
-
-    var total_vol = $("#total_vol_" + valor).val();
-    total_vol = parseFloat(total_vol);
-
-    // calculate weight columetric box size
-    var total_metric = (length * width * height) / order_volumetric_percentage;
-
-    sumador_libras += weight; //Sumador
-    sumador_volumetric += total_metric; //Sumador
-    // calculate weight x price
-    if (sumador_libras > sumador_volumetric) {
-      var calculate_weight = sumador_libras;
-    } else {
-      var calculate_weight = sumador_volumetric;
-    }
-
-    sumador_total = calculate_weight * price_lb;
-
-    if (sumador_total > order_min_cost_tax) {
-      total_impuesto = (sumador_total * order_tax_value) / 100;
-    }
-
-    total_descuento = (sumador_total * order_tax_discount) / 100;
-    total_peso = sumador_libras + sumador_volumetric;
-    total_seguro = (order_insured_value * order_tax_insurance_value) / 100;
-
-    total_impuesto_aduanero = (total_peso * order_tax_custom_tariffis_value) / 100;
+    total_weight_sum += weight;
+    total_cost_sum += totalPrice;
   });
 
-  var total_envio = sumador_total - total_descuento + total_seguro + total_impuesto + total_impuesto_aduanero;
-
-  $("#subtotal").html(sumador_total.toFixed(2));
-
-  $("#discount").html(total_descuento.toFixed(2));
-  $("#discount_input").val(total_descuento.toFixed(2));
-
-  $("#subtotal_input").val(sumador_total.toFixed(2));
-
-  $("#impuesto").html(total_impuesto.toFixed(2));
-  $("#impuesto_input").val(total_impuesto.toFixed(2));
-
-  $("#insurance").html(total_seguro.toFixed(2));
-  $("#insurance_input").val(total_seguro.toFixed(2));
-
-  $("#total_libras").html(sumador_libras.toFixed(2));
-
-  $("#total_volumetrico").html(sumador_volumetric.toFixed(2));
-
-  $("#total_peso").html(total_peso.toFixed(2));
-  $("#total_weight_input").val(total_peso.toFixed(2));
-
-  $("#total_impuesto_aduanero").html(total_impuesto_aduanero.toFixed(2));
-  $("#total_impuesto_aduanero_input").val(total_impuesto_aduanero.toFixed(2));
-
-  $("#total_envio").html(total_envio.toFixed(2));
-  $("#total_envio_input").val(total_envio.toFixed(2));
+  $("#total_weight_sum").html(total_weight_sum.toFixed(2));
+  $("#total_cost_sum").html(total_cost_sum.toFixed(2));
 }
 
-function cdp_add_item(id, total_vol, weight, length, width, height, tracking, order_no, order_prefix, sender, description, total_price) {
+function cdp_add_item(id, total_vol, weight, length, width, height, tracking, order_no, order_prefix, sender, description, total_price, quantity, total_price_raw) {
   if (selected.includes(id)) {
     $("#modal_consolidate").html(
       '<div class="alert alert-danger" id="success-alert">' +
@@ -674,17 +598,18 @@ function cdp_add_item(id, total_vol, weight, length, width, height, tracking, or
 
     html_code += '<td><b>' + sender + "</b></td>";
     html_code += '<td><b>' + tracking + "</b></td>";
-    html_code += '<td></td>';
+    html_code += '<td class="text-right">' + (quantity ? parseInt(quantity) : '') + '</td>';
     html_code += '<td><b>' + description + "</b></td>";
     html_code += '<td><b>' + weight + "</b></td>";
     html_code += '<td></td>';
     html_code += '<td><b>' + total_price + "</b></td>";
-    // html_code += '<td>' + total_vol + "</td>";
+    html_code += '<td></td>';
 
     html_code += '<input type="hidden"  id="total_vol_' + id + '"  value="' + total_vol + '" name="weight_vol[]">';
     html_code += '<input type="hidden"   value="' + order_prefix + '" name="prefix[]">';
     html_code += '<input type="hidden"   value="' + order_no + '" name="order_no_item[]">';
     html_code += '<input type="hidden" id="weight_' + id + '"   value="' + weight + '" name="weight[]">';
+    html_code += '<input type="hidden" id="total_price_' + id + '"   value="' + (total_price_raw || total_price) + '" name="total_price[]">';
 
     html_code += '<input type="hidden" id="length_' + id + '"   value="' + length + '" name="length[]">';
     html_code += '<input type="hidden" id="height_' + id + '"   value="' + height + '" name="height[]">';
