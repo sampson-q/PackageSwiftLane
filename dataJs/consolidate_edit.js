@@ -346,14 +346,10 @@ $("input[type=file]").on("change", function () {
 //Cargar datos AJAX
 function cdp_load(page) {
   var search = $("#search").val();
-  var status_courier = $("#fs_filter_status").val() || 0; // modal package-status filter
-  var per_page = $("#fs_per_page").val() || 50;
   var filterby = $("#filterby").val();
   var parametros = {
     page: page,
     search: search,
-    status_courier: status_courier,
-    per_page: per_page,
     filterby: filterby,
   };
   $("#loader").fadeIn("slow");
@@ -363,6 +359,29 @@ function cdp_load(page) {
     beforeSend: function (objeto) {},
     success: function (data) {
       $(".outer_div").html(data).fadeIn("slow");
+      // Bind "Add checked packages" button after table loads
+      $("#add_checked_packages").off("click").on("click", function(e) {
+        e.preventDefault();
+        document.querySelectorAll(".pkg-checkbox:checked").forEach(function(checkbox) {
+          let row = checkbox.closest("tr");
+          let orderId = row.getAttribute("data-order-id");
+          let totalMetric = row.getAttribute("data-total-metric");
+          let weight = row.getAttribute("data-weight");
+          let length = row.getAttribute("data-length");
+          let width = row.getAttribute("data-width");
+          let height = row.getAttribute("data-height");
+          let tracking = row.getAttribute("data-tracking");
+          let orderNo = row.getAttribute("data-order-no");
+          let orderPrefix = row.getAttribute("data-order-prefix");
+          let sender = row.getAttribute("data-sender");
+          let description = row.getAttribute("data-description");
+          let quantity = row.getAttribute("data-quantity");
+          let totalOrder = row.getAttribute("data-total-order");
+
+          cdp_add_item(orderId, totalMetric, weight, length, width, height, tracking, orderNo, orderPrefix, sender, description, totalOrder, quantity);
+          checkbox.checked = false; // uncheck after adding
+        });
+      });
     },
   });
 }
