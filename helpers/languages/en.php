@@ -2886,7 +2886,7 @@ $lang = array(
 	"inv-shipping16" => "Secure",
 	"inv-shipping17" => "Grand Total",
 	"inv-shipping18" => "TERMS",
-	"inv-shipping19" => "Print invoice",
+	"inv-shipping19" => "Print Invoice",
 
 	/**Label Shipping**/
 	"inv-label1" => "FROM",
