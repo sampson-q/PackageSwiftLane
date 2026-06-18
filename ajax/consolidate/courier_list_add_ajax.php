@@ -73,6 +73,7 @@ if ($numrows > 0) { ?>
 		<div id="selection_bar" style="display:none; margin-bottom: 10px;">
 			<button type="button" id="add_checked_packages" class="btn btn-success btn-sm"><i class="fa fa-plus"></i> Add Selected</button>
 			<span id="selection_count" class="ml-3" style="font-weight: bold; color: #333;"></span>
+				<span id="selection_totals" class="ml-3" style="font-weight: bold; color: #555;"></span>
 		</div>
 
 		<table id="zero_config" class="table table-condensed custom-table-checkbox">
@@ -225,7 +226,14 @@ if ($numrows > 0) { ?>
 				var checkedCount = $checkboxes.length;
 				if (checkedCount > 0) {
 					$('#selection_bar').show();
-					$('#selection_count').html('Select: ' + checkedCount);
+					$('#selection_count').html('Selected: ' + checkedCount);
+					var totalWeight = 0, totalCost = 0;
+					$checkboxes.each(function () {
+						var $r = $(this).closest('tr');
+						totalWeight += parseFloat($r.attr('data-weight')) || 0;
+						totalCost += parseFloat($r.attr('data-total-order-raw')) || 0;
+					});
+					$('#selection_totals').html('Total weight: ' + totalWeight.toFixed(2) + ' <?php echo $core->weight_p; ?> &nbsp;|&nbsp; Total cost: ' + (typeof format_currency !== 'undefined' ? format_currency(totalCost) : totalCost.toFixed(2)));
 				} else {
 					$('#selection_bar').hide();
 				}
