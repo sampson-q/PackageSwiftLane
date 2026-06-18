@@ -486,13 +486,13 @@ $monthName = obtenerNombreMes($currentMonth);
                                                     <!-- Sexto elemento de contador de paquetes -->
                                                     <div class="col-lg-12 col-md-12 mb-2">
                                                         <div class="d-flex align-items-center">
-                                                            <div class="m-r-10"><a href="customer_packages_list.php"><span class="text-success display-7"><iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon></span></a>
+                                                            <div class="m-r-10"><a href="courier_list.php"><span class="text-success display-7"><iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon></span></a>
                                                             </div>
 
                                                             <div class="card-info-statics">
                                                               <h5 class="mb-0">
                                                                  <?php
-                                                                    $db->cdp_query('SELECT COUNT(*) as total FROM cdb_customers_packages');
+                                                                    $db->cdp_query('SELECT COUNT(*) as total FROM cdb_add_order where is_pickup=0 and order_incomplete=0 and status_courier != 21');
                                                                     $db->cdp_execute();
                                                                     $count = $db->cdp_registro();
                                                                     echo (int)($count->total ?? 0);
@@ -646,7 +646,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" id="pills-profile-tab" href="customer_packages_list.php">
+                                        <a class="nav-link" id="pills-profile-tab" href="courier_list.php">
                                             <h5 class="card-title mb-0"><?php echo $lang['dash-general-23'] ?></h5>
                                         </a>
                                     </li>
