@@ -127,6 +127,20 @@ if (isset($_POST['login'])) {
 
                                 <div id="msgholder2" class="mt-4">
                                     <?php
+                                    if (isset($_GET['notice']) && $_GET['notice'] === 'otp_expired') {
+                                    ?>
+                                        <div class="alert alert-warning">
+                                            <p class="mb-0">Your verification session expired. Please log in again to receive a new code.</p>
+                                        </div>
+                                    <?php } ?>
+                                    <?php
+                                    if (isset($_GET['notice']) && $_GET['notice'] === 'registration_complete') {
+                                    ?>
+                                        <div class="alert alert-success">
+                                            <p class="mb-0">Your email is verified and your registration is complete. Your account is now awaiting approval — you'll get an email once it's activated.</p>
+                                        </div>
+                                    <?php } ?>
+                                    <?php
                                     if (isset($login) && $login->errors) {
                                     ?>
                                         <div class="alert alert-danger" id="success-alert">
