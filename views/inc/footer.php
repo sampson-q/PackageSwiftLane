@@ -72,6 +72,11 @@
 <?php include 'views/modals/modal_phone_update_otp.php'; ?>
 <?php include 'views/modals/modal_user_update_document.php'; ?>
 
+<?php /* Forced account setup (WhatsApp number verification etc.) — customers only */ ?>
+<?php if (isset($_SESSION['userlevel']) && (int)$_SESSION['userlevel'] === 1): ?>
+<script src="dataJs/check_user_update.js"></script>
+<?php endif; ?>
+
 <style>
     .swal2-container {
     z-index: 99999 !important;
