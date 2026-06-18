@@ -155,7 +155,22 @@ class User
             'email'       => $user->email,
         ));
 
-        // FIX 2: send via both channels, matching what the resend path does
+        if (!empty($challenge['blocked'])) {
+            // Rate-limited. If a code is still pending, reuse it so the user lands
+            // on a working OTP page (with the code already delivered + a live timer)
+            // instead of a dead one built around id 0 / a null code. Otherwise the
+            // block is terminal (e.g. hard cap reached) — surface the error.
+            if (!empty($challenge['existing_id'])) {
+                $_SESSION['otp_login_challenge'] = (int) $challenge['existing_id'];
+                $_SESSION['otp_login_user_id']   = $user->id;
+                $_SESSION['otp_login_remember']  = $rememberMe ? 1 : 0;
+                return 'otp_required';
+            }
+            $this->errors[] = $challenge['error'];
+            return false;
+        }
+
+        // Fresh challenge — deliver it on both channels
         $otpService->sendOtpEmail($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], 'login');
         $otpService->sendOtpWhatsApp($user->email, $user->fname . ' ' . $user->lname, $challenge['code'], 'login');
 
