@@ -312,6 +312,72 @@ function cdp_getEmailTemplatesdg1i4($id)
     return $result = $db->cdp_registro();
 }
 
+/**
+ * Send a templated email (cdb_email_templates) to one recipient. Centralizes the
+ * fetch + placeholder replace + PHP/SMTP send that was copy-pasted across
+ * customers_add, customers_status and OtpService.
+ *
+ * [SITE_NAME], [URL] and [VIRTUAL_LOCKER] are filled automatically; pass any
+ * others (e.g. '[NAME]' => 'John', '[USERNAME]' => 'john1') in $replacements.
+ * PHPMailer must already be loaded by the caller for SMTP. Returns
+ * ['ok' => bool, 'error' => string?].
+ */
+function cdp_sendTemplateEmail($templateId, $toEmail, array $replacements = [])
+{
+    $core = new Core;
+    $tpl  = cdp_getEmailTemplatesdg1i4($templateId);
+    if (!$tpl) {
+        return ['ok' => false, 'error' => "Email template #{$templateId} not found."];
+    }
+
+    $map = array_merge([
+        '[SITE_NAME]'      => $core->site_name,
+        '[URL]'            => $core->site_url,
+        '[VIRTUAL_LOCKER]' => isset($core->locker_address) ? $core->locker_address : '',
+    ], $replacements);
+
+    $body    = str_replace(array_keys($map), array_values($map), $tpl->body);
+    $body    = function_exists('cdp_cleanOut') ? cdp_cleanOut($body) : $body;
+    $subject = $tpl->subject;
+
+    if ($core->mailer === 'PHP') {
+        $headers  = "MIME-Version: 1.0\r\n";
+        $headers .= "Content-type: text/html; charset=UTF-8\r\n";
+        $headers .= "From: {$core->site_name} <{$core->site_email}>\r\n";
+        return ['ok' => (bool) mail($toEmail, $subject, $body, $headers)];
+    }
+
+    if ($core->mailer === 'SMTP') {
+        $mail = new PHPMailer(true);
+        try {
+            $mail->isSMTP();
+            $mail->Host       = $core->smtp_host;
+            $mail->SMTPAuth   = true;
+            $mail->Username   = $core->smtp_user;
+            $mail->Password   = $core->smtp_password;
+            $mail->SMTPSecure = $core->smtp_secure ?: 'tls';
+            $mail->Port       = $core->smtp_port;
+            $mail->setFrom($core->site_email, $core->smtp_names);
+            $mail->addAddress($toEmail);
+            $mail->isHTML(true);
+            $mail->CharSet = 'UTF-8';
+            $mail->Subject = $subject;
+            $mail->Body    = "<html><body>{$body}</body></html>";
+            $mail->SMTPOptions = ['ssl' => [
+                'verify_peer'       => false,
+                'verify_peer_name'  => false,
+                'allow_self_signed' => true,
+            ]];
+            $mail->send();
+            return ['ok' => true];
+        } catch (\Exception $e) {
+            return ['ok' => false, 'error' => 'SMTP send error: ' . $mail->ErrorInfo];
+        }
+    }
+
+    return ['ok' => false, 'error' => 'Unknown mailer configured.'];
+}
+
 
 
 // ===========================================================
