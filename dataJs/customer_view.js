@@ -4,6 +4,13 @@
 $(function () {
   cdp_load(1);
 
+  // Debounced tracking-number filter (system / postal / legacy postal).
+  var _trackTimer = null;
+  $(document).on('input', '#track', function () {
+    clearTimeout(_trackTimer);
+    _trackTimer = setTimeout(function () { cdp_load(1); }, 350);
+  });
+
 });
 
 
@@ -12,9 +19,10 @@ $(function () {
 function cdp_load(page) {
     localStorage.setItem('currentTablePage-Locker', page);
   var search = $("#search").val();
+  var track = $("#track").val() || '';
   var status_courier = $("#status_courier").val();
   var filterby = $("#filterby").val();
-  var parametros = {'search': search };
+  var parametros = {'search': search, 'track': track };
   $("#loader").fadeIn('slow');
   $.ajax({
     url: './ajax/customers/customer_view_ajax.php',
