@@ -28,10 +28,38 @@
     }
 
     $challenge = $otp->createChallenge((int)$u->id, 'forgot', ['email' => $u->email]);
-    $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], 'password reset');
+
+    if (!empty($challenge['blocked'])) {
+        // Rate-limited. If a reset code was sent recently and is still pending,
+        // reuse it so the user can continue instead of being stuck.
+        if (!empty($challenge['existing_id'])) {
+            $_SESSION['otp_forgot_challenge'] = (int)$challenge['existing_id'];
+            $_SESSION['otp_forgot_user_id']   = (int)$u->id;
+            echo json_encode([
+                'success'  => true,
+                'messages' => 'A reset code was already sent recently. Enter it to continue.',
+                'redirect' => 'auth-otp.php?flow=forgot'
+            ]);
+            exit;
+        }
+        echo json_encode(['success' => false, 'errors' => $challenge['error']]);
+        exit;
+    }
+
+    $emailResult = $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], 'password reset');
     $otp->sendOtpWhatsApp($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], 'password reset');
     $_SESSION['otp_forgot_challenge'] = $challenge['id'];
     $_SESSION['otp_forgot_user_id']   = (int)$u->id;
+
+    // Email is the primary channel for password reset — surface a failure instead
+    // of silently claiming success.
+    if (empty($emailResult['ok'])) {
+        echo json_encode([
+            'success' => false,
+            'errors'  => 'Could not send the reset code by email: ' . (isset($emailResult['error']) ? $emailResult['error'] : 'unknown error') . '.'
+        ]);
+        exit;
+    }
 
     echo json_encode([
         'success' => true,
