@@ -47,7 +47,25 @@ if ($ctx['is_restricted'] && $ctx['agency_id'] !== null) {
 }
 
 if ($search != null) {
-	$sWhere .= " and (username LIKE '%" . $search . "%' or fname LIKE '%" . $search . "%' or lname LIKE '%" . $search . "%' or locker LIKE '%" . $search . "%' or email LIKE '%" . $search . "%' or phone LIKE '%" . $search . "%')";
+	// Match every word of the search independently so partial names work in any
+	// order: "John Doe", "Doe", "John" and "Doe John" all find John Doe. Each
+	// word must hit one field (AND across words, OR across fields). CONCAT covers
+	// full-name typing; locker/id cover locker-id lookups.
+	$terms = preg_split('/\s+/', trim($search));
+	foreach ($terms as $term) {
+		$term = trim($term);
+		if ($term === '') {
+			continue;
+		}
+		$sWhere .= " and (username LIKE '%" . $term . "%'"
+			. " or fname LIKE '%" . $term . "%'"
+			. " or lname LIKE '%" . $term . "%'"
+			. " or CONCAT(fname,' ',lname) LIKE '%" . $term . "%'"
+			. " or locker LIKE '%" . $term . "%'"
+			. " or id LIKE '%" . $term . "%'"
+			. " or email LIKE '%" . $term . "%'"
+			. " or phone LIKE '%" . $term . "%')";
+	}
 }
 
 // 1. Handle Active Status Filter
