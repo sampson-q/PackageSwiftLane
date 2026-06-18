@@ -27,12 +27,14 @@ $page = (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) ? $_REQUEST['pag
 $per_page = 10;
 $offset = ($page - 1) * $per_page;
 
-// Define $sWhere if it is not already set (adjust if needed)
-$sWhere = "";
+// Optional tracking-number filter (system, postal/carrier or legacy postal).
+$track      = isset($_REQUEST['track']) ? cdp_sanitize($_REQUEST['track']) : '';
+$trackWhere = ($track !== '') ? (" AND " . cdp_trackingSearchSql($track, 'a')) : '';
 
 // Get orders for the sender (locker)
-$sql = "SELECT 
+$sql = "SELECT
             a.order_incomplete,
+            a.recipient_type,
             a.status_invoice,
             a.is_consolidate,
             a.is_pickup,
@@ -57,8 +59,8 @@ $sql = "SELECT
         INNER JOIN 
             cdb_styles AS b ON a.status_courier = b.id
         LEFT JOIN 
-            cdb_package_tracking_number AS c ON a.order_id = c.order_id WHERE a.sender_id = '$userId'
-        ORDER BY 
+            cdb_package_tracking_number AS c ON a.order_id = c.order_id WHERE a.sender_id = '$userId' $trackWhere
+        ORDER BY
             a.order_id DESC";
 
 $db->cdp_query($sql);
@@ -76,8 +78,9 @@ if (!$orders) {
 }
 
 // ---------------------------------------------------------------------------
-// Total amount payable (GHS) — ONLY packages at "Ready for PickUp" (status 32)
-// count, across all pages. Each such package's stored USD total is converted to
+// Total amount payable (GHS) — packages awaiting collection count, across all
+// pages: "Ready for PickUp" (32), "Pending Collection" (1) and "Not Picked Up"
+// (16), per cdp_isPayableStatus(). Each such package's stored USD total is converted to
 // GHS and added; the tiered handling fee is added once per consolidation (on
 // the consolidation's combined GHS total) and individually for non-consolidated
 // packages.  e.g. A,B,C,D ready-for-pickup with B+C in one consolidation =>
@@ -97,8 +100,9 @@ $consolidation_groups   = array();  // consolidate_id => combined GHS cost of it
 
 $dbc = new Conexion;
 foreach ($all_pkgs as $p) {
-    // Only "Ready for PickUp" packages are payable here.
-    if ((int) $p->status_courier !== CDP_STATUS_READY_FOR_PICKUP) continue;
+    // Collectible packages are payable here: Ready for PickUp, Pending Collection,
+    // Not Picked Up (see cdp_isPayableStatus).
+    if (!cdp_isPayableStatus($p->status_courier)) continue;
 
     $pkg_ghs = cdp_usdToGhs($p->total_order, $rate_ghs);
     $payable_ghs_subtotal += $pkg_ghs;
@@ -180,8 +184,24 @@ $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
                     $db->cdp_query("SELECT * FROM cdb_users WHERE id = '" . $row->sender_id . "'");
                     $sender_data = $db->cdp_registro();
 
-                    $db->cdp_query("SELECT * FROM cdb_recipients WHERE id = '" . $row->receiver_id . "'");
-                    $receiver_data = $db->cdp_registro();
+                    // Recipient can live in cdb_users (recipient_type='user') or
+                    // cdb_recipients. Resolve from the right table, with a fallback
+                    // to the other so user-type recipients no longer show blank.
+                    if (isset($row->recipient_type) && $row->recipient_type === 'user') {
+                        $db->cdp_query("SELECT * FROM cdb_users WHERE id = '" . intval($row->receiver_id) . "'");
+                        $receiver_data = $db->cdp_registro();
+                        if (!$receiver_data) {
+                            $db->cdp_query("SELECT * FROM cdb_recipients WHERE id = '" . intval($row->receiver_id) . "'");
+                            $receiver_data = $db->cdp_registro();
+                        }
+                    } else {
+                        $db->cdp_query("SELECT * FROM cdb_recipients WHERE id = '" . intval($row->receiver_id) . "'");
+                        $receiver_data = $db->cdp_registro();
+                        if (!$receiver_data) {
+                            $db->cdp_query("SELECT * FROM cdb_users WHERE id = '" . intval($row->receiver_id) . "'");
+                            $receiver_data = $db->cdp_registro();
+                        }
+                    }
 
                     $db->cdp_query("SELECT * FROM cdb_users WHERE id = '" . $row->driver_id . "'");
                     $driver_data = $db->cdp_registro();
@@ -247,7 +267,7 @@ $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
                         <td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
                         <td>
                             <b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
-                            <?php if ((int) $row->status_courier === CDP_STATUS_READY_FOR_PICKUP): ?>
+                            <?php if (cdp_isPayableStatus($row->status_courier)): ?>
                                 <br><small class="text-muted" title="A handling fee is included in the total amount payable"><i class="fas fa-info-circle"></i> + handling fee</small>
                             <?php endif; ?>
                         </td>
@@ -289,6 +309,16 @@ $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
                             </span>
                         </td>
                         <td align='center'>
+                            <?php if ($userData->userlevel == 9 || $userData->userlevel == 2 || $userData->userlevel == 3): ?>
+                                <div class="btn-group mb-1" role="group">
+                                    <a class="btn btn-outline-secondary btn-sm" href="print_inv_ship.php?id=<?php echo $row->order_id; ?>" target="_blank" title="Print receipt (verify payment)">
+                                        <i class="ti-receipt"></i> <?php echo $lang['toolprint']; ?>
+                                    </a>
+                                    <a class="btn btn-outline-secondary btn-sm" href="print_label_ship.php?id=<?php echo $row->order_id; ?>" target="_blank" title="Print label">
+                                        <i class="ti-printer"></i> <?php echo $lang['toollabel']; ?>
+                                    </a>
+                                </div>
+                            <?php endif; ?>
                             <div class="btn-group">
                                 <button class="btn btn-block btn-outline-dark btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <i class="fas fa-ellipsis-v"></i>
