@@ -27,7 +27,7 @@ if ($userData->userlevel == 3) {
 }
 
 if ($search != null) {
-    $sWhere .= " and CONCAT(a.order_prefix, a.order_no) LIKE '%" . $search . "%'";
+    $sWhere .= " and " . cdp_trackingSearchSql($search, 'a');
 }
 
 if ($status_courier > 0) {
@@ -64,17 +64,6 @@ $db->cdp_query("UPDATE cdb_add_order SET status_invoice = 3 WHERE due_date < now
 $db->cdp_execute();
 
 
-// Warehouse-relevant statuses only:
-// 2  = Received Office    (arrived at facility)
-// 4  = In_Warehouse       (explicitly in warehouse)
-// 6  = Available          (available for collection at office)
-// 10 = Approved           (reserve approved)
-// 12 = Rejected           (booking cancelled)
-// 13 = Consolidate        (consolidated shipments held in warehouse)
-// 19 = Invoiced           (quotation approved)
-// 21 = Cancelled
-// 23 = Pending_payment
-// 25 = Not Shipped
 $warehouse_statuses = implode(',', [1, 4, 8, 15, 16, 23,32, 33]);
 
 $sql = "SELECT a.order_incomplete, a.status_invoice, a.is_consolidate, a.is_pickup, a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options, b.mod_style, b.color
@@ -100,16 +89,12 @@ if ($numrows > 0) { ?>
         <table id="zero_config" class="table table-condensed table-hover table-striped custom-table-checkbox">
             <thead>
                 <tr>
+                    <th><b><?php echo 'Swift ' . $lang['ltracking'] ?></b></th>
                     <th><b><?php echo $lang['ltracking'] ?></b></th>
                     <th><b><?php echo $lang['ddate'] ?></b></th>
                     <?php if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
                         <th><b><?php echo $lang['left498'] ?></b></th>
                     <?php } ?>
-                    <th><b><?php echo $lang['left499'] ?></b></th>
-                    <?php if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-                        <th><b><?php echo $lang['lorigin'] ?></b></th>
-                    <?php } ?>
-                    <th><b><?php echo $lang['ldestination'] ?></b></th>
                     <th><b><?php echo $lang['lstatusshipment']?></b></th>
                     
                     <th></th>
@@ -176,25 +161,20 @@ if ($numrows > 0) { ?>
 
                         $db->cdp_query("SELECT * FROM cdb_styles WHERE id = '" . $consolidate_status_courier . "'");
                         $consolidate_style = $db->cdp_registro();
+
+                        $postal_tracking = cdp_getPackageTrackingLegacyAware($row->order_id);
                     ?>
 
                         <tr class="card-hovera">
 
                             <td><b><a href="courier_view.php?id=<?php echo $row->order_id; ?>"><?php echo $row->order_prefix . $row->order_no; ?></a></b></td>
+                            <td><?php echo $postal_tracking->tracking_number; ?></td>
 
                             <td><?php echo $row->order_date; ?></td>
 
                             <?php if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
                                 <td><?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?></td>
                             <?php } ?>
-
-                            <td><?php echo $receiver_data->fname; ?> <?php echo $receiver_data->lname; ?></td>
-
-                            <?php if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-                                <td><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
-                            <?php } ?>
-
-                            <td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
 
                             <td>
                                 <span style="background: <?php echo $row->is_consolidate ? $consolidate_style->color : $row->color; ?>;" class="label label-large">

@@ -54,7 +54,7 @@ if ($userData->userlevel == 3) {
 }
 if ($search != null) {
 
-	$sWhere .= " and  CONCAT(a.order_prefix,a.order_no) LIKE '%" . $search . "%'";
+	$sWhere .= " and  " . cdp_trackingSearchSql($search, 'a');
 }
 if ($status_courier > 0) {
 

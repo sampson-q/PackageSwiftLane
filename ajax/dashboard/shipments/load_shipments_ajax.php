@@ -52,7 +52,7 @@ if (isset($_REQUEST['search'])) {
 
 	if ($search != null) {
 
-		$swhere .= " and  CONCAT(a.order_prefix,a.order_no) LIKE '%" . $search . "%'";
+		$swhere .= " and  " . cdp_trackingSearchSql($search, 'a');
 	}
 }
 
