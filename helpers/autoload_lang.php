@@ -78,6 +78,61 @@ if (!defined('CDP_STATUS_READY_FOR_PICKUP')) {
 }
 
 /**
+ * Other collectible statuses that also count toward the customer's amount payable:
+ * "Pending Collection" (1) and "Not Picked Up" (16). A package at any of these
+ * stages is awaiting collection at destination, so it is billable.
+ */
+if (!defined('CDP_STATUS_PENDING_COLLECTION')) {
+    define('CDP_STATUS_PENDING_COLLECTION', 1);
+}
+if (!defined('CDP_STATUS_NOT_PICKED_UP')) {
+    define('CDP_STATUS_NOT_PICKED_UP', 16);
+}
+
+/**
+ * True when a package's status counts toward the customer's amount payable
+ * (collectible at destination): Ready for PickUp, Pending Collection, Not Picked Up.
+ * Use this everywhere the payable total / handling fee is decided so the set of
+ * billable statuses stays in one place.
+ */
+if (!function_exists('cdp_isPayableStatus')) {
+    function cdp_isPayableStatus($status)
+    {
+        $status = (int) $status;
+        return $status === CDP_STATUS_READY_FOR_PICKUP
+            || $status === CDP_STATUS_PENDING_COLLECTION
+            || $status === CDP_STATUS_NOT_PICKED_UP;
+    }
+}
+
+/**
+ * Build a SQL boolean expression matching a tracking search term against ALL
+ * three tracking identifiers an order can have, so one search box finds any:
+ *   1. system tracking  = CONCAT(order_prefix, order_no)
+ *   2. postal/carrier   = cdb_package_tracking_number.tracking_number (current)
+ *   3. legacy postal    = cdb_add_order.tracking_num (old-system column, ~40k rows)
+ *
+ * $search must already be escaped/sanitized by the caller (the list endpoints run
+ * it through cdp_sanitize). $alias is the cdb_add_order alias in the outer query
+ * ('' for an un-aliased single-table query). Returns a parenthesized expression
+ * with no leading AND. Lives here (not querys.php) so it is available wherever
+ * loader.php is included.
+ */
+if (!function_exists('cdp_trackingSearchSql')) {
+    function cdp_trackingSearchSql($search, $alias = 'a')
+    {
+        $p = ($alias !== '') ? ($alias . '.') : '';
+        $s = $search;
+        return "("
+            . "CONCAT({$p}order_prefix, {$p}order_no) LIKE '%{$s}%'"
+            . " OR {$p}tracking_num LIKE '%{$s}%'"
+            . " OR EXISTS (SELECT 1 FROM cdb_package_tracking_number cptn"
+            . " WHERE cptn.order_id = {$p}order_id AND cptn.tracking_number LIKE '%{$s}%')"
+            . ")";
+    }
+}
+
+/**
  * Convert a USD amount to GHS using the system exchange rate.
  * courier_add/edit/view stay in USD; conversion only happens here, at the
  * customer/payment/messaging stage.
