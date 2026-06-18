@@ -60,22 +60,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($flow === 'forgot' && !empty($_SESSION['otp_forgot_user_id'])) {
             $uid = (int) $_SESSION['otp_forgot_user_id'];
 
-        } elseif ($flow === 'signup' && !empty($_SESSION['pending_signup'])) {
-            $pending   = $_SESSION['pending_signup'];
-            $challenge = $otp->createChallenge(0, 'signup', ['email' => $pending['email']]);
+        } elseif ($flow === 'signup' && !empty($_SESSION['signup_user_id'])) {
+            $suid = (int) $_SESSION['signup_user_id'];
+            $db->cdp_query("SELECT email, fname, lname FROM cdb_users WHERE id=:id AND registration_complete=0 LIMIT 1");
+            $db->bind(':id', $suid);
+            $su = $db->cdp_registro();
 
-            if (!empty($challenge['blocked'])) {
-                $error = $challenge['error'];
-            } else {
-                $_SESSION[$sessionKey] = $challenge['id'];
-                $challengeId           = $challenge['id'];
-                $otp->sendOtpEmail(
-                    $pending['email'],
-                    $pending['fname'] . ' ' . $pending['lname'],
-                    $challenge['code'],
-                    'signup'
-                );
-                $message = 'A new OTP has been sent.';
+            if ($su) {
+                $challenge = $otp->createChallenge($suid, 'signup', ['email' => $su->email]);
+
+                if (!empty($challenge['blocked'])) {
+                    $error = $challenge['error'];
+                } else {
+                    $_SESSION[$sessionKey] = $challenge['id'];
+                    $challengeId           = $challenge['id'];
+                    $emailResult = $otp->sendOtpEmail(
+                        $su->email,
+                        $su->fname . ' ' . $su->lname,
+                        $challenge['code'],
+                        'signup'
+                    );
+                    if (!empty($emailResult['ok'])) {
+                        $message = 'A new OTP has been sent to your email.';
+                    } else {
+                        $error = 'Email could not be sent: ' . (isset($emailResult['error']) ? $emailResult['error'] : 'unknown error') . '.';
+                    }
+                }
             }
 
         } elseif ($challengeId > 0) {
@@ -102,11 +112,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION[$sessionKey] = $challenge['id'];
                     $challengeId           = $challenge['id'];
 
-                    $purpose = ($flow === 'forgot') ? 'password reset' : $flow;
-                    $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $purpose);
-                    $otp->sendOtpWhatsApp($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $purpose);
+                    $purpose     = ($flow === 'forgot') ? 'password reset' : $flow;
+                    $emailResult = $otp->sendOtpEmail($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $purpose);
+                    $waResult    = $otp->sendOtpWhatsApp($u->email, $u->fname . ' ' . $u->lname, $challenge['code'], $purpose);
 
-                    $message = 'A new OTP has been sent to your email and WhatsApp.';
+                    $sentTo = [];
+                    if (!empty($emailResult['ok'])) { $sentTo[] = 'email'; }
+                    if (!empty($waResult['ok']))    { $sentTo[] = 'WhatsApp'; }
+
+                    if ($sentTo) {
+                        $message = 'A new OTP has been sent to your ' . implode(' and ', $sentTo) . '.';
+                    }
+                    // Surface a failed channel instead of silently swallowing it
+                    if (empty($emailResult['ok'])) {
+                        $error = 'Email could not be sent: ' . (isset($emailResult['error']) ? $emailResult['error'] : 'unknown error') . '.';
+                    }
                 }
             }
         }
@@ -136,70 +156,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // ── Sign-up flow ──────────────────────────────────────────────────
             } elseif ($flow === 'signup') {
-                $pending = isset($_SESSION['pending_signup']) ? $_SESSION['pending_signup'] : null;
+                // The account row already exists (created at sign-up, marked
+                // incomplete). Verifying the email just completes the registration;
+                // the account stays inactive + unapproved until an admin approves.
+                $suid = (int) $verify['user_id'];
+                if ($suid <= 0 && !empty($_SESSION['signup_user_id'])) {
+                    $suid = (int) $_SESSION['signup_user_id'];
+                }
 
-                if (!$pending) {
+                if ($suid <= 0) {
                     $error = 'Session expired. Please register again.';
                 } else {
-                    $tempDir   = 'assets/uploads/tmp/' . $pending['temp_token'] . '/';
-                    $uploadDir = 'assets/uploads/users/';
-                    if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0755, true);
-                    }
+                    $db->cdp_query("SELECT email, fname, lname, username, locker FROM cdb_users WHERE id=:id LIMIT 1");
+                    $db->bind(':id', $suid);
+                    $su = $db->cdp_registro();
 
-                    $avatarPath        = cdp_commitUpload($tempDir, $pending['avatar_tmp'],         $uploadDir, 'avatar');
-                    $documentPhotoPath = cdp_commitUpload($tempDir, $pending['document_photo_tmp'], $uploadDir, 'docphoto');
-                    cdp_cleanupTempDir($tempDir);
-
-                    $db->cdp_query('INSERT INTO cdb_users
-                        (username, password, locker, userlevel, email, fname, lname,
-                         document_number, document_type, created, phone, active, terms, avatar, document_photo, company)
-                        VALUES
-                        (:username, :password, :locker, :userlevel, :email, :fname, :lname,
-                         :document_number, :document_type, :created, :phone, :active, :terms, :avatar, :document_photo, :company)');
-
-                    $db->bind(':username',        $pending['username']);
-                    $db->bind(':password',        $pending['password']);
-                    $db->bind(':locker',          $pending['locker']);
-                    $db->bind(':userlevel',       1);
-                    $db->bind(':email',           $pending['email']);
-                    $db->bind(':fname',           $pending['fname']);
-                    $db->bind(':lname',           $pending['lname']);
-                    $db->bind(':document_number', $pending['document_number']);
-                    $db->bind(':document_type',   $pending['document_type']);
-                    $db->bind(':created',         $pending['created']);
-                    $db->bind(':phone',           $pending['phone']);
-                    $db->bind(':active',          0);
-                    $db->bind(':terms',           $pending['terms']);
-                    $db->bind(':avatar',          '../' . $avatarPath);
-                    $db->bind(':document_photo',  '../' . $documentPhotoPath);
-                    $db->bind(':company',         $pending['company']);
+                    $db->cdp_query("UPDATE cdb_users SET registration_complete = 1 WHERE id = :id");
+                    $db->bind(':id', $suid);
                     $db->cdp_execute();
 
-                    $user_created_id = $db->dbh->lastInsertId();
-
-                    if ($user_created_id) {
-                        cdp_insertAddressCustomer([
-                            'user_id' => $user_created_id,
-                            'address' => $pending['address'],
-                            'country' => $pending['country'],
-                            'city'    => $pending['city'],
-                            'state'   => $pending['state'],
-                            'postal'  => $pending['postal'],
+                    // "Registration Received": account created, awaiting approval.
+                    // Includes the generated locker id + virtual locker address.
+                    if ($su) {
+                        cdp_sendTemplateEmail(26, $su->email, [
+                            '[NAME]'     => trim($su->fname . ' ' . $su->lname),
+                            '[USERNAME]' => $su->username,
+                            '[LOCKER]'   => $su->locker,
+                            '[EMAIL]'    => $su->email,
                         ]);
-
-                        $db->cdp_query("INSERT INTO cdb_user_details_update_check
-                            (user_id, update_address, update_document)
-                            VALUES (:user_id, 1, 1)");
-                        $db->bind(':user_id', $user_created_id);
-                        $db->cdp_execute();
-
-                        unset($_SESSION['otp_signup_challenge'], $_SESSION['pending_signup']);
-                        $otpSuccess  = true;
-                        $otpRedirect = 'index.php';
-                    } else {
-                        $error = 'An error occurred while creating your account. Please contact the administrator.';
                     }
+
+                    unset($_SESSION['otp_signup_challenge'], $_SESSION['signup_user_id']);
+                    $otpSuccess  = true;
+                    $otpRedirect = 'login.php?notice=registration_complete';
                 }
 
             // ── Forgot-password flow ──────────────────────────────────────────
@@ -215,6 +204,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = $verify['error'];
         }
     }
+}
+
+// ── Signup: issue the OTP the moment the user lands here (GET) ──────────────
+// Created on arrival, not at form submit — otherwise the success modal on the
+// sign-up page could sit open long enough for the code to expire before the user
+// reaches this page (the exact complaint behind "OTP not working"). Reuses a live
+// challenge on refresh.
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && $flow === 'signup' && !empty($_SESSION['signup_user_id'])) {
+    $suid = (int) $_SESSION['signup_user_id'];
+
+    $challengeLive = false;
+    if ($challengeId > 0) {
+        $db->cdp_query("SELECT status, expires_at FROM cdb_auth_otp_challenges WHERE id=:id LIMIT 1");
+        $db->bind(':id', $challengeId);
+        $cur = $db->cdp_registro();
+        if ($cur && $cur->status === 'pending' && strtotime($cur->expires_at) > time()) {
+            $challengeLive = true;
+        }
+    }
+
+    if (!$challengeLive) {
+        $db->cdp_query("SELECT email, fname, lname FROM cdb_users WHERE id=:id AND registration_complete=0 LIMIT 1");
+        $db->bind(':id', $suid);
+        $su = $db->cdp_registro();
+        if ($su) {
+            $challenge = $otp->createChallenge($suid, 'signup', ['email' => $su->email]);
+            if (empty($challenge['blocked'])) {
+                $_SESSION[$sessionKey] = $challenge['id'];
+                $challengeId           = $challenge['id'];
+                $otp->sendOtpEmail($su->email, $su->fname . ' ' . $su->lname, $challenge['code'], 'signup');
+            } elseif (!empty($challenge['existing_id'])) {
+                $_SESSION[$sessionKey] = (int) $challenge['existing_id'];
+                $challengeId           = (int) $challenge['existing_id'];
+            }
+        }
+    }
+}
+
+// ── Success: go straight to the destination, no interstitial popup ──
+if ($otpSuccess) {
+    header('Location: ' . $otpRedirect);
+    exit;
+}
+
+// ── Guard: no active OTP context (session expired or page visited directly) ──
+// Without a flow in the session this page is a dead-end — the resend button has
+// no user to send to and there's no challenge to count down to, so it just sits
+// disabled with no timer. Send the user back to where they can start over.
+$hasContext =
+    ($flow === 'login'  && (!empty($_SESSION['otp_login_user_id'])  || $challengeId > 0)) ||
+    ($flow === 'forgot' && (!empty($_SESSION['otp_forgot_user_id']) || $challengeId > 0)) ||
+    ($flow === 'signup' && (!empty($_SESSION['signup_user_id'])     || $challengeId > 0));
+
+if (!$hasContext) {
+    $startPages = [
+        'login'  => 'login.php',
+        'forgot' => 'forgot-password.php',
+        'signup' => 'sign-up.php',
+    ];
+    $dest = isset($startPages[$flow]) ? $startPages[$flow] : 'login.php';
+    header('Location: ' . $dest . '?notice=otp_expired');
+    exit;
 }
 
 // ── Fetch the created_at of the current challenge so the JS timer can resume ──
@@ -548,21 +599,6 @@ if ($challengeId > 0) {
 
     })();
     </script>
-
-    <?php if ($otpSuccess): ?>
-    <script>
-        Swal.fire({
-            title: 'Verified!',
-            text: 'Your identity has been confirmed successfully.',
-            icon: 'success',
-            allowOutsideClick: false,
-            confirmButtonText: 'Continue',
-            confirmButtonColor: '#336aea',
-        }).then(function () {
-            window.location.href = '<?php echo $otpRedirect; ?>';
-        });
-    </script>
-    <?php endif; ?>
 
 </body>
 </html>
