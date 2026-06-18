@@ -67,10 +67,12 @@
 							<span class="badge badge-notify badge-sm up badge-light pull-top-xs" id="countNotifications">0</span>
 						</a>
 
-                        <a class="sidebar-link waves-effect waves-dark" href="customers_list.php" aria-expanded="false">
-                            <iconify-icon icon="gridicons:multiple-users" height="32" class="text-success"></iconify-icon>
-                            <span class="badge badge-notify badge-sm up badge-light pull-top-xs" id=""><?php echo $core->cdp_getNewUsers(); ?></span>
-                        </a>
+                        <?php if (($userData->userlevel != 1)) { ?>
+                            <a class="sidebar-link waves-effect waves-dark" href="customers_list.php" aria-expanded="false">
+                                <iconify-icon icon="gridicons:multiple-users" height="32" class="text-success"></iconify-icon>
+                                <span class="badge badge-notify badge-sm up badge-light pull-top-xs" id=""><?php echo $core->cdp_getNewUsers(); ?></span>
+                            </a>
+                        <?php } ?>
                         
 						<div class="dropdown-menu dropdown-menu-right mailbox animated bounceInDown">
 							<div id="ajax_response"></div>
