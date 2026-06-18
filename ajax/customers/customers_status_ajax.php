@@ -53,56 +53,18 @@
                     // ... [inside the approval block after approving the user and retrieving userInfo]
 
                     if ($userInfo) {
-                        $subject = "Your account has been approved!";
-                        $body = "Hello " . $userInfo->fname . ",<br/><br/>" .
-                                "Your account has been successfully approved and activated. " .
-                                "You can now log in and start using our services.<br/><br/>" .
-                                "Thank you,<br/>" . $core->site_name;
-                        
-                        $mailSent = true; // assume success by default
-
-                        if ($core->mailer == 'PHP') {
-                            $websiteName  = $core->site_name;
-                            $emailAddress = $core->site_email;
-                            $headers  = "MIME-Version: 1.0\r\n";
-                            $headers .= "Content-type: text/html; charset=iso-8859-1\r\n";
-                            $headers .= "From: " . $websiteName . " <" . $emailAddress . ">\r\n";
-                            $mailSent = mail($userInfo->email, $subject, $body, $headers);
-                        } elseif ($core->mailer == 'SMTP') {
-                            $mail = new PHPMailer(true);
-                            try {
-                                $mail->isSMTP();
-                                $mail->Host       = $smtphoste;
-                                $mail->SMTPAuth   = true;
-                                $mail->Username   = $smtpuser;
-                                $mail->Password   = $smtppass;
-                                $mail->SMTPSecure = $smtpsecure;
-                                $mail->Port       = $smtpport;
-                                
-                                $mail->setFrom($site_email, $names_info);
-                                $mail->addAddress($userInfo->email);
-                                
-                                $mail->isHTML(true);
-                                $mail->Subject = $subject;
-                                $mail->Body    = "<html><body><p>" . $body . "</p></body></html>";
-                                $mail->SMTPOptions = array(
-                                    'ssl' => array(
-                                        'verify_peer'       => false,
-                                        'verify_peer_name'  => false,
-                                        'allow_self_signed' => true
-                                    )
-                                );
-                                $mailSent = $mail->send();
-                            } catch (Exception $e) {
-                                error_log("Mail error: " . $e->getMessage());
-                                $mailSent = false;
-                            }
-                        }
+                        // "Your account has been activated" — tells the now-approved
+                        // (and auto-activated) customer they can start using the system.
+                        $emailResult = cdp_sendTemplateEmail(17, $userInfo->email, [
+                            '[NAME]'     => $userInfo->fname,
+                            '[USERNAME]' => $userInfo->fname,
+                        ]);
+                        $mailSent = !empty($emailResult['ok']);
 
                         // Regardless of email status, send success response for approval
                         $response['status'] = 'success';
-                        $response['message'] = $mailSent 
-                            ? 'User approved, activated, and email sent.' 
+                        $response['message'] = $mailSent
+                            ? 'User approved, activated, and email sent.'
                             : 'User approved and activated, but email failed to send.';
                     }
 
