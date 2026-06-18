@@ -2,7 +2,8 @@
 
 var forceProfileState = {
     otpChallengeId: null,
-    phoneIntl: null
+    phoneIntl: null,
+    currentPhone: ""
 };
 
 $(function () {
@@ -17,6 +18,8 @@ function checkProfileCompletion() {
         dataType: "json",
         cache: false,
         success: function (data) {
+            forceProfileState.currentPhone = (data.phone || "").toString();
+
             var steps = [];
 
             if (parseInt(data.update_address, 10) === 0) {
@@ -57,13 +60,9 @@ function runForcedProfileSteps(steps, index) {
     }
 
     if (step === "phone") {
-        openPhoneModal().then(function (saved) {
-            if (saved) {
-                openOtpModal().then(function (verified) {
-                    if (verified) {
-                        runForcedProfileSteps(steps, index + 1);
-                    }
-                });
+        startWhatsappVerification().then(function (verified) {
+            if (verified) {
+                runForcedProfileSteps(steps, index + 1);
             }
         });
         return;
@@ -97,6 +96,82 @@ function openAddressModal() {
             backdrop: "static",
             keyboard: false,
             show: true
+        });
+    });
+}
+
+// Account setup: confirm/verify the customer's WhatsApp number. Asks whether the
+// number on file is their WhatsApp first ("Yes" sends a code straight to it);
+// "No" (or no number on file, or a send failure) falls back to entering one.
+function startWhatsappVerification() {
+    return new Promise(function (resolve) {
+        var phone = (forceProfileState.currentPhone || "").trim();
+
+        function verifyAfterSend() {
+            openOtpModal().then(function (verified) {
+                resolve(verified === true);
+            });
+        }
+
+        function askForNewNumber() {
+            openPhoneModal().then(function (saved) {
+                if (saved) {
+                    openOtpModal().then(function (verified) {
+                        resolve(verified === true);
+                    });
+                } else {
+                    resolve(false);
+                }
+            });
+        }
+
+        if (!phone) {
+            askForNewNumber();
+            return;
+        }
+
+        Swal.fire({
+            title: "WhatsApp verification",
+            html: "Is <b>" + $("<div>").text(phone).html() + "</b> the WhatsApp number you receive messages on?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Yes, send me a code",
+            cancelButtonText: "No, use another number",
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        }).then(function (result) {
+            if (!result.isConfirmed) {
+                askForNewNumber();
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "ajax/send_profile_phone_otp_ajax.php",
+                dataType: "json",
+                data: { phone: phone },
+                success: function (resp) {
+                    if (resp.status === "success") {
+                        forceProfileState.otpChallengeId = resp.challenge_id;
+                        verifyAfterSend();
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Couldn't send the code",
+                            text: resp.message || "That number couldn't receive a WhatsApp message. Please use another number.",
+                            allowOutsideClick: false
+                        }).then(askForNewNumber);
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Something went wrong sending the code. Please try another number.",
+                        allowOutsideClick: false
+                    }).then(askForNewNumber);
+                }
+            });
         });
     });
 }
@@ -485,11 +560,15 @@ function verifyForcedPhoneOtp() {
 }
 
 function resendForcedPhoneOtp() {
-    if (!forceProfileState.phoneIntl) {
+    // In the "Yes, this is my WhatsApp number" path phoneIntl isn't initialised,
+    // so fall back to the number on file.
+    var phone = forceProfileState.phoneIntl
+        ? forceProfileState.phoneIntl.getNumber()
+        : (forceProfileState.currentPhone || "");
+
+    if (!phone) {
         return;
     }
-
-    var phone = forceProfileState.phoneIntl.getNumber();
 
     $.ajax({
         type: "POST",
