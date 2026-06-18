@@ -513,15 +513,15 @@ $(document).ready(function () {
     //   return false;
     // }
 
-    if ($.trim($("#driver_id").val()) == 0) {
-      Swal.fire({
-        title: "Oops...",
-        text: message_error_form90,
-        icon: "error",
-        confirmButtonColor: "#336aea",
-      });
-      return false;
-    }
+    // if ($.trim($("#driver_id").val()) == 0) {
+    //   Swal.fire({
+    //     title: "Oops...",
+    //     text: message_error_form90,
+    //     icon: "error",
+    //     confirmButtonColor: "#336aea",
+    //   });
+    //   return false;
+    // }
 
     $("#invoice_form").submit();
   });
