@@ -218,6 +218,12 @@ $history = $db->cdp_registros();
                                 </ul>
                                 <!-- Tabs -->
                                 <input type="hidden" id="search" name="search" value="<?php echo $_GET['user']; ?>">
+                                <div class="p-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa fa-search"></i></span>
+                                        <input type="text" id="track" class="form-control" placeholder="<?php echo $lang['ltracking']; ?>">
+                                    </div>
+                                </div>
                                 <div class="outer_divx"></div>
                             </div>
                         </div>
