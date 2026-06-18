@@ -32,6 +32,9 @@ if (($userData->userlevel ?? 0) != 6 && !$user->cdp_hasPermission('view_client_l
     exit;
 }
 
+header('location: error403.php') ? $userData->userlevel == 1 : header('location: customers_profile_edit.php?user=' . $userData->id);
+exit;
+
 // Contexto de agencia (para estadísticas multi-tenant)
 $ctx = cdp_getAgencyContext();
 $whereAgency = '';
