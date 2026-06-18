@@ -1,456 +1,375 @@
 <?php
-// *************************************************************************
-// *                                                                       *
-// * DEPRIXA PRO -  Integrated Web Shipping System                         *
-// * Copyright (c) JAOMWEB. All Rights Reserved                            *
-// *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * Email: support@jaom.info                                              *
-// * Website: http://www.jaom.info                                         *
-// *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * This software is furnished under a license and may be used and copied *
-// * only  in  accordance  with  the  terms  of such  license and with the *
-// * inclusion of the above copyright notice.                              *
-// * If you Purchased from Codecanyon, Please read the full License from   *
-// * here- http://codecanyon.net/licenses/standard                         *
-// *                                                                       *
-// *************************************************************************
-
-
-
 require_once('helpers/querys.php');
 
 if (isset($_GET['id'])) {
-    $printOrderId = (int)$_GET['id'];
-    $data = cdp_getCourierPrint($printOrderId);
+    $data = cdp_getCourierPrint($_GET['id']);
 }
 
 if (!isset($_GET['id']) or $data['rowCount'] != 1) {
     cdp_redirect_to("courier_list.php");
 }
 
-
-
 $row = $data['data'];
 
-$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id=:order_id");
-$db->bind(':order_id', $printOrderId);
-$db->cdp_execute();
+// Get order items
+$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . $_GET['id'] . "'");
 $order_items = $db->cdp_registros();
 
-$db->cdp_query("SELECT * FROM cdb_met_payment where id=:order_pay_mode");
-$db->bind(':order_pay_mode', (int)$row->order_pay_mode);
-$db->cdp_execute();
-$met_payment = $db->cdp_registro();
-
-
-$db->cdp_query("SELECT * FROM cdb_courier_com where id=:order_courier");
-$db->bind(':order_courier', (int)$row->order_courier);
-$db->cdp_execute();
-$courier_com = $db->cdp_registro();
-
-$db->cdp_query("SELECT * FROM cdb_category where id=:order_item_category");
-$db->bind(':order_item_category', (int)$row->order_item_category);
-$db->cdp_execute();
-$category = $db->cdp_registro();
-
-$db->cdp_query("SELECT * FROM cdb_shipping_mode where id=:order_service_options");
-$db->bind(':order_service_options', (int)$row->order_service_options);
-$db->cdp_execute();
+// Get shipping mode
+$db->cdp_query("SELECT * FROM cdb_shipping_mode where id= '" . $row->order_service_options . "'");
 $shipping_mode = $db->cdp_registro();
 
-$fecha = date("Y-m-d :h:i A", strtotime($row->order_datetime));
+// Get category
+$db->cdp_query("SELECT * FROM cdb_category where id= '" . $row->order_item_category . "'");
+$category = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_users where id=:receiver_id");
-$db->bind(':receiver_id', (int)$row->receiver_id);
-$db->cdp_execute();
-$receiver_data = $db->cdp_registro();
+// Get courier
+$db->cdp_query("SELECT * FROM cdb_courier_com where id= '" . $row->order_courier . "'");
+$courier_com = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_users where id=:sender_id");
-$db->bind(':sender_id', (int)$row->sender_id);
-$db->cdp_execute();
+// Get sender and receiver
+$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
 $sender_data = $db->cdp_registro();
 
+$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->receiver_id . "'");
+$receiver_data = $db->cdp_registro();
 
-
-
-
-$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track=:order_track");
-$db->bind(':order_track', (string)$row->order_prefix . (string)$row->order_no);
-$db->cdp_execute();
+// Get address
+$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row->order_prefix . $row->order_no . "'");
 $address_order = $db->cdp_registro();
 
-?>
-<html dir="<?php echo $direction_layout; ?>" lang="en">
+// Get tracking and ETA
+$package_tracking = cdp_getPackageTrackingLegacyAware($_GET['id']);
 
+// Calculate totals
+$total_weight = 0;
+foreach ($order_items as $item) {
+    $total_weight += (float)$item->order_item_weight;
+}
+
+?>
+<!DOCTYPE html>
+<html dir="<?php echo $direction_layout; ?>" lang="en">
 <head>
     <meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="theme-color" content="#ffffff">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <!-- Tell the browser to be responsive to screen width -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Meta Description (for search results) -->
-    <meta name="description" content="<?php echo htmlspecialchars($core->meta_description, ENT_QUOTES, 'UTF-8'); ?>">
-    <!-- Author (content owner) -->
-    <meta name="author" content="CODDINGPRO">
-    <!-- Keywords (related keywords) -->
-    <meta name="keywords" content="<?php echo htmlspecialchars($core->meta_keywords, ENT_QUOTES, 'UTF-8'); ?>">
-    <!-- Open Graph Meta (for social media sharing, like Facebook) -->
-    <meta property="og:title" content="<?php echo htmlspecialchars($core->og_title, ENT_QUOTES, 'UTF-8'); ?>">
-    <meta property="og:description" content="<?php echo htmlspecialchars($core->og_description, ENT_QUOTES, 'UTF-8'); ?>">
-    <meta property="og:type" content="<?php echo htmlspecialchars($core->og_type, ENT_QUOTES, 'UTF-8'); ?>">
-    <meta property="og:url" content="<?php echo htmlspecialchars($core->og_url, ENT_QUOTES, 'UTF-8'); ?>">
-    <meta property="og:image" content="<?php echo htmlspecialchars($core->og_image, ENT_QUOTES, 'UTF-8'); ?>">
-    <!-- Favicon icon -->
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/uploads/favicon.png">
-    <title><?php echo $lang['inv-shipping19'] ?>- <?php echo $row->order_prefix . $row->order_no; ?></title>
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
+    <title><?php echo $lang['inv-shipping19'] . ' ' ?> - <?php echo $row->order_prefix . $row->order_no; ?></title>
+    <link href="assets/custom_dependencies/bootstrap.min.css" rel="stylesheet">
     <link type='text/css' href='assets/custom_dependencies/print.css' rel='stylesheet' />
-    <link href="assets/css/style.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/jquery-ui.css" type="text/css" />
-    <link href="assets/css/front.css" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="assets/custom_dependencies/bootstrap.min.css" rel="stylesheet">
-
     <style>
-        h4 {
-            border-bottom: 1px solid black;
+        /* ── 80mm thermal receipt ─────────────────────────────────────────── */
+        @page { size: 80mm auto; margin: 0; }
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; padding: 10px; background: #f5f5f5; }
+        .container { width: 80mm; margin: 0 auto; background: white; padding: 4mm 3mm; }
+        .header { text-align: center; border-bottom: 1px solid #333; padding-bottom: 8px; margin-bottom: 12px; }
+        .logo img { max-width: 45mm; height: auto; }
+        .company-info { padding: 0; }
+        .company-info h2 { margin: 6px 0 4px 0; font-size: 15px; }
+        .company-info p { margin: 1px 0; font-size: 9px; color: #555; }
+        .row-section { display: block; margin-bottom: 10px; }
+        .card { border: 1px solid #ddd; padding: 8px; background: #fafafa; margin-bottom: 8px; }
+        .card-title { font-weight: bold; font-size: 11px; margin-bottom: 8px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
+        .card-row { display: flex; margin-bottom: 5px; font-size: 10px; }
+        .card-label { flex: 0 0 38%; font-weight: 600; color: #333; }
+        .card-value { flex: 1; color: #555; word-break: break-word; }
+        .card-body { padding: 0; }
+        h3.card-title span { font-size: 12px; }
+        .barcode { text-align: center; margin: 10px 0; }
+        .barcode img { max-width: 74mm; height: auto; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        thead { background: #333; color: white; }
+        th { padding: 5px; text-align: left; font-weight: 600; font-size: 10px; border: 1px solid #ddd; }
+        td { padding: 5px; border: 1px solid #ddd; font-size: 10px; word-break: break-word; }
+        tbody tr:nth-child(even) { background: #f9f9f9; }
+        .totals { display: flex; gap: 8px; margin: 12px 0; }
+        .total-box { flex: 1; text-align: center; }
+        .total-box label { font-size: 9px; color: #666; font-weight: 600; display: block; margin-bottom: 3px; }
+        .total-box .value { font-size: 15px; font-weight: bold; color: #333; }
+        .footer { margin-top: 14px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 9px; }
+        .footer table { margin: 0; }
+        .footer td { border: none; font-size: 9px; }
+        .print-button { text-align: center; margin: 16px 0; }
+        .print-button button { padding: 10px 20px; font-size: 14px; cursor: pointer; }
+        .print-info { margin-top: 8px; font-size: 10px; color: #999; }
+        @media print {
+            body { background: white; padding: 0; }
+            .container { width: 80mm; max-width: 80mm; padding: 2mm; }
+            .print-button, .print-info { display: none; }
         }
     </style>
 </head>
-
 <body>
-    <div id="page-wrap">
-        <table>
-            <tr>
-                <td style="border: 0;  text-align: left" width="18%">
-                    <div id="logo">
-                        <?php echo ($core->logo) ? '<img src="assets/' . $core->logo . '" alt="' . $core->site_name . '" width="190" height="39"/>' : $core->site_name; ?>
-                </td>
-                <td style="border: 0;  text-align: center" width="56%">
-                    <?php echo $lang['inv-shipping1'] ?>: <?php echo $core->c_nit; ?> </br>
-                    <?php echo $lang['inv-shipping2'] ?>: <?php echo $core->c_phone; ?></br>
-                    <?php echo $lang['inv-shipping3'] ?>: <?php echo $core->site_email; ?></br>
-                    <?php echo $lang['inv-shipping4'] ?>: <?php echo $core->c_address; ?> - <?php echo $core->c_country; ?>-<?php echo $core->c_city; ?>
-                </td>
-                <td style="border: 0;  text-align: center" width="48%">
-                    <br><div style="font-weight:700; letter-spacing: 2px; padding-top: 6px;"><?php echo htmlspecialchars($row->order_prefix . $row->order_no, ENT_QUOTES, 'UTF-8'); ?></div>
-                </td>
-            </tr>
-        </table>
-        <hr>
-        <div id="customer">
-
-            <table align="left" width="55%">
-                <tr>
-                    <td style="border: 1px solid white; text-align: left">
-                        <strong><?php echo $lang['inv-shipping5'] ?></strong> </br>
-                        <table id="items">
-                            <b><?php echo $sender_data->fname . " " . $sender_data->lname; ?></b></br> </br>
-                            <?php echo $address_order->sender_address; ?> </br>
-                            <?php echo $address_order->sender_country . " | " . $address_order->sender_city; ?> </br>
-                            <?php echo $sender_data->phone; ?> </br>
-                            <?php echo $sender_data->email; ?>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-
-            <table align="right" width="45%">
-
-                <tr>
-                    <td class="meta-td" style="line-height: 7px">
-                        <span style="color:white;"><?php echo $lang['itemcategory'] ?></span>
-                    </td>
-                    <td><?php if ($category != null) {
-                            echo $category->name_item;
-                        } ?></td>
-                </tr>
-                <tr>
-                    <td class="meta-td" style="line-height: 7px">
-                        <span style="color:white;"><?php echo $lang['inv-shipping7'] ?></span>
-
-                    </td>
-
-                    <td>
-                        <?php if ($courier_com != null) {
-                            echo $courier_com->name_com;
-                        } ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="meta-td" style="line-height: 7px">
-                        <span style="color:white;"><?php echo $lang['add-title22'] ?></span>
-                    </td>
-                    
-                    <td>
-                        <?php if ($shipping_mode != null) {
-                            echo $shipping_mode->ship_mode;
-                        } ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="meta-td" style="line-height: 7px">
-                        <span style="color:white;"><?php echo $lang['inv-shipping8'] ?></span>
-                    </td>
-                    <td><?php echo $fecha; ?></td>
-                </tr>
-                <tr>
-                    <td class="meta-td" style="line-height: 7px">
-                        <span style="color:white;"><?php echo $lang['inv-shipping9'] ?></span>
-                    </td>
-                    <td><b><?php echo $row->order_prefix . $row->order_no; ?></b></td>
-                </tr>
-            </table>
+    <div class="container">
+        <!-- Header with Logo and Company Info -->
+        <div class="header">
+            <div class="logo">
+                <?php echo ($core->logo) ? '<img src="assets/' . $core->logo . '" alt="' . $core->site_name . '"/>' : '<h3>' . $core->site_name . '</h3>'; ?>
+            </div>
+            <div class="company-info">
+                <h2><?php echo $core->site_name; ?></h2>
+                <p><strong><?php echo $lang['inv-shipping2'] ?>:</strong> <?php echo "+233(0)243438799 || +233(0)342292798" ?></p>
+                <p><strong><?php echo $lang['inv-shipping3'] ?>:</strong> <?php echo $core->site_email; ?></p>
+                <p><strong><?php echo 'Address:' ?></strong> #01, Adaman Crescent, Behind The Allied Filling Station, Tesano Abeka Junction
+            </div>
         </div>
-        <table id="items">
-            <tr>
-                <th style="color:white;" width="5%"><b><?php echo $lang['left214'] ?></b></th>
-                <th style="color:white;" width="31%"><b><?php echo $lang['left213'] ?></b></th>
-                <th style="color:white;" width="12%"><b><?php echo $lang['left215'] ?></b></th>
-                <th style="color:white;" width="12%"><b><?php echo $lang['left216'] ?></b></th>
-                <th style="color:white;" width="12%"><b><?php echo $lang['left217'] ?></b></th>
-                <th style="color:white;" width="12%"><b><?php echo $lang['left218'] ?></b></th>
-                <th style="color:white;" width="12%"><b><?php echo $lang['left219'] ?></b></th>
-                <th style="color:white;" width="12%"><b><?php echo $lang['left231c9'] ?></b></th>
-                <th style="color:white;" width="12%"><b><?php echo $lang['left239'] ?></b></th>
-            </tr>
-            <?php
 
-            $sumador_total = 0;
-            $sumador_libras = 0;
-            $sumador_librass = 0;
-            $sumador_volumetric = 0;
-            $sumador_valor_declarado = 0;
-            $max_fixed_charge = 0;
-            $total_chargeable_weight = 0;
-            $precio_total = 0;
-            $total_impuesto = 0;
-            $total_seguro = 0;
-            $total_peso = 0;
-            $total_descuento = 0;
-            $total_impuesto_aduanero = 0;
-            $total_valor_declarado = 0;
+        <!-- Barcode -->
+        <div class="barcode">
+            <img src='https://barcode.tec-it.com/barcode.ashx?data=<?php echo $row->order_prefix . $row->order_no; ?>&code=Code128&multiplebarcodes=false&translate-esc=false&unit=Fit&dpi=92&imagetype=Gif&rotation=0&color=%23000000&bgcolor=%23ffffff&qunit=Mm&quiet=0&modulewidth=50' alt='' />
+        </div>
 
+        <!-- Sender and Recipient Cards -->
+        <div class="row-section">
+            <div class="card">
+                <div class="card-title"><?php echo $lang['inv-shipping5']; ?></div>
+                <div class="card-row">
+                    <span class="card-label">Name:</span>
+                    <span class="card-value"><strong><?php echo $sender_data->fname . " " . $sender_data->lname; ?></strong></span>
+                </div>
+                <div class="card-row">
+                    <span class="card-label">Address:</span>
+                    <span class="card-value"><?php echo $address_order ? $address_order->sender_address : 'N/A'; ?></span>
+                </div>
+                <div class="card-row">
+                    <span class="card-label">Location:</span>
+                    <span class="card-value"><?php echo $address_order ? $address_order->sender_city . ', ' . $address_order->sender_country : 'N/A'; ?></span>
+                </div>
+                <div class="card-row">
+                    <span class="card-label">Phone:</span>
+                    <span class="card-value"><?php echo $sender_data->phone; ?></span>
+                </div>
+            </div>
 
-            foreach ($order_items as $row_item) {
+            <div class="card">
+                <div class="card-title">Shipment Details</div>
+                <div class="card-row">
+                    <span class="card-label">Tracking #:</span>
+                    <span class="card-value"><strong><?php echo $package_tracking->tracking_number ?? 'N/A'; ?></strong></span>
+                </div>
+                <div class="card-row">
+                    <span class="card-label">Courier:</span>
+                    <span class="card-value"><?php echo $courier_com ? $courier_com->name_com : 'N/A'; ?></span>
+                </div>
+                <div class="card-row">
+                    <span class="card-label">Shipping Mode:</span>
+                    <span class="card-value"><strong><?php echo $shipping_mode ? $shipping_mode->ship_mode : 'N/A'; ?></strong></span>
+                </div>
+                <div class="card-row">
+                    <span class="card-label">Category:</span>
+                    <span class="card-value"><?php echo $category ? $category->name_item : 'N/A'; ?></span>
+                </div>
+            </div>
+        </div>
 
-                $description_item = $row_item->order_item_description;
-                $weight_item =  (float) $row_item->order_item_weight;
-                $length_item =  (float) $row_item->order_item_length;
-                $width_item =  (float) $row_item->order_item_width;
-                $height_item =  (float) $row_item->order_item_height;
-                $meter = (float) $row->volumetric_percentage;
+        <!-- Items Table (matching courier_add structure) -->
+        <div class="row">
+            <div class="col-lg-12 col-xl-12 col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-md-flex align-items-center">
+                            <div>
+                                <h3 class="card-title"><span><?php echo "Items Details" ?></span></h3>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="tabla">
+                                <thead class="bg-inverse text-white">
+                                    <tr>
+                                        <th><b><?php echo $lang['left214'] ?></b></th>      <!-- Cantidad -->
+                                        <th><b><?php echo $lang['left213'] ?></b></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="projects-tbl">
+                                    <?php
+                                    if ($order_items) {
 
-                $total_metric =  ($length_item *  $width_item *  $height_item) /  $meter;
-                $total_metric = round($total_metric, 2);
-                // calculate weight x price
-                if ($weight_item > $total_metric) {
-                    $calculate_weight = $weight_item;
-                    $sumador_libras += $weight_item; //Sumador
+                                        // ====== INICIALIZAR SUMAS (alineado con JS/PHP de creación) ======
+                                        $sumador_total           = 0.0;
+                                        $sumador_valor_declarado = 0.0; // suma valores declarados
+                                        $sumador_fixed_charge    = 0.0; // suma cargos fijos
+                                        $max_fixed_charge        = 0.0; // mismo que arriba, para total
+                                        $sumador_libras          = 0.0; // peso real total
+                                        $sumador_volumetric      = 0.0; // volumétrico retirado (siempre 0)
+                                        $base_packages           = 0.0; // base de paquetes en USD (peso*tarifa + precio personalizado)
+                                        $total_impuesto          = 0.0;
+                                        $total_seguro            = 0.0;
+                                        $total_peso              = 0.0;
+                                        $total_descuento         = 0.0;
+                                        $total_impuesto_aduanero = 0.0;
+                                        $total_valor_declarado   = 0.0;
 
-                } else {
-                    $calculate_weight = $total_metric;
-                    $sumador_volumetric += $total_metric; //Sumador
-                }
-                $total_chargeable_weight += (float)$calculate_weight;
+                                        // Parámetros de la orden
+                                        $meter                = (float) $row->volumetric_percentage;
+                                        $price_lb             = (float) $row->value_weight;
+                                        $tax_value            = (float) $row->tax_value;                  // %
+                                        $tax_discount         = (float) $row->tax_discount;              // %
+                                        $insurance_value      = (float) $row->tax_insurance_value;       // %
+                                        $tariffs_value        = (float) $row->tax_custom_tariffis_value; // %
+                                        $declared_value_tax   = (float) $row->declared_value;            // %
+                                        $insured_value        = (float) $row->total_insured_value;       // base asegurada
+                                        $reexpedicion_value   = (float) $row->total_reexp;
 
-                $sumador_librass += $weight_item; //Sumador
+                                        if ($meter <= 0) {
+                                            // Por seguridad, evitar división por cero
+                                            $meter = 1;
+                                        }
 
+                                        $total_qty = 0;
 
-                (float)$sumador_valor_declarado += $row_item->order_item_declared_value;
-                (float) $max_fixed_charge += $row_item->order_item_fixed_value;
+                                        foreach ($order_items as $row_order_item) {
 
+                                            $qty = (float) $row_order_item->order_item_quantity;
+                                            if ($qty <= 0) {
+                                                $qty = 1;
+                                            }
 
+                                            $total_qty += (int) $row_order_item->order_item_quantity;
 
-            ?>
+                                            $description_item  = $row_order_item->order_item_description;
+                                            $weight_item       = (float) $row_order_item->order_item_weight;
+                                            $custom_price_item = isset($row_order_item->custom_price) ? (float) $row_order_item->custom_price : 0.0;
+                                            $use_custom_item   = $custom_price_item > 0 ? 1 : 0;
 
-                <tr class="item-row">
-                    <td><?php echo $row_item->order_item_quantity; ?></td>
-                    <td><?php echo $description_item; ?></td>
-                    <td><?php echo $weight_item; ?></td>
-                    <td><?php echo $row_item->order_item_length; ?></td>
-                    <td><?php echo $row_item->order_item_width; ?></td>
-                    <td><?php echo $row_item->order_item_height; ?></td>
-                    <td><?php echo $total_metric; ?></td>
-                    <td><?php echo $row_item->order_item_fixed_value; ?></td>
-                    <td><?php echo $row_item->order_item_declared_value; ?></td>
+                                            // Per-item line total in USD (mirrors computeLineTotal in the JS):
+                                            //   weight item -> weight * qty * rate ; custom item -> custom_price * qty
+                                            if ($use_custom_item) {
+                                                $line_total_item = $custom_price_item * $qty;
+                                            } else {
+                                                $line_total_item = $weight_item * $qty * $price_lb;
+                                            }
 
-                </tr>
-            <?php
+                                            // Acumulados
+                                            $sumador_libras          += $weight_item * $qty;
+                                            $base_packages           += $line_total_item;
+                                            $sumador_valor_declarado += (float)$row_order_item->order_item_declared_value * $qty;
+                                            $sumador_fixed_charge    += (float)$row_order_item->order_item_fixed_value * $qty;
+                                            $max_fixed_charge        += (float)$row_order_item->order_item_fixed_value * $qty;
+                                    ?>
 
-            }
-            
-            
-            if ($row->manual_tariff == 1) {
-                $sumador_total = (float)$total_chargeable_weight * (float)$row->value_weight; // Calculate total based on weight and price per lb
-            } else {
-                $sumador_total = (float)$row->value_weight; // Calculate total based on weight and price per lb
-            }
+                                            <tr class="card-hover">
+                                                <td><?php echo (int) $row_order_item->order_item_quantity; ?></td>
+                                                <td><?php echo $description_item; ?></td>
+                                            </tr>
+                                        <?php
+                                        }
 
-            if ($sumador_total > $core->min_cost_tax) {
-                $total_impuesto = $sumador_total * $row->tax_value / 100;
-            }
+                                        // ====== POST-PROCESO DE SUMAS (igual que en calculateFinalTotal) ======
 
-            if ($sumador_valor_declarado > $core->min_cost_declared_tax) {
-                $total_valor_declarado = $sumador_valor_declarado * $row->declared_value / 100;
-            }
+                                        $sumador_libras     = round($sumador_libras, 2);
+                                        $sumador_volumetric = 0.0; // volumétrico retirado
 
-            $total_descuento = $sumador_total * $row->tax_discount / 100;
-            $total_peso = $sumador_libras + $sumador_volumetric;
-            $total_seguro = $row->tax_insurance_value * $row->total_insured_value / 100;
-            $total_impuesto_aduanero = $total_peso * $row->tax_custom_tariffis_value;
-            $total_envio = ($sumador_total - $total_descuento) + $total_impuesto + $total_seguro + $total_impuesto_aduanero + $total_valor_declarado + $max_fixed_charge + $row->total_reexp;
-            $sumador_total = cdb_money_format_bar($sumador_total);
-            $sumador_libras = $sumador_libras;
-            $sumador_volumetric = $sumador_volumetric;
-            $total_envio = cdb_money_format($total_envio);
-            $total_seguro = cdb_money_format_bar($total_seguro);
-            $total_peso = $total_peso;
-            $total_impuesto_aduanero = cdb_money_format_bar($total_impuesto_aduanero);
-            $total_impuesto = cdb_money_format_bar($total_impuesto);
-            $sumador_valor_declarado = cdb_money_format_bar($sumador_valor_declarado);
-            $total_valor_declarado = cdb_money_format_bar($total_valor_declarado);
+                                        // Peso cobrable = peso real (volumétrico retirado)
+                                        $calculate_weight = $sumador_libras;
 
-            ?>
+                                        // Flete base (USD): suma de líneas por ítem
+                                        // (peso*tarifa para ítems por peso + precio personalizado*qty)
+                                        $sumador_total = round($base_packages, 2);
 
-        </table>
+                                        // Impuesto (IVA o similar)
+                                        if ($sumador_total > $core->min_cost_tax) {
+                                            $total_impuesto = $sumador_total * ($tax_value / 100);
+                                        }
 
-        
-        <div><br></div>
+                                        // Impuesto por valor declarado
+                                        if ($sumador_valor_declarado > $core->min_cost_declared_tax) {
+                                            $total_valor_declarado = $sumador_valor_declarado * ($declared_value_tax / 100);
+                                        }
 
-        <table align="left" width="45%" class="separador">
-            <tr class="card-hover">
-                <td colspan="2"><b><?php echo $lang['left905'] ?> &nbsp; <?php echo $core->weight_p; ?>:</b> <?php echo $row->value_weight; ?></td>
-                <td colspan="3"><b><?php echo $lang['left232'] ?>:</b> <span id="total_libras"><?php echo $sumador_librass; ?></span></td>
+                                        // Descuento (porcentaje del base o monto fijo en USD)
+                                        $discount_type = (isset($row->discount_type) && $row->discount_type === 'amount') ? 'amount' : 'percent';
+                                        $total_descuento = ($discount_type === 'amount')
+                                            ? $tax_discount
+                                            : $sumador_total * ($tax_discount / 100);
+                                        if ($tax_discount < 0 || $total_descuento > $sumador_total) {
+                                            $total_descuento = 0;
+                                        }
 
-            </tr>
+                                        // Peso total para arancel (real + volumétrico)
+                                        $total_peso = $sumador_libras + $sumador_volumetric;
 
-            <tr class="card-hover">
-                <td colspan="2"><b><?php echo $lang['left234'] ?>:</b> <span id="total_volumetrico"><?php echo $sumador_volumetric; ?></span></td>
-                <td colspan="3"><b><?php echo $lang['left236'] ?></b>: <span id="total_peso"><?php echo $total_peso; ?></span></td>
-            </tr>
+                                        // Seguro (costo)
+                                        $total_seguro = $insured_value * ($insurance_value / 100);
 
-        </table>
+                                        // Impuesto aduanero (% sobre peso total)
+                                        $total_impuesto_aduanero = ($total_peso * $tariffs_value) / 100;
 
-        <table align="right" width="45%" class="separador">
+                                        // Total envío
+                                        $total_envio = ($sumador_total - $total_descuento)
+                                            + $total_seguro
+                                            + $total_impuesto
+                                            + $total_impuesto_aduanero
+                                            + $total_valor_declarado
+                                            + $max_fixed_charge
+                                            + $reexpedicion_value;
 
-            <tr class="card-hover">
-                <td colspan="3" align="center"><b><?php echo $lang['leftorder2021'] ?></b></td>
-                <td colspan="3" align="center"><?php echo $sumador_total; ?></td>
-            </tr>
-        </table>
+                                        if ($total_envio < 0) {
+                                            $total_envio = 0;
+                                        }
 
-        <table id="items" >
-            <tr>
-                <th colspan="2" style="color:white;" align="center"><b><?php echo $lang['leftorder21'] ?> <?php echo $row->tax_discount; ?> <?php echo $lang['leftorder222221'] ?> </b></th>
-                <th colspan="2" style="color:white;" align="center"><b><?php echo $lang['leftorder24'] ?> <?php echo $row->tax_insurance_value; ?> <?php echo $lang['leftorder222221'] ?> </b></th>
-                <th colspan="2" style="color:white;" align="center"><b><?php echo $lang['leftorder25'] ?> <?php echo $row->tax_custom_tariffis_value; ?> <?php echo $lang['leftorder222221'] ?></b></th>
-                <th colspan="2" style="color:white;" align="center"><b><?php echo $lang['leftorder67'] ?> <?php echo $row->tax_value; ?> <?php echo $lang['leftorder222221'] ?> </b></th>
-                <th colspan="2" style="color:white;" align="center"><b><?php echo $lang['leftorder23'] ?></b> </th>
-                <th colspan="2" style="color:white;" align="center"><b><?php echo $lang['leftorder19'] ?> <?php echo $row->declared_value; ?> <?php echo $lang['leftorder222221'] ?> </b></th>
-                <td colspan="2" bgcolor="#6c757d" style="color:white;" align="center"><b>Total envío</b></th>
-            </tr>
-            <tr class="card-hover">
-                <td colspan="2" align="center"><?php echo $total_descuento; ?></td>
-                <td colspan="2" align="center" id="insurance"><?php echo $total_seguro; ?></td>
-                <td colspan="2" align="center" id="total_impuesto_aduanero"><?php echo $total_impuesto_aduanero; ?></td>
-                <td colspan="2" align="center" id="impuesto"><?php echo $total_impuesto; ?></td>
-                <td colspan="2" align="center"><?php echo $sumador_valor_declarado; ?></td>
-                <td colspan="2" align="center"><?php echo $total_valor_declarado; ?></td>
-                <td colspan="2" align="center" class="ancho-td"><?php echo $core->currency; ?> &nbsp; <?php echo $total_envio; ?></td>
-
-
-            </tr>
-        </table>
-
-        <!--    end related transactions -->
-
-        <div id="terms">
-            <h5><?php echo $lang['inv-shipping18'] ?></h5>
-            <table id="related_transactions" style="width: 100%">
-                <p align="justify"><?php echo cdp_cleanOut($core->interms); ?></p>
-            </table>
-            <?php
-
-            $db->cdp_query("SELECT * FROM cdb_order_files where order_id=:order_id ORDER BY date_file");
-            $db->bind(':order_id', $printOrderId);
-            $db->cdp_execute();
-            $files_order = $db->cdp_registros();
-            $numrows = $db->cdp_rowCount();
-
-
-            if ($numrows > 0) {
-            ?>
-                <div class="col-lg-12">
-
-
-                    <h5 class=""> <?php echo $lang['print-text10'] ?></h5>
-
-                    <div class="col-md-12 row">
-
-                        <?php
-                        $count = 0;
-                        $count_hr = 0;
-
-                        foreach ($files_order as $file) {
-
-                            $date_add = date("Y-m-d h:i A", strtotime($file->date_file));
-
-                            $src = 'assets/images/no-preview.jpeg';
-
-                            if (
-                                $file->file_type == 'jpg' ||
-                                $file->file_type == 'jpeg' ||
-                                $file->file_type == 'png' ||
-                                $file->file_type == 'ico'
-                            ) {
-
-                                $src = $file->url;
-
-                                $count++;
-                        ?>
-
-                                <div class="col-md-3" id="file_delete_item_<?php echo $file->id; ?>">
-
-                                    <div style="text-align: center; margin-bottom: 5px">
-                                        <img style="width: 120px; height: 120px;" class="" src="<?php echo $src; ?>">
-                                    </div>
-                                </div>
-                        <?php
-                            }
-                        } ?>
+                                        // Formateo para mostrar
+                                        $sumador_total           = cdb_money_format($sumador_total);
+                                        $total_envio             = cdb_money_format($total_envio);
+                                        $total_seguro            = cdb_money_format($total_seguro);
+                                        $total_impuesto_aduanero = cdb_money_format($total_impuesto_aduanero);
+                                        $total_impuesto          = cdb_money_format($total_impuesto);
+                                        $total_descuento         = cdb_money_format($total_descuento);
+                                        $sumador_valor_declarado = cdb_money_format($sumador_valor_declarado);
+                                        $sumador_fixed_charge    = cdb_money_format($sumador_fixed_charge);
+                                        $total_valor_declarado   = cdb_money_format($total_valor_declarado);
+                                        ?>
+                                    <?php }  ?>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="card-hover">
+                                        <td colspan="2">
+                                            <b>Original Package Weight</b> : <?php echo htmlspecialchars((string) ($row->total_weight ?? '—'), ENT_QUOTES, 'UTF-8'); ?>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
 
+                <!-- Totals Section -->
+                <div class="totals">
+                    <div class="total-box">
+                        <label><?php echo 'Total Number of Items'; ?></label>
+                        <div class="value"><?php echo $total_qty; ?></div>
+                    </div>
                 </div>
 
-            <?php
-            } ?>
-            </br></br></br></br>
-            <table id="signing">
-                <tr class="noBorder">
-                    <td align="center">
-                        <h4></h4>
-                    </td>
-                    <td align="center">
-                        <h4></h4>
-                    </td>
-                </tr>
-                <tr class="noBorder">
-                    <td align="center"><?php echo $core->signing_company; ?></td>
-                    <td align="center"><?php echo $core->signing_customer; ?></td>
-                </tr>
-            </table>
-        </div>
+                <!-- Footer with Terms -->
+                <div class="footer">
+                    <table style="margin-top: 40px; border: none;">
+                        <tr style="border: none;">
+                            <td style="border: none; text-align: center; width: 50%; padding-bottom: 45px;">
+                                <hr style="border: none; border-top: 1px solid #000;">
+                                <small><?php echo $core->signing_company; ?></small>
+                            </td>
+                            <td style="border: none; text-align: center; width: 50%; padding-bottom: 45px;">
+                                <hr style="border: none; border-top: 1px solid #000;">
+                                <small><?php echo $core->signing_customer; ?></small>
+                            </td>
+                        </tr>
+                    </table>
 
-        <button class='button -dark center no-print' onClick="window.print();" style="font-size:16px"><?php echo $lang['inv-shipping19'] ?>&nbsp;&nbsp; <i class="fa fa-print"></i></button>
-        </div>
+                    <div class="mt-5 text-center text-muted">
+                        Developed by <b>iSolveAfrica</b><br>+233 (0) 59 144 7845<br>https://www.isolveafrica.com/
+                    </div>
+                </div>
+            </div>
 
-        <link rel="stylesheet" href="assets/css/input-css/intlTelInput.css">
-    </div>
-
+            <!-- Print Button -->
+            <div class="print-button">
+                <button class="btn btn-primary" onclick="window.print();" style="padding: 12px 30px; font-size: 16px;">
+                    <i class="fa fa-print"></i> <?php echo $lang['inv-shipping19']; ?>
+                </button>
+                <div class="print-info">Press Ctrl+P or click above to print</div>
+            </div>
 </body>
-
 </html>
