@@ -83,13 +83,26 @@ class OtpService {
 
         if ($recent) {
             $waitSec = 60 - (time() - strtotime($recent->created_at));
+
+            // The previously sent code may still be valid — hand its id back so the
+            // caller can reuse the existing challenge instead of creating a dead one
+            // (id 0 / null code), which would leave the OTP page stuck with no timer.
+            $this->db->cdp_query("SELECT id FROM cdb_auth_otp_challenges
+                WHERE user_id = :user_id AND purpose = :purpose AND status = 'pending'
+                ORDER BY created_at DESC
+                LIMIT 1");
+            $this->db->bind(':user_id', (int) $userId);
+            $this->db->bind(':purpose', $purpose);
+            $existing = $this->db->cdp_registro();
+
             return [
-                'id'       => 0,
-                'code'     => null,
-                'blocked'  => true,
-                'cooldown' => true,
-                'wait_sec' => max(1, (int) $waitSec),
-                'error'    => 'Please wait before requesting a new code.',
+                'id'          => 0,
+                'code'        => null,
+                'blocked'     => true,
+                'cooldown'    => true,
+                'wait_sec'    => max(1, (int) $waitSec),
+                'existing_id' => $existing ? (int) $existing->id : 0,
+                'error'       => 'Please wait before requesting a new code.',
             ];
         }
 
