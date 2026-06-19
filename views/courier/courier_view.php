@@ -60,6 +60,15 @@ if (isset($_GET['id_notification'])) {
 
 
 $row_order = $data['data'];
+
+// STRICT OWNERSHIP: customers (userlevel 1) may only view packages they sent.
+// Viewing anyone else's shipment is forbidden.
+if (isset($userData->userlevel) && (int)$userData->userlevel === 1
+    && (int)($row_order->sender_id ?? 0) !== (int)($_SESSION['userid'] ?? 0)) {
+    header('Location: error403.php');
+    exit;
+}
+
 $db->cdp_query("SELECT * FROM cdb_styles where id= '" . $row_order->status_courier . "'");
 $status_courier = $db->cdp_registro();
 
@@ -990,7 +999,18 @@ if ($row_order->status_invoice == 1) {
 
                 <!-- Row -->
                 <!-- DETAILS TAX PERMISSION  -->
-                <?php if ($user->cdp_hasPermission('view_details_courier')) { ?>
+                <?php if ($user->cdp_hasPermission('view_details_courier') || (int)$userData->userlevel === 1) {
+                    // Customers (userlevel 1) see the item list too, but per-item WEIGHT,
+                    // CUSTOM PRICE and LINE TOTAL are redacted SERVER-SIDE — the real
+                    // values are never written to the page, so the blur cannot be removed
+                    // (via inspector / display:none) to reveal them. Line total is
+                    // included because for custom items it equals custom_price x qty.
+                    $cv_is_customer = ((int)$userData->userlevel === 1);
+                    $cv_redact = '<span class="cv-redacted" title="Hidden">&bull;&bull;&bull;&bull;</span>';
+                ?>
+                <style>
+                    .cv-redacted{display:inline-block;min-width:46px;text-align:center;filter:blur(5px);-webkit-filter:blur(3px);user-select:none;-webkit-user-select:none;pointer-events:none;color:#555;letter-spacing:2px;}
+                </style>
                 <div class="row">
                     <div class="col-lg-12 col-xl-12 col-md-12">
                         <div class="card">
@@ -1089,9 +1109,9 @@ if ($row_order->status_invoice == 1) {
                                                                 <span class="badge badge-dark">Weight</span>
                                                             <?php } ?>
                                                         </td>
-                                                        <td><?php echo $use_custom_item ? '—' : $weight_item; ?></td>
-                                                        <td class="text-center"><?php echo $use_custom_item ? number_format($custom_price_item, 2) : '—'; ?></td>
-                                                        <td class="text-center"><?php echo number_format($line_total_item, 2); ?></td>
+                                                        <td><?php echo $cv_is_customer ? $cv_redact : ($use_custom_item ? '—' : $weight_item); ?></td>
+                                                        <td class="text-center"><?php echo $cv_is_customer ? $cv_redact : ($use_custom_item ? number_format($custom_price_item, 2) : '—'); ?></td>
+                                                        <td class="text-center"><?php echo $cv_is_customer ? $cv_redact : number_format($line_total_item, 2); ?></td>
                                                         <td class="text-center"><?php echo $row_order_item->order_item_fixed_value; ?></td>
                                                         <td class="text-center"><?php echo $row_order_item->order_item_declared_value; ?></td>
                                                     </tr>
@@ -1164,7 +1184,8 @@ if ($row_order->status_invoice == 1) {
                                                 ?>
                                             <?php }  ?>
                                         </tbody>
-
+                                        
+                                        <?php if ($user->cdp_hasPermission('view_details_courier')) { ?>
                                         <tfoot>
                                             <!-- Tarifa por unidad de peso y subtotal -->
                                             <tr class="card-hover">
@@ -1203,10 +1224,13 @@ if ($row_order->status_invoice == 1) {
                                             </tr>
 
                                         </tfoot>
+                                        <?php } ?>
                                     </table>
+                                </div>
                                 </div>
 
                                 <div><br></div>
+                                <?php if ($user->cdp_hasPermission('view_details_courier')) { ?>
                                 <div class="d-md-flex align-items-center">
                                     <div>
                                         <h3 class="card-title"><span><?php echo $lang['messageerrorform30'] ?></span></h3>
@@ -1250,6 +1274,7 @@ if ($row_order->status_invoice == 1) {
                                     </table>
                                 </div>
                             </div>
+                            <?php }?>
                         </div>
                     </div>
                 </div>
