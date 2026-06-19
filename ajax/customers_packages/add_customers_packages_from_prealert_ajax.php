@@ -347,7 +347,7 @@ if (empty($errors)) {
                 '[URL_SHIP]'
             ),
             array(
-                $sender_data->fname . ' ' . $sender_data->lname,
+                cdp_nameWithLocker($sender_data),
                 $fullshipment,
                 $email_courier_name,
                 $email_service_type,
@@ -524,7 +524,7 @@ if (empty($errors)) {
                             '[COMPANY_NAME]'
                         ],
                         [
-                            ucfirst("{$sender_data->fname} {$sender_data->lname}"),
+                            cdp_nameWithLocker($sender_data),
                             $fullshipment,
                             trim($packages_details),
                             $courier_name,
