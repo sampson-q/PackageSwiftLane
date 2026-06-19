@@ -118,7 +118,7 @@ if ($numrows > 0) { ?>
                         $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . $order_details->sender_id . "'");
                         $sender = $db->cdp_registro();
 
-						$db->cdp_query("SELECT IFNULL(sum(order_item_weight), 0) as weight FROM cdb_customers_packages_detail where order_id= '" . $row->order_id . "'");
+						$db->cdp_query("SELECT IFNULL(total_weight, 0) as weight FROM cdb_add_order where order_id= '" . $row->order_id . "'");
 						$order_weight = $db->cdp_registro();
 
 						$weight = number_format($order_weight->weight, 2, '.', '');
