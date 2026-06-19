@@ -36,7 +36,7 @@ if ($search !== '') {
 
 // Paginación
 $page       = (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) ? (int)$_REQUEST['page'] : 1;
-$per_page   = 10;
+$per_page = (($_REQUEST['per_page'] ?? '') === 'all') ? 1000000000 : (in_array((int)($_REQUEST['per_page'] ?? 0), [25, 50, 100], true) ? (int)$_REQUEST['per_page'] : 25); //how much records you want to show
 $adjacents  = 4;
 $offset     = ($page - 1) * $per_page;
 

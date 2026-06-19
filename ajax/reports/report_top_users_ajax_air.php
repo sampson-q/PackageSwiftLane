@@ -413,7 +413,7 @@ function renderShipmentDetails($table_page, $total_pages, $adjacents, $shipments
 renderUserCard($topShipper, $lang);
 
 // 1) Define pagination parameters
-$per_page   = 4;
+$per_page = (($_REQUEST['per_page'] ?? '') === 'all') ? 1000000000 : (in_array((int)($_REQUEST['per_page'] ?? 0), [25, 50, 100], true) ? (int)$_REQUEST['per_page'] : 4); //how much records you want to show
 $table_page = isset($_REQUEST['table_page']) ? intval($_REQUEST['table_page']) : 1;
 $offset     = ($table_page - 1) * $per_page;
 $adjacents  = 4;

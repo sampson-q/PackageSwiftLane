@@ -33,7 +33,7 @@ $search = cdp_sanitize($_REQUEST['search']);
 
 // Configuración de paginación
 $page = (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) ? $_REQUEST['page'] : 1;
-$per_page = 10; // Registros por página
+$per_page = (($_REQUEST['per_page'] ?? '') === 'all') ? 1000000000 : (in_array((int)($_REQUEST['per_page'] ?? 0), [25, 50, 100], true) ? (int)$_REQUEST['per_page'] : 25); //how much records you want to show // Registros por página
 $adjacents  = 4; // Número de páginas adyacentes
 $offset = ($page - 1) * $per_page;
 
