@@ -28,6 +28,18 @@ function cdp_cleanOutx($text)
   return stripslashes($text);
 }
 
+/**
+ * Short HTML-escape helper for templates (used by print views such as
+ * views/courier/warehouse_view_print.php and views/print/print_label_ship.php).
+ * Without it those pages fatal with "Call to undefined function h()".
+ */
+if (!function_exists('h')) {
+  function h($value)
+  {
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+  }
+}
+
 
 /**
      * validate track()
