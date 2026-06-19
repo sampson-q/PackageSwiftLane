@@ -486,6 +486,7 @@ $lang = array(
 	"global-3" 		=> "Estado de la factura",
 	"global-4" 		=> "¿Está seguro de que desea eliminar este registro?",
 	"global-5" 		=> "Si, bórralo!",
+	"rows-all" 		=> "Todos",
 	"global-error" 		=> "Algo salió mal con ajax !",
 	"global-error1" 		=> "Eliminado!",
 	"global-6" 		=> "Esta acción no se puede deshacer!",

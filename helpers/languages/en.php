@@ -479,6 +479,7 @@ $lang = array(
 	"global-3" => "Invoice Status",
 	"global-4" => "Are you sure you want to delete this record?",
 	"global-5" => "Delete",
+	"rows-all" => "All",
 	"global-error" 		=> "Something went wrong with ajax !",
 	"global-error1" 	=> "Removed!",
 	"global-6" => "This action cannot be undone!",

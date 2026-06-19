@@ -475,6 +475,7 @@ $lang = array(
 	"global-3" => "Statut de la facture",
 	"global-4" => "Êtes-vous sûr de vouloir supprimer cet enregistrement?",
 	"global-5" => "Supprimer",
+	"rows-all" => "Tout",
 	"global-error" 		=> "Quelque chose s'est mal passé avec ajax !",
 	"global-error1" 	=> "Supprimé!",
 	"global-6" => "Cette action ne peut pas être annulée!",
