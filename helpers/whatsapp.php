@@ -340,7 +340,7 @@ if (!function_exists('cdp_sendShipmentRegisteredWhatsApp')) {
         $track_url = rtrim((string) ($settings->site_url ?? ''), '/') . '/track.php?order_track=' . rawurlencode($tracking);
 
         $body = cdp_renderWhatsAppTemplate(4, [
-            '[CUSTOMER_FULLNAME]' => ucfirst(trim(($sender->fname ?? '') . ' ' . ($sender->lname ?? ''))),
+            '[CUSTOMER_FULLNAME]' => cdp_nameWithLocker($sender),
             '[TRACKING_NUMBER]'   => $tracking,
             '[SERVICE_TYPE]'      => cdp_wa_lookupName('cdb_shipping_mode', 'ship_mode', $service_id),
             '[COURIER_NAME]'      => cdp_wa_lookupName('cdb_courier_com', 'name_com', $ids['courier'] ?? 0),
@@ -426,7 +426,7 @@ if (!function_exists('cdp_sendStatusUpdateWhatsApp')) {
         }
 
         $body = cdp_renderWhatsAppTemplate(11, [
-            '[CUSTOMER_FULLNAME]' => ucfirst(trim(($sender->fname ?? '') . ' ' . ($sender->lname ?? ''))),
+            '[CUSTOMER_FULLNAME]' => cdp_nameWithLocker($sender),
             '[TRACKING_NUMBER]'   => $tracking,
             '[CURR_STATUS]'       => (string) $statusLabel,
             '[APP_URL]'           => $appUrl,
@@ -522,7 +522,7 @@ if (!function_exists('cdp_notifyConsolidationPackageSenders')) {
 
                 $tracking = $pkg->order_prefix . $pkg->order_no;
                 $body = cdp_renderWhatsAppTemplate(17, array(
-                    '[CUSTOMER_FULLNAME]'      => ucfirst(trim(($sender->fname ?? '') . ' ' . ($sender->lname ?? ''))),
+                    '[CUSTOMER_FULLNAME]'      => cdp_nameWithLocker($sender),
                     '[TRACKING_NUMBER]'        => $tracking,
                     '[CONSOLIDATION_TRACKING]' => (string) $consolidationTracking,
                     '[CURR_STATUS]'            => (string) $statusLabel,
@@ -581,7 +581,7 @@ if (!function_exists('cdp_personalizeWhatsAppBody')) {
         return str_replace(
             ['[CUSTOMER_FULLNAME]', '[COMPANY_NAME]', '[COMPANY_SITE_URL]', '[TRACKING_NUMBER]'],
             [
-                ucfirst(trim(($sender->fname ?? '') . ' ' . ($sender->lname ?? ''))),
+                cdp_nameWithLocker($sender),
                 (string) ($settings->site_name ?? ''),
                 (string) ($settings->site_url ?? ''),
                 (string) $tracking,
