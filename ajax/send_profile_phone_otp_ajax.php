@@ -3,6 +3,8 @@ require_once("../loader.php");
 require_once("../helpers/querys.php");
 require_once("../lib/OtpService.php");
 require_once(__DIR__ . "/notify_whatsapp/api_whatsapp_service_v2.php");
+require_once("../helpers/ajax_guard.php");
+require_login();
 
 header('Content-Type: application/json; charset=UTF-8');
 
