@@ -31,7 +31,10 @@
 
          $permissions = $user->cdp_getUserPermissions();
 
-        if (!$user->cdp_hasPermission('view_shipment_details')) {
+        // Customers (userlevel 1) may view their OWN shipments even without the
+        // staff 'view_shipment_details' permission. Ownership (sender == viewer)
+        // is enforced inside views/courier/courier_view.php.
+        if (!$user->cdp_hasPermission('view_shipment_details') && (int)$user->userlevel !== 1) {
             header("location: error403.php");
             exit;
         }
