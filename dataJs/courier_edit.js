@@ -313,6 +313,7 @@ function calculateFinalTotal(element) {
   var sum_declared    = 0;
   var sum_fixed       = 0;
   var sum_lines_usd   = 0; // sum of all per-row line totals (USD)
+  var sum_custom_usd  = 0; // sum of custom-priced rows (USD) — mirrors courier_add
 
   (packagesItems || []).forEach(function (item, i) {
     var qty    = Math.max(1, nf(item.qty, 1));
@@ -321,6 +322,7 @@ function calculateFinalTotal(element) {
     sum_weight_real += weight * qty;
     sum_declared    += nf(item.declared_value) * qty;
     sum_fixed       += nf(item.fixed_value) * qty;
+    if (item.use_custom_price) { sum_custom_usd += nf(item.custom_price, 0) * qty; }
 
     var lineTotal = computeLineTotal(item, price_lb);
     sum_lines_usd += lineTotal;
@@ -380,6 +382,7 @@ function calculateFinalTotal(element) {
   $("#total_impuesto_aduanero").html(r2(total_aduana));
   $("#total_envio").html(r2(total));
   $("#total_weight").html(r2(sum_weight_real));
+  if ($("#total_custom_price").length) $("#total_custom_price").html(r2(sum_custom_usd));
   $("#total_vol_weight").html("—"); // volumetric removed
   if ($("#total_fixed").length) $("#total_fixed").html(r2(sum_fixed));
   if ($("#total_declared").length) $("#total_declared").html(r2(sum_declared));
