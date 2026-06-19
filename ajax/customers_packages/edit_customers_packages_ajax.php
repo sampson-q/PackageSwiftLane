@@ -531,7 +531,7 @@ if (empty($errors)) {
                     '[URL_SHIP]'
                 ],
                 [
-                    $sender_data->fname . ' ' . $sender_data->lname,
+                    cdp_nameWithLocker($sender_data),
                     $fullshipment,
                     $changed_fields_html,
                     $packages_section_html,
@@ -633,7 +633,7 @@ if (empty($errors)) {
                 if (!empty($wa_changes)) {
                     $wa_status_line = ($pkg_ph['[STATUS]'] !== 'N/A') ? "\n*Current Status:* {$pkg_ph['[STATUS]']}\n" : '';
                     $whatsapp_body =
-                        "Hello {$sender_data->fname} {$sender_data->lname},\n\n" .
+                        "Hello " . cdp_nameWithLocker($sender_data) . ",\n\n" .
                         "Your shipment *{$fullshipment}* has been updated.\n\n" .
                         "*What Changed:*\n{$wa_changes}" .
                         $wa_status_line .
