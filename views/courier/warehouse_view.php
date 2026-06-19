@@ -43,6 +43,11 @@ $statusrow = $core->cdp_getStatusMultiple(1, 4, 8, 15, 16, 23, 32, 33);
                     <div class="col-5 align-self-center">
                         <h4 class="page-title"><?php echo 'Warehouse'; ?></h4>
                     </div>
+                    <div class="col-7 align-self-center text-right">
+                        <button type="button" class="btn btn-outline-danger" onclick="cdp_exportPrint();">
+                            <i class="fa fa-print"></i>&nbsp;<?php echo $lang['report-text5'] ?? 'Export PDF'; ?>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -90,7 +95,7 @@ $statusrow = $core->cdp_getStatusMultiple(1, 4, 8, 15, 16, 23, 32, 33);
                                     </div>
 
                                     <!-- Date range filter -->
-                                    <div class="col-sm-12 col-md-4 mb-2">
+                                    <div class="col-sm-12 col-md-3 mb-2">
                                         <div class="input-group">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text">
@@ -99,6 +104,18 @@ $statusrow = $core->cdp_getStatusMultiple(1, 4, 8, 15, 16, 23, 32, 33);
                                             </div>
                                             <input type="text" name="daterange-warehouse" id="daterange-warehouse" class="form-control float-right" placeholder="<?php echo $lang['report-text90'] ?>" />
                                             <button type="button" id="btn-clear-daterange" class="btn btn-outline-secondary ml-2" title="Clear period">✕</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Rows per page filter -->
+                                    <div class="col-sm-12 col-md-2 mb-2">
+                                        <div class="input-group">
+                                            <select onchange="cdp_load(1);" class="form-control custom-select" id="per_page" name="per_page">
+                                                <option value="25">25 rows</option>
+                                                <option value="50">50 rows</option>
+                                                <option value="100">100 rows</option>
+                                                <option value="all"><?php echo $lang['rows-all'] ?? 'All'; ?></option>
+                                            </select>
                                         </div>
                                     </div>
 
