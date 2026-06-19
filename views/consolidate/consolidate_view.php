@@ -984,6 +984,9 @@ if ($row_order->status_invoice == 1) {
                                                 $total_peso = 0;
                                                 $total_descuento = 0;
                                                 $total_impuesto_aduanero = 0;
+                                                
+                                                $consolidate_weight = 0;
+                                                $consolidate_total = 0;
 
                                                 foreach ($order_items as $row_order_item) {
 
@@ -1020,17 +1023,20 @@ if ($row_order->status_invoice == 1) {
                                                     $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . $package_owners->sender_id . "'");
                                                     $sender = $db->cdp_registro();
                                                     $sender_name = $sender->fname . ' ' . $sender->lname;
-
+                                                    
                                                     // Fetch package total price
-                                                    $db->cdp_query("SELECT total_order, order_id, status_courier FROM cdb_add_order WHERE order_no='" . $row_order_item->order_no . "'");
+                                                    $db->cdp_query("SELECT total_order, order_id, status_courier, total_weight FROM cdb_add_order WHERE order_no='" . $row_order_item->order_no . "'");
                                                     $order_details = $db->cdp_registro();
 
                                                     // Fetch items (quantity + description)
                                                     $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id = '" . $order_details->order_id . "'");
                                                     $items = $db->cdp_registros();
-
+                                                    
                                                     $db->cdp_query("SELECT * FROM cdb_styles where id='" . $order_details->status_courier . "'");
 						                            $package_style = $db->cdp_registro();
+                                                    
+                                                    $consolidate_weight += $order_details->total_weight;
+                                                    $consolidate_total += $order_details->total_order;
 
                                                     ?>
                                                     <tr class="card-hover">
@@ -1049,117 +1055,30 @@ if ($row_order->status_invoice == 1) {
                                                             <?php } ?>
                                                         </td>
                                                         
-                                                        <td colspan="3"><?php echo number_format($row_order_item->weight, 2, '.', ''); ?></td>
+                                                        <td colspan="3"><?php echo number_format($order_details->total_weight, 2, '.', ''); ?></td>
                                                         <td colspan="3"><?php echo cdb_money_format($order_details->total_order); ?></td>
                                                     </tr>
                                                 <?php }
-
-                                                $total_descuento = $sumador_total * $row_order->tax_discount / 100;
-                                                $total_peso = $sumador_libras + $sumador_volumetric;
-
-                                                $total_seguro = $row_order->tax_insurance_value * $row_order->total_insured_value / 100;
-
-                                                $total_impuesto_aduanero = $total_peso * $row_order->tax_custom_tariffis_value;
-
-                                                $total_envio = ($sumador_total - $total_descuento) + $total_impuesto + $total_seguro + $total_impuesto_aduanero + $row_order->total_reexp;
-
-                                                $sumador_total = cdb_money_format_bar($sumador_total);
-                                                // $sumador_libras = $sumador_libras;
-                                                // $sumador_volumetric = $sumador_volumetric;
-                                                $total_envio = cdb_money_format($total_envio);
-                                                $total_seguro = cdb_money_format_bar($total_seguro);
-                                                // $total_peso = $total_peso;
-                                                $total_impuesto_aduanero = cdb_money_format_bar($total_impuesto_aduanero);
-                                                $total_impuesto = cdb_money_format_bar($total_impuesto);
-                                                $total_descuento = cdb_money_format_bar($total_descuento);
                                             } ?>
                                         </tbody>
 
-                                              <tfoot>
-                                            <tr class="card-hover">
-                                                <td colspan="3"><b><?php echo $lang['left905'] ?> &nbsp; <?php echo $core->weight_p; ?>:</b> <?php echo $row_order->value_weight; ?></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td colspan="2" class="text-right"><b><?php echo $lang['leftorder2021'] ?></b></td>
-                                                <td class="text-center"><?php echo $sumador_total; ?></td>
-                                                <td></td>
-                                            </tr>
-
-                                            <tr class="card-hover">
-                                                <td colspan="3"><b><?php echo $lang['left232'] ?></b> <span id="total_libras">: <?php echo $sumador_libras; ?></span></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td colspan="2" class="text-right">
-                                                    <b><?php echo $lang['leftorder21'] ?> <?php echo $row_order->tax_discount; ?> <?php echo $lang['leftorder222221'] ?> </b>
-                                                </td>
-                                                <td class="text-center"><?php echo $total_descuento; ?></td>
-                                                <td></td>
-                                            </tr>
-
-                                            <tr>
-                                                <td colspan="3"><b><?php echo $lang['left234'] ?></b> <span id="total_volumetrico">: <?php echo $sumador_volumetric; ?></span></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td colspan="3" class="text-right"></td>
-                                                <td></td>
-                                                <td></td>
-                                            </tr>
-
-                                            <tr>
-                                                <td colspan="3"><b><?php echo $lang['left236'] ?></b> <span id="total_peso"> :<?php echo $total_peso; ?></span></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td colspan="3" class="text-right"></td>
-                                                <td></td>
-                                                <td></td>
-
-                                            </tr>
-
-                                        </tfoot>
-                                    </table>
-                                </div>
-
-                                <div><br></div>
-                                <div class="d-md-flex align-items-center">
-                                    <div>
-                                        <h3 class="card-title"><span><?php echo $lang['messageerrorform30'] ?></span></h3>
-                                    </div>
-                                </div>
-                                <div><hr></div>
-
-
-                                <div class="table-responsive">
-                                    <table class="table table-hover" id="tabla">
-                                        <thead class="bg-inverse text-white">
-                                            <tr>
-                                                <th><b><?php echo $lang['leftorder22'] ?></b></th>
-                                                <th><b><?php echo $lang['leftorder25'] ?> <?php echo $row_order->tax_custom_tariffis_value; ?> <?php echo $lang['leftorder222221'] ?></b></th>
-                                                <th><b><?php echo $lang['leftorder24'] ?> <?php echo $row_order->tax_insurance_value; ?> <?php echo $lang['leftorder222221'] ?></b></b></th>
-                                                <th><b><?php echo $lang['leftorder67'] ?> <?php echo $row_order->tax_value; ?> <?php echo $lang['leftorder222221'] ?></b></th>
-                                                
-                                                <th><b><?php echo $lang['langs_048'] ?></b></th>
-
-                                                <th><b><?php echo $lang['leftorder2020'] ?> &nbsp; <?php echo $core->currency; ?></b></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="projects-tbl">
-                              
-                                            <tr class="card-hover">
-                                                <td class="text-center" id="insurance"><?php echo $row_order->total_insured_value; ?></td>
-                                                <td class="text-center" id="total_impuesto_aduanero"><?php echo $total_impuesto_aduanero; ?></td>
-                                                <td class="text-center" id="insurance"><?php echo $total_seguro; ?></td>
-                                                <td class="text-center" id="impuesto"><?php echo $total_impuesto; ?></td>
-                                                <td class="text-center" id="reexp"><?php echo cdb_money_format($row_order->total_reexp); ?></td>
-                                                <td class="text-center" id="total_envio"><b><?php echo $total_envio; ?></b></td>
-                                            </tr>
-                            
-                                        </tbody>
+                                        <tfoot>
+                                                <tr class="">
+                                                    <td colspan="6" class="text-right">Total Weight:</td>
+                                                    <td class="" id=""><b><?php echo number_format($consolidate_weight, 2, '.', ''); ?></b></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                </tr>
+                                                <tr class="">
+                                                    <td></td>
+                                                    <td colspan="7" class="text-right">Total Cost:</td>
+                                                    <td id=""><b><?php echo cdb_money_format($consolidate_total); ?></b></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                </tr>
+                                            </tfoot>
                                     </table>
                                 </div>
                             </div>
