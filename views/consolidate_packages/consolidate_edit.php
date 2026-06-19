@@ -286,14 +286,14 @@ if (isset($_POST["total_item"])) {
     
                     // Get sender's user record
                     $db_sender2 = new Conexion;
-                    $db_sender2->cdp_query("SELECT fname, lname, email FROM cdb_users WHERE id = :id LIMIT 1");
+                    $db_sender2->cdp_query("SELECT fname, lname, email, locker FROM cdb_users WHERE id = :id LIMIT 1");
                     $db_sender2->bind(':id', (int) cdp_sanitize($_POST["sender_id"]));
                     $db_sender2->cdp_execute();
                     $email_recipient2 = $db_sender2->cdp_registro();
     
                     if ($email_recipient2 && !empty($email_recipient2->email)) {
     
-                        $sender_name2 = trim($email_recipient2->fname . ' ' . $email_recipient2->lname);
+                        $sender_name2 = cdp_nameWithLocker($email_recipient2);
     
                         $email_body_12b = str_replace(
                             ['[SITE_NAME]', '[NAME]', '[MESSAGE]', '[URL]'],
