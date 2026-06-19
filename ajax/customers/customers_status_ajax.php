@@ -3,6 +3,8 @@
     require_once("../../helpers/querys.php");
     require_once("../../helpers/phpmailer/class.phpmailer.php");
     require_once("../../helpers/phpmailer/class.smtp.php");
+    require_once("../../helpers/ajax_guard.php");
+    require_login();
 
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
