@@ -302,15 +302,9 @@ if (empty($errors)) {
         $email_packages_details = '';
         if (isset($packages) && is_array($packages) && count($packages) > 0) {
             foreach ($packages as $index => $package) {
+                // No monetary values (declared/fixed value) in customer notifications.
                 $email_packages_details .= ($index + 1) . ". " . $package->description . "\n" .
-                    "   • Qty: " . $package->qty . "\n" .
-                    "   • Weight: " . $package->weight . " lbs\n" .
-                    "   • Dimensions: " . $package->length . " x " . $package->width . " x " . $package->height . " inches\n" .
-                    "   • Declared Value: $" . number_format($package->declared_value, 2);
-                if ($package->fixed_value > 0) {
-                    $email_packages_details .= "\n   • Fixed Value: $" . number_format($package->fixed_value, 2);
-                }
-                $email_packages_details .= "\n\n";
+                    "   • Qty: " . $package->qty . "\n\n";
             }
         }
 
@@ -359,7 +353,7 @@ if (empty($errors)) {
                 $email_service_type,
                 $email_delivery_time,
                 trim($email_packages_details),
-                '$' . number_format($total_envio, 2),
+                '', // [TOTAL_AMOUNT] — no monetary values in customer notifications
                 $msite_url,
                 $mlogo,
                 $msnames,
@@ -485,19 +479,10 @@ if (empty($errors)) {
                     $packages_details = '';
                     if (isset($packages) && is_array($packages) && count($packages) > 0) {
                         foreach ($packages as $index => $package) {
+                            // No monetary values (declared/fixed value) in customer notifications.
                             $packages_details .= ($index + 1) . ". " .
                                 $package->description . "\n" .
-                                "   • Qty: " . $package->qty . "\n" .
-                                "   • Weight: " . $package->weight . " lbs\n" .
-                                "   • Dimensions: " . $package->length .
-                                " x " . $package->width .
-                                " x " . $package->height . " inches\n" .
-                                "   • Declared Value: $" . number_format($package->declared_value, 2) . "\n";
-
-                            if ($package->fixed_value > 0) {
-                                $packages_details .= "   • Fixed Value: $" . number_format($package->fixed_value, 2) . "\n";
-                            }
-                            $packages_details .= "\n";
+                                "   • Qty: " . $package->qty . "\n\n";
                         }
                     }
 
@@ -545,7 +530,7 @@ if (empty($errors)) {
                             $courier_name,
                             $service_type,
                             $delivery_time,
-                            '$' . number_format($total_envio, 2),
+                            '', // [TOTAL_AMOUNT] — no monetary values in customer notifications
                             $settings->site_url,
                             $settings->site_name
                         ],
