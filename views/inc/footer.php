@@ -36,6 +36,37 @@
     })(window.jQuery);
 </script>
 
+<!-- Global table-load indicator: a spinner shown while any paginated list table
+     is being (re)populated via AJAX. Scoped to list-load requests (those that
+     send a `page` param) so it doesn't fire for select2/OTP/other AJAX. -->
+<div id="cdp-table-loader" aria-live="polite" aria-busy="true"
+     style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:90000;pointer-events:none;">
+    <div style="position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);background:rgba(255,255,255,.94);border:1px solid #e6e6e6;border-radius:10px;padding:13px 20px;box-shadow:0 6px 22px rgba(0,0,0,.14);font-family:Roboto,Arial,Helvetica,sans-serif;">
+        <span style="display:inline-block;width:16px;height:16px;border:2px solid #cfd8ec;border-top-color:#336aea;border-radius:50%;animation:cdpTableSpin .7s linear infinite;vertical-align:middle;"></span>
+        <span style="margin-left:9px;font-size:13px;color:#333;vertical-align:middle;">Loading…</span>
+    </div>
+</div>
+<style>@keyframes cdpTableSpin { to { transform: rotate(360deg); } }</style>
+<script>
+    (function ($) {
+        if (!$) return;
+        function isListLoad(settings) {
+            var d = (settings && typeof settings.data === 'string') ? settings.data : '';
+            return /(?:^|&)page=/.test(d);
+        }
+        var active = 0;
+        $(document).ajaxSend(function (e, xhr, settings) {
+            if (!isListLoad(settings)) return;
+            active++;
+            $('#cdp-table-loader').stop(true, true).fadeIn(120);
+        }).ajaxComplete(function (e, xhr, settings) {
+            if (!isListLoad(settings)) return;
+            active = Math.max(0, active - 1);
+            if (active === 0) $('#cdp-table-loader').fadeOut(120);
+        });
+    })(window.jQuery);
+</script>
+
 <script>
     // Rows-per-page: append the chosen #per_page value to every list-load AJAX
     // request (those whose object `data` contains a `page` key). jQuery serializes
