@@ -44,7 +44,11 @@ if ($userData->userlevel == 3) {
 } else if ($ctx['is_restricted']) {
 	$swhere .= " and 1=0";
 }
-$swhere .= " and month(a.order_date)='$month' AND year(a.order_date)='$year'";
+// Customers (userlevel 1) see ALL their own shipments on the dashboard — the
+// current-month/year scoping is only for staff activity overviews.
+if ((int)$userData->userlevel !== 1) {
+	$swhere .= " and month(a.order_date)='$month' AND year(a.order_date)='$year'";
+}
 
 if (isset($_REQUEST['search'])) {
 
