@@ -395,7 +395,10 @@ $(document).ready(function() {
             },
             success: function(response) {
                 Swal.close();
-                if (response.status === 'success') {
+                if (response.status === 'verify') {
+                    // Client created as pending — verify their email via OTP (blocking).
+                    cdp_openClientEmailOtp(response.email || '');
+                } else if (response.status === 'success') {
                     Swal.fire({
                         type: 'success',
                         title: message_error_form15,
@@ -431,8 +434,141 @@ $(document).ready(function() {
       }
 
     });
-    
+
 });
+
+
+// ── Email-OTP verification for a newly added client (shown in a SweetAlert) ──
+// Mirrors the sign-up OTP step, but runs inside the admin's active session as a
+// modal instead of redirecting to auth-otp.php. The client account already
+// exists (pending); verifying the email activates it.
+function cdp_openClientEmailOtp(email) {
+    var cooldownTimer = null;
+
+    function startCooldown(secs) {
+        var remaining = secs;
+        var $btn = $('#client_otp_resend');
+        $btn.prop('disabled', true).css({ opacity: 0.5, 'pointer-events': 'none' });
+        clearInterval(cooldownTimer);
+        cooldownTimer = setInterval(function () {
+            remaining--;
+            if (remaining <= 0) {
+                clearInterval(cooldownTimer);
+                $btn.prop('disabled', false).css({ opacity: 1, 'pointer-events': 'auto' }).text('Resend code');
+            } else {
+                $btn.text('Resend in ' + remaining + 's');
+            }
+        }, 1000);
+    }
+
+    function doSend() {
+        var $status = $('#client_otp_status');
+        $status.text('Sending code…').css('color', '#6c757d');
+        $.ajax({
+            url: './ajax/customers/client_otp_send_ajax.php',
+            type: 'POST',
+            dataType: 'json',
+            success: function (r) {
+                if (r.ok) {
+                    $status.text('Code sent to ' + (r.email || email)).css('color', '#28a745');
+                    startCooldown(60);
+                } else {
+                    $status.text(r.error || 'Could not send code').css('color', '#dc3545');
+                    if (r.cooldown) { startCooldown(60); }
+                }
+            },
+            error: function () {
+                $status.text('Network error while sending the code').css('color', '#dc3545');
+            }
+        });
+    }
+
+    Swal.fire({
+        title: 'Verify client email',
+        html:
+            '<p style="font-size:14px;margin-bottom:8px;">Enter the 6-digit code sent to<br><b>' +
+            $('<i>').text(email).html() + '</b></p>' +
+            '<input id="client_otp_input" class="swal2-input" maxlength="6" inputmode="numeric" ' +
+            'autocomplete="one-time-code" placeholder="------" ' +
+            'style="letter-spacing:8px;text-align:center;font-size:22px;font-weight:700;">' +
+            '<div style="margin-top:6px;"><a href="#" id="client_otp_resend">Resend code</a></div>' +
+            '<div id="client_otp_status" style="margin-top:8px;font-size:12px;color:#6c757d;"></div>',
+        confirmButtonText: 'Verify',
+        confirmButtonColor: '#336aea',
+        showCancelButton: true,
+        cancelButtonText: 'Cancel',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        focusConfirm: false,
+        reverseButtons: true,
+        onBeforeOpen: function () {
+            $('#client_otp_resend').on('click', function (e) {
+                e.preventDefault();
+                if (!$(this).prop('disabled')) { doSend(); }
+            });
+            doSend();
+            setTimeout(function () { $('#client_otp_input').focus(); }, 150);
+        },
+        preConfirm: function () {
+            var code = ($('#client_otp_input').val() || '').replace(/\D/g, '');
+            if (code.length !== 6) {
+                Swal.showValidationMessage('Enter the 6-digit code');
+                return false;
+            }
+            return new Promise(function (resolve) {
+                $.ajax({
+                    url: './ajax/customers/client_otp_verify_ajax.php',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: { otp_code: code },
+                    success: function (r) {
+                        if (r.ok) { resolve(true); }
+                        else { Swal.showValidationMessage(r.error || 'Invalid code'); resolve(false); }
+                    },
+                    error: function () {
+                        Swal.showValidationMessage('Network error. Please try again.');
+                        resolve(false);
+                    }
+                });
+            });
+        }
+    }).then(function (result) {
+        clearInterval(cooldownTimer);
+        if (result.value) {
+            Swal.fire({
+                type: 'success',
+                title: 'Client verified & activated',
+                showConfirmButton: false,
+                timer: 1600,
+                timerProgressBar: true
+            }).then(function () { window.location.href = 'customers_list.php'; });
+        } else {
+            // Cancelled — confirm discarding the still-unverified client.
+            Swal.fire({
+                type: 'warning',
+                title: 'Discard this client?',
+                text: 'They were not verified, so the account will be removed. You can add them again later.',
+                showCancelButton: true,
+                confirmButtonText: 'Discard',
+                cancelButtonText: 'Keep verifying',
+                confirmButtonColor: '#dc3545',
+                reverseButtons: true
+            }).then(function (res2) {
+                if (res2.value) {
+                    $.ajax({
+                        url: './ajax/customers/client_otp_discard_ajax.php',
+                        type: 'POST',
+                        dataType: 'json',
+                        complete: function () { window.location.href = 'customers_list.php'; }
+                    });
+                } else {
+                    cdp_openClientEmailOtp(email); // reopen the verification step
+                }
+            });
+        }
+    });
+}
+
 
 
 
