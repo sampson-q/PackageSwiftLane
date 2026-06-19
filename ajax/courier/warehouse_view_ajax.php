@@ -56,9 +56,16 @@ if ($filterby == 3) {
 
 // Pagination
 $page      = (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) ? $_REQUEST['page'] : 1;
-$per_page  = 10;
 $adjacents = 4;
-$offset    = ($page - 1) * $per_page;
+
+// Rows-per-page filter (25 / 50 / 100 / all)
+$per_page_req = $_REQUEST['per_page'] ?? 25;
+if ($per_page_req === 'all') {
+    $per_page = 'all';
+} else {
+    $per_page = in_array((int)$per_page_req, [25, 50, 100], true) ? (int)$per_page_req : 25;
+}
+$offset = ($per_page === 'all') ? 0 : ($page - 1) * $per_page;
 
 $db->cdp_query("UPDATE cdb_add_order SET status_invoice = 3 WHERE due_date < now() and status_invoice != 1 and order_payment_method > 1");
 $db->cdp_execute();
@@ -78,10 +85,14 @@ $db->cdp_query($sql);
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
-$db->cdp_query($sql . " LIMIT $offset, $per_page");
+if ($per_page === 'all') {
+    $db->cdp_query($sql);
+    $total_pages = 1;
+} else {
+    $db->cdp_query($sql . " LIMIT $offset, $per_page");
+    $total_pages = ceil($numrows / $per_page);
+}
 $data = $db->cdp_registros();
-
-$total_pages = ceil($numrows / $per_page);
 
 
 if ($numrows > 0) { ?>
@@ -215,7 +226,7 @@ if ($numrows > 0) { ?>
                                 <span class="label label-large <?php echo $label_class; ?>"><?php echo $text_status; ?></span>
                             </td>
 
-                            <?php if ($row->status_courier != 8) { ?>}
+                            <?php if ($row->status_courier != 8) { ?>
                             <td align='center'>
 							    <div class="btn-group">
 							        <button class="btn btn-block btn-outline-dark btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
