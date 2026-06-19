@@ -36,6 +36,54 @@
     })(window.jQuery);
 </script>
 
+<script>
+    // Rows-per-page: append the chosen #per_page value to every list-load AJAX
+    // request (those whose object `data` contains a `page` key). jQuery serializes
+    // object data to a query string BEFORE prefilters run, so appending to
+    // options.data here is safe. No-ops when the page has no #per_page dropdown
+    // or when per_page was already sent explicitly (e.g. courier/warehouse).
+    (function ($) {
+        if (!$ || !$.ajaxPrefilter) return;
+        $.ajaxPrefilter(function (options, originalOptions) {
+            var od = originalOptions && originalOptions.data;
+            if (!od || typeof od !== 'object' || !('page' in od)) return;
+            if (/(?:^|&)per_page=/.test(options.data || '')) return;
+            var $pp = $('#per_page');
+            if (!$pp.length) return;
+            options.data = (options.data ? options.data + '&' : '') +
+                'per_page=' + encodeURIComponent($pp.val() || 25);
+        });
+    })(window.jQuery);
+</script>
+
+<script>
+    // Rows-per-page: inject a 25/50/100/All dropdown into the filter row of every
+    // paginated list page that doesn't already ship a static one (warehouse,
+    // courier_list and dashboard shipments do). Anchored next to #search so it
+    // lands on the same row as the other filters.
+    (function ($) {
+        if (!$) return;
+        $(function () {
+            if (typeof cdp_load !== 'function') return;   // paginated list pages only
+            if ($('#per_page').length) return;            // already has a dropdown
+            var $search = $('#search');
+            if (!$search.length) return;                  // no filter row to attach to
+            var $anchor = $search.closest('[class*="col-"]');
+            if (!$anchor.length) $anchor = $search.closest('.input-group');
+            if (!$anchor.length) return;
+            $anchor.after(
+                '<div class="col-sm-12 col-md-2 mb-2"><div class="input-group">' +
+                '<select onchange="cdp_load(1);" class="form-control custom-select" id="per_page" name="per_page">' +
+                '<option value="25">25 rows</option>' +
+                '<option value="50">50 rows</option>' +
+                '<option value="100">100 rows</option>' +
+                '<option value="all">All</option>' +
+                '</select></div></div>'
+            );
+        });
+    })(window.jQuery);
+</script>
+
 <!-- Bootstrap tether Core JavaScript -->
 <script src="assets/template/assets/libs/popper.js/dist/umd/popper.min.js"></script>
 <script src="assets/template/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
