@@ -384,11 +384,28 @@ if (isset($_POST["create_invoice"])) {
 
     $email_template = cdp_getEmailTemplatesdg1i4(1);
 
+    // Consolidation details (status + the shipments folded into it — no money)
+    $consol_items = '';
+    if (isset($_POST['order_no_item']) && is_array($_POST['order_no_item'])) {
+        foreach ($_POST['order_no_item'] as $ono) {
+            $ono = trim((string) $ono);
+            if ($ono === '') continue;
+            $consol_items .= '<li>' . htmlspecialchars($code_prefix . $ono, ENT_QUOTES, 'UTF-8') . '</li>';
+        }
+    }
+    $consol_details = '<table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:8px 0;background:#fafafa;border-left:4px solid #f5a800;font-family:Roboto,Arial,Helvetica,sans-serif;"><tr><td style="padding:12px 18px;">'
+        . '<p style="margin:0 0 4px 0;font-size:10px;color:#aaaaaa;text-transform:uppercase;letter-spacing:1px;">Consolidation Status</p>'
+        . '<p style="margin:0 0 10px 0;font-size:15px;font-weight:700;color:#1a1a1a;">' . htmlspecialchars($add_status, ENT_QUOTES, 'UTF-8') . '</p>'
+        . '<p style="margin:0 0 4px 0;font-size:10px;color:#aaaaaa;text-transform:uppercase;letter-spacing:1px;">Consolidated Shipments</p>'
+        . ($consol_items !== '' ? '<ul style="margin:0;padding-left:18px;font-size:14px;color:#1a1a1a;">' . $consol_items . '</ul>' : '<p style="margin:0;font-size:14px;">N/A</p>')
+        . '</td></tr></table>';
+
     $body = str_replace(
         array(
             '[NAME]',
             '[TRACKING]',
             '[DELIVERY_TIME]',
+            '[SHIPMENT_DETAILS]',
             '[URL]',
             '[URL_LINK]',
             '[SITE_NAME]',
@@ -398,6 +415,7 @@ if (isset($_POST["create_invoice"])) {
             $sender_data->fname . ' ' . $sender_data->lname,
             $fullshipment,
             $date_ship,
+            $consol_details,
             $msite_url,
             $mlogo,
             $msnames,
@@ -405,6 +423,11 @@ if (isset($_POST["create_invoice"])) {
         ),
         $email_template->body
     );
+
+    // If the template has no [SHIPMENT_DETAILS] slot, append so the details still show.
+    if (strpos($email_template->body, '[SHIPMENT_DETAILS]') === false) {
+        $body .= $consol_details;
+    }
 
 
     $newbody = cdp_cleanOutx($body);
