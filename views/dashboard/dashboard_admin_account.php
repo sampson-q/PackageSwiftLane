@@ -299,6 +299,7 @@ foreach ($data as $row) {
                                         <h5 class="m-0 me-2"><?php echo $lang['dash-general-30'] ?></h5>
                                     </div>
                                 </div>
+                                <div class="d-flex justify-content-end mb-2"><div class="input-group" style="max-width:170px;"><select onchange="cdp_load(1);" class="form-control custom-select" id="per_page" name="per_page"><option value="25">25 rows</option><option value="50">50 rows</option><option value="100">100 rows</option><option value="all"><?php echo $lang['rows-all'] ?? 'All'; ?></option></select></div></div>
                                 <div class="outer_div">
 
                                 </div>
