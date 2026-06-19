@@ -307,6 +307,10 @@ if ($challengeId > 0) {
     <link href="assets/css_main_deprixa/css/auth-pages.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <style>
+        /* Keep all OTP boxes on a single row, even on small phones. */
+        #otp_boxes {
+            flex-wrap: nowrap;
+        }
         .otp-box {
             width: 48px;
             height: 56px;
@@ -314,6 +318,20 @@ if ($challengeId > 0) {
             border-radius: 8px;
             border: 2px solid #dee2e6;
             transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        /* On narrow viewports the fixed-width boxes would overflow/wrap, so let
+           them shrink equally to share the row instead of breaking to a new line. */
+        @media (max-width: 480px) {
+            #otp_boxes {
+                gap: 6px !important;
+            }
+            .otp-box {
+                flex: 1 1 0;
+                width: auto;
+                min-width: 0;
+                height: 52px;
+                font-size: 1.1rem !important;
+            }
         }
         .otp-box:focus {
             border-color: #336aea;
@@ -414,7 +432,7 @@ if ($challengeId > 0) {
                                 <div class="row">
                                     <div class="col-12">
                                         <div class="mb-3">
-                                            <div class="d-flex justify-content-center gap-2 flex-wrap" id="otp_boxes">
+                                            <div class="d-flex justify-content-center gap-2 flex-nowrap" id="otp_boxes">
                                                 <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
                                                 <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
                                                 <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
