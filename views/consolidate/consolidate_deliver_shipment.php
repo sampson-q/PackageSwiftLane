@@ -309,7 +309,7 @@ if (isset($_POST['person_receives'])) {
                 '[URL_SHIP]'
             ),
             array(
-                $sender_data->fname . ' ' . $sender_data->lname,
+                cdp_nameWithLocker($sender_data),
                 $fullshipment,
                 $date_ship,
                 $status_courier_deliver,
@@ -392,7 +392,7 @@ if (isset($_POST['person_receives'])) {
                 try {
                     $settings_wa = cdp_getSettingsCourier();
                     $whatsapp_body = cdp_renderWhatsAppTemplate(3, array(
-                        '[CUSTOMER_FULLNAME]' => ucfirst(trim(($sender_data->fname ?? '') . ' ' . ($sender_data->lname ?? ''))),
+                        '[CUSTOMER_FULLNAME]' => cdp_nameWithLocker($sender_data),
                         '[TRACKING_NUMBER]'   => $fullshipment,
                         '[COMPANY_NAME]'      => !empty($settings_wa->site_name) ? $settings_wa->site_name : 'Our team',
                     ));
