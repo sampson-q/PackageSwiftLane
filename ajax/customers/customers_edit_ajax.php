@@ -21,6 +21,8 @@
 
 require_once("../../loader.php");
 require_once("../../helpers/querys.php");
+require_once("../../helpers/ajax_guard.php");
+require_login();
 
 $user = new User;
 $core = new Core;
