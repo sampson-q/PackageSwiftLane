@@ -232,6 +232,8 @@ $history = $db->cdp_registros();
 
                 </div>
 
+                <?php include('views/modals/modal_verify_payment_packages.php'); ?>
+
                 <?php include 'views/inc/footer.php'; ?>
             </div>
             <!-- ============================================================== -->
