@@ -294,7 +294,7 @@ if (isset($_POST['address'])) {
                 '[URL_SHIP]'
             ),
             array(
-                $sender_data->fname . ' ' . $sender_data->lname,
+                cdp_nameWithLocker($sender_data),
                 $fullshipment,
                 $date_ship,
                 $status_courier_deliver,
@@ -390,7 +390,7 @@ if (isset($_POST['address'])) {
                 $wa_comment  = trim(cdp_sanitize($_POST['comments'] ?? ''));
         
                 $whatsapp_body_sender =
-                    "Hello {$sender_data->fname} {$sender_data->lname},\n\n" .
+                    "Hello " . cdp_nameWithLocker($sender_data) . ",\n\n" .
                     "There is a new tracking update on your consolidation *{$fullshipment}*.\n\n" .
                     "*Status:* {$wa_status_label}\n" .
                     "*Location:* {$wa_location}\n" .
