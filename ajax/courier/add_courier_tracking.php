@@ -193,7 +193,7 @@ if (empty($errors)) {
                 '[URL_SHIP]'
             ),
             array(
-                $sender_data->fname . ' ' . $sender_data->lname,
+                cdp_nameWithLocker($sender_data),
                 $fullshipment,
                 $date_ship,
                 $status_data->mod_style,
@@ -280,7 +280,7 @@ if (empty($errors)) {
                     $wa_new_status = $status_data ? $status_data->mod_style : '';
 
                     $whatsapp_body_sender =
-                        "Hello {$sender_data->fname} {$sender_data->lname},\n\n" .
+                        "Hello " . cdp_nameWithLocker($sender_data) . ",\n\n" .
                         "There is a tracking update on your shipment *{$fullshipment}*.\n\n" .
                         "- *Status:* *{$wa_new_status}*\n" .
                         "- *Location:* {$wa_location}\n" .
