@@ -458,6 +458,11 @@ if (empty($errors)) {
         // =====================
         $email_template = cdp_getEmailTemplatesdg1i4(34);
 
+        // Full, current shipment details (status / weight / carrier tracking /
+        // ETA / items, no money) — re-sent on every edit, not a diff-only.
+        require_once(__DIR__ . '/../../helpers/notify_placeholders.php');
+        $pkg_ph = cdp_buildPackageNotifyPlaceholders($shipment_id, 'sea');
+
         if ($email_template) {
 
             // Build changed fields HTML rows
@@ -490,10 +495,10 @@ if (empty($errors)) {
             if (isset($changed_fields['_packages_updated']) && isset($packages) && is_array($packages) && count($packages) > 0) {
                 $pkg_rows = '';
                 foreach ($packages as $index => $package) {
+                    // No monetary values (declared value) in customer notifications.
                     $pkg_rows .= ($index + 1) . ". " . htmlspecialchars($package->description) . "\n" .
                         "   Weight: " . $package->weight . " lbs\n" .
-                        "   Dimensions: " . $package->length . " x " . $package->width . " x " . $package->height . " inches\n" .
-                        "   Declared Value: $" . number_format($package->declared_value, 2) . "\n\n";
+                        "   Dimensions: " . $package->length . " x " . $package->width . " x " . $package->height . " inches\n\n";
                 }
 
                 $packages_section_html = '
@@ -503,6 +508,14 @@ if (empty($errors)) {
                     <td style="font-size:13px;color:#444444;line-height:22px;font-family:Roboto,Arial,Helvetica,sans-serif;white-space:pre-line;">' . trim($pkg_rows) . '</td>
                   </tr>
                 </table>';
+            }
+
+            // Always append the full current shipment details so the customer
+            // sees the complete, up-to-date picture (not just the diff).
+            if ($pkg_ph['[SHIPMENT_DETAILS]'] !== '') {
+                $packages_section_html .=
+                    '<p style="margin:0 0 8px 0;font-size:14px;font-weight:700;color:#1a1a1a;font-family:Roboto,Arial,Helvetica,sans-serif;">Updated Shipment Details</p>'
+                    . $pkg_ph['[SHIPMENT_DETAILS]'];
             }
 
             $body = str_replace(
@@ -522,7 +535,7 @@ if (empty($errors)) {
                     $fullshipment,
                     $changed_fields_html,
                     $packages_section_html,
-                    '$' . number_format($total_envio, 2),
+                    '', // [TOTAL_AMOUNT] — no monetary values in customer notifications
                     $msite_url,
                     $mlogo,
                     $msnames,
@@ -590,31 +603,41 @@ if (empty($errors)) {
                 $wa_changes = '';
                 foreach ($changed_fields as $label => $diff) {
                     if ($label === '_packages_updated') {
-                        $wa_changes .= "• Package details (weight/dimensions) updated\n";
+                        $wa_changes .= "• Package details updated\n";
                         continue;
                     }
                     if ($label === 'Order Total') continue; // money is excluded from sender alerts
                     $wa_changes .= "• {$label}: " . ($diff['old'] ?? '') . " ➜ " . ($diff['new'] ?? '') . "\n";
                 }
 
-                // Build packages block for WhatsApp (only if updated; no money)
-                $wa_packages = '';
-                if (isset($changed_fields['_packages_updated']) && isset($packages) && is_array($packages) && count($packages) > 0) {
-                    $wa_packages = "\n*Package Breakdown:*\n";
-                    foreach ($packages as $index => $package) {
-                        $wa_packages .= ($index + 1) . ". " . $package->description . "\n" .
-                            "   Weight: " . $package->weight . " lbs\n" .
-                            "   Dimensions: " . $package->length . " x " . $package->width . " x " . $package->height . " inches\n";
+                // Full current details (no money, no dimensions). Status is shown
+                // distinctly as Current Status, so it is not repeated here.
+                $wa_details = '';
+                if ($pkg_ph['[WEIGHT]'] !== 'N/A') {
+                    $wa_details .= "• Total Weight: " . $pkg_ph['[WEIGHT]'] . "\n";
+                }
+                if ($pkg_ph['[ITEMS]'] !== 'N/A') {
+                    $wa_details .= "• Items:\n";
+                    foreach (explode("\n", $pkg_ph['[ITEMS]']) as $il) {
+                        $wa_details .= "   - {$il}\n";
                     }
+                }
+                if ($pkg_ph['[POSTAL_TRACKING]'] !== 'N/A') {
+                    $wa_details .= "• Carrier Tracking #: *" . $pkg_ph['[POSTAL_TRACKING]'] . "*\n";
+                }
+                if ($pkg_ph['[ETA]'] !== 'N/A') {
+                    $wa_details .= "• Estimated Arrival: " . $pkg_ph['[ETA]'] . "\n";
                 }
 
                 // Send only when something actually changed.
                 if (!empty($wa_changes)) {
+                    $wa_status_line = ($pkg_ph['[STATUS]'] !== 'N/A') ? "\n*Current Status:* {$pkg_ph['[STATUS]']}\n" : '';
                     $whatsapp_body =
                         "Hello {$sender_data->fname} {$sender_data->lname},\n\n" .
                         "Your shipment *{$fullshipment}* has been updated.\n\n" .
-                        "*What changed:*\n{$wa_changes}" .
-                        $wa_packages .
+                        "*What Changed:*\n{$wa_changes}" .
+                        $wa_status_line .
+                        ($wa_details !== '' ? "\n*Updated Details*\n" . $wa_details : '') .
                         "\nTrack your shipment at any time:\n" .
                         $app_url . "\n\n" .
                         "Thank you, *{$msnames}* Team";
