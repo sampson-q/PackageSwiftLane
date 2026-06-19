@@ -563,7 +563,7 @@ if ($row_order->status_invoice == 1) {
                                 ?>
 
                                 <!-- VERIFY PAYMENT PERMISSION  -->
-                                <?php if ($user->cdp_hasPermission('verify_payments')) { ?>
+                                <?php if ($user->cdp_hasPermission('verify_payments') && in_array($userData->userlevel, [2, 3, 9])) { ?>
 
                                     <?php
 
