@@ -369,42 +369,40 @@ if (!function_exists('cdp_wa_buildShipmentExtraLines')) {
         $settings = cdp_getSettingsCourier();
         $lines = array();
 
+        // Total Weight is the Original Total Weight ONLY (the staff-entered
+        // package_total_weight). Item weights price the items — they do NOT make
+        // up the package weight — so they are never summed here. Omitted if unset.
+        $weightUnit = trim((string) ($settings->weight_p ?? 'lb'));
+        $ptw = (isset($_POST['package_total_weight']) && $_POST['package_total_weight'] !== '')
+            ? (float) $_POST['package_total_weight'] : 0.0;
+        if ($ptw > 0) {
+            $lines[] = '• Total Weight: ' . (0 + $ptw) . ($weightUnit !== '' ? ' ' . $weightUnit : '');
+        }
+
+        // Contents = items + quantities (no pieces count, no dimensions).
         if (isset($_POST['packages'])) {
             $pkgs = json_decode($_POST['packages']);
             if (is_array($pkgs) && count($pkgs) > 0) {
-                $pieces = 0;
-                $summedWeight = 0.0;
                 $contents = array();
                 foreach ($pkgs as $p) {
                     $qty = max(1, (int) ($p->qty ?? 1));
-                    $pieces += $qty;
-                    $summedWeight += (float) ($p->weight ?? 0) * $qty;
                     $desc = trim((string) ($p->description ?? ''));
                     if ($desc !== '') {
                         $contents[] = $qty . ' x ' . $desc;
                     }
                 }
-                $weightUnit = trim((string) ($settings->weight_p ?? 'lb'));
-                // Original total weight (entered by staff) wins; else summed item weights.
-                $ptw = (isset($_POST['package_total_weight']) && $_POST['package_total_weight'] !== '')
-                    ? (float) $_POST['package_total_weight'] : 0.0;
-                $totalWeight = $ptw > 0 ? $ptw : round($summedWeight, 2);
-
-                $lines[] = '• Pieces: ' . $pieces;
-                $lines[] = '• Total weight: ' . (0 + $totalWeight) . ($weightUnit !== '' ? ' ' . $weightUnit : '');
                 if ($contents) {
                     $lines[] = '• Contents: ' . implode('; ', $contents);
                 }
-                // Dimensions intentionally dropped — the length/width/height model is retired.
             }
         }
         $pt = trim((string) ($_POST['tracking_number'] ?? ''));
         if ($pt !== '' && $pt !== '0') {
-            $lines[] = '• Carrier tracking #: ' . $pt;
+            $lines[] = '• Carrier Tracking #: *' . $pt . '*';
         }
         $eta = trim((string) ($_POST['estimated_eta'] ?? ''));
         if ($eta !== '') {
-            $lines[] = '• Estimated arrival: ' . $eta;
+            $lines[] = '• Estimated Arrival: ' . $eta;
         }
         return $lines;
     }
@@ -486,6 +484,11 @@ if (!function_exists('cdp_notifyConsolidationPackageSenders')) {
         $ordersTable = $tables[$module]['orders'];
         $outOfConsolidationStatuses = array(8, 15, 16, 21, 27, 32);
 
+        // Per-package detail enrichment (items / weight / carrier tracking)
+        // reads from the air or sea order tables via the shared notify helper.
+        $phModule = ($module === 'consolidate_packages') ? 'sea' : 'air';
+        require_once __DIR__ . '/notify_placeholders.php';
+
         $settings = cdp_getSettingsCourier();
 
         $db = new Conexion;
@@ -529,6 +532,28 @@ if (!function_exists('cdp_notifyConsolidationPackageSenders')) {
                 if ($body === null) {
                     // Template missing: nothing will render for any package — stop.
                     return array('sent' => $sent, 'skipped' => $skipped + 1);
+                }
+
+                // Append this package's own details (no money): carrier tracking,
+                // weight, items. Template 17 has no [EXTRA_DETAILS] slot.
+                if (function_exists('cdp_buildPackageNotifyPlaceholders')) {
+                    $pkg_ph = cdp_buildPackageNotifyPlaceholders((int) $pkg->order_id, $phModule);
+                    $detail_lines = array();
+                    if ($pkg_ph['[WEIGHT]'] !== 'N/A') {
+                        $detail_lines[] = '• Total Weight: ' . $pkg_ph['[WEIGHT]'];
+                    }
+                    if ($pkg_ph['[ITEMS]'] !== 'N/A') {
+                        $detail_lines[] = '• Items:';
+                        foreach (explode("\n", $pkg_ph['[ITEMS]']) as $il) {
+                            $detail_lines[] = '   - ' . $il;
+                        }
+                    }
+                    if ($pkg_ph['[POSTAL_TRACKING]'] !== 'N/A') {
+                        $detail_lines[] = '• Carrier Tracking #: *' . $pkg_ph['[POSTAL_TRACKING]'] . '*';
+                    }
+                    if ($detail_lines) {
+                        $body .= "\n\n" . implode("\n", $detail_lines);
+                    }
                 }
 
                 $res = sendNotificationWhatsApp_v2($sender, $body);
