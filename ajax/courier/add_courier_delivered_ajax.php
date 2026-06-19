@@ -184,7 +184,7 @@ if (empty($errors)) {
                 '[URL_SHIP]'
             ), array_keys($pkg_ph)),
             array_merge(array(
-                $sender_data->fname . ' ' . $sender_data->lname,
+                cdp_nameWithLocker($sender_data),
                 $fullshipment,
                 $date_ship,
                 $add_status,
@@ -304,7 +304,7 @@ if (empty($errors)) {
                     $whatsapp_body = str_replace(
                         ['[CUSTOMER_FULLNAME]', '[TRACKING_NUMBER]', '[COMPANY_NAME]'],
                         [
-                            ucfirst(trim(($sender_data->fname ?? '') . ' ' . ($sender_data->lname ?? ''))),
+                            cdp_nameWithLocker($sender_data),
                             $fullshipment,
                             ($settings_wa && !empty($settings_wa->site_name)) ? $settings_wa->site_name : 'Our team',
                         ],
