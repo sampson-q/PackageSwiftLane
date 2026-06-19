@@ -551,8 +551,11 @@ if (empty($errors)) {
 
         $email_template = cdp_getEmailTemplatesdg1i4(16);
 
+        require_once(__DIR__ . '/../../helpers/notify_placeholders.php');
+        $pkg_ph = cdp_buildPackageNotifyPlaceholders($shipment_id);
+
         $body = str_replace(
-            array(
+            array_merge(array(
                 '[NAME]',
                 '[TRACKING]',
                 '[DELIVERY_TIME]',
@@ -560,8 +563,8 @@ if (empty($errors)) {
                 '[URL_LINK]',
                 '[SITE_NAME]',
                 '[URL_SHIP]'
-            ),
-            array(
+            ), array_keys($pkg_ph)),
+            array_merge(array(
                 $sender_data->fname . ' ' . $sender_data->lname,
                 $fullshipment,
                 $date_ship,
@@ -569,7 +572,7 @@ if (empty($errors)) {
                 $mlogo,
                 $msnames,
                 $app_url
-            ),
+            ), array_values($pkg_ph)),
             $email_template->body
         );
 
@@ -803,6 +806,20 @@ if (empty($errors)) {
                         if ($eta_wa !== '') {
                             $extra_lines[] = '• Estimated arrival: ' . $eta_wa;
                         }
+
+                        // Status + full itemized list (qty x description, no prices)
+                        require_once(__DIR__ . '/../../helpers/notify_placeholders.php');
+                        $wa_ph = cdp_buildPackageNotifyPlaceholders($shipment_id);
+                        if ($wa_ph['[STATUS]'] !== 'N/A') {
+                            $extra_lines[] = '• Status: ' . $wa_ph['[STATUS]'];
+                        }
+                        if ($wa_ph['[ITEMS]'] !== 'N/A') {
+                            $extra_lines[] = '• Items:';
+                            foreach (explode("\n", $wa_ph['[ITEMS]']) as $il) {
+                                $extra_lines[] = '   - ' . $il;
+                            }
+                        }
+
                         $extra_details_wa = $extra_lines ? implode("\n", $extra_lines) . "\n" : '';
                         $track_url_wa = rtrim((string) ($settings->site_url ?? ''), '/') . '/track.php?order_track=' . rawurlencode($fullshipment);
 
