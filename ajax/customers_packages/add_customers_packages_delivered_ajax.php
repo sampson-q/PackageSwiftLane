@@ -179,7 +179,7 @@ if (empty($errors)) {
                 '[URL_SHIP]'
             ), array_keys($pkg_ph)),
             array_merge(array(
-                $sender_data->fname . ' ' . $sender_data->lname,
+                cdp_nameWithLocker($sender_data),
                 $fullshipment,
                 $date_ship,
                 'Completed!',
@@ -312,7 +312,7 @@ if (empty($errors)) {
                     $wa_record .= "- Carrier Tracking #: *" . $wa_ph['[POSTAL_TRACKING]'] . "*\n";
                 }
 
-                $whatsapp_body = "Hello {$sender_data->fname} {$sender_data->lname} 👋\n\n" .
+                $whatsapp_body = "Hello " . cdp_nameWithLocker($sender_data) . " 👋\n\n" .
                     "✅ *Your package has been successfully delivered!*\n\n" .
                     "📦 *Shipment Details:*\n" .
                     "- Shipment No: *{$fullshipment}*\n" .
