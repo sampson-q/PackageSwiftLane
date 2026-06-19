@@ -31,7 +31,8 @@
 
         $permissions = $user->cdp_getUserPermissions();
 
-        if (!$user->cdp_hasPermission('edit_shipment')) {
+        // Customers (userlevel 1) are strictly view-only — never allowed to edit.
+        if ((int)$user->userlevel === 1 || !$user->cdp_hasPermission('edit_shipment')) {
             header("location: error403.php");
             exit;
         }
