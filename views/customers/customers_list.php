@@ -27,13 +27,18 @@ $db = new Conexion;
 $userData = $user->cdp_getUserData();
 
 // Agencia (userlevel 6) o cualquier rol con permiso view_client_list
-if (($userData->userlevel ?? 0) != 6 && !$user->cdp_hasPermission('view_client_list')) {
+// if (($userData->userlevel ?? 0) != 6 && !$user->cdp_hasPermission('view_client_list')) {
+//     header("location: error403.php");
+//     exit;
+// }
+
+// header('location: error403.php') ? $userData->userlevel == 1 : header('location: customers_profile_edit.php?user=' . $userData->id);
+// exit;
+
+if (!in_array($userData->userlevel, [2, 3, 9]) && !$user->cdp_hasPermission('view_client_list')) {
     header("location: error403.php");
     exit;
 }
-
-header('location: error403.php') ? $userData->userlevel == 1 : header('location: customers_profile_edit.php?user=' . $userData->id);
-exit;
 
 // Contexto de agencia (para estadísticas multi-tenant)
 $ctx = cdp_getAgencyContext();
