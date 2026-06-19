@@ -451,6 +451,11 @@ if ($numrows > 0) { ?>
 							                </a>
 							            <?php } ?>
 
+                                        <?php if ($user->cdp_hasPermission('courier_deliver_shipment')) { ?>
+							                <a class="dropdown-item" target="blank" href="courier_deliver_shipment.php?id=<?php echo $row->order_id; ?>">
+							                    &nbsp;<i style="color:#343a40" class="fa fa-box"></i>&nbsp;<?php echo 'Deliver Package' ?>
+							                </a>
+							            <?php } ?>
 							        </div>
 							    </div>
 							</td>
