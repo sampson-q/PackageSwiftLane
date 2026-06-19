@@ -332,6 +332,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                                 <option value="25">25 rows</option>
                                                 <option value="50" selected>50 rows</option>
                                                 <option value="100">100 rows</option>
+                                                <option value="all"><?php echo $lang['rows-all'] ?? 'All'; ?></option>
                                             </select>
                                         </div>
                                     </div>
