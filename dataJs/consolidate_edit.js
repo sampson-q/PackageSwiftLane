@@ -359,38 +359,53 @@ function cdp_load(page) {
     beforeSend: function (objeto) {},
     success: function (data) {
       $(".outer_div").html(data).fadeIn("slow");
-      // Bind "Add checked packages" button after table loads
-      $("#add_checked_packages").off("click").on("click", function(e) {
-        e.preventDefault();
-        document.querySelectorAll(".pkg-checkbox:checked").forEach(function(checkbox) {
-          let row = checkbox.closest("tr");
-          let orderId = row.getAttribute("data-order-id");
-          let totalMetric = row.getAttribute("data-total-metric");
-          let weight = row.getAttribute("data-weight");
-          let length = row.getAttribute("data-length");
-          let width = row.getAttribute("data-width");
-          let height = row.getAttribute("data-height");
-          let tracking = row.getAttribute("data-tracking");
-          let orderNo = row.getAttribute("data-order-no");
-          let orderPrefix = row.getAttribute("data-order-prefix");
-          let sender = row.getAttribute("data-sender");
-          let description = row.getAttribute("data-description");
-          let quantity = row.getAttribute("data-quantity");
-          let totalOrder = row.getAttribute("data-total-order");
-          let totalOrderRaw = row.getAttribute("data-total-order-raw");
-
-          cdp_add_item(orderId, totalMetric, weight, length, width, height, tracking, orderNo, orderPrefix, sender, description, totalOrder, quantity, totalOrderRaw);
-
-          // Remove the row completely from the DOM
-          row.remove();
-        });
-
-        // Update selection bar
-        updateSelectionBar();
-      });
+      // "Add Selected" + the modal search are handled by delegated handlers
+      // (bound once, below) so they survive every content reload.
     },
   });
 }
+
+// Find-shipments modal: "Add Selected". Delegated + preventDefault so the button
+// can never fall through to a form submit (a submit reloads the page, which is
+// what made the whole modal disappear).
+$(document).on("click", "#add_checked_packages", function (e) {
+  e.preventDefault();
+  var added = 0;
+  document.querySelectorAll(".pkg-checkbox:checked").forEach(function (checkbox) {
+    var row = checkbox.closest("tr");
+    if (!row) return;
+    cdp_add_item(
+      row.getAttribute("data-order-id"),
+      row.getAttribute("data-total-metric"),
+      row.getAttribute("data-weight"),
+      row.getAttribute("data-length"),
+      row.getAttribute("data-width"),
+      row.getAttribute("data-height"),
+      row.getAttribute("data-tracking"),
+      row.getAttribute("data-order-no"),
+      row.getAttribute("data-order-prefix"),
+      row.getAttribute("data-sender"),
+      row.getAttribute("data-description"),
+      row.getAttribute("data-total-order"),
+      row.getAttribute("data-quantity"),
+      row.getAttribute("data-total-order-raw")
+    );
+    row.remove();
+    added++;
+  });
+  if (typeof updateSelectionBar === "function") updateSelectionBar();
+  // Selected packages are now in the consolidation list — close the modal.
+  if (added > 0) {
+    $("#myModalConsolidate").modal("hide");
+  }
+});
+
+// The modal search must filter via AJAX, never submit/reload the page (a reload
+// closes the modal). Covers Enter and the search button.
+$(document).on("submit", "#send_email", function (e) {
+  e.preventDefault();
+  cdp_load(1);
+});
 
 $("#save_data").on("submit", function (event) {
   var parametros = $(this).serialize();
