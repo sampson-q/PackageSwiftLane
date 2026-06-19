@@ -412,7 +412,7 @@ if (isset($_POST["create_invoice"])) {
             '[URL_SHIP]'
         ),
         array(
-            $sender_data->fname . ' ' . $sender_data->lname,
+            cdp_nameWithLocker($sender_data),
             $fullshipment,
             $date_ship,
             $consol_details,
