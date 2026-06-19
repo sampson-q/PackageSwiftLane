@@ -188,7 +188,7 @@ if (empty($errors)) {
                 '[URL_SHIP]'
             ),
             array(
-                $sender_data->fname . ' ' . $sender_data->lname,
+                cdp_nameWithLocker($sender_data),
                 $fullshipment,
                 $date_ship,
                 $status_data->mod_style,
