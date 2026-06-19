@@ -27,28 +27,96 @@ $category = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_courier_com WHERE id='" . $row->order_courier . "'");
 $courier_com = $db->cdp_registro();
 
-// Sender and receiver
+// Sender
 $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . $row->sender_id . "'");
 $sender_data = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_users WHERE id='" . $row->receiver_id . "'");
+// Recipient — 'user' ships to the account holder (self); otherwise a saved recipient
+$recipient_type = isset($row->recipient_type) ? $row->recipient_type : 'recipient';
+if ($recipient_type === 'user') {
+    $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . intval($row->receiver_id) . "'");
+} else {
+    $db->cdp_query("SELECT * FROM cdb_recipients WHERE id='" . intval($row->receiver_id) . "'");
+}
 $receiver_data = $db->cdp_registro();
 
 // Address
 $db->cdp_query("SELECT * FROM cdb_address_shipments WHERE order_track='" . $row->order_prefix . $row->order_no . "'");
 $address_order = $db->cdp_registro();
 
+// Status style
+$db->cdp_query("SELECT * FROM cdb_styles WHERE id='" . (int)$row->status_courier . "'");
+$status_style = $db->cdp_registro();
+
 // Tracking and ETA
 $package_tracking = cdp_getPackageTrackingLegacyAware($_GET['id']);
 
-// Totals
-$total_weight = 0;
-foreach ($order_items as $item) {
-    $total_weight += (float)$item->order_item_weight;
+if (!function_exists('h')) {
+    function h($value) {
+        return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+    }
 }
 
-function h($value) {
-    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+// ── Derived values ──────────────────────────────────────────────────────────
+$swift_tracking  = $row->order_prefix . $row->order_no;             // system package tracking (banner)
+$postal_tracking = $package_tracking->tracking_number ?? '';        // carrier / postal tracking (bottom barcode)
+$eta             = $package_tracking->estimated_eta ?? '';
+
+// FROM (sender)
+$from_name    = trim(($sender_data->fname ?? '') . ' ' . ($sender_data->lname ?? ''));
+$from_phone   = $sender_data->phone ?? '';
+$from_address = $address_order->sender_address ?? '';
+$from_city    = $address_order->sender_city ?? '';
+$from_state   = $address_order->sender_state ?? '';
+$from_zip     = $address_order->sender_zip_code ?? '';
+$from_country = $address_order->sender_country ?? '';
+
+// SHIP TO (recipient)
+if ($recipient_type === 'user') {
+    $to_name    = trim(($sender_data->fname ?? '') . ' ' . ($sender_data->lname ?? ''));
+    $to_phone   = $sender_data->phone ?? '';
+    $to_address = $address_order->sender_address ?? '';
+    $to_city    = $address_order->sender_city ?? '';
+    $to_state   = $address_order->sender_state ?? '';
+    $to_zip     = $address_order->sender_zip_code ?? '';
+    $to_country = $address_order->sender_country ?? '';
+} else {
+    $to_name    = trim(($receiver_data->fname ?? '') . ' ' . ($receiver_data->lname ?? ''));
+    $to_phone   = $receiver_data->phone ?? '';
+    $to_address = $address_order->recipient_address ?? '';
+    $to_city    = $address_order->recipient_city ?? '';
+    $to_state   = $address_order->recipient_state ?? '';
+    $to_zip     = $address_order->recipient_zip_code ?? '';
+    $to_country = $address_order->recipient_country ?? '';
+}
+
+// Original package weight (stored on the order; fall back to summed item weights)
+$pkg_weight = $row->total_weight ?? '';
+if ($pkg_weight === '' || $pkg_weight === null) {
+    $sum = 0;
+    foreach ($order_items as $it) { $sum += (float)$it->order_item_weight; }
+    $pkg_weight = $sum;
+}
+
+// QR payload — the sender's details
+$qr_data = "FROM: " . $from_name
+    . "\nTel: " . $from_phone
+    . "\n" . $from_address
+    . "\n" . trim($from_city . ', ' . $from_country, ', ');
+
+$qr_src = 'https://barcode.tec-it.com/barcode.ashx?data=' . urlencode($qr_data)
+    . '&code=QRCode&translate-esc=true&unit=Fit&dpi=96&imagetype=Gif&rotation=0'
+    . '&color=%23000000&bgcolor=%23ffffff&qunit=Mm&quiet=1';
+
+// Bottom barcode — the carrier / postal tracking
+$barcode_value = $postal_tracking !== '' ? $postal_tracking : $swift_tracking;
+$barcode_src = 'https://barcode.tec-it.com/barcode.ashx?data=' . urlencode($barcode_value)
+    . '&code=Code128&multiplebarcodes=false&translate-esc=false&unit=Fit&dpi=96&imagetype=Gif&rotation=0'
+    . '&color=%23000000&bgcolor=%23ffffff&qunit=Mm&quiet=0&modulewidth=50';
+
+function label_addr_lines($address, $city, $state, $zip, $country) {
+    $line2 = trim(implode(', ', array_filter([$city, $state, $zip])), ', ');
+    return array_filter([$address, $line2, $country]);
 }
 ?>
 <!DOCTYPE html>
@@ -57,276 +125,249 @@ function h($value) {
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo h($core->favicon); ?>">
-    <title><?php echo h($lang['inv-shipping19'] . ' - ' . $row->order_prefix . $row->order_no); ?></title>
+    <title><?php echo h($lang['inv-shipping19'] . ' - ' . $swift_tracking); ?></title>
     <link href="assets/custom_dependencies/bootstrap.min.css" rel="stylesheet">
     <style>
         @page { size: 102mm 152mm; margin: 0; }
         * { box-sizing: border-box; }
         html, body {
             width: 102mm;
-            height: 152mm;
             margin: 0;
             padding: 0;
             background: #fff;
             font-family: Arial, Helvetica, sans-serif;
-            color: #111;
+            color: #000;
         }
-        body {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .label {
             width: 102mm;
-            height: 152mm;
-            padding: 4mm;
-            overflow: hidden;
-        }
-        .panel {
-            border: 1px solid #111;
-            border-radius: 2mm;
+            min-height: 152mm;
             padding: 3mm;
-            margin-bottom: 2.5mm;
+            border: 1.5pt solid #000;
         }
-        .header {
+
+        /* Header: logo (left) + sender QR (right) */
+        .lab-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 3mm;
             padding-bottom: 2mm;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 2mm;
+            border-bottom: 2pt solid #000;
         }
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 2.5mm;
-            min-width: 0;
-        }
-        .brand img {
-            max-height: 12mm;
-            max-width: 25mm;
-            object-fit: contain;
-        }
-        .brand-name {
-            font-size: 10pt;
-            font-weight: 700;
-            line-height: 1.05;
-            margin: 0;
-        }
-        .brand-meta {
-            font-size: 7.5pt;
-            line-height: 1.2;
-            margin-top: 0.5mm;
-            color: #444;
-        }
-        .track-box {
-            text-align: right;
-            flex: 0 0 auto;
-        }
-        .track-label {
-            font-size: 6.5pt;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            color: #666;
-            margin-bottom: 1mm;
-        }
-        .track-value {
-            font-size: 11pt;
-            font-weight: 800;
-            line-height: 1;
-        }
-        .barcode {
-            text-align: right;
-            margin: 1.5mm 0 1mm;
-        }
-        .barcode img {
-            width: 55%;
-            /* max-width: 90mm; */
-            height: auto;
-        }
-        .mini-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2mm;
-        }
-        .card {
-            border: 1px solid #d8d8d8;
-            border-radius: 1.5mm;
-            padding: 2mm;
-            background: #fafafa;
-            min-height: 0;
-        }
-        .card-title {
-            font-size: 7.5pt;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            padding-bottom: 1.2mm;
-            margin-bottom: 1.5mm;
-            border-bottom: 1px solid #e4e4e4;
-        }
-        .rowline {
-            display: flex;
-            gap: 1.2mm;
-            font-size: 7.2pt;
-            line-height: 1.25;
-            margin-bottom: 0.9mm;
-        }
-        .lbl {
-            flex: 0 0 24%;
-            color: #666;
-            font-weight: 700;
-        }
-        .val {
-            flex: 1;
-            min-width: 0;
-            word-break: break-word;
-            color: #111;
-        }
-        .full {
-            grid-column: 1 / -1;
-        }
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 2mm;
-        }
-        .stat {
+        .lab-logo img { max-height: 16mm; max-width: 50mm; object-fit: contain; }
+        .lab-logo .brand-name { font-size: 12pt; font-weight: 800; }
+        .lab-qr { text-align: center; flex: 0 0 auto; }
+        .lab-qr img { width: 22mm; height: 22mm; object-fit: contain; }
+        .lab-qr .cap { font-size: 6pt; letter-spacing: .3px; text-transform: uppercase; color: #000; }
+
+        /* Swift tracking banner (the "Priority Mail" slot = our package tracking) */
+        .swift-banner {
+            margin: 2mm 0;
+            border: 1.5pt solid #000;
             text-align: center;
-            border: 1px solid #d8d8d8;
-            border-radius: 1.5mm;
-            padding: 1.8mm 1mm;
-            background: #fff;
+            padding: 1.5mm 2mm;
         }
-        .stat .k {
-            display: block;
-            font-size: 6.5pt;
-            color: #666;
+        .swift-banner .k {
+            font-size: 7pt;
             font-weight: 700;
-            margin-bottom: 1mm;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .stat .v {
-            display: block;
-            font-size: 10pt;
+        .swift-banner .v {
+            font-size: 18pt;
             font-weight: 800;
-            line-height: 1;
+            line-height: 1.05;
+            letter-spacing: 1px;
         }
-        .items {
+        .swift-banner .meta {
+            font-size: 7pt;
             margin-top: 1mm;
+            display: flex;
+            justify-content: center;
+            gap: 3mm;
+            flex-wrap: wrap;
         }
-        table {
+        .badge-status {
+            display: inline-block;
+            color: #fff;
+            font-weight: 700;
+            padding: 0.3mm 1.6mm;
+            border-radius: 1mm;
+            font-size: 7pt;
+        }
+
+        /* FROM / SHIP TO */
+        .addr-grid { display: flex; gap: 2mm; margin-bottom: 2mm; }
+        .addr {
+            flex: 1;
+            border: 1pt solid #000;
+            padding: 1.8mm;
+            min-width: 0;
+        }
+        .addr .tag {
+            font-size: 6.5pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border-bottom: 1pt solid #000;
+            margin-bottom: 1mm;
+            padding-bottom: .6mm;
+        }
+        .addr .nm { font-size: 8.5pt; font-weight: 800; }
+        .addr .ln { font-size: 7.3pt; line-height: 1.3; word-break: break-word; }
+        .addr .tel { font-size: 7.3pt; margin-top: .6mm; }
+
+        /* Items table (your spec) */
+        .shipment-table {
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
+            margin-bottom: 2mm;
         }
-        th, td {
-            border: 1px solid #d8d8d8;
-            padding: 1.4mm 1.2mm;
-            font-size: 7pt;
+        .shipment-table th, .shipment-table td {
+            border: 1pt solid #000;
+            padding: 1.2mm 1.4mm;
+            font-size: 7.4pt;
             vertical-align: top;
             word-break: break-word;
         }
-        th {
-            background: #111;
+        .shipment-table thead th {
+            background: #000;
             color: #fff;
-            font-weight: 700;
             text-align: left;
+            font-weight: 700;
         }
-        .footer-note {
-            margin-top: 2.5mm;
-            font-size: 6.5pt;
-            color: #555;
+        .shipment-table thead th:first-child { width: 16%; text-align: center; }
+        .shipment-table tbody td:first-child { text-align: center; font-weight: 700; }
+        .shipment-table tfoot td {
+            font-weight: 800;
+            font-size: 7.6pt;
+            background: #f0f0f0;
+        }
+
+        /* Bottom carrier tracking barcode */
+        .carrier {
+            border-top: 2pt solid #000;
+            padding-top: 2mm;
             text-align: center;
         }
-        .print-button {
-            text-align: center;
-            margin-top: 4mm;
+        .carrier .cap {
+            font-size: 7pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .6px;
         }
-        .print-button button {
-            padding: 10px 18px;
-            font-size: 14px;
-            cursor: pointer;
-        }
+        .carrier img { width: 85%; height: 16mm; object-fit: contain; margin: 1mm 0 .5mm; }
+        .carrier .num { font-size: 9pt; font-weight: 700; letter-spacing: 1px; }
+
+        .print-button { text-align: center; margin-top: 4mm; }
+        .print-button button { padding: 10px 18px; font-size: 14px; cursor: pointer; }
         @media print {
             .print-button { display: none; }
-            body { background: #fff; }
-            .label { padding: 3mm; }
+            .label { border: none; }
         }
     </style>
 </head>
 <body>
     <div class="label">
-        <div class="panel">
-            <div class="header">
-                <div class="brand">
-                    <?php if (!empty($core->logo)) : ?>
-                        <img src="assets/<?php echo h($core->logo); ?>" alt="<?php echo h($core->site_name); ?>">
-                    <?php endif; ?>
-                </div>
-                
-                <div class="barcode">
-                    <img src="https://barcode.tec-it.com/barcode.ashx?data=<?php echo urlencode($row->order_prefix . $row->order_no); ?>&code=Code128&multiplebarcodes=false&translate-esc=false&unit=Fit&dpi=92&imagetype=Gif&rotation=0&color=%23000000&bgcolor=%23ffffff&qunit=Mm&quiet=0&modulewidth=50" alt="Barcode">
-                </div>
+
+        <!-- Header: logo + sender QR -->
+        <div class="lab-head">
+            <div class="lab-logo">
+                <?php if (!empty($core->logo)) : ?>
+                    <img src="assets/<?php echo h($core->logo); ?>" alt="<?php echo h($core->site_name); ?>">
+                <?php else : ?>
+                    <span class="brand-name"><?php echo h($core->site_name); ?></span>
+                <?php endif; ?>
             </div>
-
-
-            <div class="mini-grid">
-                <div class="card">
-                    <div class="card-title"><?php echo h($lang['inv-shipping5']); ?></div>
-                    <div class="rowline"><div class="lbl">Name</div><div class="val"><strong><?php echo h($sender_data->fname . ' ' . $sender_data->lname); ?></strong></div></div>
-                    <div class="rowline"><div class="lbl">Phone</div><div class="val"><?php echo h($sender_data->phone); ?></div></div>
-                    <div class="rowline"><div class="lbl">Address</div><div class="val"><?php echo h($address_order->sender_address ?? 'N/A'); ?></div></div>
-                    <div class="rowline"><div class="lbl">Location</div><div class="val"><?php echo h(($address_order->sender_city ?? 'N/A') . ', ' . ($address_order->sender_country ?? 'N/A')); ?></div></div>
-                </div>
-
-
-                <div class="card">
-                    <div class="card-title">Shipment Details</div>
-                    <div class="">
-                        <div>
-                            <div class="rowline"><div class="lbl">Tracking</div><br><div class="val"><strong><?php echo h($package_tracking->tracking_number ?? 'N/A'); ?></strong></div></div>
-                            <div class="rowline"><div class="lbl">Courier</div><div class="val"><?php echo h($courier_com->name_com ?? 'N/A'); ?></div></div>
-                        </div>
-                        <div>
-                            <div class="rowline"><div class="lbl">Mode</div><div class="val"><?php echo h($shipping_mode->ship_mode ?? 'N/A'); ?></div></div>
-                            <div class="rowline"><div class="lbl">Category</div><div class="val"><?php echo h($category->name_item ?? 'N/A'); ?></div></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card full items">
-                    <div class="card-title">Items</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 18%;">Qty</th>
-                                <th>Description</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if ($order_items) : ?>
-                                <?php foreach ($order_items as $item) : ?>
-                                    <tr>
-                                        <td><?php echo h((int)$item->order_item_quantity); ?></td>
-                                        <td><?php echo h($item->order_item_description); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else : ?>
-                                <tr>
-                                    <td colspan="2">No items found.</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="footer-note">
-                <?php echo '<br>Developed by <b>iSolveAfrica</b><br>+233 (0) 59 144 7845<br>https://www.isolveafrica.com/'; ?>
+            <div class="lab-qr">
+                <img src="<?php echo h($qr_src); ?>" alt="Sender QR">
+                <div class="cap"><?php echo h($lang['left498'] ?? 'Sender'); ?></div>
             </div>
         </div>
+
+        <!-- Swift (system) package tracking -->
+        <div class="swift-banner">
+            <div class="k"><?php echo h($lang['ltracking'] ?? 'Tracking'); ?></div>
+            <div class="v"><?php echo h($swift_tracking); ?></div>
+            <div class="meta">
+                <?php if (!empty($status_style->mod_style)) : ?>
+                    <span class="badge-status" style="background: <?php echo h($status_style->color); ?>;"><?php echo h($status_style->mod_style); ?></span>
+                <?php endif; ?>
+                <?php if (!empty($shipping_mode->ship_mode)) : ?>
+                    <span><strong><?php echo h($shipping_mode->ship_mode); ?></strong></span>
+                <?php endif; ?>
+                <?php if (!empty($eta)) : ?>
+                    <span>ETA: <strong><?php echo h($eta); ?></strong></span>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- FROM / SHIP TO -->
+        <div class="addr-grid">
+            <div class="addr">
+                <div class="tag"><?php echo h($lang['left498'] ?? 'Sender'); ?></div>
+                <div class="nm"><?php echo h($from_name); ?></div>
+                <?php foreach (label_addr_lines($from_address, $from_city, $from_state, $from_zip, $from_country) as $ln) : ?>
+                    <div class="ln"><?php echo h($ln); ?></div>
+                <?php endforeach; ?>
+                <?php if (!empty($from_phone)) : ?><div class="tel">Tel: <?php echo h($from_phone); ?></div><?php endif; ?>
+            </div>
+            <div class="addr">
+                <div class="tag"><?php echo h($lang['left499'] ?? 'Recipient'); ?></div>
+                <div class="nm"><?php echo h($to_name); ?></div>
+                <?php foreach (label_addr_lines($to_address, $to_city, $to_state, $to_zip, $to_country) as $ln) : ?>
+                    <div class="ln"><?php echo h($ln); ?></div>
+                <?php endforeach; ?>
+                <?php if (!empty($to_phone)) : ?><div class="tel">Tel: <?php echo h($to_phone); ?></div><?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Items -->
+        <table class="shipment-table">
+            <thead>
+                <tr>
+                    <th><?php echo h($lang['left214']); ?></th>
+                    <th><?php echo h($lang['left213']); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($order_items)) : ?>
+                    <?php foreach ($order_items as $row_order_item) : ?>
+                        <tr>
+                            <td><?php echo (int) $row_order_item->order_item_quantity; ?></td>
+                            <td><?php echo h($row_order_item->order_item_description); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else : ?>
+                    <tr>
+                        <td colspan="2" style="text-align:center;">No items</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2">
+                        Original Package Weight: <?php echo h($pkg_weight !== '' ? $pkg_weight : '—'); ?>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Carrier / postal tracking -->
+        <div class="carrier">
+            <div class="cap"><?php echo h($lang['ltracking'] ?? 'Tracking'); ?> #<?php echo $postal_tracking === '' ? ' (Pending)' : ''; ?></div>
+            <?php if ($postal_tracking !== '') : ?>
+                <img src="<?php echo h($barcode_src); ?>" alt="Carrier barcode">
+                <div class="num"><?php echo h($postal_tracking); ?></div>
+            <?php else : ?>
+                <div class="num" style="font-weight:700; padding:3mm 0;">Awaiting carrier tracking</div>
+            <?php endif; ?>
+        </div>
+
     </div>
+
     <div class="print-button">
         <button class="btn btn-primary" onclick="window.print();">
             <i class="fa fa-print"></i> Print Label
