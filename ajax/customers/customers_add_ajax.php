@@ -1,308 +1,154 @@
 <?php
-// *************************************************************************
-// *                                                                       *
-// * DEPRIXA PRO -  Integrated Web Shipping System                         *
-// * Copyright (c) JAOMWEB. All Rights Reserved                            *
-// *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * Email: support@jaom.info                                              *
-// * Website: http://www.jaom.info                                         *
-// *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * This software is furnished under a license and may be used and copied *
-// * only  in  accordance  with  the  terms  of such  license and with the *
-// * inclusion of the above copyright notice.                              *
-// * If you Purchased from Codecanyon, Please read the full License from   *
-// * here- http://codecanyon.net/licenses/standard                         *
-// *                                                                       *
-// *************************************************************************
+// Admin "add client" — mirrors public sign-up, only from the admin side:
+// the client is created as an INCOMPLETE, pre-approved account and must pass
+// email-OTP verification (shown in a SweetAlert) before it is activated.
+// WhatsApp-number verification is then forced on the client's first login
+// (update_phone = 0), exactly like sign-up.
 
- 
+ini_set('display_errors', 0);
 
 require_once("../../loader.php");
 require_once("../../helpers/querys.php");
-require_once("../../helpers/phpmailer/class.phpmailer.php");
-require_once("../../helpers/phpmailer/class.smtp.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_client_list');
 
+header('Content-Type: application/json; charset=UTF-8');
+
 $user = new User;
 $core = new Core;
+$db   = new Conexion;
+
 $errors = array();
-$userData = $user->cdp_getUserData();
 
-if (empty($_POST['username']))
+$username        = trim($_POST['username'] ?? '');
+$email           = trim($_POST['email'] ?? '');
+$fname           = trim($_POST['fname'] ?? '');
+$lname           = trim($_POST['lname'] ?? '');
+$password        = $_POST['password'] ?? '';
+$phone           = trim($_POST['phone'] ?? '');
+$document_type   = trim($_POST['document_type'] ?? '');
+$document_number = trim($_POST['document_number'] ?? '');
 
-    $errors['username'] = $lang['validate_field_ajax117'];
+// ── Validation (mirrors sign-up) ────────────────────────────────────────────
+if ($username === '') {
+    $errors[] = $lang['validate_field_ajax117'];
+} elseif (strlen($username) < 4 || !ctype_alnum($username)) {
+    $errors[] = $lang['messagesform80'];
+} elseif ($user->cdp_usernameExists($username)) {
+    $errors[] = $lang['validate_field_ajax118'];
+}
 
-if ($value = $user->cdp_usernameExists($_POST['username']))
+if ($fname === '')           $errors[] = $lang['validate_field_ajax122'];
+if ($lname === '')           $errors[] = $lang['validate_field_ajax123'];
 
-    if ($value == 1)
+if ($password === '') {
+    $errors[] = $lang['validate_field_ajax124'];
+} elseif (strlen($password) < 8) {
+    $errors[] = $lang['messagesform75'];
+}
 
-        $errors['username'] = $lang['validate_field_ajax118'];
-
-if ($value == 2)
-
-    $errors['username'] = $lang['validate_field_ajax119'];
-
-if ($value == 3)
-    $errors['username'] = $lang['validate_field_ajax120'];
-
-
-if (empty($_POST['fname']))
-
-    $errors['fname'] = $lang['validate_field_ajax122'];
-if (empty($_POST['lname']))
-
-    $errors['lname'] = $lang['validate_field_ajax123'];
-
-if (empty($_POST['password']))
-
-    $errors['password'] = $lang['validate_field_ajax124'];
-
-if (empty($_POST['email']))
-
-    $errors['email'] = $lang['validate_field_ajax125'];
-
-if ($user->cdp_emailExists($_POST['email']))
-
-    $errors[] = $lang['validate_field_ajax126'];
-
-if (!$user->cdp_isValidEmail($_POST['email']))
-
+if ($email === '') {
+    $errors[] = $lang['validate_field_ajax125'];
+} elseif (!$user->cdp_isValidEmail($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $errors[] = $lang['validate_field_ajax127'];
+} elseif ($user->cdp_emailExists($email)) {
+    $errors[] = $lang['validate_field_ajax126'];
+}
 
-if (empty($_POST['phone']))
-
-    $errors['phone'] = $lang['validate_field_ajax128'];
-
-
-
-
-if (empty($errors)) {
-
-
-    $settings = cdp_getSettingsCourier();
-    $prefixlk = $settings->prefix_locker;
-
-
-
-     header('Content-type: application/json; charset=UTF-8');
-    
-    $response = array();
-
-    $datos = array(
-        'username' => cdp_sanitize($_POST['username']),
-        'locker' => cdp_sanitize($prefixlk. ' ' .$_POST['locker']),
-        'userlevel' => 1,
-        'email' => cdp_sanitize($_POST['email']),
-        'fname' => cdp_sanitize($_POST['fname']),
-        'lname' => cdp_sanitize($_POST['lname']),
-        'notes' => cdp_sanitize($_POST['notes']),
-        'phone' => cdp_sanitize($_POST['phone']),
-        'gender' => cdp_sanitize($_POST['gender']),
-        'newsletter' => intval($_POST['newsletter']),
-        'active' => cdp_sanitize($_POST['active']),
-        'document_type' => cdp_sanitize($_POST['document_type']),
-        'document_number' => cdp_sanitize($_POST['document_number'])
-    );
-
-    if ($_POST['password'] != "") {
-        $datos['password'] = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    }
-
-
-    $datos['created'] = date("Y-m-d H:i:s");
-
-    $ctx = cdp_getAgencyContext();
-    if ($ctx['is_restricted']) {
-        if ($ctx['agency_id'] === null) {
-            header('Content-Type: application/json; charset=UTF-8');
-            echo json_encode(['status' => 'error', 'message' => 'Su usuario de agencia no tiene una agencia asociada.']);
-            exit;
-        }
-        $datos['agency_id'] = (int)$ctx['agency_id'];
-    }
-
-    $customer_id = cdp_insertCustomer($datos);
-
-    if ($customer_id !== null && isset($_POST["total_address"])) {
-
-        for ($count = 0; $count < $_POST["total_address"]; $count++) {
-
-            $dataAddresses = array(
-                'user_id' =>  $customer_id,
-                'address' =>  cdp_sanitize($_POST["address"][$count]),
-                'country' =>  cdp_sanitize($_POST["country"][$count]),
-                'city' =>  cdp_sanitize($_POST["city"][$count]),
-                'state' =>  cdp_sanitize($_POST["state"][$count]),
-                'postal' =>  cdp_sanitize($_POST["postal"][$count])
-            );
-
-            cdp_insertAddressCustomer($dataAddresses); 
-        }
-
-
-        if ($customer_id) {
-            $response['status'] = 'success';
-            $response['message'] = $lang['message_ajax_success_add'];
-        } else {
-            $response['status'] = 'error';
-            $response['message'] = $lang['message_ajax_error1'];
-        }
-
-
-        echo json_encode($response);
-    }
-
-    if (isset($_POST['notify']) && $_POST['notify'] == 1) {
-        $email_template = cdp_getEmailTemplatesdg1i4(3);
-
-        $body = str_replace(
-            array(
-                '[USERNAME]',
-                '[PASSWORD]',
-                '[LOCKER]',
-                '[VIRTUAL_LOCKER]',
-                '[NAME]',
-                '[SITE_NAME]',
-                '[URL]'
-            ),
-            array(
-                cdp_sanitize($_POST['username']),
-                cdp_sanitize($_POST['password']),
-                cdp_sanitize($_POST['locker']),
-                $core->locker_address,
-                cdp_sanitize($_POST['fname']) . ' ' . cdp_sanitize($_POST['lname']),
-                $core->site_name,
-                $core->site_url
-            ),
-            $email_template->body
-        );
-
-
-        $newbody = cdp_cleanOut($body);
-
-
-        //SENDMAIL PHP
-
-        if ($core->mailer == 'PHP') {
-
-
-            /*SIGUE RECOLECTANDO DATOS PARA FUNCION MAIL*/
-            $message = $newbody;
-            $websiteName = $core->site_name;
-            $emailAddress = $core->site_email;
-            $header = "MIME-Version: 1.0\r\n";
-            $header .= "Content-type: text/html; charset=iso-8859-1\r\n";
-            $header .= "From: " . $websiteName . " <" . $emailAddress . ">\r\n";
-            $subject = $email_template->subject;
-            mail($_POST['email'], $subject, $message, $header);
-            /*FINALIZA RECOLECTANDO DATOS PARA FUNCION MAIL*/
-        } elseif ($core->mailer == 'SMTP') {
-
-
-            //PHPMAILER PHP
-
-
-            $destinatario = "" . cdp_sanitize($_POST['email']) . "";
-
-
-            $mail = new PHPMailer();
-            $mail->IsSMTP();
-            $mail->SMTPAuth = true;
-            $mail->Port = $core->smtp_port;
-            $mail->IsHTML(true);
-            $mail->CharSet = 'UTF-8';
-
-            // Datos de la cuenta de correo utilizada para enviar vía SMTP
-            $mail->Host = $core->smtp_host;       // Dominio alternativo brindado en el email de alta
-            $mail->Username = $core->smtp_user;    // Mi cuenta de correo
-            $mail->Password = $core->smtp_password;    //Mi contraseña
-
-
-            $mail->From = $core->site_email; // Email desde donde envío el correo.
-            $mail->FromName = $core->smtp_names;
-            $mail->AddAddress($destinatario); // Esta es la dirección a donde enviamos los datos del formulario
-
-            $mail->Subject = $email_template->subject; // Este es el titulo del email.
-            $mail->Body = "<html> 
-                  
-                  <body> 
-                  
-                  <p>{$newbody}</p>
-                  
-                  </body> 
-                  
-                  </html>
-                  
-                  <br />"; // Texto del email en formato HTML
-            // FIN - VALORES A MODIFICAR //
-
-            $mail->SMTPOptions = array(
-                'ssl' => array(
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'allow_self_signed' => true
-                )
-            );
-
-            $estadoEnvio = $mail->Send();
-        }
+if ($document_number !== '') {
+    // Block only when a *usable* (active/approved) account already uses it.
+    $db->cdp_query("SELECT id FROM cdb_users WHERE document_number = :d AND (active = 1 OR approve = 1) LIMIT 1");
+    $db->bind(':d', cdp_sanitize($document_number));
+    $db->cdp_execute();
+    if ($db->cdp_registro()) {
+        $errors[] = $lang['messagesform82'] ?? 'Document number already in use.';
     }
 }
 
+if ($phone === '') $errors[] = $lang['validate_field_ajax128'];
 
 if (!empty($errors)) {
-?>
-    <div class="alert alert-danger" id="success-alert">
-        <p><span class="icon-minus-sign"></span><i class="close icon-remove-circle"></i>
-            <?php echo $lang['message_ajax_error2']; ?>
-        <ul class="error">
-            <?php
-            foreach ($errors as $error) { ?>
-                <li>
-                    <i class="icon-double-angle-right"></i>
-                    <?php
-                    echo $error;
-
-                    ?>
-
-                </li>
-            <?php
-
-            }
-            ?>
-
-
-        </ul>
-        </p>
-    </div>
-
-
-
-<?php
+    echo json_encode(['status' => 'error', 'message' => implode(' ', $errors), 'errors' => $errors]);
+    exit;
 }
 
-if (isset($messages)) {
+// ── Create the incomplete, pre-approved account ─────────────────────────────
+$settings = cdp_getSettingsCourier();
+$prefixlk = $settings->prefix_locker;
 
-?>
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        <p><span class="icon-info-sign"></span>
-            <?php
-            foreach ($messages as $message) {
-                echo $message;
-            }
-            ?>
-        </p>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
+$datos = array(
+    'username'        => cdp_sanitize($username),
+    'locker'          => cdp_sanitize($prefixlk . ' ' . ($_POST['locker'] ?? '')),
+    'userlevel'       => 1,
+    'email'           => cdp_sanitize($email),
+    'fname'           => cdp_sanitize($fname),
+    'lname'           => cdp_sanitize($lname),
+    'notes'           => cdp_sanitize($_POST['notes'] ?? ''),
+    'phone'           => cdp_sanitize($phone),
+    'gender'          => cdp_sanitize($_POST['gender'] ?? ''),
+    'newsletter'      => intval($_POST['newsletter'] ?? 0),
+    'active'          => 0, // inactive until the email OTP is verified
+    'document_type'   => cdp_sanitize($document_type),
+    'document_number' => cdp_sanitize($document_number),
+    'password'        => password_hash($password, PASSWORD_DEFAULT),
+    'created'         => date('Y-m-d H:i:s'),
+);
 
-<?php
+$ctx = cdp_getAgencyContext();
+if ($ctx['is_restricted']) {
+    if ($ctx['agency_id'] === null) {
+        echo json_encode(['status' => 'error', 'message' => 'Your agency user has no associated agency.']);
+        exit;
+    }
+    $datos['agency_id'] = (int) $ctx['agency_id'];
 }
-?>
+
+$customer_id = cdp_insertCustomer($datos);
+
+if (!$customer_id) {
+    echo json_encode(['status' => 'error', 'message' => $lang['message_ajax_error1']]);
+    exit;
+}
+
+// Admin authorised this client → approve = 1; email not yet verified → registration_complete = 0
+$db->cdp_query("UPDATE cdb_users SET approve = 1, registration_complete = 0 WHERE id = :id");
+$db->bind(':id', $customer_id);
+$db->cdp_execute();
+
+// Onboarding checklist — address + document captured now (1); WhatsApp number
+// left at 0 so the post-login account-setup forces phone verification.
+$db->cdp_query("INSERT INTO cdb_user_details_update_check
+    (user_id, update_address, update_phone, update_document) VALUES (:id, 1, 0, 1)");
+$db->bind(':id', $customer_id);
+$db->cdp_execute();
+
+// Addresses (the form supports multiple)
+if (isset($_POST['total_address'])) {
+    for ($count = 0; $count < (int) $_POST['total_address']; $count++) {
+        if (!isset($_POST['address'][$count])) {
+            continue;
+        }
+        cdp_insertAddressCustomer(array(
+            'user_id' => $customer_id,
+            'address' => cdp_sanitize($_POST['address'][$count]),
+            'country' => cdp_sanitize($_POST['country'][$count]),
+            'city'    => cdp_sanitize($_POST['city'][$count]),
+            'state'   => cdp_sanitize($_POST['state'][$count]),
+            'postal'  => cdp_sanitize($_POST['postal'][$count]),
+        ));
+    }
+}
+
+// Bind the pending verification to THIS admin session so the OTP endpoints can
+// only ever act on the account just created here (prevents OTP abuse on
+// arbitrary user ids).
+$_SESSION['client_add_pending_user_id'] = (int) $customer_id;
+unset($_SESSION['client_add_otp_challenge']);
+
+echo json_encode([
+    'status'  => 'verify',
+    'message' => 'Client created. Verify their email to finish.',
+    'email'   => $email,
+]);
+exit;
