@@ -341,8 +341,11 @@ if (empty($errors)) {
 
         $email_template = cdp_getEmailTemplatesdg1i4(16);
 
+        require_once(__DIR__ . '/../../helpers/notify_placeholders.php');
+        $pkg_ph = cdp_buildPackageNotifyPlaceholders($shipment_id);
+
         $body = str_replace(
-            array(
+            array_merge(array(
                 '[NAME]',
                 '[TRACKING]',
                 '[DELIVERY_TIME]',
@@ -350,8 +353,8 @@ if (empty($errors)) {
                 '[URL_LINK]',
                 '[SITE_NAME]',
                 '[URL_SHIP]'
-            ),
-            array(
+            ), array_keys($pkg_ph)),
+            array_merge(array(
                 $sender_data->fname . ' ' . $sender_data->lname,
                 $fullshipment,
                 $date_ship,
@@ -359,9 +362,14 @@ if (empty($errors)) {
                 $mlogo,
                 $msnames,
                 $app_url
-            ),
+            ), array_values($pkg_ph)),
             $email_template->body
         );
+
+        // If the template has no [SHIPMENT_DETAILS] slot, append the enriched block.
+        if (strpos($email_template->body, '[SHIPMENT_DETAILS]') === false && $pkg_ph['[SHIPMENT_DETAILS]'] !== '') {
+            $body .= $pkg_ph['[SHIPMENT_DETAILS]'];
+        }
 
         $newbody = cdp_cleanOutx($body);
 
@@ -502,12 +510,16 @@ if (empty($errors)) {
                 if ($sender_data && !empty($sender_data->phone)) {
                     // Shared template-4 path: defaults the service, adds
                     // pieces/weight/dims/carrier-tracking/ETA, valid track URL.
+                    $wa_extra = cdp_wa_buildShipmentExtraLines();
+                    if (!empty($add_status)) {
+                        $wa_extra[] = '• Status: ' . $add_status;
+                    }
                     $wa_result = cdp_sendShipmentRegisteredWhatsApp($sender_data, $fullshipment, array(
                         'courier'  => intval($dataShipment['order_courier'] ?? 0),
                         'service'  => intval($dataShipment['order_service_options'] ?? 0),
                         'delitime' => intval($dataShipment['order_deli_time'] ?? 0),
                         'office'   => intval($dataShipment['origin_off'] ?? 0),
-                    ), cdp_wa_buildShipmentExtraLines());
+                    ), $wa_extra);
 
                     if (empty($wa_result['success'])) {
                         error_log("WhatsApp notification failed for shipment {$fullshipment}: " . ($wa_result['message'] ?? ''));
