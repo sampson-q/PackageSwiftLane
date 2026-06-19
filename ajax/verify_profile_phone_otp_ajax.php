@@ -2,6 +2,8 @@
 require_once("../loader.php");
 require_once("../helpers/querys.php");
 require_once("../lib/OtpService.php");
+require_once("../helpers/ajax_guard.php");
+require_login();
 
 header('Content-Type: application/json; charset=UTF-8');
 
