@@ -40,6 +40,24 @@ if (!function_exists('h')) {
   }
 }
 
+/**
+ * Customer display name with their locker id appended — e.g. "John Doe (LK123)".
+ * Falls back to just the name when no locker is set. Used in customer-facing
+ * notifications (email [NAME] / WhatsApp [CUSTOMER_FULLNAME]). Expects a
+ * cdb_users row (fname / lname / locker).
+ */
+if (!function_exists('cdp_nameWithLocker')) {
+  function cdp_nameWithLocker($user)
+  {
+    if (!$user) {
+      return '';
+    }
+    $name   = trim((string) ($user->fname ?? '') . ' ' . (string) ($user->lname ?? ''));
+    $locker = trim((string) ($user->locker ?? ''));
+    return ($locker !== '') ? $name . ' (' . $locker . ')' : $name;
+  }
+}
+
 
 /**
      * validate track()
