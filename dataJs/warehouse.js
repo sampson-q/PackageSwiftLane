@@ -77,13 +77,15 @@ function cdp_load(page) {
     var status_courier = $("#status_courier").val();
     var filterby       = $("#filterby").val();
     var range          = $("#daterange-warehouse").val();
+    var per_page       = $("#per_page").val();
 
     var parametros = {
         page:           page,
         search:         search,
         status_courier: status_courier,
         filterby:       filterby,
-        range:          range
+        range:          range,
+        per_page:       per_page
     };
 
     $("#loader").fadeIn('slow');
@@ -95,6 +97,22 @@ function cdp_load(page) {
             $(".outer_divx").html(data).fadeIn('slow');
         }
     });
+}
+
+
+// Export current warehouse view to a printable / PDF page
+function cdp_exportPrint() {
+    var search         = $("#search").val();
+    var status_courier = $("#status_courier").val();
+    var filterby       = $("#filterby").val();
+    var range          = $("#daterange-warehouse").val();
+
+    window.open(
+        'warehouse_print.php?search=' + encodeURIComponent(search) +
+        '&status_courier=' + encodeURIComponent(status_courier) +
+        '&filterby=' + encodeURIComponent(filterby) +
+        '&range=' + encodeURIComponent(range)
+    );
 }
 
 
