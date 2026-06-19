@@ -100,7 +100,7 @@ foreach ($data as $key) {
                     '[URL_SHIP]'
                 ],
                 [
-                    $sender_data->fname . ' ' . $sender_data->lname,
+                    cdp_nameWithLocker($sender_data),
                     $tracking,
                     $old_status_label,
                     $new_status_label,
@@ -164,7 +164,7 @@ foreach ($data as $key) {
         if ($sender_data && !empty($sender_data->phone)) {
             try {
                 $whatsapp_body =
-                    "Hello {$sender_data->fname} {$sender_data->lname},\n\n" .
+                    "Hello " . cdp_nameWithLocker($sender_data) . ",\n\n" .
                     "There is an update on your shipment *{$tracking}*.\n\n" .
                     "*Shipment Status:*\n" .
                     "_{$old_status_label}_ -> *{$new_status_label}*\n\n" .
