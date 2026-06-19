@@ -6,6 +6,8 @@ require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
 require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
+require_once("../../helpers/ajax_guard.php");
+require_login();
 
 $core = new Core;
 $db = new Conexion;
