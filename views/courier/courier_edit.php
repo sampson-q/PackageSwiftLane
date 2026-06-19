@@ -427,10 +427,20 @@ $numrows     = $db->cdp_rowCount();
                                     </div>
 
                                     <!-- Tabla de paquetes -->
-                                    <div class="text-md-right">
-                                        <button type="button" onclick="addPackage()" name="add_rows" id="add_rows" class="btn btn-outline-dark">
-                                            <span class="fa fa-plus"></span> <?php echo $lang['left231'] ?>
-                                        </button>
+                                    <div class="row">
+                                        <div class="col-2">
+                                            <small class="text-muted d-block">Original Total Weight</small>
+                                            <div class="text-md-left">
+                                                <input type="text" class="form-control form-control-sm" id="package_total_weight" name="package_total_weight" value="<?php echo htmlspecialchars((string)($row_order->total_weight ?? ''), ENT_QUOTES, 'UTF-8'); ?>" placeholder="Total weight of this package" onkeypress="return isNumberKey(event,this)">
+                                            </div>
+                                        </div>
+                                        <div class="col-10">
+                                            <div class="text-right">
+                                                <button type="button" onclick="addPackage()" name="add_rows" id="add_rows" class="btn btn-outline-dark">
+                                                    <span class="fa fa-plus"></span> <?php echo $lang['left231'] ?>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="table-responsive mt-2">
                                         <table class="table table-sm table-bordered table-hover table-packages mb-0" id="packages_table">
@@ -451,19 +461,19 @@ $numrows     = $db->cdp_rowCount();
                                         </table>
                                     </div>
 
-                                    <!-- Totales de peso -->
+                                    <!-- Totales parciales de paquetes -->
                                     <div class="row mt-3">
                                         <div class="col-md-6">
                                             <div class="weight-summary mb-2 mb-md-0">
-                                                <small class="text-muted d-block"><?php echo $lang['courier_weight_total']; ?> <span class="text-muted">(items, auto)</span></small>
+                                                <small class="text-muted d-block"><?php echo $lang['courier_weight_total']; ?></small>
                                                 <span class="h5 mb-0" id="total_weight">0.00</span>
-                                                <span class="d-none" id="total_vol_weight">0.00</span>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="weight-summary">
-                                                <small class="text-muted d-block">Original total weight <span class="text-muted">(actual package weight)</span></small>
-                                                <input type="text" class="form-control form-control-sm" id="package_total_weight" name="package_total_weight" value="<?php echo htmlspecialchars((string)($row_order->total_weight ?? ''), ENT_QUOTES, 'UTF-8'); ?>" placeholder="total weight of the package" onkeypress="return isNumberKey(event,this)">
+                                                <small class="text-muted d-block">Total Custom Price (USD)</small>
+                                                <span class="h5 mb-0" id="total_custom_price">0.00</span>
+                                                <span class="d-none" id="total_vol_weight">0.00</span>
                                             </div>
                                         </div>
                                     </div>
@@ -611,7 +621,8 @@ $numrows     = $db->cdp_rowCount();
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-sm-6 col-md-2">
+                                                    <!-- Valor asegurado (hidden — mirrors courier_add) -->
+                                                    <div class="col-sm-6 col-md-2" style="display:none">
                                                         <div class="form-group mb-2">
                                                             <label class="control-label col-form-label-sm"><?php echo $lang['leftorder22']; ?></label>
                                                             <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event,this)"
@@ -622,7 +633,8 @@ $numrows     = $db->cdp_rowCount();
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-sm-6 col-md-2">
+                                                    <!-- Seguro de envío % (hidden — mirrors courier_add) -->
+                                                    <div class="col-sm-6 col-md-2" style="display:none">
                                                         <div class="form-group mb-2">
                                                             <label class="control-label col-form-label-sm"><?php echo $lang['leftorder24']; ?> <?php echo $lang['leftorder222221']; ?></label>
                                                             <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event,this)"
@@ -636,7 +648,8 @@ $numrows     = $db->cdp_rowCount();
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-sm-6 col-md-2">
+                                                    <!-- Aranceles aduaneros % (hidden — mirrors courier_add) -->
+                                                    <div class="col-sm-6 col-md-2" style="display:none">
                                                         <div class="form-group mb-2">
                                                             <label class="control-label col-form-label-sm"><?php echo $lang['leftorder25']; ?> <?php echo $lang['leftorder222221']; ?></label>
                                                             <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event,this)"
@@ -650,7 +663,8 @@ $numrows     = $db->cdp_rowCount();
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-sm-6 col-md-2">
+                                                    <!-- Impuesto % (hidden — mirrors courier_add) -->
+                                                    <div class="col-sm-6 col-md-2" style="display:none">
                                                         <div class="form-group mb-2">
                                                             <label class="control-label col-form-label-sm"><?php echo $lang['leftorder67']; ?> <?php echo $lang['leftorder222221']; ?></label>
                                                             <input type="text" onchange="calculateFinalTotal(this);"
@@ -667,7 +681,8 @@ $numrows     = $db->cdp_rowCount();
 
                                                 <!-- Fila 2 -->
                                                 <div class="row mt-2">
-                                                    <div class="col-sm-6 col-md-3">
+                                                    <!-- Valor declarado % (hidden — mirrors courier_add) -->
+                                                    <div class="col-sm-6 col-md-3" style="display:none">
                                                         <div class="form-group mb-2">
                                                             <label class="control-label col-form-label-sm"><?php echo $lang['leftorder66']; ?> <?php echo $lang['leftorder222221']; ?></label>
                                                             <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event,this)"
@@ -681,7 +696,8 @@ $numrows     = $db->cdp_rowCount();
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-sm-6 col-md-3">
+                                                    <!-- Re expedición (hidden — mirrors courier_add) -->
+                                                    <div class="col-sm-6 col-md-3" style="display:none">
                                                         <div class="form-group mb-2">
                                                             <label class="control-label col-form-label-sm"><?php echo $lang['langs_048']; ?></label>
                                                             <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event,this)"
