@@ -162,8 +162,11 @@ if (empty($errors)) {
 
         $email_template = cdp_getEmailTemplatesdg1i4(23);
 
+        require_once(__DIR__ . '/../../helpers/notify_placeholders.php');
+        $pkg_ph = cdp_buildPackageNotifyPlaceholders($shipment_id, 'sea');
+
         $body = str_replace(
-            array(
+            array_merge(array(
                 '[NAME]',
                 '[TRACKING]',
                 '[DELIVERY_TIME]',
@@ -174,8 +177,8 @@ if (empty($errors)) {
                 '[URL_LINK]',
                 '[SITE_NAME]',
                 '[URL_SHIP]'
-            ),
-            array(
+            ), array_keys($pkg_ph)),
+            array_merge(array(
                 $sender_data->fname . ' ' . $sender_data->lname,
                 $fullshipment,
                 $date_ship,
@@ -186,9 +189,15 @@ if (empty($errors)) {
                 $mlogo,
                 $msnames,
                 $app_url
-            ),
+            ), array_values($pkg_ph)),
             $email_template->body
         );
+
+        // Template 23 has no [SHIPMENT_DETAILS] slot — append the enriched block
+        // so the delivered notification still carries the package details.
+        if (strpos($email_template->body, '[SHIPMENT_DETAILS]') === false && $pkg_ph['[SHIPMENT_DETAILS]'] !== '') {
+            $body .= $pkg_ph['[SHIPMENT_DETAILS]'];
+        }
 
         $newbody = cdp_cleanOutx($body);
 
@@ -286,12 +295,30 @@ if (empty($errors)) {
 
         if (!empty($sender_data->phone) && isset($_POST['notify_whatsapp']) && (int)$_POST['notify_whatsapp'] === 1) {
             try {
+                // Concise record of what was delivered (no prices).
+                require_once(__DIR__ . '/../../helpers/notify_placeholders.php');
+                $wa_ph = cdp_buildPackageNotifyPlaceholders($shipment_id, 'sea');
+                $wa_record = '';
+                if ($wa_ph['[WEIGHT]'] !== 'N/A') {
+                    $wa_record .= "- Total Weight: " . $wa_ph['[WEIGHT]'] . "\n";
+                }
+                if ($wa_ph['[ITEMS]'] !== 'N/A') {
+                    $wa_record .= "- Items:\n";
+                    foreach (explode("\n", $wa_ph['[ITEMS]']) as $il) {
+                        $wa_record .= "   • {$il}\n";
+                    }
+                }
+                if ($wa_ph['[POSTAL_TRACKING]'] !== 'N/A') {
+                    $wa_record .= "- Carrier Tracking #: *" . $wa_ph['[POSTAL_TRACKING]'] . "*\n";
+                }
+
                 $whatsapp_body = "Hello {$sender_data->fname} {$sender_data->lname} 👋\n\n" .
                     "✅ *Your package has been successfully delivered!*\n\n" .
                     "📦 *Shipment Details:*\n" .
                     "- Shipment No: *{$fullshipment}*\n" .
                     "- Delivered To: " . cdp_sanitize($_POST['person_receives']) . "\n" .
-                    "- Delivered On: {$date_ship}\n\n" .
+                    "- Delivered On: {$date_ship}\n" .
+                    $wa_record . "\n" .
                     "You can view your full delivery record using the link below:\n" .
                     "🔗 {$app_url}\n\n" .
                     "Thank you for choosing *{$msnames}*. We hope to serve you again! 🙏";
