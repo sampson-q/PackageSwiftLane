@@ -649,7 +649,7 @@ if (empty($errors)) {
         // Send email to sender
         $sendShipmentEmail(
             $sender_data,
-            $sender_data->fname . ' ' . $sender_data->lname
+            cdp_nameWithLocker($sender_data)
         );
 
         // Send email to receiver
@@ -716,7 +716,7 @@ if (empty($errors)) {
 
                         $whatsapp_body = str_replace(
                             ['[CUSTOMER_FULLNAME]','[TRACKING_NUMBER]','[PREV_STATUS]','[CURR_STATUS]','[CHANGES]','[ORD_DATE]','[RECIPIENT]','[ORIGIN]','[DESTINATION]','[APP_URL]','[COMPANY_NAME]'],
-                            [ucfirst("{$sender_data->fname} {$sender_data->lname}"), $fullshipment, $old_status_label ?: $current_status_name, $current_status_name, implode("\n", $wa_changes_lines), $order_date_fmt, $recipient_name, $origin, $destination, $app_url, $settings->site_name],
+                            [cdp_nameWithLocker($sender_data), $fullshipment, $old_status_label ?: $current_status_name, $current_status_name, implode("\n", $wa_changes_lines), $order_date_fmt, $recipient_name, $origin, $destination, $app_url, $settings->site_name],
                             $tpl->body
                         );
                         sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
