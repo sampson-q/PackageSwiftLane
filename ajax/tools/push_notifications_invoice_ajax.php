@@ -3,6 +3,8 @@
 require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
+require_once("../../helpers/ajax_guard.php");
+require_login();
 
 $db = new Conexion;
 $errors = array();
