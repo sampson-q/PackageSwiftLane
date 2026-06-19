@@ -185,20 +185,15 @@ if (isset($_POST["total_item"])) {
             $new_driver_label2 = $_new_drv2 ? trim($_new_drv2->fname . ' ' . $_new_drv2->lname) : 'None';
     
             // ── 2. Build diff array ─────────────────────────────────────────────
+            // Customer notifications must carry NO monetary values, so the price/
+            // tax/total fields (Price per lb, Sub-Total, Insurance, Insured Value,
+            // Discount, Custom Tariffs, Tax, Total Order) are deliberately omitted.
             $diff_map2 = [
                 'Payment Method'        => [(string) $old_pay_label2,                               (string) $new_pay_label2],
                 'Status'                => [(string) $old_status_label2,                            (string) $new_status_label2],
                 'Driver'                => [(string) $old_driver_label2,                            (string) $new_driver_label2],
                 'Seals / Package No.'   => [(string) $_before_pkg_edit->seals_package,             cdp_sanitize($_POST["seals"])],
                 'Estimated ETA'         => [(string) ($_before_pkg_edit->estimated_eta ?? ''),     cdp_sanitize($_POST["estimated_eta"])],
-                'Price per lb'          => [(string) $_before_pkg_edit->value_weight,              (string) floatval($_POST["price_lb"])],
-                'Sub-Total'             => [(string) $_before_pkg_edit->sub_total,                 (string) floatval($_POST["subtotal_input"])],
-                'Insurance'             => [(string) $_before_pkg_edit->total_tax_insurance,       (string) floatval($_POST["insurance_input"])],
-                'Insured Value'         => [(string) $_before_pkg_edit->total_insured_value,       (string) floatval($_POST["insured_input"])],
-                'Discount'              => [(string) $_before_pkg_edit->total_tax_discount,        (string) floatval($_POST["discount_input"])],
-                'Custom Tariffs'        => [(string) $_before_pkg_edit->total_tax_custom_tariffis, (string) floatval($_POST["total_impuesto_aduanero_input"])],
-                'Tax'                   => [(string) $_before_pkg_edit->total_tax,                 (string) floatval($_POST["impuesto_input"])],
-                'Total Order'           => [(string) $_before_pkg_edit->total_order,               (string) floatval($_POST["total_envio_input"])],
                 'Total Weight'          => [(string) $_before_pkg_edit->total_weight,              (string) floatval($_POST["total_weight_input"])],
             ];
     
@@ -233,7 +228,29 @@ if (isset($_POST["total_item"])) {
                 }
     
                 $consolidate_number2 = $row_order->c_prefix . $row_order->c_no;
-    
+
+                // Re-send the full current consolidation details (status + the
+                // shipments folded into it — no money), not just the diff.
+                $consol_items_edit2 = '';
+                $db_ci2 = new Conexion;
+                $db_ci2->cdp_query("SELECT o.order_prefix, o.order_no
+                    FROM cdb_consolidate_packages_detail d
+                    INNER JOIN cdb_customers_packages o ON o.order_id = d.order_id
+                    WHERE d.consolidate_id = :cid");
+                $db_ci2->bind(':cid', (int) $order_id);
+                $ci_rows2 = $db_ci2->cdp_registros();
+                if ($ci_rows2) {
+                    foreach ($ci_rows2 as $cir) {
+                        $consol_items_edit2 .= '<li>' . htmlspecialchars($cir->order_prefix . $cir->order_no, ENT_QUOTES, 'UTF-8') . '</li>';
+                    }
+                }
+                $consol_details2 = '<table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:8px 0 16px 0;background:#fafafa;border-left:4px solid #f5a800;font-family:Roboto,Arial,Helvetica,sans-serif;"><tr><td style="padding:12px 18px;">'
+                    . '<p style="margin:0 0 4px 0;font-size:10px;color:#aaaaaa;text-transform:uppercase;letter-spacing:1px;">Consolidation Status</p>'
+                    . '<p style="margin:0 0 10px 0;font-size:15px;font-weight:700;color:#1a1a1a;">' . htmlspecialchars($new_status_label2, ENT_QUOTES, 'UTF-8') . '</p>'
+                    . '<p style="margin:0 0 4px 0;font-size:10px;color:#aaaaaa;text-transform:uppercase;letter-spacing:1px;">Consolidated Shipments</p>'
+                    . ($consol_items_edit2 !== '' ? '<ul style="margin:0;padding-left:18px;font-size:14px;color:#1a1a1a;">' . $consol_items_edit2 . '</ul>' : '<p style="margin:0;font-size:14px;">N/A</p>')
+                    . '</td></tr></table>';
+
                 $message_html2 = '
                 <p style="margin:0 0 16px 0;font-size:14px;color:#444444;line-height:24px;font-family:Roboto,Arial,Helvetica,sans-serif;">
                     The following changes were made to consolidation package
@@ -249,7 +266,7 @@ if (isset($_POST["total_item"])) {
                         </tr>
                     </thead>
                     <tbody>' . $rows_html2 . '</tbody>
-                </table>
+                </table>' . $consol_details2 . '
                 <p style="margin:0;font-size:13px;color:#888888;font-family:Roboto,Arial,Helvetica,sans-serif;">
                     If you have any questions, please contact us.
                 </p>';
