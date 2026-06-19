@@ -31,6 +31,8 @@ if (empty($_POST['order_deli_time']))      $errors['order_deli_time']      = $la
 if (empty($_POST['status_courier']))       $errors['status_courier']       = $lang['validate_field_ajax157'];
 if (empty($_POST['order_payment_method'])) $errors['order_payment_method'] = $lang['validate_field_ajax158'];
 
+$_POST["order_service_options"] = 8;
+
 // -------------------------------------------------------------------------
 // Package-item validation (weight XOR custom price). Runs BEFORE the existing
 // items are deleted/re-inserted so an invalid payload can never wipe the rows.
@@ -117,8 +119,8 @@ if (empty($errors)) {
         $r = $db_snap->cdp_registro();
         $old_courier_name = $r ? $r->name_com : 'N/A';
 
-        $db_snap->cdp_query("SELECT ship_mode FROM cdb_shipping_mode WHERE id = :id LIMIT 1");
-        $db_snap->bind(':id', (int)$old_shipment->order_service_options);
+        $db_snap->cdp_query("SELECT * FROM cdb_shipping_mode WHERE id = 8");
+        $db_snap->bind(':id', (int) $old_shipment->order_service_options);
         $db_snap->cdp_execute();
         $r = $db_snap->cdp_registro();
         $old_service_type = $r ? $r->ship_mode : 'N/A';
@@ -512,18 +514,21 @@ if (empty($errors)) {
             if (isset($_POST["packages"]))
                 $changed_fields['_packages_updated'] = true;
 
-            if (round($old_total, 2) !== round($new_total, 2))
-                $changed_fields['Order Total'] = [
-                    'old' => '$' . number_format($old_total, 2),
-                    'new' => '$' . number_format($new_total, 2)
-                ];
+            // Order Total intentionally NOT tracked here — customer notifications
+            // must never carry monetary values.
         }
+
+        // Full, current package details (status, original weight, carrier tracking,
+        // ETA, items + quantities — no money) re-sent on every update under the
+        // "Shipment Update" header.
+        require_once(__DIR__ . '/../../helpers/notify_placeholders.php');
+        $enriched_ph = cdp_buildPackageNotifyPlaceholders($shipment_id);
 
         // =======================
         // EMAIL — HELPER CLOSURE
         // =======================
         $sendShipmentEmail = function($recipient_obj, $recipient_name_label) use (
-            $changed_fields, $packages, $total_envio,
+            $changed_fields, $packages, $total_envio, $enriched_ph,
             $fullshipment, $app_url, $msite_url, $mlogo, $msnames,
             $site_email, $check_mail, $names_info,
             $smtphoste, $smtpuser, $smtppass, $lang
@@ -563,16 +568,12 @@ if (empty($errors)) {
             if (isset($changed_fields['_packages_updated']) && isset($packages) && is_array($packages) && count($packages) > 0) {
                 $pkg_rows = '';
                 foreach ($packages as $index => $pkg) {
-                    $pkg_custom = isset($pkg->custom_price) ? (float) $pkg->custom_price : 0;
-                    $pkg_use_custom = isset($pkg->use_custom_price)
-                        ? (int) $pkg->use_custom_price
-                        : ($pkg_custom > 0 ? 1 : 0);
-                    $pkg_price_line = $pkg_use_custom
-                        ? "   Custom Price: $" . number_format($pkg_custom, 2) . " (USD)\n"
-                        : "   Weight: " . (isset($pkg->weight) ? $pkg->weight : 0) . " lbs\n";
+                    // No monetary values (custom price / declared value) in customer
+                    // notifications — show description + weight only.
+                    $pkg_weight = isset($pkg->weight) ? $pkg->weight : 0;
                     $pkg_rows .= ($index + 1) . ". " . htmlspecialchars($pkg->description ?? '') . "\n" .
-                        $pkg_price_line .
-                        "   Declared Value: $" . number_format($pkg->declared_value ?? 0, 2) . "\n\n";
+                        ((float) $pkg_weight != 0 ? "   Weight: " . $pkg_weight . " lbs\n" : "") .
+                        "\n";
                 }
                 $packages_section_html = '
                 <p style="margin:0 0 8px 0;font-size:14px;font-weight:700;color:#1a1a1a;font-family:Roboto,Arial,Helvetica,sans-serif;">Package Breakdown</p>
@@ -582,6 +583,12 @@ if (empty($errors)) {
                   </tr>
                 </table>';
             }
+
+            // Always attach the full current details (re-sent on every update),
+            // regardless of whether the package list itself changed. Rendered
+            // through the existing [PACKAGES_SECTION] slot so no template edit is
+            // needed.
+            $packages_section_html .= $enriched_ph['[SHIPMENT_DETAILS]'];
 
             $body = str_replace(
                 [
@@ -600,7 +607,7 @@ if (empty($errors)) {
                     $fullshipment,
                     $changed_fields_html,
                     $packages_section_html,
-                    '$' . number_format($total_envio, 2),
+                    '', // [TOTAL_AMOUNT] — no monetary values in customer notifications
                     $msite_url,
                     $mlogo,
                     $msnames,
@@ -686,6 +693,19 @@ if (empty($errors)) {
 
                 // Send only when something actually changed.
                 if (!empty($wa_changes_lines)) {
+
+                    // Re-send the full current details under the changes. Status is
+                    // omitted here — template 13 already shows Current Status distinctly.
+                    $wa_changes_lines[] = '';
+                    $wa_changes_lines[] = '*Updated Details*';
+                    if ($enriched_ph['[WEIGHT]'] !== 'N/A')          { $wa_changes_lines[] = '• Total Weight: ' . $enriched_ph['[WEIGHT]']; }
+                    if ($enriched_ph['[ITEMS]'] !== 'N/A') {
+                        $wa_changes_lines[] = '• Items:';
+                        foreach (explode("\n", $enriched_ph['[ITEMS]']) as $il) { $wa_changes_lines[] = '   - ' . $il; }
+                    }
+                    if ($enriched_ph['[POSTAL_TRACKING]'] !== 'N/A') { $wa_changes_lines[] = '• Carrier Tracking #: *' . $enriched_ph['[POSTAL_TRACKING]'] . '*'; }
+                    if ($enriched_ph['[ETA]'] !== 'N/A')             { $wa_changes_lines[] = '• Estimated Arrival: ' . $enriched_ph['[ETA]']; }
+
                     $tpl = getTemplateWhatsApp(13);
                     if ($tpl) {
                         $current_status_name = $add_status;
