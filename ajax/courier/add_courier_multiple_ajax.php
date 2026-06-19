@@ -324,7 +324,7 @@ if (empty($errors)) {
                         '[URL_SHIP]'
                     ),
                     array(
-                        $sender_data->fname . ' ' . $sender_data->lname,
+                        cdp_nameWithLocker($sender_data),
                         $order_track,
                         $date_ship,
                         $msite_url,
