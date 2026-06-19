@@ -280,14 +280,14 @@ if (isset($_POST["total_item"])) {
                     $mail_cfg = $db_cfg->cdp_registro();
 
                     $db_sender_email = new Conexion;
-                    $db_sender_email->cdp_query("SELECT fname, lname, email FROM cdb_users WHERE id = :id LIMIT 1");
+                    $db_sender_email->cdp_query("SELECT fname, lname, email, locker FROM cdb_users WHERE id = :id LIMIT 1");
                     $db_sender_email->bind(':id', (int) $_before_edit->sender_id);
                     $db_sender_email->cdp_execute();
                     $email_recipient_user = $db_sender_email->cdp_registro();
 
                     if ($email_recipient_user && !empty($email_recipient_user->email)) {
                         
-                        $sender_full_name = trim($email_recipient_user->fname . ' ' . $email_recipient_user->lname);
+                        $sender_full_name = cdp_nameWithLocker($email_recipient_user);
 
                         $email_body_12 = str_replace(
                             ['[SITE_NAME]', '[NAME]', '[MESSAGE]', '[URL]'],
@@ -786,11 +786,26 @@ if (isset($_POST["total_item"])) {
                                     <script>
                                         var selected = [];
                                     </script>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h4 class="card-title">
+                                                <i class="fas fas fa-boxes" style="color:#20c997"></i>
+                                                <?php echo $lang['left212'] ?>
+                                            </h4>
+                                        </div>
+                                        <!-- Adicionar envios al consolidado de envios-->
+                                        <div class="col-md-6 text-right">
+                                            <button type="button" data-toggle="modal" data-target="#myModalConsolidate" class="btn btn-outline-dark">
+                                                <span class="fa fa-search"></span>
+                                                <?php echo $lang['leftorder148']; ?>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div><br></div>
+                                    
                                     <div class="table-responsive">
                                         <table id="invoice-item-table" class="table">
-                                            <div align="right">
-                                                <button type="button" data-toggle="modal" data-target="#myModalConsolidate" class="btn btn-outline-success"><span class="fa fa-search"></span> Search Shipments</button>
-                                            </div>
                                             <thead class="bg-inverse text-white">
                                                 <tr>
                                                     <th><b><?php echo $lang['packager'] ?></b></th>
@@ -902,64 +917,6 @@ if (isset($_POST["total_item"])) {
                                                     ?>
                                             </tbody>
                                             <tfoot>
-                                                <tr class="card-hover">
-                                                    <td colspan="2"></td>
-                                                    <td colspan="2"></td>
-                                                    <td colspan="2" class="text-right"><b><?php echo $lang['leftorder2021'] ?></b></td>
-                                                    <td class="text-right" id="subtotal"><?php echo $sumador_total; ?></td>
-                                                    <td></td>
-                                                </tr>
-
-                                                <tr class="card-hover">
-                                                    <td colspan=""><b><?php echo $lang['left905'] ?> &nbsp; <?php echo $core->weight_p; ?>:</b>
-                                                        <input type="text" onkeypress="return isNumberKey(event, this)" onblur="cdp_cal_final_total();" class="form-control form-control-sm is is-invalid" value="<?php echo $row_order->value_weight; ?>" name="price_lb" id="price_lb" style="width: 160px;">
-                                                    </td>
-                                                    <td></td>
-                                                    <td colspan="2"></td>
-                                                    <td colspan="2" class="text-right">
-                                                        <b><?php echo $lang['leftorder21'] ?> <?php echo $row_order->tax_discount; ?> <?php echo $lang['leftorder222221'] ?></b>
-                                                    </td>
-                                                    <td class="text-right"><?php echo $total_descuento; ?></td>
-                                                    <td></td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td colspan="2"><b><?php echo $lang['left232'] ?>:</b> <span id="total_libras"><?php echo $sumador_libras; ?></span></td>
-                                                    <td colspan="2"></td>
-                                                    <td colspan="2" class="text-right">
-                                                        <b><?php echo $lang['leftorder24'] ?> <?php echo $row_order->tax_insurance_value; ?> <?php echo $lang['leftorder222221'] ?></b>
-                                                    </td>
-                                                    <td class="text-right" id="insurance"><?php echo $total_seguro; ?></td>
-                                                    <td></td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td colspan="2"><b><?php echo $lang['left234'] ?>:</b> <span id="total_volumetrico"><?php echo $sumador_volumetric; ?></span></td>
-                                                    <td colspan="2"></td>
-                                                    <td colspan="2" class="text-right">
-                                                        <b><?php echo $lang['leftorder25'] ?> <?php echo $row_order->tax_custom_tariffis_value; ?> <?php echo $lang['leftorder222221'] ?></b>
-                                                    </td>
-                                                    <td class="text-right" id="total_impuesto_aduanero"><?php echo $total_impuesto_aduanero; ?></td>
-                                                    <td></td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td colspan="2"><b><?php echo $lang['left236'] ?></b>: <span id="total_peso"><?php echo $total_peso; ?></span></td>
-                                                    <td colspan="2"></td>
-                                                    <td colspan="2" class="text-right">
-                                                        <b><?php echo $lang['leftorder67'] ?><?php echo $row_order->tax_value; ?> <?php echo $lang['leftorder222221'] ?></b>
-                                                    </td>
-                                                    <td class="text-right" id="impuesto"><?php echo $total_impuesto; ?></td>
-                                                    <td></td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td colspan="2"></td>
-                                                    <td colspan="2"></td>
-                                                    <td colspan="2" class="text-right"><b><?php echo $lang['leftorder2020'] ?> &nbsp; <?php echo $core->currency; ?></b></td>
-                                                    <td class="text-right" id="total_envio"><?php echo $total_envio; ?></td>
-                                                    <td></td>
-                                                </tr>
                                                 <tr class="">
                                                     <td colspan="4" class="text-right"><b>Total Weight:</b></td>
                                                     <td class="" id="total_weight_sum">0.00</td>
