@@ -289,14 +289,76 @@ $("input[type=file]").on("change", function () {
   $("#selectItem").html("attached files (" + count_files + ")");
 });
 
+// Dangerous-goods consolidation type. A consolidation may only group ONE kind
+// (all dangerous, or all normal). On the ADD screen this starts unlocked (null)
+// and locks to the chosen kind once the first package is added; remove them all
+// to switch. The EDIT screen is always locked to the consolidation's own kind.
+window.cdpConsType =
+  window.CDP_DG_MODE === "edit" ? (window.CDP_DG_LOCK ? 1 : 0) : null;
+
+// The dangerous-goods value Find Shipments should filter by right now.
+function cdp_currentDg() {
+  if (window.CDP_DG_MODE === "edit") {
+    return window.CDP_DG_LOCK ? 1 : 0;
+  }
+  var v = $('input[name="dg_filter"]:checked').val();
+  return String(v) === "1" ? 1 : 0;
+}
+
+// Reflect the lock state on the filter control (disable + explain when locked).
+function cdpApplyDgLock() {
+  var $group = $("#dg_filter_group");
+  if (!$group.length) return;
+
+  if (window.CDP_DG_MODE === "edit") {
+    var lockVal = window.CDP_DG_LOCK ? 1 : 0;
+    $("#dg_filter_normal").prop("checked", lockVal === 0).closest("label").toggleClass("active", lockVal === 0);
+    $("#dg_filter_dg").prop("checked", lockVal === 1).closest("label").toggleClass("active", lockVal === 1);
+    $group.find("input").prop("disabled", true);
+    $group.css({ opacity: 0.85, "pointer-events": "none" });
+    $("#dg_filter_note")
+      .text(lockVal ? "This consolidation holds dangerous goods." : "This consolidation holds normal goods.")
+      .show();
+    return;
+  }
+
+  if (window.cdpConsType !== null) {
+    // Sync the control to the locked kind, then freeze it.
+    $("#dg_filter_normal").prop("checked", window.cdpConsType === 0).closest("label").toggleClass("active", window.cdpConsType === 0);
+    $("#dg_filter_dg").prop("checked", window.cdpConsType === 1).closest("label").toggleClass("active", window.cdpConsType === 1);
+    $group.find("input").prop("disabled", true);
+    $group.css({ opacity: 0.85, "pointer-events": "none" });
+    $("#dg_filter_note")
+      .text(
+        window.cdpConsType
+          ? "Locked to dangerous goods — remove all packages to switch."
+          : "Locked to normal goods — remove all packages to switch."
+      )
+      .show();
+  } else {
+    $group.find("input").prop("disabled", false);
+    $group.css({ opacity: 1, "pointer-events": "" });
+    $("#dg_filter_note").hide();
+  }
+}
+
+// Reload Find Shipments when the kind filter changes (only reachable unlocked).
+$(document).on("change", 'input[name="dg_filter"]', function () {
+  cdp_load(1);
+});
+
+$(function () {
+  cdpApplyDgLock();
+  $("#myModalConsolidate").on("shown.bs.modal", cdpApplyDgLock);
+});
+
 //Cargar datos AJAX
 function cdp_load(page) {
   var search = $("#search").val();
-  var filterby = $("#filterby").val();
   var parametros = {
     page: page,
     search: search,
-    filterby: filterby,
+    dg: cdp_currentDg(),
   };
   $("#loader").fadeIn("slow");
   $.ajax({
@@ -460,6 +522,12 @@ $(document).ready(function () {
       cdp_cal_final_total();
     });
     $("#total_item").val(selected.length);
+
+    // Emptied the list — the kind is no longer fixed, so unlock the filter.
+    if (window.CDP_DG_MODE !== "edit" && selected.length === 0) {
+      window.cdpConsType = null;
+      cdpApplyDgLock();
+    }
   });
 
   $("#create_invoice").on("click", function () {
@@ -706,6 +774,14 @@ function cdp_add_item(id, total_vol, weight, length, width, height, tracking, or
     $("#modal_consolidate").html("");
     selected.push(id);
     $("#total_item").val(selected.length);
+
+    // First package fixes the consolidation's kind (dangerous vs normal); the
+    // filter then locks so the two can never be mixed.
+    if (window.CDP_DG_MODE !== "edit" && window.cdpConsType === null) {
+      window.cdpConsType = cdp_currentDg();
+      cdpApplyDgLock();
+    }
+
     var parent = $("#row_id_" + id);
 
     var html_code = "";
