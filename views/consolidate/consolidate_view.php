@@ -301,8 +301,6 @@ if ($row_order->status_invoice == 1) {
 
                                 </div>
 
-
-
                                 <div class="row">
                                     <div class=" col-sm-12 col-md-6 mb-2">
                                         <b class=""><?php echo $lang['left506'] ?></b>
@@ -314,75 +312,19 @@ if ($row_order->status_invoice == 1) {
 
                                 <!-- <hr> -->
                                 <div class="row">
-
-                                    <div class=" col-sm-12 col-md-4 mb-2">
-                                        <div class="">
-                                            <h5> &nbsp;<b><?php echo $lang['tools-branchOffice4'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $branchoffices->name_branch; ?></p>
-                                        </div>
-
+                                    <div class="col-4">
+                                        <h5> &nbsp;<b><?php echo $lang['tools-branchOffice4'] ?></b></h5>
+                                        <p class="text-muted m-l-5"><?php echo $branchoffices->name_branch; ?></p>
                                     </div>
-
-                                    <div class=" col-sm-12 col-md-4 mb-2">
-                                        <div class="">
-                                            <h5> &nbsp;<b><?php echo $lang['tools-office1'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $offices->name_off; ?></p>
-                                        </div>
-
+                                    <div class="col-4">
+                                        <h5> &nbsp;<b><?php echo $lang['tools-office1'] ?></b></h5>
+                                        <p class="text-muted m-l-5"><?php echo $offices->name_off; ?></p>
                                     </div>
-
-                                    <div class=" col-sm-12 col-md-4 mb-2">
-                                        <div class="">
-                                            <h5> &nbsp;<b><?php echo $lang['itemcategory'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $category->name_item; ?></p>
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-
-                                <!-- <hr> -->
-                                <div class="row">
-
-                                    <div class=" col-sm-12 col-md-4 mb-2">
-                                        <div class="">
-                                            <h5> &nbsp;<b><?php echo $lang['track-shipment19'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $meses_[$mes] . ' ' . $dia . ', ' . $anio; ?></p>
-
-                                            <h5> &nbsp;<b><?php echo $lang['langs_034'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $delivery_time->delitime; ?></p>
-                                        </div>
-
-                                    </div>
-
-                                    <div class=" col-sm-12 col-md-4 mb-2">
-                                        <div class="">
-                                            <h5> &nbsp;<b><?php echo $lang['leftorder37'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $packaging->name_pack; ?></p>
-                                            <h5> &nbsp;<b><?php echo $lang['leftorder48'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo  $met_payment->met_payment; ?></p>
-                                        </div>
-
-                                    </div>
-
-                                    <div class=" col-sm-12 col-md-4 mb-2">
-                                        <div class="">
-                                            <h5> &nbsp;<b><?php echo 'Estimated Time of Arrival' ?></b></h5>
-
-                                            <p class="text-muted  m-l-5"><?php if ($estimated_eta !== null) {
-                                                                                echo $estimated_eta->estimated_eta;
-                                                                            } else {
-                                                                                echo 'N/A';
-                                                                            } ?></p>
-                                            <h5> &nbsp;<b><?php echo $lang['tools-shipmode1'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php if ($order_service_options != null) {
-                                                                                echo $order_service_options->ship_mode;
-                                                                            } ?></p>
-                                        </div>
+                                    <div class="col-4">
+                                        <h5> &nbsp;<b><?php echo 'Estimated Time of Arrival' ?></b></h5>
+                                        <p class="text-muted m-l-5"><?php echo $estimated_eta ? $estimated_eta->estimated_eta : 'N/A'; ?></p>
                                     </div>
                                 </div>
-
 
                                 <?php
                                 $track_c = $row_order->c_prefix . $row_order->c_no;
