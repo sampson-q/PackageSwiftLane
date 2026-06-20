@@ -343,14 +343,46 @@ $("input[type=file]").on("change", function () {
   $("#selectItem").html("attached files (" + count_files + ")");
 });
 
+// Dangerous-goods consolidation kind. On the EDIT screen this is fixed to the
+// consolidation's own kind (set from the page); Find Shipments and the filter
+// control stay locked to it so dangerous and normal goods can never be mixed.
+window.cdpConsType =
+  window.CDP_DG_MODE === "edit" ? (window.CDP_DG_LOCK ? 1 : 0) : null;
+
+function cdp_currentDg() {
+  if (window.CDP_DG_MODE === "edit") {
+    return window.CDP_DG_LOCK ? 1 : 0;
+  }
+  var v = $('input[name="dg_filter"]:checked').val();
+  return String(v) === "1" ? 1 : 0;
+}
+
+// Lock the filter control to the consolidation's kind and explain why.
+function cdpApplyDgLock() {
+  var $group = $("#dg_filter_group");
+  if (!$group.length) return;
+  var lockVal = window.cdpConsType ? 1 : 0;
+  $("#dg_filter_normal").prop("checked", lockVal === 0).closest("label").toggleClass("active", lockVal === 0);
+  $("#dg_filter_dg").prop("checked", lockVal === 1).closest("label").toggleClass("active", lockVal === 1);
+  $group.find("input").prop("disabled", true);
+  $group.css({ opacity: 0.85, "pointer-events": "none" });
+  $("#dg_filter_note")
+    .text(lockVal ? "This consolidation holds dangerous goods." : "This consolidation holds normal goods.")
+    .show();
+}
+
+$(function () {
+  cdpApplyDgLock();
+  $("#myModalConsolidate").on("shown.bs.modal", cdpApplyDgLock);
+});
+
 //Cargar datos AJAX
 function cdp_load(page) {
   var search = $("#search").val();
-  var filterby = $("#filterby").val();
   var parametros = {
     page: page,
     search: search,
-    filterby: filterby,
+    dg: cdp_currentDg(),
   };
   $("#loader").fadeIn("slow");
   $.ajax({
