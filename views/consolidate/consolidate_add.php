@@ -101,6 +101,36 @@ $templatesreceiver = 14;
 
 if (isset($_POST["create_invoice"])) {
 
+    // ─────────────────────────────────────────────────────────────────────
+    // DANGEROUS-GOODS GUARD: a consolidation must hold a single kind — all
+    // dangerous goods, or all normal goods, never a mix. Derive the kind from
+    // the selected packages and refuse the save if they are not homogeneous.
+    // (The UI already prevents mixing; this is the authoritative server check.)
+    // ─────────────────────────────────────────────────────────────────────
+    $posted_order_ids = array_values(array_filter(
+        array_map('intval', (array) ($_POST['order_id'] ?? [])),
+        function ($v) { return $v > 0; }
+    ));
+    $consolidation_dg = 0;
+    $dg_mixed = false;
+    if (!empty($posted_order_ids)) {
+        $in_ids = implode(',', $posted_order_ids);
+        $db->cdp_query("SELECT DISTINCT is_dangerous_good FROM cdb_add_order WHERE order_id IN ($in_ids)");
+        $dg_kinds = array_values(array_unique(array_map(
+            function ($r) { return (int) $r->is_dangerous_good; },
+            $db->cdp_registros()
+        )));
+        if (count($dg_kinds) > 1) {
+            $dg_mixed = true;
+        } else {
+            $consolidation_dg = $dg_kinds[0] ?? 0;
+        }
+    }
+
+    if ($dg_mixed) {
+        $error_script = 'swal("Cannot consolidate", "A consolidation cannot mix dangerous goods and normal goods. Please keep only one kind in this consolidation.", "error");';
+    } else {
+
     $next_order = $core->cdp_consolidate_track();
     $date = date('Y-m-d', strtotime(trim($_POST["order_date"])));
     $time = date("H:i:s");
@@ -159,7 +189,8 @@ if (isset($_POST["create_invoice"])) {
                     driver_id,
                     seals_package,
                     status_invoice,
-                    recipient_type
+                    recipient_type,
+                    is_dangerous_good
                     )
                 VALUES
                     (
@@ -199,7 +230,8 @@ if (isset($_POST["create_invoice"])) {
                     :driver_id,
                     :seals_package,
                     :status_invoice,
-                    :recipient_type
+                    :recipient_type,
+                    :is_dangerous_good
                     )
             ");
 
@@ -241,6 +273,7 @@ if (isset($_POST["create_invoice"])) {
     $db->bind(':driver_id',  cdp_sanitize($_POST["driver_id"]));
     $db->bind(':seals_package',  cdp_sanitize($_POST["seals"]));
     $db->bind(':recipient_type', isset($_POST["recipient_type"]) ? cdp_sanitize($_POST["recipient_type"]) : 'recipient');
+    $db->bind(':is_dangerous_good', $consolidation_dg, PDO::PARAM_INT);
 
     $db->cdp_execute();
 
@@ -767,6 +800,8 @@ if (isset($_POST["create_invoice"])) {
         $error_script = 'swal("Error", "' . $message . '", "error");';
     }
 
+    } // end DANGEROUS-GOODS guard (else of $dg_mixed)
+
 }
 ?>
 
@@ -1244,6 +1279,7 @@ if (isset($_POST["create_invoice"])) {
             <?php include('views/modals/modal_add_recipient_shipment.php'); ?>
             <?php include('views/modals/modal_add_addresses_user.php'); ?>
             <?php include('views/modals/modal_add_addresses_recipient.php'); ?>
+            <?php $cdp_show_dg_filter = true; // air courier consolidation: show dangerous-goods filter ?>
             <?php include('views/modals/modal_add_ship_consolidate.php'); ?>
         </div>
 
@@ -1280,10 +1316,16 @@ if (isset($_POST["create_invoice"])) {
         <script><?php echo $error_script; ?></script>
     <?php endif; ?>
 
+    <!-- Dangerous-goods mode for the Find Shipments filter. ADD starts unlocked
+         (the first package fixes the kind); see dataJs/consolidate_add.js. -->
+    <script>
+        window.CDP_DG_MODE = 'add';
+        window.CDP_DG_LOCK = null;
+    </script>
     <script src="dataJs/consolidate_add.js"></script>
 
 
 
-</body> 
+</body>
 
 </html>
