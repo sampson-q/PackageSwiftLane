@@ -145,7 +145,7 @@ if ($numrows > 0) { ?>
                     <td class="text-center">
                         <img src="assets/<?php echo ($user->avatar) ? $user->avatar : "/uploads/blank.png"; ?>"  alt="" class="rounded-circle" width="40" height="40" style="display: block; margin: auto;" />
                     </td>
-					<td class="text-center"><?php echo $user->fname; ?> <?php echo $user->lname; ?></td>
+                    <td class="text-center"><b><a href="customers_edit.php?user=<?php echo $user->id; ?>"><?php echo $user->fname; ?> <?php echo $user->lname; ?></a></b></td>
 					<td class="text-center"><?php echo $user->email; ?></td>
 					<td class="text-center"><?php echo $user->locker; ?></td>
 					<td class="text-center"><?php echo cdp_userStatus($user->active, $user->id, $lang); ?></td>
@@ -153,14 +153,15 @@ if ($numrows > 0) { ?>
 					
                     <td class="text-center">
                         <div class="action-buttons">
-                            <a href="customers_edit.php?user=<?php echo $user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien46'] ?>">
+                            <!-- <a href="customers_edit.php?user=<?php echo $user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien46'] ?>">
                                 <i class="ti-pencil"></i>
-                            </a>
+                            </a> -->
                             <a href="newsletter.php?email=<?php echo $user->email; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien45'] ?>">
-                                <i style="color:#F5590D" class="ti-email"></i>
+                                <i style="color: #15e6a0; font-size: 14px;" class="ti-email"></i>
                             </a>
-                            <a href="customer_view.php?user=<?php echo $user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo "View Customer" ?>">
-                                <i style="color:#AA080C" class="ti-eye"></i>
+                            <span class="mx-1">|</span>
+                            <a href="customer_view.php?user=<?php echo $user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo "View Customer Packages" ?>">
+                                <i style="color: #ff0037; font-size: 18px;" class="ti-eye"></i>
                             </a>
                             <?php if ($user->id == 1) : ?>
                                 <a data-rel="<?php echo $user->username; ?>">
