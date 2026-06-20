@@ -5960,6 +5960,25 @@ function cdp_calculateTariffServerSide($sender_id, $sender_address_id, $recipien
 //  COURIER SHIPMENTS
 // ===========================================================
 
+/**
+ * Dangerous-goods style marker (cdb_styles, status_type = 4). This is NOT a
+ * workflow status_courier value — it only carries the distinct hazmat colour and
+ * label used to badge dangerous-goods packages/consolidations across the UI.
+ * Returns the style row (id / mod_style / detail / color) or null when missing.
+ */
+function cdp_getDangerousGoodsStyle()
+{
+    static $cached = null;
+    if ($cached !== null) {
+        return $cached ?: null;
+    }
+    $db = new Conexion;
+    $db->cdp_query("SELECT * FROM cdb_styles WHERE mod_style = 'Dangerous_Goods' OR status_type = 4 ORDER BY id ASC LIMIT 1");
+    $db->cdp_execute();
+    $cached = $db->cdp_registro() ?: false;
+    return $cached ?: null;
+}
+
 function cdp_getCourier($id)
 {
     $db = new Conexion;
@@ -6029,7 +6048,8 @@ function cdp_insertCourierShipment($datos)
         provider_purchase,
         price_purchase,
         notify_whatsapp_sender,
-        courier_notes
+        courier_notes,
+        is_dangerous_good
         )
     VALUES
         (
@@ -6063,7 +6083,8 @@ function cdp_insertCourierShipment($datos)
         :provider_purchase,
         :price_purchase,
         :notify_whatsapp_sender,
-        :courier_notes
+        :courier_notes,
+        :is_dangerous_good
         )
 ");
 
@@ -6099,6 +6120,9 @@ function cdp_insertCourierShipment($datos)
     $db->bind(':price_purchase',    $datos['price_purchase'] ?? null);
     $db->bind(':notify_whatsapp_sender', (int) ($datos['notify_whatsapp_sender'] ?? 0), PDO::PARAM_INT);
     $db->bind(':courier_notes', $datos['courier_notes']);
+    // Dangerous-goods (hazmat) flag — orthogonal to status_courier. A package is
+    // either a dangerous good or not; a consolidation may only group one kind.
+    $db->bind(':is_dangerous_good', (int) ($datos['is_dangerous_good'] ?? 0), PDO::PARAM_INT);
 
     $db->cdp_execute();
     return $db->dbh->lastInsertId();
@@ -6254,7 +6278,8 @@ function cdp_updateCourierShipment($datos)
         due_date=:due_date,
         status_invoice=:status_invoice,
         manual_tariff=:manual_tariff,
-        courier_notes=:courier_notes
+        courier_notes=:courier_notes,
+        is_dangerous_good=:is_dangerous_good
 
         WHERE
         order_id=:order_id
@@ -6279,6 +6304,7 @@ function cdp_updateCourierShipment($datos)
     $db->bind(':due_date',   $datos["due_date"]);
     $db->bind(':status_invoice',   $datos["status_invoice"]);
     $db->bind(':courier_notes', $datos["courier_notes"]);
+    $db->bind(':is_dangerous_good', (int) ($datos['is_dangerous_good'] ?? 0), PDO::PARAM_INT);
 
     return $db->cdp_execute();
 }
