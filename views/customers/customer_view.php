@@ -219,9 +219,18 @@ $history = $db->cdp_registros();
                                 <!-- Tabs -->
                                 <input type="hidden" id="search" name="search" value="<?php echo $_GET['user']; ?>">
                                 <div class="p-3">
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fa fa-search"></i></span>
-                                        <input type="text" id="track" class="form-control" placeholder="<?php echo $lang['ltracking']; ?>">
+                                    <div class="row align-items-center g-2">
+                                        <div class="col-12 col-md">
+                                            <input type="text" id="track" class="form-control" placeholder="<?php echo $lang['ltracking']; ?>">
+                                        </div>
+                                        <div class="col-12 col-md-auto mt-2 mt-md-0">
+                                            <select onchange="cdp_load(1);" class="form-control custom-select" id="per_page" name="per_page">
+                                                <option value="25">25 rows</option>
+                                                <option value="50">50 rows</option>
+                                                <option value="100">100 rows</option>
+                                                <option value="all"><?php echo $lang['rows-all'] ?? 'All'; ?></option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="outer_divx"></div>
