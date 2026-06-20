@@ -306,6 +306,9 @@ if ($row_order->status_invoice == 1) {
                                         <b class=""><?php echo $lang['left506'] ?></b>
                                         <span class="label" style="background-color: <?php echo $status_courier->color; ?>"><?php echo $status_courier->mod_style; ?>
                                         </span>
+                                        <?php if (isset($row_order->is_dangerous_good) && (int)$row_order->is_dangerous_good === 1) { $dg_style = cdp_getDangerousGoodsStyle(); if ($dg_style) { ?>
+                                            <span class="label" style="background-color: <?php echo htmlspecialchars($dg_style->color, ENT_QUOTES, 'UTF-8'); ?>"><i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars(str_replace('_', ' ', $dg_style->mod_style), ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <?php } } ?>
                                     </div>
                                 </div>
                                 <br>
