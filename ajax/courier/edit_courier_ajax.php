@@ -168,6 +168,13 @@ if (empty($errors)) {
         'status_invoice'        => $status_invoice,
         'manual_tariff'         => $tariff_mode,
         'courier_notes'         => cdp_sanitize($_POST["courier_notes"]),
+        // Dangerous-goods (hazmat) flag — checkbox only posts when checked. A
+        // package already inside a consolidation must keep its classification:
+        // flipping it would split the consolidation across both kinds, so the
+        // posted value is ignored while consolidated.
+        'is_dangerous_good'     => ($old_shipment && (int)$old_shipment->is_consolidate === 1)
+            ? (int)($old_shipment->is_dangerous_good ?? 0)
+            : ((isset($_POST['is_dangerous_good']) && intval($_POST['is_dangerous_good']) === 1) ? 1 : 0),
     );
 
     $updateShip = cdp_updateCourierShipment($dataShipment);
