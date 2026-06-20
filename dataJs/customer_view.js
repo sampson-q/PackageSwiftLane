@@ -20,9 +20,8 @@ function cdp_load(page) {
     localStorage.setItem('currentTablePage-Locker', page);
   var search = $("#search").val();
   var track = $("#track").val() || '';
-  var status_courier = $("#status_courier").val();
-  var filterby = $("#filterby").val();
-  var parametros = {'search': search, 'track': track };
+  var per_page = $("#per_page").val() || 25;
+  var parametros = {'search': search, 'track': track, 'page': page, 'per_page': per_page };
   $("#loader").fadeIn('slow');
   $.ajax({
     url: './ajax/customers/customer_view_ajax.php',
