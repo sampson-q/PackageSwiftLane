@@ -527,6 +527,27 @@ $categories   = $core->cdp_getCategoriesById(27);
                                         </div>
                                     </div>
 
+                                    <!-- Dangerous goods (hazmat) toggle. A package is either a dangerous
+                                         good or not; consolidations may only group one kind. -->
+                                    <div class="row">
+                                        <div class="col-12 mb-3">
+                                            <div id="dg_toggle_bar" class="dg-toggle-bar">
+                                                <div class="dg-toggle-text">
+                                                    <i class="fas fa-exclamation-triangle dg-icon"></i>
+                                                    <span class="dg-title">Dangerous Goods (Hazmat)</span>
+                                                    <small class="d-block text-muted">Flag this courier as dangerous goods. Dangerous and normal goods can never be consolidated together.</small>
+                                                </div>
+                                                <label class="custom-control custom-checkbox dg-switch mb-0">
+                                                    <input type="checkbox" class="custom-control-input" name="is_dangerous_good" id="is_dangerous_good" value="1" onchange="cdp_toggleDangerousBar(this)">
+                                                    <span class="custom-control-indicator"></span>
+                                                    <span class="custom-control-description dg-state">Not dangerous</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <?php include 'views/courier/_dangerous_good_toggle_assets.php'; ?>
+
                                     <!-- Tabla de paquetes -->
                                     <div class="row">
                                         <div class="col-2">
