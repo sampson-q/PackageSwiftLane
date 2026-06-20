@@ -71,7 +71,32 @@ $address_order = $db->cdp_registro();
 $_before_edit = null;
 
 if (isset($_POST["total_item"])) {
-    
+
+    // ─────────────────────────────────────────────────────────────────────
+    // DANGEROUS-GOODS GUARD: this consolidation already has a fixed kind
+    // (dangerous vs normal). Every package kept/added must match it — the edit
+    // screen offers no kind toggle, so any mismatch is tampering and is refused
+    // before a single row is rewritten.
+    // ─────────────────────────────────────────────────────────────────────
+    $consolidation_dg_edit = (int) ($row_order->is_dangerous_good ?? 0);
+    $posted_ids_edit = array_values(array_filter(
+        array_map('intval', (array) ($_POST['order_id'] ?? [])),
+        function ($v) { return $v > 0; }
+    ));
+    $dg_mismatch = false;
+    if (!empty($posted_ids_edit)) {
+        $in_e = implode(',', $posted_ids_edit);
+        $db_dg = new Conexion;
+        $db_dg->cdp_query("SELECT COUNT(*) AS c FROM cdb_add_order WHERE order_id IN ($in_e) AND is_dangerous_good <> $consolidation_dg_edit");
+        $db_dg->cdp_execute();
+        $dg_row = $db_dg->cdp_registro();
+        $dg_mismatch = ($dg_row && (int) $dg_row->c > 0);
+    }
+
+    if ($dg_mismatch) {
+        $error_script = 'swal("Cannot consolidate", "This consolidation holds ' . ($consolidation_dg_edit ? 'dangerous goods' : 'normal goods') . ' only. One or more selected packages are the other kind and were not saved.", "error");';
+    } else {
+
     // Capture before-edit state for change tracking
     try {
         $db_snap = new Conexion;
@@ -552,6 +577,8 @@ if (isset($_POST["total_item"])) {
         $message = "There was an error processing the data";
         $error_script = 'swal("Error", "' . $message . '", "error");';
     }
+
+    } // end DANGEROUS-GOODS guard (else of $dg_mismatch)
 }
 
 ?>
@@ -982,6 +1009,7 @@ if (isset($_POST["total_item"])) {
         <?php include 'views/inc/footer.php'; ?>
     </div>
 
+    <?php $cdp_show_dg_filter = true; // air courier consolidation: show dangerous-goods filter ?>
     <?php include('views/modals/modal_add_ship_consolidate.php'); ?>
 
     <?php include('helpers/languages/translate_to_js.php'); ?>
@@ -997,6 +1025,12 @@ if (isset($_POST["total_item"])) {
         <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
         <script><?php echo $error_script; ?></script>
     <?php endif; ?>
+    <!-- Dangerous-goods mode for the Find Shipments filter. EDIT is locked to the
+         consolidation's own kind; the filter cannot be toggled here. -->
+    <script>
+        window.CDP_DG_MODE = 'edit';
+        window.CDP_DG_LOCK = <?php echo (int)($row_order->is_dangerous_good ?? 0); ?>;
+    </script>
     <script src="dataJs/consolidate_edit.js"></script>
 </body>
 </html>
