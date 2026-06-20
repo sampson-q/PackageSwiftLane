@@ -13,7 +13,7 @@
 
 						<div class="row mb-3 ml-2">
 
-							<div class="col-sm-12 col-md-8">
+							<div class="col-sm-12 col-md-6">
 
 								<div class="input-group">
 									<input type="text" name="search" id="search" class="form-control input-sm float-right" placeholder="<?php echo $lang['left21551'] ?>" onkeyup="cdp_load(1);">
@@ -23,6 +23,25 @@
 
 								</div>
 							</div><!-- /.col -->
+
+							<?php if (!empty($cdp_show_dg_filter)) { ?>
+							<!-- Dangerous-goods filter (air courier consolidation only). A
+							     consolidation may only group ONE kind, so this toggles between
+							     normal and dangerous-goods packages. consolidate_*.js hides/locks
+							     it to the consolidation's own kind on the edit screen (and after
+							     the first package is added). -->
+							<div class="col-sm-12 col-md-6" id="dg_filter_wrap">
+								<div class="btn-group btn-group-toggle float-md-right" data-toggle="buttons" id="dg_filter_group">
+									<label class="btn btn-outline-secondary btn-sm active">
+										<input type="radio" name="dg_filter" id="dg_filter_normal" value="0" checked> <i class="fa fa-box"></i> Normal goods
+									</label>
+									<label class="btn btn-outline-danger btn-sm">
+										<input type="radio" name="dg_filter" id="dg_filter_dg" value="1"> <i class="fas fa-exclamation-triangle"></i> Dangerous goods
+									</label>
+								</div>
+								<small id="dg_filter_note" class="d-block text-muted text-md-right mt-1" style="display:none;"></small>
+							</div><!-- /.col -->
+							<?php } ?>
 						</div>
 
 						<div class="outer_div"></div><!-- Datos ajax Final -->
