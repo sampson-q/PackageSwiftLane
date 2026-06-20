@@ -467,6 +467,7 @@ $address_order = $db->cdp_registro();
                                                 <select class="custom-select col-12" id="status_courier" name="status_courier" required>
                                                     <option value="0">--<?php echo $lang['left210'] ?>--</option>
                                                     <?php foreach ($statusrow as $row) : ?>
+                                                        <?php if ((int)($row->status_type ?? 0) === 4) continue; // Dangerous-goods marker is a flag, not a selectable status ?>
 
                                                         <option value="<?php echo $row->id; ?>" <?php if ($row_order->status_courier == $row->id) {
                                                                                                     echo 'selected';
