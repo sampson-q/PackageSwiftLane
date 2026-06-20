@@ -68,7 +68,7 @@ $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
 
-$sql = "SELECT a.recipient_type, a.status_invoice, a.total_order, a.consolidate_id, a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options, a.order_deli_time, b.mod_style, b.color FROM cdb_consolidate as a
+$sql = "SELECT a.recipient_type, a.status_invoice, a.total_order, a.consolidate_id, a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options, a.order_deli_time, a.is_dangerous_good, b.mod_style, b.color FROM cdb_consolidate as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 $sWhere
 			  and a.status_courier!=14
@@ -241,6 +241,11 @@ if ($numrows > 0) { ?>
 							<td class="">
 
 								<span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->mod_style; ?></span>
+
+								<?php if ((int)$row->is_dangerous_good === 1 && ($dg_style = cdp_getDangerousGoodsStyle())) { ?>
+									<br>
+									<span style="background: <?php echo htmlspecialchars($dg_style->color, ENT_QUOTES, 'UTF-8'); ?>;" class="label label-large"><i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars(str_replace('_', ' ', $dg_style->mod_style), ENT_QUOTES, 'UTF-8'); ?></span>
+								<?php } ?>
 
 							</td>
 
