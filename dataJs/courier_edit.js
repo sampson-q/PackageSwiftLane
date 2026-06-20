@@ -492,6 +492,12 @@ $("#invoice_form").on("submit", function (event) {
   if (notify_sms_sender)    data.append("notify_sms_sender", notify_sms_sender);
   if (notify_sms_receiver)  data.append("notify_sms_receiver", notify_sms_receiver);
   if (tariff_mode)          data.append("tariff_mode", tariff_mode);
+
+  // Dangerous-goods (hazmat) flag. Sent unconditionally (0 or 1) so unchecking
+  // it actually clears the flag — this FormData is hand-built, so an unchecked
+  // box would otherwise never reach the server.
+  data.append("is_dangerous_good", $("#is_dangerous_good").is(":checked") ? 1 : 0);
+
   if (deleted_file_ids_val) data.append("deleted_file_ids", deleted_file_ids_val);
 
   // Files
