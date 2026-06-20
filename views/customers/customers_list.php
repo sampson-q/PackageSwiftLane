@@ -340,65 +340,45 @@ $pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 10
             </div>
 
             <!-- -------------------------------------------------------------- -->
-              <!-- Start Page Content -->
-              <!-- -------------------------------------------------------------- -->
-              <div><br></div>
-              <div class="widget-content searchable-container list">
-                <!-- ---------------------
-                            start Contact
-                        ---------------- -->
-                    <div class="card card-body">
-                        <div class="row align-items-center g-2">
-                            <!-- Search Input -->
-                            <div class="col-sm-12 col-md-6 col-xl-7">
-                                <div class="input-group">
-                                    <div class="input-group-append">
-                                        <button type="submit" class="btn btn-danger">
-                                            <iconify-icon icon="solar:magnifer-linear"></iconify-icon>
-                                        </button>
-                                    </div>
-                                    <input type="text" name="search" id="search" class="form-control" placeholder="<?php echo $lang['filter82']; ?>" onkeyup="cdp_load(1);">
-                                </div>
-                            </div>
-
-                            <!-- Hidden filter states -->
-                            <input type="hidden" id="filterby_active" value="0">
-                            <input type="hidden" id="filterby_approve" value="0">
-                            <input type="hidden" id="filterby_new" value="0">
-
-                            <!-- Action Button -->
-                            <div class="col-sm-12 col-md-6 col-xl-5 text-md-end text-center mt-2 mt-md-0">
-                                <a href="customers_add.php" id="btn-add-contact" class="btn btn-danger w-100 w-md-auto">
-                                    <i data-feather="users" class="feather-sm fill-white me-1"></i>
-                                    <?php echo $lang['rolesp47']; ?>
-                                </a>
+            <!-- Start Page Content -->
+            <!-- -------------------------------------------------------------- -->
+            
+            <div><br></div>
+            <div class="widget-content searchable-container list">
+                <div class="card card-body">
+                    <div class="row align-items-center g-2">
+                        <div class="col-sm-4 col-md-4 col-xl-4">
+                            <div class="input-group">
+                                <input type="text" name="search" id="search" class="form-control" placeholder="<?php echo $lang['filter82']; ?>" onkeyup="cdp_load(1);">
                             </div>
                         </div>
-                    </div>
 
-                    <!-- ---------------------
-                                end Contact
-                        ---------------- -->
+                        <input type="hidden" id="filterby_active" value="0">
+                        <input type="hidden" id="filterby_approve" value="0">
+                        <input type="hidden" id="filterby_new" value="0">
 
-                    <div class="row">
-                        <!-- Column -->
-
-                        <div class="col-lg-12 col-xl-12 col-md-12">
-
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="table-responsive">
-
-                                        <div class="outer_div"></div>
-
-                                    </div>
-
-                                </div>
-                            </div>
+                        <div class="">
+                            <a href="customers_add.php" id="btn-add-contact" class="btn btn-danger w-100 w-md-auto">
+                                <i data-feather="users" class="feather-sm fill-white me-1"></i>
+                                <?php echo $lang['rolesp47']; ?>
+                            </a>
                         </div>
-                        <!-- Column -->
                     </div>
                 </div>
+
+                <div class="row">
+                    <div class="col-lg-12 col-xl-12 col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <div class="outer_div"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Column -->
+                </div>
+            </div>
                
 
             </div>
