@@ -23,9 +23,10 @@ if (!$userRecord) {
 
 $userId = $userRecord->id;
 
-$page = (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) ? $_REQUEST['page'] : 1;
+$page = (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) ? (int)$_REQUEST['page'] : 1;
 $per_page = (($_REQUEST['per_page'] ?? '') === 'all') ? 1000000000 : (in_array((int)($_REQUEST['per_page'] ?? 0), [25, 50, 100], true) ? (int)$_REQUEST['per_page'] : 25); //how much records you want to show
 $offset = ($page - 1) * $per_page;
+$adjacents = 4; // pages shown either side of the current page in the paginator
 
 // Optional tracking-number filter (system, postal/carrier or legacy postal).
 $track      = isset($_REQUEST['track']) ? cdp_sanitize($_REQUEST['track']) : '';
@@ -152,19 +153,8 @@ $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
                 <?php } ?>
                 <th><b><?php echo $lang['ltracking']; ?></b></th>
                 <th><b><?php echo $lang['customTracking']; ?></b></th>
-                
-                
-                <?php if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-                    <th><b><?php echo $lang['left498']; ?></b></th>
-                <?php } ?>
-                <th><b><?php echo $lang['left499']; ?></b></th>
-                <?php if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-                    <th><b><?php echo $lang['lorigin']; ?></b></th>
-                <?php } ?>
-                <th><b><?php echo $lang['ldestination']; ?></b></th>
                 <th><b><?php echo $lang['ship-all5']; ?></b></th>
                 <th><b><?php echo $lang['lstatusshipment']; ?></b></th>
-                <th></th>
                 <th><b><?php echo $lang['global-3']; ?></b></th>
                 <th><b></b></th>
             </tr>
@@ -187,21 +177,21 @@ $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
                     // Recipient can live in cdb_users (recipient_type='user') or
                     // cdb_recipients. Resolve from the right table, with a fallback
                     // to the other so user-type recipients no longer show blank.
-                    if (isset($row->recipient_type) && $row->recipient_type === 'user') {
-                        $db->cdp_query("SELECT * FROM cdb_users WHERE id = '" . intval($row->receiver_id) . "'");
-                        $receiver_data = $db->cdp_registro();
-                        if (!$receiver_data) {
-                            $db->cdp_query("SELECT * FROM cdb_recipients WHERE id = '" . intval($row->receiver_id) . "'");
-                            $receiver_data = $db->cdp_registro();
-                        }
-                    } else {
-                        $db->cdp_query("SELECT * FROM cdb_recipients WHERE id = '" . intval($row->receiver_id) . "'");
-                        $receiver_data = $db->cdp_registro();
-                        if (!$receiver_data) {
-                            $db->cdp_query("SELECT * FROM cdb_users WHERE id = '" . intval($row->receiver_id) . "'");
-                            $receiver_data = $db->cdp_registro();
-                        }
-                    }
+                    // if (isset($row->recipient_type) && $row->recipient_type === 'user') {
+                    //     $db->cdp_query("SELECT * FROM cdb_users WHERE id = '" . intval($row->receiver_id) . "'");
+                    //     $receiver_data = $db->cdp_registro();
+                    //     if (!$receiver_data) {
+                    //         $db->cdp_query("SELECT * FROM cdb_recipients WHERE id = '" . intval($row->receiver_id) . "'");
+                    //         $receiver_data = $db->cdp_registro();
+                    //     }
+                    // } else {
+                    //     $db->cdp_query("SELECT * FROM cdb_recipients WHERE id = '" . intval($row->receiver_id) . "'");
+                    //     $receiver_data = $db->cdp_registro();
+                    //     if (!$receiver_data) {
+                    //         $db->cdp_query("SELECT * FROM cdb_users WHERE id = '" . intval($row->receiver_id) . "'");
+                    //         $receiver_data = $db->cdp_registro();
+                    //     }
+                    // }
 
                     $db->cdp_query("SELECT * FROM cdb_users WHERE id = '" . $row->driver_id . "'");
                     $driver_data = $db->cdp_registro();
@@ -255,16 +245,6 @@ $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
                             <br><small class="text-muted"><?php echo $row->order_date; ?></small>
                         </td>
                         <td><?php echo $row->tracking_number; ?></td>
-                        
-                        
-                        <?php if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-                            <td><?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?></td>
-                        <?php } ?>
-                        <td><?php echo empty($receiver_data->fname) ? $sender_data->fname : $receiver_data->fname; ?> <?php echo empty($receiver_data->lname) ? $sender_data->lname : $receiver_data->lname; ?></td>
-                        <?php if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
-                            <td><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
-                        <?php } ?>
-                        <td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
                         <td>
                             <b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
                             <?php if (cdp_isPayableStatus($row->status_courier)): ?>
@@ -294,13 +274,6 @@ $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
                                 <span style="background: #FC5239;" class="label label-large">
                                     <?php echo $lang['left1018']; ?>
                                 </span>
-                            <?php } ?>
-                        </td>
-                        <td>
-                            <?php if ($row->status_invoice == 2 && $userData->userlevel == 1) { ?>
-                                <a style="background: #34e89e;" class="label" href="add_payment_gateways_courier.php?id_order=<?php echo $row->order_id; ?>">
-                                    <i style="color:#343a40" class="fas fa-dollar-sign"></i>&nbsp;<?php echo $lang['leftorder35']; ?>
-                                </a>
                             <?php } ?>
                         </td>
                         <td>
@@ -415,7 +388,7 @@ $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
         </tbody>
     </table>
     <div class="pull-right">
-			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'courier_list');	?>
-		</div>
+        <?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'courier_list');	?>
+    </div>
     <script src="dataJs/customer_view_ajax.js"></script>
 </div>
