@@ -108,11 +108,10 @@ $statusrow = $core->cdp_getStatusByType(1);
                             <div class="card-body">
                                 <div id="resultados_ajax"></div>
 
-
                                 <div class="row">
 
                                 <?php if ($user->cdp_hasPermission('add_consolidate_shipment')) { ?>
-                                    <div class="col-md-4 <?php if ($direction_layout === 'rtl') {
+                                    <div class="col-md-2 <?php if ($direction_layout === 'rtl') {
                                                                     echo 'pull-left';
                                                                 } else {
                                                                     echo 'pull-right';
@@ -129,15 +128,10 @@ $statusrow = $core->cdp_getStatusByType(1);
                                     <?php } ?>
 
                                     <div class="col-sm-4">
-
                                         <div class="input-group">
                                             <input type="text" name="search" id="search" class="form-control input-sm float-right" placeholder="<?php echo $lang['left21551'] ?>" onkeyup="cdp_load(1);">
-                                            <div class="input-group-append input-sm">
-                                                <button type="submit" class="btn btn-danger"><i class="fa fa-search"></i></button>
-                                            </div>
-
                                         </div>
-                                    </div><!-- /.col -->
+                                    </div>
 
                                     <div class="col-sm-4">
                                         <div class="input-group">
@@ -152,8 +146,6 @@ $statusrow = $core->cdp_getStatusByType(1);
                                     </div>
                                 </div>
 
-
-
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="btn-group mt-2 hide" id="div-actions-checked">
@@ -165,15 +157,6 @@ $statusrow = $core->cdp_getStatusByType(1);
                                                 <?php if ($user->cdp_hasPermission('select_change_status_courier')) { ?>
                                                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalCheckboxStatus"><i style="color:#20c997" class="ti-reload"></i>&nbsp;<?php echo $lang['left21550'] ?></a>
                                                 <?php } ?>
-
-                                                <?php if ($user->cdp_hasPermission('assign_drivers')) { ?>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalDriverCheckbox"><i style="color:#ff0000" class="fas fa-car"></i>&nbsp;<?php echo $lang['left208'] ?></a>
-                                                <?php } ?>
-
-                                                <?php if ($user->cdp_hasPermission('print_label')) { ?>
-                                                <a class="dropdown-item" onclick="cdp_printMultipleLabel();" target="_blank"> <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?> </a>
-                                                <?php } ?>
-
                                             </div>
                                         </div>
 
