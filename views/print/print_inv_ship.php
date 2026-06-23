@@ -142,6 +142,12 @@ foreach ($order_items as $item) {
                 </div>
             </div>
 
+            <?php if ($package_tracking->tracking_number) : ?>
+                <div class="barcode">
+                    <img src='https://barcode.tec-it.com/barcode.ashx?data=<?php echo $package_tracking->tracking_number; ?>&code=Code128&multiplebarcodes=false&translate-esc=false&unit=Fit&dpi=92&imagetype=Gif&rotation=0&color=%23000000&bgcolor=%23ffffff&qunit=Mm&quiet=0&modulewidth=50' alt='' />
+                </div>
+            <?php endif; ?>
+
             <div class="card">
                 <div class="card-title">Shipment Details</div>
                 <div class="card-row">
