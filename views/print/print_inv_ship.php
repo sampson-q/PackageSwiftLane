@@ -57,7 +57,7 @@ if ($order_items) {
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon; ?>">
+    <link rel="icon" type="image/png" href="assets/<?php echo $core->favicon; ?>">
     <title><?php echo $lang['inv-shipping19'] . ' - ' . $row->order_prefix . $row->order_no; ?></title>
     <link href="assets/custom_dependencies/bootstrap.min.css" rel="stylesheet">
     <link type="text/css" href="assets/custom_dependencies/print.css" rel="stylesheet" />
@@ -65,7 +65,7 @@ if ($order_items) {
     
     <style>
         @page {
-            size: 80mm auto;
+            size: 110mm auto;
             margin: 0;
         }
 
@@ -85,23 +85,23 @@ if ($order_items) {
 
         body {
             font-family: Arial, sans-serif;
-            font-size: 9px;
-            line-height: 1.3;
-            color: #111;
+            font-size: 16px;
+            line-height: 1.35;
+            color: #000;
         }
 
         .label-page {
             width: 100%;
-            max-width: 80mm;
+            max-width: 110mm;
             padding: 4mm 3.5mm 5mm;
             overflow: visible;
             display: block;
         }
 
         .topbar {
-            border-bottom: 0.25mm solid #111;
-            padding-bottom: 2mm;
-            margin-bottom: 2mm;
+            border-bottom: 0.35mm solid #000;
+            padding-bottom: 2.2mm;
+            margin-bottom: 2.2mm;
         }
 
         .brand-wrap {
@@ -110,13 +110,14 @@ if ($order_items) {
 
         .logo {
             text-align: center;
-            margin-bottom: 1.5mm;
+            margin-bottom: -15.5mm;
+            margin-top: -15mm;
         }
 
         .logo img {
             display: inline-block;
-            max-width: 60mm;
-            max-height: 22mm;
+            max-width: 120mm;
+            max-height: 54mm;
             object-fit: contain;
         }
 
@@ -127,14 +128,14 @@ if ($order_items) {
 
         .brand-name {
             margin: 0 0 1mm 0;
-            font-size: 12px;
+            font-size: 19px;
             font-weight: 700;
             line-height: 1.1;
         }
 
         .brand-lines {
             margin: 0;
-            font-size: 8px;
+            font-size: 16px;
             line-height: 1.35;
             word-break: break-word;
         }
@@ -147,8 +148,8 @@ if ($order_items) {
         .barcode img {
             display: inline-block;
             width: 100%;
-            max-width: 74mm;
-            height: 15mm;
+            max-width: 80mm;
+            height: 20mm;
             object-fit: contain;
         }
 
@@ -159,7 +160,7 @@ if ($order_items) {
         }
 
         .panel {
-            border: 0.25mm solid #666;
+            border: 0.35mm solid #000;
             padding: 1.5mm 1.8mm;
             overflow: visible;
         }
@@ -167,8 +168,8 @@ if ($order_items) {
         .panel-title {
             margin: 0 0 1mm 0;
             padding-bottom: 0.8mm;
-            border-bottom: 0.2mm solid #999;
-            font-size: 9px;
+            border-bottom: 0.25mm solid #000;
+            font-size: 16px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.2px;
@@ -179,7 +180,7 @@ if ($order_items) {
             grid-template-columns: 19mm 1fr;
             gap: 1.2mm;
             margin: 0 0 0.8mm 0;
-            font-size: 8.2px;
+            font-size: 15px;
             line-height: 1.35;
         }
 
@@ -194,7 +195,7 @@ if ($order_items) {
         }
 
         .items-panel {
-            border: 0.25mm solid #666;
+            border: 0.35mm solid #000;
             padding: 1.2mm 1.4mm;
             overflow: visible;
             min-height: 0;
@@ -210,13 +211,13 @@ if ($order_items) {
 
         .items-header h3 {
             margin: 0;
-            font-size: 8.5px;
+            font-size: 14.5px;
             font-weight: 700;
             line-height: 1.1;
         }
 
         .meta-chip {
-            font-size: 7px;
+            font-size: 14px;
             white-space: nowrap;
         }
 
@@ -228,12 +229,12 @@ if ($order_items) {
 
         thead th {
             background: #f0f0f0;
-            font-size: 8px;
+            font-size: 16px;
             font-weight: 700;
         }
 
         th, td {
-            border: 0.15mm solid #999;
+            border: 0.2mm solid #000;
             padding: 0.75mm 1mm;
             vertical-align: top;
             word-break: break-word;
@@ -250,7 +251,7 @@ if ($order_items) {
         }
 
         tfoot td {
-            font-size: 8px;
+            font-size: 16px;
             padding: 0.8mm 1mm;
             background: #fafafa;
         }
@@ -263,21 +264,21 @@ if ($order_items) {
         }
 
         .total-box {
-            border: 0.25mm solid #666;
+            border: 0.35mm solid #000;
             padding: 1.5mm;
             text-align: center;
         }
 
         .total-box label {
             display: block;
-            font-size: 7px;
+            font-size: 14px;
             font-weight: 700;
             margin-bottom: 1mm;
             text-transform: uppercase;
         }
 
         .total-box .value {
-            font-size: 15px;
+            font-size: 23px;
             font-weight: 700;
             line-height: 1;
         }
@@ -291,20 +292,21 @@ if ($order_items) {
 
         .signature {
             text-align: center;
-            font-size: 7px;
+            font-size: 14px;
             line-height: 1.2;
         }
 
         .signature .line {
-            margin-top: 10mm;
-            border-top: 0.2mm solid #111;
+            margin-top: 43mm;
+            border-top: 0.3mm solid #000;
             padding-top: 1mm;
         }
 
         .credits {
             text-align: center;
-            font-size: 7px;
+            font-size: 9.0px;
             line-height: 1.25;
+            margin-top: 5mm;
         }
 
         .print-button {
@@ -314,15 +316,58 @@ if ($order_items) {
 
         .print-button button {
             padding: 10px 24px;
-            font-size: 14px;
+            font-size: 20px;
             cursor: pointer;
         }
 
         .print-info {
             margin-top: 1mm;
-            font-size: 8.5px;
-            color: #777;
+            font-size: 14.5px;
+            color: #000;
         }
+
+
+        /* Stronger contrast for thermal printing */
+        body, .label-page, .panel, .items-panel, .total-box, .signature, .credits,
+        .topbar, .brand-text, .brand-lines, .brand-name, .panel-title, .items-header h3,
+        .meta-chip, .kv, .kv .k, .kv .v, table, thead th, th, td, tfoot td {
+            color: #000 !important;
+        }
+
+        .panel, .items-panel, .total-box {
+            border-color: #000 !important;
+        }
+
+        .topbar, .panel-title, th, td, tfoot td, .total-box {
+            border-color: #000 !important;
+        }
+
+        .brand-name,
+        .panel-title,
+        .items-header h3,
+        .total-box label,
+        .kv .k,
+        .signature .line,
+        .print-info {
+            font-weight: 700 !important;
+        }
+
+        .brand-lines,
+        .kv .v,
+        td,
+        th,
+        tfoot td,
+        .credits,
+        .meta-chip {
+            font-weight: 600 !important;
+        }
+
+        .logo img,
+        .barcode img {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
 
         @media print {
             html, body {
@@ -333,15 +378,38 @@ if ($order_items) {
                 padding: 0 !important;
                 overflow: visible !important;
                 background: #fff !important;
+                color: #000 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                -webkit-text-size-adjust: 100% !important;
+                text-size-adjust: 100% !important;
+            }
+
+            * {
+                color: #000 !important;
+                text-shadow: none !important;
+                box-shadow: none !important;
+                filter: none !important;
             }
 
             .label-page {
                 width: 100% !important;
-                max-width: 80mm !important;
+                max-width: 110mm !important;
                 height: auto !important;
                 min-height: 0 !important;
                 padding: 4mm 3.5mm 5mm !important;
                 overflow: visible !important;
+            }
+
+            .topbar,
+            .panel,
+            .items-panel,
+            .total-box,
+            .signature .line,
+            th,
+            td,
+            tfoot td {
+                border-color: #000 !important;
             }
 
             .print-button,
@@ -361,9 +429,9 @@ if ($order_items) {
         <div class="topbar">
             <div class="brand-wrap">
                 <div class="logo">
-                    <?php echo ($core->logo) ? '<img src="assets/' . $core->logo . '" alt="' . htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8') . '"/>' : '<h3>' . htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8') . '</h3>'; ?>
+                    <?php echo ($core->logo) ? '<img src="assets/uploads/SWIFT LOGO PNG-04.PNG" alt="' . htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8') . '"/>' : '<h3>' . htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8') . '</h3>'; ?>
                 </div>
-                <div class="brand-text">
+                <div class="brand-text" style="color:#000 !important;">
                     <p class="brand-name"><?php echo htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8'); ?></p>
                     <p class="brand-lines">
                         <strong><?php echo $lang['inv-shipping2']; ?>:</strong> <?php echo htmlspecialchars("+233(0)243438799 || +233(0)342292798", ENT_QUOTES, 'UTF-8'); ?><br>
@@ -409,7 +477,7 @@ if ($order_items) {
 
             <div class="kv">
                 <div class="k">Tracking #:</div>
-                <div class="v"><strong><?php echo htmlspecialchars($package_tracking->tracking_number ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></strong></div>
+                <div class="v">&nbsp;&nbsp;&nbsp;&nbsp;<strong><?php echo htmlspecialchars($package_tracking->tracking_number ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></strong></div>
             </div>
 
             <div class="kv">
@@ -417,10 +485,10 @@ if ($order_items) {
                 <div class="v"><?php echo htmlspecialchars($courier_com ? $courier_com->name_com : 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
             </div>
 
-            <div class="kv">
+            <!-- <div class="kv">
                 <div class="k">Mode:</div>
                 <div class="v"><strong><?php echo htmlspecialchars($shipping_mode ? $shipping_mode->ship_mode : 'N/A', ENT_QUOTES, 'UTF-8'); ?></strong></div>
-            </div>
+            </div> -->
 
             <div class="kv">
                 <div class="k">Category:</div>
@@ -437,9 +505,7 @@ if ($order_items) {
         <div class="items-panel">
             <div class="items-header">
                 <h3><?php echo htmlspecialchars("Items Details", ENT_QUOTES, 'UTF-8'); ?></h3>
-                <div class="meta-chip">
-                    <strong><?php echo htmlspecialchars($row->order_prefix . $row->order_no, ENT_QUOTES, 'UTF-8'); ?></strong>
-                </div>
+                
             </div>
 
             <table>
@@ -570,7 +636,7 @@ if ($order_items) {
                     <tr>
                         <td colspan="2">
                             <strong>Original Package Weight</strong> :
-                            <?php echo htmlspecialchars((string)($row->total_weight ?? $total_weight ?? '—'), ENT_QUOTES, 'UTF-8'); ?>
+                            <?php echo htmlspecialchars((string)($row->total_weight ?? $total_weight ?? '—'), ENT_QUOTES, 'UTF-8') . ', <b>Total Items:</b> ' . $total_qty; ?>
                         </td>
                     </tr>
                 </tfoot>
@@ -578,24 +644,30 @@ if ($order_items) {
         </div>
 
         <div class="footer">
-            <div class="total-box">
+            <!-- <div class="total-box">
                 <label><?php echo 'Total Number of Items'; ?></label>
                 <div class="value"><?php echo (int) $total_qty; ?></div>
-            </div>
+            </div> -->
 
-            <div class="signatures">
+            <!-- <div class="signatures col-12"> -->
                 <div class="signature">
-                    <div class="line"><?php echo htmlspecialchars($core->signing_company, ENT_QUOTES, 'UTF-8'); ?></div>
+                    <div class="line"><?php echo 'Signature / Stamp' ?></div>
                 </div>
-                <div class="signature">
+                <!-- <div class="signature">
                     <div class="line"><?php echo htmlspecialchars($core->signing_customer, ENT_QUOTES, 'UTF-8'); ?></div>
-                </div>
-            </div>
+                </div> -->
+            <!-- </div> -->
 
-            <div class="credits">
-                Developed by <strong>iSolveAfrica</strong><br>
-                +233 (0) 59 144 7845<br>
-                https://www.isolveafrica.com/
+            <div class="row credits">
+                <div class="col-5">
+                    Developed by <strong>iSolveAfrica</strong>
+                </div>
+                <div class="col-3">
+                    +233(0)591447845
+                </div>
+                <div class="col-4">
+                    https://www.isolveafrica.com/
+                </div>
             </div>
         </div>
     </div>
