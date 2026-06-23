@@ -440,6 +440,13 @@ if ($numrows > 0) { ?>
 							                <?php } ?>
 							            <?php } ?>
 
+                                        <?php if ($user->cdp_hasPermission('print_shipment_label')) { ?>
+							                <a class="dropdown-item" target="blank" href="print_label_ship.php?id=<?php echo $row->order_id; ?>">
+							                    <i style="color:#343a40" class="ti-printer"></i>
+							                    &nbsp;<?php echo 'Print Label'; ?>
+							                </a>
+							            <?php } ?>
+
 							            <!-- IMPRIMIR ENVÍO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('print_shipment')) { ?>
 							                <a class="dropdown-item" target="blank" href="print_inv_ship.php?id=<?php echo $row->order_id; ?>">
