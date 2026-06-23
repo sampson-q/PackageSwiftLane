@@ -318,7 +318,7 @@ $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
                                             <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel']; ?>
                                         </a>
                                     <?php } ?>
-                                    <?php if ($row->order_incomplete == 1 && $userData->userlevel != 1 /*&& $row->is_consolidate == 0*/) { ?>
+                                    <?php if ($row->order_incomplete == 1 && $userData->userlevel != 1 && $row->is_consolidate == 0) { ?>
                                         <?php if (($userData->userlevel == 9 || $userData->userlevel == 2) && $row->status_courier != 8) { ?>
                                             <a class="dropdown-item" href="courier_edit.php?id=<?php echo $row->order_id; ?>&tracking_number=<?php echo $row->tracking_number; ?>&eta=<?php echo $row->estimated_eta; ?>" title="<?php echo $lang['tooledit']; ?>">
                                                 <i style="color:#343a40" class="ti-pencil"></i>&nbsp;<?php echo $lang['tooledit']; ?>
