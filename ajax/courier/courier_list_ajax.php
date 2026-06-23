@@ -391,13 +391,13 @@ if ($numrows > 0) { ?>
 
 							            <!-- EDITAR ENVÍO PERMISO -->
 							            <?php if ($row->order_incomplete == 1 && $user->cdp_hasPermission('edit_shipment')) { ?>
-							                <?php if ($row->is_consolidate == 0 ) { ?>
+							                <?php //if ($row->is_consolidate == 0 ) { ?>
 							                    <?php if ($row->status_courier != 8) { ?>
 							                        <a class="dropdown-item" href="courier_edit.php?id=<?php echo $row->order_id; ?>" title="<?php echo $lang['tooledit'] ?>">
 							                            <i style="color:#343a40" class="ti-pencil"></i>
 							                            &nbsp;<?php echo $lang['tooledit'] ?>
 							                        </a>
-							                    <?php } ?>
+							                    <?php // } ?>
 							                <?php } ?>
 							            <?php } ?>
 
