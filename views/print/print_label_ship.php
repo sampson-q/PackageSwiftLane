@@ -1,6 +1,8 @@
 <?php
 require_once('helpers/querys.php');
 
+$db = new Conexion;
+
 if (isset($_GET['id'])) {
     $data = cdp_getCourierPrint($_GET['id']);
 }
@@ -55,9 +57,7 @@ foreach ($order_items as $item) {
     $total_qty    += (int)$item->order_item_quantity;
 }
 
-function h($value) {
-    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
-}
+// h() is provided globally by helpers/functions.php (loaded via loader.php).
 
 // ── Derived values ──────────────────────────────────────────────────────────
 $sys_tracking = $row->order_prefix . $row->order_no;                  // system/package tracking (title)
