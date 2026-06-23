@@ -191,6 +191,10 @@ $statusrow = $core->cdp_getStatusByType(1);
                                             <a class="dropdown-item" onclick="cdp_printMultipleLabel();" target="_blank"> <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?> </a>
                                             <?php } ?>
 
+                                            <?php if ($user->cdp_hasPermission('print_shipment')) { ?>
+                                            <a class="dropdown-item" onclick="cdp_printMultipleInvoice();" target="_blank"> <i style="color:#343a40" class="ti-printer"></i>&nbsp;Print Shipments </a>
+                                            <?php } ?>
+
                                         </div>
                                     </div>
 

@@ -143,16 +143,58 @@ function cdp_printMultipleLabel() {
     showCancelButton: true, // Mostrar botón de cancelar
     confirmButtonText: 'Print', // Texto del botón de confirmación
     cancelButtonText: 'Cancel', // Texto del botón de cancelar
-    reverseButtons: true // Revertir el orden de los botones (colocar "Print" a la derecha)
-  }).then((result) => {
-    // Si el usuario hace clic en el botón de confirmación
-    if (result.isConfirmed) {
-      // Abrimos una nueva ventana para imprimir las etiquetas de paquetes múltiples
-      window.open(
+    reverseButtons: true, // Revertir el orden de los botones (colocar "Print" a la derecha)
+    // Open inside the click gesture: SweetAlert's .then resolves after the close
+    // animation, which Chrome treats as a lost user gesture and blocks window.open.
+    preConfirm: function () {
+      var win = window.open(
         "print_label_ship_multiple.php?data=" +
         JSON.stringify(checked_data), // Pasamos los datos de los paquetes seleccionados como parámetro
         "_blank"
       );
+      if (!win) {
+        Swal.showValidationMessage("Your browser blocked the print window. Please allow pop-ups for this site and try again.");
+        return false;
+      }
+    }
+  });
+}
+
+// Bulk-print the shipment invoice/receipt for every selected shipment.
+// Opens a single tab that auto-prints each receipt one after the other.
+function cdp_printMultipleInvoice() {
+  var checked_data = []; // order_no values of the selected shipments
+  $(".custom-table-checkbox")
+    .find("tr > td:first-child")
+    .find("input[type=checkbox]:checked")
+    .each(function () {
+      checked_data.push($(this).val());
+    });
+
+  if (checked_data.length === 0) {
+    Swal.fire({ text: "Please select at least one shipment.", icon: "warning", confirmButtonText: "OK" });
+    return;
+  }
+
+  Swal.fire({
+    title: 'Print Shipments',
+    html: '<b>Print the receipt/invoice for the ' + checked_data.length + ' selected shipment(s)?</b>',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Print',
+    cancelButtonText: 'Cancel',
+    reverseButtons: true,
+    // Open inside the click gesture: SweetAlert's .then resolves after the close
+    // animation, which Chrome treats as a lost user gesture and blocks window.open.
+    preConfirm: function () {
+      var win = window.open(
+        "print_inv_ship_multiple.php?data=" + JSON.stringify(checked_data),
+        "_blank"
+      );
+      if (!win) {
+        Swal.showValidationMessage("Your browser blocked the print window. Please allow pop-ups for this site and try again.");
+        return false;
+      }
     }
   });
 }
