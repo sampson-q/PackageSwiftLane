@@ -243,8 +243,8 @@ $statusrow = $core->cdp_getStatusByType(1);
     <!-- ============================================================== -->
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="dataJs/courier.js"></script> 
-    <script src="dataJs/courier_ajax.js"></script>
+    <script src="<?= cdp_asset('dataJs/courier.js') ?>"></script> 
+    <script src="<?= cdp_asset('dataJs/courier_ajax.js') ?>"></script>
 
 
 </body>

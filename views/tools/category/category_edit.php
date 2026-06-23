@@ -183,7 +183,7 @@ $row_item = $data['data'];
 
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="dataJs/category.js"></script>
+    <script src="<?= cdp_asset('dataJs/category.js') ?>"></script>
 </body>
 
 </html>

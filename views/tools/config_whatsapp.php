@@ -217,7 +217,7 @@ $userData = $user->cdp_getUserData();
 		<!-- All Jquery -->
 		<!-- ============================================================== -->
 
-		<script src="dataJs/whatssap_config.js"></script>
+		<script src="<?= cdp_asset('dataJs/whatssap_config.js') ?>"></script>
 
 </body>
 

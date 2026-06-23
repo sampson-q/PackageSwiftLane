@@ -1213,7 +1213,7 @@ if (isset($_POST["total_item"])) {
         <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
         <script><?php echo $error_script; ?></script>
     <?php endif; ?>
-    <script src="dataJs/consolidate_package_edit.js"></script>
+    <script src="<?= cdp_asset('dataJs/consolidate_package_edit.js') ?>"></script>
 
 </body>
 

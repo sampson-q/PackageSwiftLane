@@ -248,7 +248,7 @@ $userData = $user->cdp_getUserData();
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
     <script src="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
-    <script src="dataJs/pre_alert_add.js" type="text/javascript"></script>
+    <script src="<?= cdp_asset('dataJs/pre_alert_add.js') ?>" type="text/javascript"></script>
 
 
 </body>

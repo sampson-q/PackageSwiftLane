@@ -206,7 +206,7 @@ $row_off = $data['data'];
 
     <script src="assets/template/dist/js/app-style-switcher.js"></script>
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
-    <script src="dataJs/setting_payment_list.js"></script>
+    <script src="<?= cdp_asset('dataJs/setting_payment_list.js') ?>"></script>
 </body>
 
 </html>

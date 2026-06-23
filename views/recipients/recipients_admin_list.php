@@ -149,7 +149,7 @@ if (($userData->userlevel ?? 0) != 6 && !$user->cdp_hasPermission('view_recipien
     <!-- ============================================================== -->
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="dataJs/recipients_admin.js"></script>
+    <script src="<?= cdp_asset('dataJs/recipients_admin.js') ?>"></script>
 </body>
 
 </html>

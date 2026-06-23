@@ -315,7 +315,7 @@ $styles_status = $db->cdp_registro();
 
 	<?php include('helpers/languages/translate_to_js.php'); ?>
 
-	<script src="dataJs/config_info_ship_default.js"></script>
+	<script src="<?= cdp_asset('dataJs/config_info_ship_default.js') ?>"></script>
 
 </body>
 

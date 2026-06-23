@@ -213,7 +213,7 @@ $statusrow = $core->cdp_getStatusByType(2);
     <?php include('helpers/languages/translate_to_js.php'); ?>
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
-    <script src="dataJs/consolidate_package_list.js"></script>
+    <script src="<?= cdp_asset('dataJs/consolidate_package_list.js') ?>"></script>
 
 
 </body>

@@ -1322,7 +1322,7 @@ if (isset($_POST["create_invoice"])) {
         window.CDP_DG_MODE = 'add';
         window.CDP_DG_LOCK = null;
     </script>
-    <script src="dataJs/consolidate_add.js"></script>
+    <script src="<?= cdp_asset('dataJs/consolidate_add.js') ?>"></script>
 
 
 

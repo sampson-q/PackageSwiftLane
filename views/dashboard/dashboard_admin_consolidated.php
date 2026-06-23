@@ -330,4 +330,4 @@ $monthName = obtenerNombreMes($currentMonth);
      <!-- This Page JS -->
     <script src="assets/template/assets/libs/echarts/dist/echarts-en.min.js"></script>
     <script src="assets/template/assets/extra-libs/chart.js-2.8/Chart.min.js"></script>
-    <script src="dataJs/dashboard_consolidate.js"></script>
+    <script src="<?= cdp_asset('dataJs/dashboard_consolidate.js') ?>"></script>

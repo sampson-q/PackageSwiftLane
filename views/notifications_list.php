@@ -161,7 +161,7 @@ $userData = $user->cdp_getUserData();
 		<!-- End Wrapper -->
 		<!-- ============================================================== -->
 		<script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
-		<script src="dataJs/notifications.js"></script> 
+		<script src="<?= cdp_asset('dataJs/notifications.js') ?>"></script> 
 </body>
 
 </html>

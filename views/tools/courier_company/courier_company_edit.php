@@ -211,7 +211,7 @@ $row_courier = $data['data'];
 	<?php include('helpers/languages/translate_to_js.php'); ?>
 
 
-	<script src="dataJs/courier_company.js"></script>
+	<script src="<?= cdp_asset('dataJs/courier_company.js') ?>"></script>
 </body>
 
 </html>

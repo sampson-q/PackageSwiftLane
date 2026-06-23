@@ -227,7 +227,7 @@ if (!isset($_GET['id']) or $row == null) {
 			});
 		</script>
 
-		<script src="dataJs/templates_email.js"></script>
+		<script src="<?= cdp_asset('dataJs/templates_email.js') ?>"></script>
 
 
 </body>

@@ -316,7 +316,7 @@ $userData = $user->cdp_getUserData();
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
 
-    <script src="dataJs/recipients_edit.js"></script>
+    <script src="<?= cdp_asset('dataJs/recipients_edit.js') ?>"></script>
 
 
 </body>

@@ -164,7 +164,7 @@ $userData = $user->cdp_getUserData();
     <!-- ============================================================== -->
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="dataJs/shipping_mode.js"></script>
+    <script src="<?= cdp_asset('dataJs/shipping_mode.js') ?>"></script>
 </body>
 
 </html>

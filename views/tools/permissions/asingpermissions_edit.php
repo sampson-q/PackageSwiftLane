@@ -313,7 +313,7 @@ if (isset($_GET['id'])) {
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
-    <script src="dataJs/asingpermissions.js"></script>
+    <script src="<?= cdp_asset('dataJs/asingpermissions.js') ?>"></script>
 
 </body>
 

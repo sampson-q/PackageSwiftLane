@@ -180,7 +180,7 @@ $statusrow = $core->cdp_getStatus();
 
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
-    <script src="dataJs/pickup.js"></script>
+    <script src="<?= cdp_asset('dataJs/pickup.js') ?>"></script>
 
 </body>
 

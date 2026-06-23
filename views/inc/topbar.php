@@ -151,4 +151,4 @@
 	</audio>
 
 
-	<!-- <script src="dataJs/load_notifications_all.js"> </script> -->
+	<!-- <script src="<?= cdp_asset('dataJs/load_notifications_all.js') ?>"> </script> -->

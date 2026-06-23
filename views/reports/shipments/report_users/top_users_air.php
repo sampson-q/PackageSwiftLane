@@ -229,7 +229,7 @@ $paymethodrow = $core->cdp_getPaymentMethod();
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
 
 
-    <script src="dataJs/top_users_air.js"></script>
+    <script src="<?= cdp_asset('dataJs/top_users_air.js') ?>"></script>
 
 </body>
 

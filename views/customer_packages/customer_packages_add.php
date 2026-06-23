@@ -836,6 +836,6 @@ $categories   = $core->cdp_getCategoriesById(27);
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
 
     <!-- Tu automatización -->
-    <script src="dataJs/customers_packages_add.js"></script>
+    <script src="<?= cdp_asset('dataJs/customers_packages_add.js') ?>"></script>
 </body>
 </html>

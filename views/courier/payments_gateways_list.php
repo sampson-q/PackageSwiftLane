@@ -144,7 +144,7 @@ $userData = $user->cdp_getUserData();
     <!-- End Wrapper -->
     <!-- ============================================================== -->
     <?php include('helpers/languages/translate_to_js.php'); ?>
-    <script src="dataJs/courier_payment_gateways_list.js"> </script>
+    <script src="<?= cdp_asset('dataJs/courier_payment_gateways_list.js') ?>"> </script>
 
 
 </body>

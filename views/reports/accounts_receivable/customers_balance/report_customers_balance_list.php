@@ -211,7 +211,7 @@ $paymethodrow = $core->cdp_getPaymentMethod();
     <script src="assets/template/assets/libs/daterangepicker/daterangepicker.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
 
-    <script src="dataJs/report_customers_balance.js"></script>
+    <script src="<?= cdp_asset('dataJs/report_customers_balance.js') ?>"></script>
 
     <script type="text/javascript">
         function cdp_soloNumeros(e) {

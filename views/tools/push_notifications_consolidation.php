@@ -149,7 +149,7 @@ $row_order = $data['data'];
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
 
     <!-- include custom JS -->
-    <script src="dataJs/push_notifications_consolidation.js"></script>
+    <script src="<?= cdp_asset('dataJs/push_notifications_consolidation.js') ?>"></script>
 
 </body>
 

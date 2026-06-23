@@ -1036,6 +1036,6 @@ if (isset($_POST["total_item"])) {
         window.CDP_DG_MODE = 'edit';
         window.CDP_DG_LOCK = <?php echo (int)($row_order->is_dangerous_good ?? 0); ?>;
     </script>
-    <script src="dataJs/consolidate_edit.js"></script>
+    <script src="<?= cdp_asset('dataJs/consolidate_edit.js') ?>"></script>
 </body>
 </html>

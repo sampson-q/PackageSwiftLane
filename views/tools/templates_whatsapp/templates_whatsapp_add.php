@@ -244,7 +244,7 @@ $userData = $user->cdp_getUserData();
         <?php include('helpers/languages/translate_to_js.php'); ?>
 
 
-        <script src="dataJs/templates_whatsapp.js"></script>
+        <script src="<?= cdp_asset('dataJs/templates_whatsapp.js') ?>"></script>
 
 
 </body>

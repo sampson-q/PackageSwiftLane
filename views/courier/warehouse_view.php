@@ -174,7 +174,7 @@ $statusrow = $core->cdp_getStatusMultiple(1, 4, 8, 15, 16, 23, 32, 33);
 
     <script src="assets/template/assets/libs/moment/moment.min.js"></script>
     <script src="assets/template/assets/libs/daterangepicker/daterangepicker.js"></script>
-    <script src="dataJs/warehouse.js"></script>
+    <script src="<?= cdp_asset('dataJs/warehouse.js') ?>"></script>
 
 </body>
 

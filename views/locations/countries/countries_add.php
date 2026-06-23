@@ -212,7 +212,7 @@ $userData = $user->cdp_getUserData();
     <!-- End Wrapper -->
     <!-- ============================================================== -->
     <?php include('helpers/languages/translate_to_js.php'); ?>
-    <script src="dataJs/countries.js"></script>
+    <script src="<?= cdp_asset('dataJs/countries.js') ?>"></script>
 </body>
 
 </html>

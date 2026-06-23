@@ -193,7 +193,7 @@ if (isset($_GET['id_notification'])) {
     <!-- ============================================================== -->
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="dataJs/prealert.js"></script>
+    <script src="<?= cdp_asset('dataJs/prealert.js') ?>"></script>
 
 </body>
 

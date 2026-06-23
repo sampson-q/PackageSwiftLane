@@ -498,4 +498,4 @@ foreach ($data as $row) {
     </div>
 
 
-    <script src="dataJs/dashboard_client.js"></script>
+    <script src="<?= cdp_asset('dataJs/dashboard_client.js') ?>"></script>

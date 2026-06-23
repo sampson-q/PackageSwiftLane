@@ -231,7 +231,7 @@ $module_actions = $db->cdp_registros();
 
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="dataJs/asingrole.js"></script>
+    <script src="<?= cdp_asset('dataJs/asingrole.js') ?>"></script>
 </body>
 
 </html>

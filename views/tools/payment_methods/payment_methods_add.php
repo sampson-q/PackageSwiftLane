@@ -169,7 +169,7 @@ $userData = $user->cdp_getUserData();
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
 
-    <script src="dataJs/payment_method.js"></script>
+    <script src="<?= cdp_asset('dataJs/payment_method.js') ?>"></script>
 </body>
 
 </html>

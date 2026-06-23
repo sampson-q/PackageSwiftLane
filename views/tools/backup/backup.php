@@ -51,7 +51,7 @@ $userData = $user->cdp_getUserData();
 	<link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
 	<title><?php echo $lang['tools-config61'] ?> | <?php echo $core->site_name ?></title>
 	<?php include 'views/inc/head_scripts.php'; ?>
-	<link href="assets/css/front.css" rel="stylesheet" type="text/css">
+	<link href="<?= cdp_asset('assets/css/front.css') ?>" rel="stylesheet" type="text/css">
 
 
 </head>
@@ -220,7 +220,7 @@ $userData = $user->cdp_getUserData();
 		<!-- End Wrapper -->
 		<!-- ============================================================== -->
 
-		<script src="dataJs/backup.js"></script>
+		<script src="<?= cdp_asset('dataJs/backup.js') ?>"></script>
 
 </body>
 

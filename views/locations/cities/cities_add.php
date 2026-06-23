@@ -186,7 +186,7 @@ $userData = $user->cdp_getUserData();
 
 
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="dataJs/cities.js"></script>
+    <script src="<?= cdp_asset('dataJs/cities.js') ?>"></script>
 </body>
 
 </html>

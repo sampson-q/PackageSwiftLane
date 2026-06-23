@@ -1185,7 +1185,7 @@ if ($row_order->status_invoice == 1) {
 
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="dataJs/consolidate_view.js"></script>
+    <script src="<?= cdp_asset('dataJs/consolidate_view.js') ?>"></script>
     <script>var cdp_consolidate_id = <?php echo (int)$_GET['id']; ?>;</script>
 
 </body>

@@ -853,7 +853,7 @@ $delitimerow = $db->cdp_registro();
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
 
 
-    <script src="dataJs/customers_packages_add_from_prealert.js"></script>
+    <script src="<?= cdp_asset('dataJs/customers_packages_add_from_prealert.js') ?>"></script>
 
 
 

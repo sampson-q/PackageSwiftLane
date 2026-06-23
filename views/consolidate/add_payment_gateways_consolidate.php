@@ -411,4 +411,4 @@ $payrow = $core->cdp_getPayment();
     <input id="public_key_stripe" name="public_key_stripe" type="hidden" value="<?php echo $public_key_stripe; ?>" />
     <input id="public_key_paystack" name="public_key_paystack" type="hidden" value="<?php echo $public_key_paystack; ?>" />
 
-    <script src="dataJs/consolidate_add_payment_gateways.js"></script>
+    <script src="<?= cdp_asset('dataJs/consolidate_add_payment_gateways.js') ?>"></script>

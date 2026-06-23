@@ -169,7 +169,7 @@ $userData = $user->cdp_getUserData();
 		<!-- End Wrapper -->
 		<!-- ============================================================== -->
 
-		<script src="dataJs/templates_email.js"></script>
+		<script src="<?= cdp_asset('dataJs/templates_email.js') ?>"></script>
 </body>
 
 </html>

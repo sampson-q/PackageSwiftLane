@@ -158,8 +158,8 @@ $statusrow = $core->cdp_getStatus();
     <!-- ============================================================== -->
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="dataJs/locker.js"></script>
-    <script src="dataJs/locker_ajax.js"></script>
+    <script src="<?= cdp_asset('dataJs/locker.js') ?>"></script>
+    <script src="<?= cdp_asset('dataJs/locker_ajax.js') ?>"></script>
 
 </body>
 

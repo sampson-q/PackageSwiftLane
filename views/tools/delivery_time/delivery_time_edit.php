@@ -183,7 +183,7 @@ $row_off = $data['data'];
 
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="dataJs/delivery_time.js"></script>
+    <script src="<?= cdp_asset('dataJs/delivery_time.js') ?>"></script>
 </body>
 
 </html>

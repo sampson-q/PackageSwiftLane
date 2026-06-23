@@ -177,7 +177,7 @@ $userData = $user->cdp_getUserData();
 		<!-- ============================================================== -->
 
 
-		<script src="dataJs/templates_sms.js"></script>
+		<script src="<?= cdp_asset('dataJs/templates_sms.js') ?>"></script>
 </body>
 
 </html>

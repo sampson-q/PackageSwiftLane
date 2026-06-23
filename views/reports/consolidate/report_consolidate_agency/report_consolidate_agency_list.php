@@ -205,7 +205,7 @@ $paymethodrow = $core->cdp_getPaymentMethod();
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
 
 
-    <script src="dataJs/report_consolidate_agency.js"></script>
+    <script src="<?= cdp_asset('dataJs/report_consolidate_agency.js') ?>"></script>
 </body>
 
 </html>

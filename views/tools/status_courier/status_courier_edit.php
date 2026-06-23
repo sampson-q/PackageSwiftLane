@@ -235,7 +235,7 @@ $row_off = $data['data'];
 		});
 	</script>
 
-	<script src="dataJs/status_courier.js"></script>
+	<script src="<?= cdp_asset('dataJs/status_courier.js') ?>"></script>
 
 </body>
 

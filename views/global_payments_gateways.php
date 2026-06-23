@@ -163,7 +163,7 @@ if (!$user->cdp_is_Admin())
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
 
-    <script src="dataJs/global_payments_gateways.js"></script>
+    <script src="<?= cdp_asset('dataJs/global_payments_gateways.js') ?>"></script>
 
 </body>
 

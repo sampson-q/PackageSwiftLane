@@ -388,6 +388,6 @@ $monthName = obtenerNombreMes($currentMonth);
         <!--Morris JavaScript -->
         <script src="assets/template/assets/libs/raphael/raphael.min.js"></script>
         <script src="assets/template/assets/libs/morris.js/morris.min.js"></script>
-        <script src="dataJs/dashboard_packages.js"></script>
+        <script src="<?= cdp_asset('dataJs/dashboard_packages.js') ?>"></script>
 
-        <script src="dataJs/customers_packages.js"></script> 
+        <script src="<?= cdp_asset('dataJs/customers_packages.js') ?>"></script> 

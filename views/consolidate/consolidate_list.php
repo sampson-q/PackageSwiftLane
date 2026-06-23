@@ -199,7 +199,7 @@ $statusrow = $core->cdp_getStatusByType(1);
 
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
-    <script src="dataJs/consolidate_list.js"></script>
+    <script src="<?= cdp_asset('dataJs/consolidate_list.js') ?>"></script>
 
 
 

@@ -220,7 +220,7 @@ $payrow = $core->cdp_getPayment();
     <!-- ============================================================== -->
     <?php include('helpers/languages/translate_to_js.php'); ?>
      <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
-    <script src="dataJs/customers_packages.js"></script>
+    <script src="<?= cdp_asset('dataJs/customers_packages.js') ?>"></script>
 </body>
 
 </html>

@@ -155,8 +155,8 @@
     <!-- ============================================================== -->
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="dataJs/pickup_client.js"></script>
-    <script src="dataJs/pickup_client_ajax.js"></script>
+    <script src="<?= cdp_asset('dataJs/pickup_client.js') ?>"></script>
+    <script src="<?= cdp_asset('dataJs/pickup_client_ajax.js') ?>"></script>
 
 </body>
 

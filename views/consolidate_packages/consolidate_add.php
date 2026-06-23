@@ -1338,7 +1338,7 @@ if (isset($_POST["create_invoice"])) {
         <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
         <script><?php echo $error_script; ?></script>
     <?php endif; ?>
-    <script src="dataJs/consolidate_package_add.js"></script>
+    <script src="<?= cdp_asset('dataJs/consolidate_package_add.js') ?>"></script>
 
 
 </body>

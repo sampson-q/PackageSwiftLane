@@ -228,7 +228,7 @@ $userData = $user->cdp_getUserData();
 
 
 		<script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
-		<script src="dataJs/config_twilio_sms.js"></script>
+		<script src="<?= cdp_asset('dataJs/config_twilio_sms.js') ?>"></script>
 
 </body>
 

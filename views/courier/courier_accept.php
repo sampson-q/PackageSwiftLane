@@ -942,7 +942,7 @@ $address_order = $db->cdp_registro();
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
-    <script src="dataJs/courier_accept.js"></script>
+    <script src="<?= cdp_asset('dataJs/courier_accept.js') ?>"></script>
 
 </body>
 

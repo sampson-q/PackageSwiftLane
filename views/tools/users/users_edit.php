@@ -488,7 +488,7 @@ $current_role = $role_query['rowCount'] ? $role_query['data']->role_name : '';
 	<script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
 
-	<script src="dataJs/users_edit.js"></script>
+	<script src="<?= cdp_asset('dataJs/users_edit.js') ?>"></script>
 </body>
 
 </html>

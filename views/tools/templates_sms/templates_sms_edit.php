@@ -222,7 +222,7 @@ if (!isset($_GET['id']) or $row == null) {
 		</script>
 
 
-		<script src="dataJs/templates_sms.js"></script>
+		<script src="<?= cdp_asset('dataJs/templates_sms.js') ?>"></script>
 </body>
 
 </html>

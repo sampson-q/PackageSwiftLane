@@ -207,7 +207,7 @@ $userData = $user->cdp_getUserData();
 
 		<script src="assets/template/dist/js/app-style-switcher.js"></script>
 		<script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
-		<script src="dataJs/sms_config.js"></script>
+		<script src="<?= cdp_asset('dataJs/sms_config.js') ?>"></script>
 </body>
 
 </html>

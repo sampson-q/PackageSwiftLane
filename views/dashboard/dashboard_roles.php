@@ -853,4 +853,4 @@ $monthName = obtenerNombreMes($currentMonth);
 
 
 
-    <script src="dataJs/dashboard_index.js"></script>
+    <script src="<?= cdp_asset('dataJs/dashboard_index.js') ?>"></script>

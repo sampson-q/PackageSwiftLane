@@ -171,7 +171,7 @@ $userData = $user->cdp_getUserData();
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
 
-    <script src="dataJs/users.js"></script>
+    <script src="<?= cdp_asset('dataJs/users.js') ?>"></script>
 </body>
 
 </html>

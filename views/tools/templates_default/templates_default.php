@@ -252,7 +252,7 @@ $default_notification_templates = $db->cdp_registros();
 
         <script src="assets/jquery.validate.js"></script>
         <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-        <script src="dataJs/templates_default.js"></script>
+        <script src="<?= cdp_asset('dataJs/templates_default.js') ?>"></script>
 </body>
 
 </html>

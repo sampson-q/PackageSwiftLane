@@ -404,4 +404,4 @@ $payrow = $core->cdp_getPayment();
     <input id="public_key_paystack" name="public_key_paystack" type="hidden" value="<?php echo $public_key_paystack; ?>" />
 
 
-    <script src="dataJs/courier_add_payment_gateways.js"></script>
+    <script src="<?= cdp_asset('dataJs/courier_add_payment_gateways.js') ?>"></script>

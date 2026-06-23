@@ -243,7 +243,7 @@ $virtualMailboxes = $core->cdp_getVirtualMailboxes($where);
     <!-- ============================================================== -->
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <!-- <script src="dataJs/recipients.js"></script> -->
+    <!-- <script src="<?= cdp_asset('dataJs/recipients.js') ?>"></script> -->
 </body>
 
 </html>

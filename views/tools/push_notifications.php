@@ -195,6 +195,6 @@ $userData = $user->cdp_getUserData();
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
 
     <!-- our JS -->
-    <script src="dataJs/push_notifications.js"></script>
+    <script src="<?= cdp_asset('dataJs/push_notifications.js') ?>"></script>
 </body>
 </html>

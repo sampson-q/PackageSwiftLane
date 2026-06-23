@@ -163,12 +163,12 @@ $code_currency = $core->cdp_getCodeCountries();
     <script src="assets/template/assets/libs/claviska/jquery-minicolors/jquery.minicolors.min.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
 
-    <script src="dataJs/config_general.js"></script>
-    <script src="dataJs/config.js"></script>
-    <script src="dataJs/configlogo.js"></script>
-    <script src="dataJs/config_email.js"></script>
-    <script src="dataJs/whatssap_config.js"></script>
-    <script src="dataJs/config_seo.js"></script>
+    <script src="<?= cdp_asset('dataJs/config_general.js') ?>"></script>
+    <script src="<?= cdp_asset('dataJs/config.js') ?>"></script>
+    <script src="<?= cdp_asset('dataJs/configlogo.js') ?>"></script>
+    <script src="<?= cdp_asset('dataJs/config_email.js') ?>"></script>
+    <script src="<?= cdp_asset('dataJs/whatssap_config.js') ?>"></script>
+    <script src="<?= cdp_asset('dataJs/config_seo.js') ?>"></script>
 
 </body>
 

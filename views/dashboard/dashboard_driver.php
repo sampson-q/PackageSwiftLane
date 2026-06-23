@@ -329,4 +329,4 @@ $userData = $user->cdp_getUserData();
     </div>
 
 
-    <script src="dataJs/dashboard_driver.js"></script>
+    <script src="<?= cdp_asset('dataJs/dashboard_driver.js') ?>"></script>

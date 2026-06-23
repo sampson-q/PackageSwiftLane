@@ -336,7 +336,7 @@ $driverrow = $user->cdp_userAllDriver();
     <script src="assets/template/dist/js/app-style-switcher.js"></script>
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
-    <script src="dataJs/customer_packages_deliver.js"></script>
+    <script src="<?= cdp_asset('dataJs/customer_packages_deliver.js') ?>"></script>
 </body>
 
 </html>

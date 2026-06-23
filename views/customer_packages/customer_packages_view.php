@@ -1336,7 +1336,7 @@ if ($row_order->status_invoice == 1) {
 
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="dataJs/customers_packages_view.js"></script>
+    <script src="<?= cdp_asset('dataJs/customers_packages_view.js') ?>"></script>
 
 </body>
 

@@ -645,7 +645,7 @@ $history = $db->cdp_registros();
         <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
         <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
 
-        <script src="dataJs/customers_edit.js"></script>
+        <script src="<?= cdp_asset('dataJs/customers_edit.js') ?>"></script>
 
 
 

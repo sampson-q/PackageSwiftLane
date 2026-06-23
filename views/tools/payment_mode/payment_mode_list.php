@@ -162,7 +162,7 @@ $userData = $user->cdp_getUserData();
     <!-- End Wrapper -->
     <!-- ============================================================== -->
 
-    <script src="dataJs/payment_mode.js"></script>
+    <script src="<?= cdp_asset('dataJs/payment_mode.js') ?>"></script>
     
 </body>
 

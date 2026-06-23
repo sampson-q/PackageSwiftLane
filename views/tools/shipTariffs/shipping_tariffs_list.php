@@ -194,7 +194,7 @@ $userData = $user->cdp_getUserData();
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
 
 
-    <script src="dataJs/shipping_tariffs_list.js"></script>
+    <script src="<?= cdp_asset('dataJs/shipping_tariffs_list.js') ?>"></script>
 
 </body>
 

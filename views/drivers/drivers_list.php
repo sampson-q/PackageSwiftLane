@@ -149,7 +149,7 @@ $userData = $user->cdp_getUserData();
     <!-- End Wrapper -->
     <!-- ============================================================== -->
     <?php include('helpers/languages/translate_to_js.php'); ?>
-    <script src="dataJs/drivers.js"></script>
+    <script src="<?= cdp_asset('dataJs/drivers.js') ?>"></script>
 </body>
 
 </html>

@@ -213,7 +213,7 @@ $payrow = $core->cdp_getPayment();
     <script src="assets/template/assets/libs/daterangepicker/daterangepicker.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
 
-    <script src="dataJs/report_packages_registered_general.js"></script>
+    <script src="<?= cdp_asset('dataJs/report_packages_registered_general.js') ?>"></script>
 </body>
 
 </html>

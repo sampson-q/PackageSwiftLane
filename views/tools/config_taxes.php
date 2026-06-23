@@ -269,7 +269,7 @@ $userData = $user->cdp_getUserData();
 
 	<?php include('helpers/languages/translate_to_js.php'); ?>
 
-	<script src="dataJs/config_taxes.js"></script>
+	<script src="<?= cdp_asset('dataJs/config_taxes.js') ?>"></script>
 </body>
 
 </html>

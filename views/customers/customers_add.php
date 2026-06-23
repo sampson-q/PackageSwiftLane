@@ -438,7 +438,7 @@ if (($userData->userlevel ?? 0) != 6 && !$user->cdp_hasPermission('add_client'))
 
     </script>
 
-    <script src="dataJs/customers_add.js"></script>
+    <script src="<?= cdp_asset('dataJs/customers_add.js') ?>"></script>
 
 
 </body>

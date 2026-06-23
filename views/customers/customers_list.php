@@ -387,7 +387,7 @@ $pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 10
 
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="dataJs/customers.js"></script>
+    <script src="<?= cdp_asset('dataJs/customers.js') ?>"></script>
 
 
 </body>

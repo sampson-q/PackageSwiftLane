@@ -227,7 +227,7 @@ if (isset($_GET['email'])) {
                 $('.summernote').summernote();
             });
         </script>
-        <script src="dataJs/newsletter.js"></script>
+        <script src="<?= cdp_asset('dataJs/newsletter.js') ?>"></script>
 
 
 
