@@ -1,4 +1,5 @@
 <?php
+if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
 
 require_once("../loader.php");
 
@@ -130,5 +131,5 @@ $data = $db->cdp_registros();
             <?php } ?>
         </tbody>
     </table>
-    <script src="dataJs/pickup_client_ajax.js"></script>
+    <script src="<?= cdp_asset('dataJs/pickup_client_ajax.js') ?>"></script>
 </div>

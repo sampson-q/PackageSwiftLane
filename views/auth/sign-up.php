@@ -1,4 +1,5 @@
 <?php
+if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
 
 ?>
 <!DOCTYPE html>
@@ -28,13 +29,13 @@
 
     <link href="assets/css_main_deprixa/css/dashboard-swiftlane.css" rel="stylesheet" type="text/css" />
 
-    <script type="text/javascript" src="assets/js/jquery.js"></script>
-    <script type="text/javascript" src="assets/js/jquery-ui.js"></script>
-    <script src="assets/js/jquery.ui.touch-punch.js"></script>
-    <script src="assets/js/jquery.wysiwyg.js"></script>
-    <script src="assets/js/global.js"></script>
-    <script src="assets/js/custom.js"></script>
-    <script src="assets/js/checkbox.js"></script>
+    <script type="text/javascript" src="<?= cdp_asset('assets/js/jquery.js') ?>"></script>
+    <script type="text/javascript" src="<?= cdp_asset('assets/js/jquery-ui.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/js/jquery.ui.touch-punch.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/js/jquery.wysiwyg.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/js/global.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/js/custom.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/js/checkbox.js') ?>"></script>
 
     <style> 
         .select2-selection__rendered {
@@ -386,7 +387,7 @@
 
     </script>
 
-    <script src="dataJs/sign-up.js"></script>
+    <script src="<?= cdp_asset('dataJs/sign-up.js') ?>"></script>
 
 </body>
 

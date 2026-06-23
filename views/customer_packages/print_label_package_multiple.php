@@ -1,4 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<?php
+if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; } ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html dir="<?php echo $direction_layout; ?>">
 
 <head>
@@ -6,7 +7,7 @@
 	<!-- Favicon icon -->
 	<link rel="icon" type="image/png" sizes="16x16" href="assets/uploads/favicon.png">
 	<title><?php echo $lang['print-text12'] ?></title>
-	<link type='text/css' href='assets/css/label_custom.css' rel='stylesheet' />
+	<link type='text/css' href='<?= cdp_asset('assets/css/label_custom.css') ?>' rel='stylesheet' />
 	<link type='text/css' href="assets/custom_dependencies/print_pacakges_label.css" rel='stylesheet' />
 
 </head>

@@ -1,4 +1,5 @@
 <?php
+if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
 // *************************************************************************
 // *                                                                       *
 // * DEPRIXA PRO -  Integrated Web Shipping System                         *
@@ -87,13 +88,13 @@ $sender_data = $db->cdp_registro();
     <title>Tracking - <?php echo $row->c_prefix . $row->c_no; ?></title>
     <link type='text/css' href='assets/custom_dependencies/print.css' rel='stylesheet' />
 
-    <link rel="stylesheet" href="assets/css/input-css/intlTelInput.css">
+    <link rel="stylesheet" href="<?= cdp_asset('assets/css/input-css/intlTelInput.css') ?>">
 
     <link rel="stylesheet" type="text/css" href="assets/select2/dist/css/select2.min.css">
-    <link href="assets/css/style.min.css" rel="stylesheet">
+    <link href="<?= cdp_asset('assets/css/style.min.css') ?>" rel="stylesheet">
 
     <link rel="stylesheet" href="assets/jquery-ui.css" type="text/css" />
-    <link href="assets/css/front.css" rel="stylesheet" type="text/css">
+    <link href="<?= cdp_asset('assets/css/front.css') ?>" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="assets/custom_dependencies/bootstrap.min.css" rel="stylesheet">
 
 </head>

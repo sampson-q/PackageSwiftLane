@@ -1,4 +1,5 @@
 <?php
+if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
 // ajax/courier_view_ajax.php
 require_once("../../loader.php");
 $db    = new Conexion;
@@ -390,5 +391,5 @@ $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
     <div class="pull-right">
         <?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'courier_list');	?>
     </div>
-    <script src="dataJs/customer_view_ajax.js"></script>
+    <script src="<?= cdp_asset('dataJs/customer_view_ajax.js') ?>"></script>
 </div>

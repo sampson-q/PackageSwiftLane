@@ -1,4 +1,5 @@
 <?php
+if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
 // *************************************************************************
 // *                                                                       *
 // * DEPRIXA PRO -  Integrated Web Shipping System                         *
@@ -483,6 +484,6 @@ if ($numrows > 0) { ?>
 		<div class="pull-right">
 			<?php echo cdp_paginate($page, $total_pages, $adjacents, $lang, 'courier_list');	?>
 		</div>
-		<script src="dataJs/courier_ajax.js"></script>
+		<script src="<?= cdp_asset('dataJs/courier_ajax.js') ?>"></script>
 	</div>
 <?php } ?>

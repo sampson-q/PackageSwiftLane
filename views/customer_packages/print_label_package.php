@@ -1,4 +1,5 @@
 <?php
+if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
 // *************************************************************************
 // *                                                                       *
 // * DEPRIXA PRO -  Integrated Web Shipping System                         *
@@ -142,7 +143,7 @@ if ($row->status_invoice == 1) {
 	<!-- Favicon icon -->
 	<link rel="icon" type="image/png" sizes="16x16" href="assets/uploads/favicon.png">
 	<title><?php echo $lang['status-ship2'] ?> - <?php echo $row->order_prefix . $row->order_no; ?></title>
-	<link type='text/css' href='assets/css/label_custom.css' rel='stylesheet' />
+	<link type='text/css' href='<?= cdp_asset('assets/css/label_custom.css') ?>' rel='stylesheet' />
 	<link type='text/css' href="assets/custom_dependencies/print_pacakges_label.css" rel='stylesheet' />
 
 </head>

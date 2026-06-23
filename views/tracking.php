@@ -1,4 +1,5 @@
 <?php
+if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
     require_once ("loader.php");
     $login = new User;
 ?>
@@ -156,11 +157,11 @@
     <script src="assets/css_main_deprixa/js/feather.min.js"></script>
     <script src="assets/css_main_deprixa/js/plugins.init.js"></script>
     <script src="assets/css_main_deprixa/js/app.js"></script>
-    <script src="dataJs/tracking.js"></script>
+    <script src="<?= cdp_asset('dataJs/tracking.js') ?>"></script>
 >
     <!--Note: All important javascript like page loader, menu, sticky menu, menu-toggler, one page menu etc. -->
 
-    <script src="dataJs/tracking.js"></script>
+    <script src="<?= cdp_asset('dataJs/tracking.js') ?>"></script>
 
 </body>
 

@@ -1,4 +1,5 @@
-<!-- ============================================================== -->
+<?php
+if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; } ?><!-- ============================================================== -->
 <!-- Right Part contents-->
 <!-- ============================================================== -->
 <div class="right-part mail-list bg-white">
@@ -73,7 +74,7 @@
 
 
 
-<script src="dataJs/config_payment.js">
+<script src="<?= cdp_asset('dataJs/config_payment.js') ?>">
 
 
 </script>

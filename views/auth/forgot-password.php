@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+<?php
+if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; } ?><!DOCTYPE html>
 <html dir="<?php echo $direction_layout; ?>" lang="en">
 
 <head>
@@ -19,13 +20,13 @@
     <link href="assets/css_main_deprixa/css/colors/default.css" rel="stylesheet" id="color-opt">
     <link href="assets/css_main_deprixa/css/auth-pages.css" rel="stylesheet" type="text/css" />
 
-    <script type="text/javascript" src="assets/js/jquery.js"></script>
-    <script type="text/javascript" src="assets/js/jquery-ui.js"></script>
-    <script src="assets/js/jquery.ui.touch-punch.js"></script>
-    <script src="assets/js/jquery.wysiwyg.js"></script>
-    <script src="assets/js/global.js"></script>
-    <script src="assets/js/custom.js"></script>
-    <script src="assets/js/checkbox.js"></script>
+    <script type="text/javascript" src="<?= cdp_asset('assets/js/jquery.js') ?>"></script>
+    <script type="text/javascript" src="<?= cdp_asset('assets/js/jquery-ui.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/js/jquery.ui.touch-punch.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/js/jquery.wysiwyg.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/js/global.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/js/custom.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/js/checkbox.js') ?>"></script>
 
 </head>
 
@@ -124,7 +125,7 @@
     <script src="assets/css_main_deprixa/js/app.js"></script>
     <!--Note: All important javascript like page loader, menu, sticky menu, menu-toggler, one page menu etc. -->
 
-    <script src="dataJs/forgot_password.js"></script>
+    <script src="<?= cdp_asset('dataJs/forgot_password.js') ?>"></script>
 
 
 </body>

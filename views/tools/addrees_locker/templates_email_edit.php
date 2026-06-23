@@ -1,4 +1,5 @@
 <?php
+if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
 // *************************************************************************
 // *                                                                       *
 // * DEPRIXA PRO -  Integrated Web Shipping System                         *
@@ -65,15 +66,15 @@ if (!isset($_GET['id']) or $row == null) {
 	<!-- This Page CSS -->
 	<!-- Custom CSS -->
 	<link href="assets/libs/summernote/dist/summernote-bs4.css" rel="stylesheet">
-	<link href="assets/css/style.min.css" rel="stylesheet">
+	<link href="<?= cdp_asset('assets/css/style.min.css') ?>" rel="stylesheet">
 
-	<link href="assets/css/front.css" rel="stylesheet" type="text/css">
-	<script type="text/javascript" src="assets/js/jquery.js"></script>
-	<script type="text/javascript" src="assets/js/jquery-ui.js"></script>
-	<script src="assets/js/jquery.ui.touch-punch.js"></script>
-	<script src="assets/js/jquery.wysiwyg.js"></script>
-	<script src="assets/js/global.js"></script>
-	<script src="assets/js/custom.js"></script>
+	<link href="<?= cdp_asset('assets/css/front.css') ?>" rel="stylesheet" type="text/css">
+	<script type="text/javascript" src="<?= cdp_asset('assets/js/jquery.js') ?>"></script>
+	<script type="text/javascript" src="<?= cdp_asset('assets/js/jquery-ui.js') ?>"></script>
+	<script src="<?= cdp_asset('assets/js/jquery.ui.touch-punch.js') ?>"></script>
+	<script src="<?= cdp_asset('assets/js/jquery.wysiwyg.js') ?>"></script>
+	<script src="<?= cdp_asset('assets/js/global.js') ?>"></script>
+	<script src="<?= cdp_asset('assets/js/custom.js') ?>"></script>
 	<link href="assets/customClassPagination.css" rel="stylesheet">
 
 
@@ -231,18 +232,18 @@ if (!isset($_GET['id']) or $row == null) {
 		<script src="assets/libs/popper.js/dist/umd/popper.min.js"></script>
 		<script src="assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
 		<!-- apps -->
-		<script src="assets/js/app.min.js"></script>
-		<script src="assets/js/app.init.js"></script>
+		<script src="<?= cdp_asset('assets/js/app.min.js') ?>"></script>
+		<script src="<?= cdp_asset('assets/js/app.init.js') ?>"></script>
 		<script src="assets/template/dist/js/app-style-switcher.js"></script>
 		<!-- slimscrollbar scrollbar JavaScript -->
 		<script src="assets/libs/perfect-scrollbar/dist/perfect-scrollbar.jquery.min.js"></script>
-		<script src="assets/js/sparkline/sparkline.js"></script>
+		<script src="<?= cdp_asset('assets/js/sparkline/sparkline.js') ?>"></script>
 		<!--Wave Effects -->
-		<script src="assets/js/waves.js"></script>
+		<script src="<?= cdp_asset('assets/js/waves.js') ?>"></script>
 		<!--Menu sidebar -->
-		<script src="assets/js/sidebarmenu.js"></script>
+		<script src="<?= cdp_asset('assets/js/sidebarmenu.js') ?>"></script>
 		<!--Custom JavaScript -->
-		<script src="assets/js/custom.min.js"></script>
+		<script src="<?= cdp_asset('assets/js/custom.min.js') ?>"></script>
 
 		<script src="assets/libs/summernote/dist/summernote-bs4.min.js"></script>
 		<script>
@@ -251,7 +252,7 @@ if (!isset($_GET['id']) or $row == null) {
 			});
 		</script>
 
-		<script src="dataJs/templates_email.js"></script>
+		<script src="<?= cdp_asset('dataJs/templates_email.js') ?>"></script>
 
 
 
