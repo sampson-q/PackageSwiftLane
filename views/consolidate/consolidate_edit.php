@@ -437,6 +437,11 @@ if (isset($_POST["total_item"])) {
             $db->cdp_execute();
         }
 
+        if ($_POST['status_courier'] == 33) {
+            $db->cdp_query("UPDATE cdb_add_order SET status_courier = '33', is_consolidate = '0' WHERE order_no = :order_no");
+            $db->bind(':order_no', cdp_sanitize($_POST["order_no_item"][$count]));
+            $db->cdp_execute();
+        }
     }
 
     // ═════════════════════════════════════════════════════════════════════
