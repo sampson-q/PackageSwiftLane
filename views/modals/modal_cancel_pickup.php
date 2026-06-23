@@ -8,6 +8,7 @@
 				</div>
 				<div class="modal-body">
 					<form class="form-horizontal" method="post" id="cancel_pickup_form" name="cancel_pickup_form">
+                        <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 						<div class="resultados_ajax_mail text-center"></div>
 
 						<div class="row">
