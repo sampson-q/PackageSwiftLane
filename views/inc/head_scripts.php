@@ -1,5 +1,6 @@
 <?php require_once __DIR__ . '/../../helpers/csrf.php'; ?>
-<link href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet">
+<?php require_once __DIR__ . '/../../helpers/asset.php'; ?>
+<link href="<?= cdp_asset('assets/template/assets/libs/sweetalert2/sweetalert2.min.css') ?>" rel="stylesheet">
 <meta name="csrf-param" content="<?php echo htmlspecialchars(cdp_csrf_param(), ENT_QUOTES, 'UTF-8'); ?>">
 <meta name="csrf-token" content="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 <!-- Fonts -->
@@ -21,18 +22,18 @@
 		min-width: 1.4rem;
 	}
 </style>
-<link rel="stylesheet" href="assets/vendor/fonts/fontawesome.css" />
-<link rel="stylesheet" href="assets/vendor/fonts/tabler-icons.css" />
-<link rel="stylesheet" href="assets/vendor/fonts/flag-icons.css" />
-<link rel="stylesheet" type="text/css" href="assets/template/dist/css/uicons-regular-rounded.css" />
-<link href="assets/template/dist/css/style.min.css" rel="stylesheet">
-<link href="assets/customClassPagination.css" rel="stylesheet">
-<link href="assets/css/scroll-menu.css" rel="stylesheet">
+<link rel="stylesheet" href="<?= cdp_asset('assets/vendor/fonts/fontawesome.css') ?>" />
+<link rel="stylesheet" href="<?= cdp_asset('assets/vendor/fonts/tabler-icons.css') ?>" />
+<link rel="stylesheet" href="<?= cdp_asset('assets/vendor/fonts/flag-icons.css') ?>" />
+<link rel="stylesheet" type="text/css" href="<?= cdp_asset('assets/template/dist/css/uicons-regular-rounded.css') ?>" />
+<link href="<?= cdp_asset('assets/template/dist/css/style.min.css') ?>" rel="stylesheet">
+<link href="<?= cdp_asset('assets/customClassPagination.css') ?>" rel="stylesheet">
+<link href="<?= cdp_asset('assets/css/scroll-menu.css') ?>" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
-<link rel="stylesheet" type="text/css" href="assets/template/assets/libs/select2/dist/css/select2.min.css">
-<link rel="stylesheet" href="assets/template/assets/libs/intlTelInput/intlTelInput.css">
+<link rel="stylesheet" type="text/css" href="<?= cdp_asset('assets/template/assets/libs/select2/dist/css/select2.min.css') ?>">
+<link rel="stylesheet" href="<?= cdp_asset('assets/template/assets/libs/intlTelInput/intlTelInput.css') ?>">
 <!-- SwiftLane design-system override — must load last so tokens cascade -->
-<link href="assets/css_main_deprixa/css/dashboard-swiftlane.css" rel="stylesheet" type="text/css" />
+<link href="<?= cdp_asset('assets/css_main_deprixa/css/dashboard-swiftlane.css') ?>" rel="stylesheet" type="text/css" />
 
 
 <?php
