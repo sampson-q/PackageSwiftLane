@@ -1124,15 +1124,33 @@ function cdp_showError(errors) {
 }
 
 function cdp_showSuccess(message, shipment_id) {
-    // 1. Save flag and message to storage
-    localStorage.setItem('cdp_alert_pending', 'true');
-    localStorage.setItem('cdp_alert_message', message || "OK");
+    Swal.fire({
+        title: message || "OK",
+        icon: "success",
+        allowOutsideClick: false,
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: "Print Label",
+        denyButtonText: "Edit Shipment",
+        cancelButtonText: "Add a New Shipment"
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            window.location.href = "print_label_ship.php?id=" + shipment_id;
+        } else if (result.isDenied) {
+            window.location.href = "courier_edit.php?id=" + shipment_id;
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            window.location.reload();
+        }
+    });
+    // // 1. Save flag and message to storage
+    // localStorage.setItem('cdp_alert_pending', 'true');
+    // localStorage.setItem('cdp_alert_message', message || "OK");
     
-    // Optional: If you need shipment_id later on the reloaded page, uncomment below
-    // localStorage.setItem('cdp_alert_shipment_id', shipment_id || "");
+    // // Optional: If you need shipment_id later on the reloaded page, uncomment below
+    // // localStorage.setItem('cdp_alert_shipment_id', shipment_id || "");
 
-    // 2. Perform reload
-    window.location.reload();
+    // // 2. Perform reload
+    // window.location.reload();
 }
 
 // Add this globally so it executes every time the page loads up fresh
