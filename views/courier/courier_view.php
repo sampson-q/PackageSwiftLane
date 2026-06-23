@@ -295,7 +295,7 @@ if ($row_order->status_invoice == 1) {
 
                                                         <!-- EDITAR ENVÍO PERMISO -->
                                                         <?php if ($row_order->order_incomplete == 1 && $user->cdp_hasPermission('edit_shipment')) { ?>
-                                                            <?php if ($row_order->is_consolidate == 0 && $userData->userlevel == 9 || $userData->userlevel == 2) { ?>
+                                                            <?php if (/*$row_order->is_consolidate == 0 &&*/$userData->userlevel == 9 || $userData->userlevel == 2) { ?>
                                                                 <?php if ($row_order->status_courier != 8) { ?>
                                                                     <a class="dropdown-item" href="courier_edit.php?id=<?php echo $_GET['id']; ?>">
                                                                         <i style="color:#343a40" class="ti-pencil"></i>&nbsp;<?php echo $lang['tooledit'] ?>
