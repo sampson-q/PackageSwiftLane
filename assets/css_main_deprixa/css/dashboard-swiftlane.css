@@ -642,6 +642,22 @@ table.dataTable tbody td {
   color: var(--sw-text) !important;
   border-radius: 999px !important;
   font-weight: 700 !important;
+  padding: 0.75rem 1.75rem !important;
+}
+
+.swal2-deny.swal2-styled {
+  background: #ffffff !important;
+  color: var(--sw-text) !important;
+  border: 1.5px solid var(--sw-border) !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  padding: 0.75rem 1.75rem !important;
+}
+
+.swal2-deny.swal2-styled:hover {
+  background: #f8fbff !important;
+  border-color: var(--sw-red) !important;
+  color: var(--sw-red) !important;
 }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
