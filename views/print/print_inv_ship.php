@@ -62,18 +62,18 @@ if ($order_items) {
     <link href="assets/custom_dependencies/bootstrap.min.css" rel="stylesheet">
     <link type="text/css" href="assets/custom_dependencies/print.css" rel="stylesheet" />
 
+    
     <style>
         @page {
-            size: 80mm 210mm;
+            size: 80mm auto;
             margin: 0;
         }
 
         html, body {
-            width: 80mm;
-            height: 210mm;
+            width: 100%;
             margin: 0;
             padding: 0;
-            overflow: hidden;
+            overflow: visible;
             background: #fff !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
@@ -85,24 +85,23 @@ if ($order_items) {
 
         body {
             font-family: Arial, sans-serif;
-            font-size: 7px;
-            line-height: 1.15;
+            font-size: 9px;
+            line-height: 1.3;
             color: #111;
         }
 
         .label-page {
-            width: 80mm;
-            height: 210mm;
-            padding: 2mm;
-            overflow: hidden;
-            display: grid;
-            grid-template-rows: auto auto auto 1fr auto;
-            gap: 1.5mm;
+            width: 100%;
+            max-width: 80mm;
+            padding: 4mm 3.5mm 5mm;
+            overflow: visible;
+            display: block;
         }
 
         .topbar {
-            border-bottom: 0.2mm solid #111;
-            padding-bottom: 1mm;
+            border-bottom: 0.25mm solid #111;
+            padding-bottom: 2mm;
+            margin-bottom: 2mm;
         }
 
         .brand-wrap {
@@ -111,13 +110,13 @@ if ($order_items) {
 
         .logo {
             text-align: center;
-            margin-bottom: 1mm;
+            margin-bottom: 1.5mm;
         }
 
         .logo img {
             display: inline-block;
-            max-width: 50mm;
-            max-height: 18mm;
+            max-width: 60mm;
+            max-height: 22mm;
             object-fit: contain;
         }
 
@@ -127,49 +126,49 @@ if ($order_items) {
         }
 
         .brand-name {
-            margin: 0 0 0.8mm 0;
-            font-size: 10px;
+            margin: 0 0 1mm 0;
+            font-size: 12px;
             font-weight: 700;
-            line-height: 1.05;
+            line-height: 1.1;
         }
 
         .brand-lines {
             margin: 0;
-            font-size: 6.4px;
-            line-height: 1.2;
+            font-size: 8px;
+            line-height: 1.35;
             word-break: break-word;
         }
 
         .barcode {
             text-align: center;
-            margin-top: 1mm;
+            margin-top: 1.5mm;
         }
 
         .barcode img {
             display: inline-block;
             width: 100%;
             max-width: 74mm;
-            height: 12mm;
+            height: 15mm;
             object-fit: contain;
         }
 
         .info-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 1.2mm;
+            gap: 2mm;
         }
 
         .panel {
-            border: 0.2mm solid #666;
-            padding: 1mm 1.2mm;
-            overflow: hidden;
+            border: 0.25mm solid #666;
+            padding: 1.5mm 1.8mm;
+            overflow: visible;
         }
 
         .panel-title {
-            margin: 0 0 0.8mm 0;
-            padding-bottom: 0.6mm;
-            border-bottom: 0.15mm solid #999;
-            font-size: 7px;
+            margin: 0 0 1mm 0;
+            padding-bottom: 0.8mm;
+            border-bottom: 0.2mm solid #999;
+            font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.2px;
@@ -177,10 +176,11 @@ if ($order_items) {
 
         .kv {
             display: grid;
-            grid-template-columns: 16mm 1fr;
-            gap: 1mm;
-            margin: 0 0 0.4mm 0;
-            font-size: 6.5px;
+            grid-template-columns: 19mm 1fr;
+            gap: 1.2mm;
+            margin: 0 0 0.8mm 0;
+            font-size: 8.2px;
+            line-height: 1.35;
         }
 
         .kv .k {
@@ -194,10 +194,10 @@ if ($order_items) {
         }
 
         .items-panel {
-            border: 0.2mm solid #666;
-            padding: 0.8mm 1mm;
-            overflow: hidden;
-            min-height: 70mm;
+            border: 0.25mm solid #666;
+            padding: 1.2mm 1.4mm;
+            overflow: visible;
+            min-height: 0;
         }
 
         .items-header {
@@ -205,18 +205,18 @@ if ($order_items) {
             align-items: center;
             justify-content: space-between;
             gap: 2mm;
-            margin-bottom: 0.8mm;
+            margin-bottom: 1mm;
         }
 
         .items-header h3 {
             margin: 0;
-            font-size: 7px;
+            font-size: 8.5px;
             font-weight: 700;
-            line-height: 1;
+            line-height: 1.1;
         }
 
         .meta-chip {
-            font-size: 6px;
+            font-size: 7px;
             white-space: nowrap;
         }
 
@@ -228,19 +228,19 @@ if ($order_items) {
 
         thead th {
             background: #f0f0f0;
-            font-size: 6.5px;
+            font-size: 8px;
             font-weight: 700;
         }
 
         th, td {
             border: 0.15mm solid #999;
-            padding: 0.35mm 0.7mm;
+            padding: 0.75mm 1mm;
             vertical-align: top;
             word-break: break-word;
         }
 
         td.qty {
-            width: 14mm;
+            width: 16mm;
             text-align: center;
             font-weight: 700;
         }
@@ -250,34 +250,34 @@ if ($order_items) {
         }
 
         tfoot td {
-            font-size: 6.5px;
-            padding: 0.5mm 0.7mm;
+            font-size: 8px;
+            padding: 0.8mm 1mm;
             background: #fafafa;
         }
 
         .footer {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 1.2mm;
+            gap: 2mm;
             align-items: start;
         }
 
         .total-box {
-            border: 0.2mm solid #666;
-            padding: 1mm;
+            border: 0.25mm solid #666;
+            padding: 1.5mm;
             text-align: center;
         }
 
         .total-box label {
             display: block;
-            font-size: 6px;
+            font-size: 7px;
             font-weight: 700;
-            margin-bottom: 0.6mm;
+            margin-bottom: 1mm;
             text-transform: uppercase;
         }
 
         .total-box .value {
-            font-size: 12px;
+            font-size: 15px;
             font-weight: 700;
             line-height: 1;
         }
@@ -285,60 +285,63 @@ if ($order_items) {
         .signatures {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1.5mm;
+            gap: 3mm;
             align-items: end;
         }
 
         .signature {
             text-align: center;
-            font-size: 6px;
-            line-height: 1.1;
+            font-size: 7px;
+            line-height: 1.2;
         }
 
         .signature .line {
-            margin-top: 8mm;
+            margin-top: 10mm;
             border-top: 0.2mm solid #111;
-            padding-top: 0.8mm;
+            padding-top: 1mm;
         }
 
         .credits {
             text-align: center;
-            font-size: 6px;
-            line-height: 1.2;
+            font-size: 7px;
+            line-height: 1.25;
         }
 
         .print-button {
             text-align: center;
-            margin: 1mm 0 0 0;
+            margin: 2mm 0 0 0;
         }
 
         .print-button button {
-            padding: 12px 30px;
-            font-size: 16px;
+            padding: 10px 24px;
+            font-size: 14px;
             cursor: pointer;
         }
 
         .print-info {
-            margin-top: 0.8mm;
-            font-size: 8px;
+            margin-top: 1mm;
+            font-size: 8.5px;
             color: #777;
         }
 
         @media print {
             html, body {
-                width: 80mm !important;
-                height: 210mm !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: 0 !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                overflow: hidden !important;
+                overflow: visible !important;
                 background: #fff !important;
             }
 
             .label-page {
-                width: 80mm !important;
-                height: 210mm !important;
-                padding: 2mm !important;
-                overflow: hidden !important;
+                width: 100% !important;
+                max-width: 80mm !important;
+                height: auto !important;
+                min-height: 0 !important;
+                padding: 4mm 3.5mm 5mm !important;
+                overflow: visible !important;
             }
 
             .print-button,
@@ -351,6 +354,7 @@ if ($order_items) {
             }
         }
     </style>
+
 </head>
 <body>
     <div class="label-page">
