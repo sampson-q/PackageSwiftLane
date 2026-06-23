@@ -86,7 +86,10 @@ $barcode_url = 'https://barcode.tec-it.com/barcode.ashx?data=' . urlencode($post
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo h($core->favicon); ?>">
-    <title><?php echo h('Label - ' . $sys_tracking); ?></title>
+    <title><?php echo h('Package Label - ' . $sys_tracking); ?></title>
+    <link rel="stylesheet" href="assets/vendor/fonts/fontawesome.css" />
+    <link rel="stylesheet" href="assets/vendor/fonts/tabler-icons.css" />
+    <link rel="stylesheet" href="assets/vendor/fonts/flag-icons.css" />
     <style>
         @page { size: 102mm 152mm; margin: 0; }
         * { box-sizing: border-box; }
@@ -243,8 +246,11 @@ $barcode_url = 'https://barcode.tec-it.com/barcode.ashx?data=' . urlencode($post
                 </table>
 
                 <div class="facts">
+                    <?php if ($row->is_dangerous_good) : ?>
+                        <div class="f"><div class="k">Hazmat</div><div class="v"><i class="fas fa-exclamation-triangle dg-icon fa-2x"></i></div></div>
+                    <?php endif; ?>
+                    <!-- <div class="f"><div class="k">Mode</div><div class="v"><?php echo h($shipping_mode->ship_mode ?? 'N/A'); ?></div></div> -->
                     <div class="f"><div class="k">Courier</div><div class="v"><?php echo h($courier_com->name_com ?? 'N/A'); ?></div></div>
-                    <div class="f"><div class="k">Mode</div><div class="v"><?php echo h($shipping_mode->ship_mode ?? 'N/A'); ?></div></div>
                     <div class="f"><div class="k">Items</div><div class="v"><?php echo h($total_qty); ?></div></div>
                     <div class="f"><div class="k">Weight</div><div class="v"><?php echo h(number_format($row->total_weight, 2)); ?></div></div>
                 </div>
