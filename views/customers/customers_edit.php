@@ -331,6 +331,7 @@ $history = $db->cdp_registros();
                                         <div class="card-body">
 
                                             <form enctype="multipart/form-data" class="form-horizontal form-material" id="edit_user" name="edit_user" method="post">
+                                                <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                                 <section>
                                                     <?php if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
                                                         <div class="row">
