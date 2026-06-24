@@ -701,3 +701,6 @@ $monthName = obtenerNombreMes($currentMonth);
 
 
     <script src="<?= cdp_asset('dataJs/dashboard_index.js') ?>"></script>
+    <!-- Pickup-aging: prompt admins to notify senders of packages uncollected for 2 weeks. -->
+    <script>window.cdpPaDashboard = true;</script>
+    <script src="<?= cdp_asset('dataJs/pickup_aging.js') ?>"></script>
