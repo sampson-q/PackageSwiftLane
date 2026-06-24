@@ -907,6 +907,7 @@ if ($row_order->status_invoice == 1) {
                                             <tr>
                                                 <th><b><?php echo $lang['packager']; ?></b></th>
                                                 <th><b><?php echo 'Package Status'; ?></b></th>
+                                                <th><b><?php echo 'Swift ' . $lang['ltracking']; ?></b></th>
                                                 <th><b><?php echo $lang['ltracking']; ?></b></th>
                                                 <th class="text-right"><b><?php echo 'Qty' ?></b></th>
                                                 <th><b><?php echo $lang['contents']; ?></b></th>
@@ -967,7 +968,7 @@ if ($row_order->status_invoice == 1) {
 
                                                     $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . $package_owners->sender_id . "'");
                                                     $sender = $db->cdp_registro();
-                                                    $sender_name = $sender->fname . ' ' . $sender->lname;
+                                                    $sender_name = $sender->fname . ' ' . $sender->lname . ' <b>(' . $sender->locker . ')</b>';
                                                     
                                                     // Fetch package total price
                                                     $db->cdp_query("SELECT total_order, order_id, status_courier, total_weight FROM cdb_add_order WHERE order_no='" . $row_order_item->order_no . "'");
@@ -979,6 +980,8 @@ if ($row_order->status_invoice == 1) {
                                                     
                                                     $db->cdp_query("SELECT * FROM cdb_styles where id='" . $order_details->status_courier . "'");
 						                            $package_style = $db->cdp_registro();
+
+                                                    $postal_tracking = cdp_getPackageTrackingLegacyAware($row_order_item->order_id);
                                                     
                                                     $consolidate_weight += $order_details->total_weight;
                                                     $consolidate_total += $order_details->total_order;
@@ -988,6 +991,7 @@ if ($row_order->status_invoice == 1) {
                                                         <td><b><?php echo $sender_name; ?></b></td>
                                                         <td><span class="label" style="background-color: <?php echo $package_style->color; ?>"><?php echo $package_style->mod_style; ?></span></td>
                                                         <td><b><?php echo $row_order_item->order_prefix . $row_order_item->order_no; ?></b></td>
+                                                        <td><b><?php echo $postal_tracking->tracking_number; ?></b></td>
 
                                                         <td class="text-right">
                                                             <?php foreach ($items as $item) { ?>
@@ -1018,7 +1022,7 @@ if ($row_order->status_invoice == 1) {
                                                 </tr>
                                                 <tr class="">
                                                     <td></td>
-                                                    <td colspan="7" class="text-right">Total Cost:</td>
+                                                    <td colspan="8" class="text-right">Total Cost:</td>
                                                     <td id=""><b><?php echo cdb_money_format($consolidate_total); ?></b></td>
                                                     <td></td>
                                                     <td></td>
