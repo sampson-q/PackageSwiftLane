@@ -23,6 +23,7 @@
 
 require_once("../../loader.php");
 require_once("../../helpers/querys.php");
+require_once(__DIR__ . '/../../helpers/pickup_aging.php');
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 
 require_login();
@@ -48,6 +49,14 @@ foreach ($data as $key) {
     if (!$exists) {
         // Si no existe un registro duplicado, actualizar el estado del envío
         cdp_updateStatusConsolidateMultiple($key, $status);
+
+        // Sorting at Accra (33) / Ready for PickUp (32) become the member packages'
+        // own status; Ready for PickUp also starts the pickup-aging clock.
+        if ($status === CDP_PA_SORTING || $status === CDP_PA_READY) {
+            cdp_propagateConsolidationStatusToPackages(
+                (int) $courier->consolidate_id, $status, (int) ($_SESSION['userid'] ?? 0), $office
+            );
+        }
 
         // Agregar comentario
         $comment = $comments = $lang['multiple_updated3'] . ' ' . $tracking;
