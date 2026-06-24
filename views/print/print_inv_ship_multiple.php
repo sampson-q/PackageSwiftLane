@@ -1,11 +1,7 @@
 <?php
 // *************************************************************************
-// * Bulk shipment invoice/receipt — prints one print_inv_ship layout per  *
-// * selected shipment. Mirrors the single views/print/print_inv_ship.php   *
-// * exactly (110mm thermal label), one receipt per page-break.             *
-// * NOTE: the bulk-select checkboxes carry order_no, so each shipment is    *
-// * resolved with cdp_getCourierPrintMultiple($order_no), then $row->order_id*
-// * is used for the item/address/tracking lookups.                          *
+// * Bulk shipment invoice/receipt — one continuous thermal roll output   *
+// * Single header, all shipments in one flow, single footer at the end.   *
 // *************************************************************************
 require_once('helpers/querys.php');
 
@@ -18,6 +14,8 @@ $order_list = json_decode($_GET['data']);
 if (!is_array($order_list) || count($order_list) === 0) {
     cdp_redirect_to("courier_list.php");
 }
+
+$shipment_total = count($order_list);
 ?>
 <!DOCTYPE html>
 <html dir="<?php echo $direction_layout; ?>" lang="en">
@@ -25,18 +23,29 @@ if (!is_array($order_list) || count($order_list) === 0) {
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="assets/<?php echo $core->favicon; ?>">
-    <title><?php echo $lang['inv-shipping19'] . ' - ' . count($order_list); ?></title>
+    <title><?php echo $lang['inv-shipping19'] . ' - ' . $shipment_total; ?></title>
     <link href="assets/custom_dependencies/bootstrap.min.css" rel="stylesheet">
     <link type="text/css" href="assets/custom_dependencies/print.css" rel="stylesheet" />
 
     <style>
+        /*
+         * Thermal roll, fixed-page-size driver (Premax):
+         * We can't use true "infinite continuous roll" because the driver
+         * is configured with a fixed page size, not receipt/continuous mode.
+         * Instead we set a generous but FINITE ceiling. The actual rendered
+         * height is driven entirely by real content (see .label-page below),
+         * so short batches print short and only batches that approach this
+         * ceiling would ever risk a second page.
+         * 4000mm covers ~30+ shipments with room to spare; raise if your
+         * largest realistic batch could ever exceed it.
+         */
         @page {
-            size: 110mm auto;
+            size: 110mm 4000mm;
             margin: 0;
         }
 
         html, body {
-            width: 100%;
+            width: 110mm;
             margin: 0;
             padding: 0;
             overflow: visible;
@@ -56,17 +65,12 @@ if (!is_array($order_list) || count($order_list) === 0) {
             color: #000;
         }
 
-        /* One receipt per shipment; each starts on a new page when printed. */
-        .receipt { page-break-after: always; }
-        .receipt:last-of-type { page-break-after: auto; }
-
         .label-page {
-            width: 100%;
-            max-width: 110mm;
+            width: 110mm;
+            height: auto;
             padding: 4mm 3.5mm 5mm;
             overflow: visible;
             display: block;
-            margin: 0 auto 6mm auto;
         }
 
         .topbar {
@@ -122,6 +126,11 @@ if (!is_array($order_list) || count($order_list) === 0) {
             max-width: 80mm;
             height: 20mm;
             object-fit: contain;
+        }
+
+        .shipment-block {
+            margin-bottom: 6mm;
+            overflow: visible;
         }
 
         .info-grid {
@@ -187,11 +196,6 @@ if (!is_array($order_list) || count($order_list) === 0) {
             line-height: 1.1;
         }
 
-        .meta-chip {
-            font-size: 14px;
-            white-space: nowrap;
-        }
-
         table {
             width: 100%;
             border-collapse: collapse;
@@ -228,37 +232,8 @@ if (!is_array($order_list) || count($order_list) === 0) {
         }
 
         .footer {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 2mm;
-            align-items: start;
-        }
-
-        .total-box {
-            border: 0.35mm solid #000;
-            padding: 1.5mm;
-            text-align: center;
-        }
-
-        .total-box label {
-            display: block;
-            font-size: 14px;
-            font-weight: 700;
-            margin-bottom: 1mm;
-            text-transform: uppercase;
-        }
-
-        .total-box .value {
-            font-size: 23px;
-            font-weight: 700;
-            line-height: 1;
-        }
-
-        .signatures {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 3mm;
-            align-items: end;
+            margin-top: 8mm;
+            overflow: visible;
         }
 
         .signature {
@@ -296,25 +271,23 @@ if (!is_array($order_list) || count($order_list) === 0) {
             color: #000;
         }
 
-        /* Stronger contrast for thermal printing */
-        body, .label-page, .panel, .items-panel, .total-box, .signature, .credits,
+        body, .label-page, .panel, .items-panel, .signature, .credits,
         .topbar, .brand-text, .brand-lines, .brand-name, .panel-title, .items-header h3,
-        .meta-chip, .kv, .kv .k, .kv .v, table, thead th, th, td, tfoot td {
+        .kv, .kv .k, .kv .v, table, thead th, th, td, tfoot td {
             color: #000 !important;
         }
 
-        .panel, .items-panel, .total-box {
+        .panel, .items-panel {
             border-color: #000 !important;
         }
 
-        .topbar, .panel-title, th, td, tfoot td, .total-box {
+        .topbar, .panel-title, th, td, tfoot td {
             border-color: #000 !important;
         }
 
         .brand-name,
         .panel-title,
         .items-header h3,
-        .total-box label,
         .kv .k,
         .signature .line,
         .print-info {
@@ -326,8 +299,7 @@ if (!is_array($order_list) || count($order_list) === 0) {
         td,
         th,
         tfoot td,
-        .credits,
-        .meta-chip {
+        .credits {
             font-weight: 600 !important;
         }
 
@@ -339,7 +311,7 @@ if (!is_array($order_list) || count($order_list) === 0) {
 
         @media print {
             html, body {
-                width: 100% !important;
+                width: 110mm !important;
                 height: auto !important;
                 min-height: 0 !important;
                 margin: 0 !important;
@@ -360,25 +332,20 @@ if (!is_array($order_list) || count($order_list) === 0) {
                 filter: none !important;
             }
 
-            .label-page {
-                width: 100% !important;
-                max-width: 110mm !important;
-                height: auto !important;
-                min-height: 0 !important;
-                padding: 4mm 3.5mm 5mm !important;
-                overflow: visible !important;
-                margin: 0 auto !important;
-            }
-
-            .topbar,
+            .shipment-block,
             .panel,
             .items-panel,
-            .total-box,
-            .signature .line,
-            th,
-            td,
-            tfoot td {
-                border-color: #000 !important;
+            tr {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+
+            .label-page {
+                width: 110mm !important;
+                max-width: 110mm !important;
+                height: auto !important;
+                padding: 4mm 3.5mm 5mm !important;
+                overflow: visible !important;
             }
 
             .print-button,
@@ -391,71 +358,18 @@ if (!is_array($order_list) || count($order_list) === 0) {
             }
         }
     </style>
-
 </head>
-<body onload="window.print();">
+<body>
 
     <div class="print-button">
         <button class="btn btn-primary" onclick="window.print();">
             <i class="fa fa-print"></i> <?php echo $lang['inv-shipping19']; ?>
         </button>
-        <div class="print-info">Press Ctrl+P or click above to print all <?php echo count($order_list); ?> receipt(s)</div>
+        <div class="print-info">Press Ctrl+P or click above to print all <?php echo $shipment_total; ?> receipt(s)</div>
     </div>
 
-<?php
-foreach ($order_list as $order_no) {
-
-    $data = cdp_getCourierPrintMultiple($order_no);
-
-    // Skip silently if the shipment can't be resolved (deleted / bad id).
-    if (!isset($data['rowCount']) || (int) $data['rowCount'] !== 1) {
-        continue;
-    }
-
-    $row      = $data['data'];
-    $order_id = (int) $row->order_id;
-
-    // Get order items
-    $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . $order_id . "'");
-    $order_items = $db->cdp_registros();
-
-    // Get shipping mode
-    $db->cdp_query("SELECT * FROM cdb_shipping_mode WHERE id='" . (int) $row->order_service_options . "'");
-    $shipping_mode = $db->cdp_registro();
-
-    // Get category
-    $db->cdp_query("SELECT * FROM cdb_category WHERE id='" . (int) $row->order_item_category . "'");
-    $category = $db->cdp_registro();
-
-    // Get courier
-    $db->cdp_query("SELECT * FROM cdb_courier_com WHERE id='" . (int) $row->order_courier . "'");
-    $courier_com = $db->cdp_registro();
-
-    // Get sender and receiver
-    $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . (int) $row->sender_id . "'");
-    $sender_data = $db->cdp_registro();
-
-    $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . (int) $row->receiver_id . "'");
-    $receiver_data = $db->cdp_registro();
-
-    // Get address
-    $db->cdp_query("SELECT * FROM cdb_address_shipments WHERE order_track='" . $row->order_prefix . $row->order_no . "'");
-    $address_order = $db->cdp_registro();
-
-    // Get tracking and ETA
-    $package_tracking = cdp_getPackageTrackingLegacyAware($order_id);
-
-    $total_qty    = 0;
-    $total_weight = 0;
-    if ($order_items) {
-        foreach ($order_items as $item) {
-            $total_weight += (float) $item->order_item_weight;
-            $total_qty    += (int) $item->order_item_quantity;
-        }
-    }
-?>
-    <div class="receipt">
     <div class="label-page">
+        <!-- ONE HEADER ONLY -->
         <div class="topbar">
             <div class="brand-wrap">
                 <div class="logo">
@@ -470,102 +384,150 @@ foreach ($order_list as $order_no) {
                     </p>
                 </div>
             </div>
-
-            <div class="barcode">
-                <img src="https://barcode.tec-it.com/barcode.ashx?data=<?php echo urlencode($row->order_prefix . $row->order_no); ?>&code=Code128&multiplebarcodes=false&translate-esc=false&unit=Fit&dpi=92&imagetype=Gif&rotation=0&color=%23000000&bgcolor=%23ffffff&qunit=Mm&quiet=0&modulewidth=50" alt="">
-            </div>
         </div>
 
-        <div class="info-grid">
-            <div class="panel">
-                <div class="panel-title"><?php echo htmlspecialchars($lang['inv-shipping5'], ENT_QUOTES, 'UTF-8'); ?></div>
+        <?php
+        foreach ($order_list as $order_no) {
 
-                <div class="kv">
-                    <div class="k">Name:</div>
-                    <div class="v"><strong><?php echo htmlspecialchars($sender_data->fname . " " . $sender_data->lname, ENT_QUOTES, 'UTF-8'); ?></strong></div>
-                </div>
+            $data = cdp_getCourierPrintMultiple($order_no);
 
-                <div class="kv">
-                    <div class="k">Address:</div>
-                    <div class="v"><?php echo htmlspecialchars($address_order ? $address_order->sender_address : 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
-                </div>
+            if (!isset($data['rowCount']) || (int) $data['rowCount'] !== 1) {
+                continue;
+            }
 
-                <div class="kv">
-                    <div class="k">Location:</div>
-                    <div class="v"><?php echo htmlspecialchars($address_order ? ($address_order->sender_city . ', ' . $address_order->sender_country) : 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
-                </div>
+            $row      = $data['data'];
+            $order_id = (int) $row->order_id;
 
-                <div class="kv">
-                    <div class="k">Phone:</div>
-                    <div class="v"><?php echo htmlspecialchars($sender_data->phone, ENT_QUOTES, 'UTF-8'); ?></div>
-                </div>
-            </div>
-        </div>
+            $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . $order_id . "'");
+            $order_items = $db->cdp_registros();
 
-        <div class="panel">
-            <div class="panel-title">Shipment Details</div>
+            $db->cdp_query("SELECT * FROM cdb_shipping_mode WHERE id='" . (int) $row->order_service_options . "'");
+            $shipping_mode = $db->cdp_registro();
 
-            <div class="kv">
-                <div class="k">Tracking #:</div>
-                <div class="v">&nbsp;&nbsp;&nbsp;&nbsp;<strong><?php echo htmlspecialchars($package_tracking->tracking_number ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></strong></div>
-            </div>
+            $db->cdp_query("SELECT * FROM cdb_category WHERE id='" . (int) $row->order_item_category . "'");
+            $category = $db->cdp_registro();
 
-            <div class="kv">
-                <div class="k">Courier:</div>
-                <div class="v"><?php echo htmlspecialchars($courier_com ? $courier_com->name_com : 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
-            </div>
+            $db->cdp_query("SELECT * FROM cdb_courier_com WHERE id='" . (int) $row->order_courier . "'");
+            $courier_com = $db->cdp_registro();
 
-            <div class="kv">
-                <div class="k">Category:</div>
-                <div class="v"><?php echo htmlspecialchars($category ? $category->name_item : 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
-            </div>
+            $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . (int) $row->sender_id . "'");
+            $sender_data = $db->cdp_registro();
 
-            <?php if (!empty($package_tracking->tracking_number)) : ?>
+            $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . (int) $row->receiver_id . "'");
+            $receiver_data = $db->cdp_registro();
+
+            $db->cdp_query("SELECT * FROM cdb_address_shipments WHERE order_track='" . $row->order_prefix . $row->order_no . "'");
+            $address_order = $db->cdp_registro();
+
+            $package_tracking = cdp_getPackageTrackingLegacyAware($order_id);
+
+            $total_qty    = 0;
+            $total_weight = 0;
+
+            if ($order_items) {
+                foreach ($order_items as $item) {
+                    $total_weight += (float) $item->order_item_weight;
+                    $total_qty    += (int) $item->order_item_quantity;
+                }
+            }
+        ?>
+            <div class="shipment-block">
                 <div class="barcode">
-                    <img src="https://barcode.tec-it.com/barcode.ashx?data=<?php echo urlencode($package_tracking->tracking_number); ?>&code=Code128&multiplebarcodes=false&translate-esc=false&unit=Fit&dpi=92&imagetype=Gif&rotation=0&color=%23000000&bgcolor=%23ffffff&qunit=Mm&quiet=0&modulewidth=50" alt="">
+                    <img src="https://barcode.tec-it.com/barcode.ashx?data=<?php echo urlencode($row->order_prefix . $row->order_no); ?>&code=Code128&multiplebarcodes=false&translate-esc=false&unit=Fit&dpi=92&imagetype=Gif&rotation=0&color=%23000000&bgcolor=%23ffffff&qunit=Mm&quiet=0&modulewidth=50" alt="">
                 </div>
-            <?php endif; ?>
-        </div>
 
-        <div class="items-panel">
-            <div class="items-header">
-                <h3><?php echo htmlspecialchars("Items Details", ENT_QUOTES, 'UTF-8'); ?></h3>
+                <div class="info-grid">
+                    <div class="panel">
+                        <div class="panel-title"><?php echo htmlspecialchars($lang['inv-shipping5'], ENT_QUOTES, 'UTF-8'); ?></div>
+
+                        <div class="kv">
+                            <div class="k">Name:</div>
+                            <div class="v"><strong><?php echo htmlspecialchars($sender_data->fname . " " . $sender_data->lname, ENT_QUOTES, 'UTF-8'); ?></strong></div>
+                        </div>
+
+                        <div class="kv">
+                            <div class="k">Address:</div>
+                            <div class="v"><?php echo htmlspecialchars($address_order ? $address_order->sender_address : 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
+                        </div>
+
+                        <div class="kv">
+                            <div class="k">Location:</div>
+                            <div class="v"><?php echo htmlspecialchars($address_order ? ($address_order->sender_city . ', ' . $address_order->sender_country) : 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
+                        </div>
+
+                        <div class="kv">
+                            <div class="k">Phone:</div>
+                            <div class="v"><?php echo htmlspecialchars($sender_data->phone, ENT_QUOTES, 'UTF-8'); ?></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">Shipment Details</div>
+
+                    <div class="kv">
+                        <div class="k">Tracking #:</div>
+                        <div class="v">&nbsp;&nbsp;&nbsp;&nbsp;<strong><?php echo htmlspecialchars($package_tracking->tracking_number ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></strong></div>
+                    </div>
+
+                    <div class="kv">
+                        <div class="k">Courier:</div>
+                        <div class="v"><?php echo htmlspecialchars($courier_com ? $courier_com->name_com : 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
+                    </div>
+
+                    <div class="kv">
+                        <div class="k">Category:</div>
+                        <div class="v"><?php echo htmlspecialchars($category ? $category->name_item : 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
+                    </div>
+
+                    <?php if (!empty($package_tracking->tracking_number)) : ?>
+                        <div class="barcode">
+                            <img src="https://barcode.tec-it.com/barcode.ashx?data=<?php echo urlencode($package_tracking->tracking_number); ?>&code=Code128&multiplebarcodes=false&translate-esc=false&unit=Fit&dpi=92&imagetype=Gif&rotation=0&color=%23000000&bgcolor=%23ffffff&qunit=Mm&quiet=0&modulewidth=50" alt="">
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="items-panel">
+                    <div class="items-header">
+                        <h3><?php echo htmlspecialchars("Items Details", ENT_QUOTES, 'UTF-8'); ?></h3>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 14mm;"><?php echo $lang['left214']; ?></th>
+                                <th><?php echo $lang['left213']; ?></th>
+                            </tr>
+                        </thead>
+                        <tbody id="projects-tbl">
+                            <?php if ($order_items) : foreach ($order_items as $row_order_item) : ?>
+                                <tr>
+                                    <td class="qty"><?php echo (int) $row_order_item->order_item_quantity; ?></td>
+                                    <td class="desc"><?php echo htmlspecialchars($row_order_item->order_item_description, ENT_QUOTES, 'UTF-8'); ?></td>
+                                </tr>
+                            <?php endforeach; endif; ?>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2">
+                                    <strong>Original Package Weight</strong> :
+                                    <?php echo htmlspecialchars((string) ($row->total_weight ?? $total_weight ?? '—'), ENT_QUOTES, 'UTF-8') . ', <b>Total Items:</b> ' . $total_qty; ?>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
+            <div class="row text-muted" style="margin-top: -1.5mm; margin-bottom: 5mm;">
+                <div class="col-3"><hr></div>
+                <div class="col-6 text-center" style="line-height: 8mm;">end of shipment</div>
+                <div class="col-3"><hr></div>
+            </div>
+        <?php
+        } // end foreach
+        ?>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 14mm;"><?php echo $lang['left214']; ?></th>
-                        <th><?php echo $lang['left213']; ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($order_items) : foreach ($order_items as $row_order_item) : ?>
-                        <tr>
-                            <td class="qty"><?php echo (int) $row_order_item->order_item_quantity; ?></td>
-                            <td class="desc"><?php echo htmlspecialchars($row_order_item->order_item_description, ENT_QUOTES, 'UTF-8'); ?></td>
-                        </tr>
-                    <?php endforeach; endif; ?>
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="2">
-                            <strong>Original Package Weight</strong> :
-                            <?php echo htmlspecialchars((string) ($row->total_weight ?? $total_weight ?? '—'), ENT_QUOTES, 'UTF-8') . ', <b>Total Items:</b> ' . $total_qty; ?>
-                        </td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-
-    </div>
-    </div>
-<?php
-} // end foreach
-?>
-
-    <!-- Signature + credits appear ONCE, at the very end of the whole batch. -->
-    <div class="label-page batch-footer">
+        <!-- ONE FOOTER ONLY -->
         <div class="footer">
             <div class="signature">
                 <div class="line"><?php echo 'Signature / Stamp' ?></div>
@@ -579,5 +541,36 @@ foreach ($order_list as $order_no) {
         </div>
     </div>
 
+    <script>
+    (function () {
+        var images = document.querySelectorAll('img');
+        var total = images.length;
+        var loaded = 0;
+
+        function tryPrint() {
+            loaded++;
+            if (loaded >= total) {
+                // Small delay lets the browser finish layout/paint after the
+                // last barcode image lands before we snapshot the page for print.
+                setTimeout(function () { window.print(); }, 150);
+            }
+        }
+
+        if (total === 0) {
+            window.print();
+            return;
+        }
+
+        images.forEach(function (img) {
+            if (img.complete) {
+                tryPrint();
+            } else {
+                img.addEventListener('load', tryPrint);
+                // Don't hang forever if a barcode image fails to fetch (e.g. tec-it.com down)
+                img.addEventListener('error', tryPrint);
+            }
+        });
+    })();
+    </script>
 </body>
 </html>
