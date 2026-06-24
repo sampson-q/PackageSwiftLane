@@ -46,10 +46,10 @@ $sql = "SELECT b.user_id, b.shipping_type, a.id_notifi_user, b.notification_desc
 		WHERE a.user_id = :user_id
 		order by b.notification_id desc";
 
-$db->cdp_query($sql);
+$db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
 $db->bind(':user_id', $userId);
-$db->cdp_execute();
-$numrows = $db->cdp_rowCount();
+$cdp_cnt_row = $db->cdp_registro();
+$numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");

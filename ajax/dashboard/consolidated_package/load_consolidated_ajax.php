@@ -69,16 +69,16 @@ if (isset($_REQUEST['search'])) {
 $sql = "SELECT  a.total_order, a.recipient_type, a.consolidate_id , a.c_prefix, a.c_no, a.c_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM cdb_consolidate_packages as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 $swhere
-			and month(c_date)='$month' AND year(c_date)='$year'
+			and c_date >= '$year-$month-01' AND c_date < DATE('$year-$month-01') + INTERVAL 1 MONTH
 		 
 			  and a.status_courier!=14
 			 order by consolidate_id  desc
 			 ";
 
 
-$db->cdp_query($sql);
-$db->cdp_execute();
-$numrows = $db->cdp_rowCount();
+$db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
+$cdp_cnt_row = $db->cdp_registro();
+$numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");

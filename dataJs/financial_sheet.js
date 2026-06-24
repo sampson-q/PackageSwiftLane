@@ -2,21 +2,25 @@
 
 /* ===========================================================================
    FINANCIAL SHEET
-   Nested lazy-loaded accordions: consolidation -> packages -> items.
-   Items editable by weight OR custom price, guarded by a hard per-package lock
-   that is refreshed by a heartbeat while open and released on close/unload.
+   Nested accordions: consolidation -> packages -> items (plain jQuery show/hide,
+   no Bootstrap collapse). Opening a consolidation tints the whole card and shows
+   its packages; opening a package tints it and reveals its items + change log.
+   Each item's custom price is entered in USD or GHS via a tiny per-input toggle;
+   storage is always USD.
    =========================================================================== */
 
 var FS_AJAX = "./ajax/reports/financial_sheet_ajax.php";
 var fsOpenLocks = {};      // oid -> true (packages we currently hold the lock for)
 var fsHeartbeat = null;
 
+function fsRate() { return Number(window.FS_RATE) > 0 ? Number(window.FS_RATE) : 1; }
+function fsMoney(usd) { return "$" + (Number(usd) || 0).toFixed(2); }
+
 $(function () {
+    $("#fs_rate_label").text(fsRate().toFixed(2));
     fsLoad();
 
-    $("#fs_search").on("keyup", function (e) {
-        if (e.key === "Enter") fsLoad();
-    });
+    $("#fs_search").on("keyup", function (e) { if (e.key === "Enter") fsLoad(); });
     $("#fs_search_btn").on("click", fsLoad);
 
     // Release every lock we hold when leaving the page.
@@ -35,35 +39,37 @@ function fsLoad() {
     $.ajax({
         url: FS_AJAX,
         data: { action: "list", q: q },
-        success: function (html) {
-            $(".outer_div").html(html);
-        },
+        success: function (html) { $(".outer_div").html(html); },
         complete: function () { $("#loader").fadeOut("fast"); }
     });
 }
 
 /* ----------------------- Accordion: consolidation ----------------------- */
-// Only one consolidation open at a time: opening one collapses the others
-// (releasing any package locks held inside them).
+// One consolidation open at a time. Opening loads + shows its packages and
+// tints the whole card so the packages sit on the active background.
 function fsToggleConsolidation(header, cid) {
-    var $body    = $(".fs-consol-body[data-cid='" + cid + "']");
-    var willOpen = !$body.hasClass("show");
+    var $card = $(header).closest(".fs-consol-card");
+    var $body = $(".fs-consol-body[data-cid='" + cid + "']");
+    var willOpen = $body.is(":hidden");
 
-    $(".fs-consol-body.show").each(function () {
+    $(".fs-consol-body:visible").each(function () {
         if (String($(this).data("cid")) !== String(cid)) {
-            $(this).find(".fs-pkg-body.show").each(function () { fsStopLock($(this).data("oid")); });
-            $(this).collapse("hide");
+            $(this).find(".fs-pkg-body:visible").each(function () { fsStopLock($(this).data("oid")); });
+            $(this).slideUp(120);
         }
     });
-
-    var $box = $body.find(".fs-packages").first();
-    $body.collapse("toggle");
+    $(".fs-consol-card.fs-active, .fs-pkg-card.fs-active").removeClass("fs-active");
 
     if (!willOpen) {
-        // Collapsing this consolidation -> release its nested package locks.
-        $body.find(".fs-pkg-body.show").each(function () { fsStopLock($(this).data("oid")); });
+        $body.find(".fs-pkg-body:visible").each(function () { fsStopLock($(this).data("oid")); });
+        $body.slideUp(120);
         return;
     }
+
+    $card.addClass("fs-active");
+    var $box = $body.find(".fs-packages").first();
+    $body.slideDown(120);
+
     if ($box.attr("data-loaded") !== "1") {
         $box.attr("data-loaded", "1");
         $.ajax({
@@ -77,38 +83,43 @@ function fsToggleConsolidation(header, cid) {
 
 /* -------------------------- Accordion: package -------------------------- */
 function fsTogglePackage(header, oid) {
+    var $card = $(header).closest(".fs-pkg-card");
     var $body = $(".fs-pkg-body[data-oid='" + oid + "']");
     var $box  = $body.find(".fs-items").first();
-    var willOpen = !$body.hasClass("show");
+    var willOpen = $body.is(":hidden");
 
     // One package open at a time within a consolidation (releases sibling locks).
-    $body.closest(".fs-packages").find(".fs-pkg-body.show").each(function () {
+    var $container = $body.closest(".fs-packages");
+    $container.find(".fs-pkg-body:visible").each(function () {
         if (String($(this).data("oid")) !== String(oid)) {
             fsStopLock($(this).data("oid"));
-            $(this).collapse("hide");
+            $(this).slideUp(120);
         }
     });
+    $container.find(".fs-pkg-card.fs-active").removeClass("fs-active");
 
-    $body.collapse("toggle");
+    if (!willOpen) {
+        $body.slideUp(120);
+        fsStopLock(oid);
+        return;
+    }
 
-    if (willOpen) {
-        if ($box.attr("data-loaded") !== "1") {
-            $box.attr("data-loaded", "1");
-            $.ajax({
-                url: FS_AJAX,
-                data: { action: "items", order_id: oid },
-                success: function (html) {
-                    $box.html(html);
-                    // We hold the lock only if the server returned editable rows.
-                    if ($box.find(".fs-save").length) fsStartLock(oid);
-                },
-                error: function () { $box.attr("data-loaded", "0").html('<div class="text-danger small">Failed to load items.</div>'); }
-            });
-        } else if ($box.find(".fs-save").length) {
-            fsStartLock(oid); // re-acquire on re-open
-        }
-    } else {
-        fsStopLock(oid); // collapsed -> release
+    $card.addClass("fs-active");
+    $body.slideDown(120);
+
+    if ($box.attr("data-loaded") !== "1") {
+        $box.attr("data-loaded", "1");
+        $.ajax({
+            url: FS_AJAX,
+            data: { action: "items", order_id: oid },
+            success: function (html) {
+                $box.html(html);
+                if ($box.find(".fs-save").length) fsStartLock(oid);
+            },
+            error: function () { $box.attr("data-loaded", "0").html('<div class="text-danger small">Failed to load items.</div>'); }
+        });
+    } else if ($box.find(".fs-save").length) {
+        fsStartLock(oid); // re-acquire on re-open
     }
 }
 
@@ -123,10 +134,9 @@ function fsStartLock(oid) {
                     data: { action: "lock", order_id: id },
                     success: function (r) {
                         if (r && r.ok === false) {
-                            // Lost the lock (expired and taken) — make the rows read-only.
                             fsStopLock(id);
                             var $items = $(".fs-pkg-body[data-oid='" + id + "'] .fs-items");
-                            $items.find("input,button.fs-save,.fs-mode .btn").prop("disabled", true);
+                            $items.find("input,button.fs-save,.fs-mode .btn,.fs-cur-btn").prop("disabled", true);
                             $items.prepend('<div class="alert alert-warning mb-2"><i class="fas fa-lock"></i> Lock lost — now being edited by <b>' + (r.by || "another user") + '</b>.</div>');
                         }
                     }
@@ -159,19 +169,61 @@ function fsSetMode(iid, mode) {
 
     if (mode === "custom") {
         $weight.val("").prop("disabled", true).attr("placeholder", "—");
-        $custom.prop("disabled", false).attr("placeholder", "USD").focus();
+        $custom.prop("disabled", false).attr("placeholder", fsItemCur(iid).toUpperCase()).focus();
+        fsCustomLiveEquiv($custom[0]);
     } else {
         $custom.val("").prop("disabled", true).attr("placeholder", "—");
+        $row.find(".fs-equiv").text("");
         $weight.prop("disabled", false).attr("placeholder", "weight").focus();
+    }
+}
+
+/* Per-input currency toggle: switch ONE custom-price box between USD and GHS,
+   converting whatever is currently typed. Storage stays USD (server converts). */
+function fsItemCur(iid) { return $("tr[data-iid='" + iid + "'] .fs-custom").attr("data-cur") || "usd"; }
+
+function fsToggleItemCur(iid, cur) {
+    cur = (cur === "ghs") ? "ghs" : "usd";
+    var $row = $("tr[data-iid='" + iid + "']");
+    var $i   = $row.find(".fs-custom");
+    var old  = $i.attr("data-cur") || "usd";
+
+    if (old !== cur) {
+        var raw = parseFloat(String($i.val() || "").replace(/,/g, ""));
+        if (!isNaN(raw) && raw > 0) {
+            var usd   = (old === "ghs") ? raw / fsRate() : raw;        // normalise to USD
+            var shown = (cur === "ghs") ? usd * fsRate() : usd;        // re-express
+            $i.val(shown.toFixed(2));
+        }
+        $i.attr("data-cur", cur).attr("placeholder", cur.toUpperCase());
+    }
+    $row.find(".fs-cur-btn").removeClass("active btn-primary").addClass("btn-outline-secondary");
+    $row.find(".fs-cur-btn[data-cur='" + cur + "']").addClass("active btn-primary").removeClass("btn-outline-secondary");
+    fsCustomLiveEquiv($i[0]);
+}
+
+// Live "≈ $X / ≈ ₵X" helper under a custom-price input, based on ITS toggle.
+function fsCustomLiveEquiv(input) {
+    var $i  = $(input);
+    var $eq = $i.closest("td").find(".fs-equiv");
+    var raw = parseFloat(String($i.val() || "").replace(/,/g, ""));
+    if (isNaN(raw) || raw <= 0) { $eq.text(""); return; }
+    if (($i.attr("data-cur") || "usd") === "ghs") {
+        $eq.text("≈ $" + (raw / fsRate()).toFixed(2) + " USD");
+    } else {
+        $eq.text("≈ ₵" + (raw * fsRate()).toFixed(2) + " GHS");
     }
 }
 
 function fsSaveItem(oid, iid, btn) {
     var $row  = $("tr[data-iid='" + iid + "']");
     var mode  = $row.find(".fs-mode-val").val() || "weight";
-    var value = (mode === "custom") ? $row.find(".fs-custom").val() : $row.find(".fs-weight").val();
+    var $cust = $row.find(".fs-custom");
+    var cur   = $cust.attr("data-cur") || "usd";
+    var raw   = (mode === "custom") ? $cust.val() : $row.find(".fs-weight").val();
+    var value = parseFloat(String(raw || "").replace(/,/g, ""));
 
-    if (!value || parseFloat(value) <= 0) {
+    if (!value || value <= 0) {
         Swal.fire({ icon: "error", text: "Enter a " + (mode === "custom" ? "custom price" : "weight") + " greater than 0.", confirmButtonText: "Ok" });
         return;
     }
@@ -180,15 +232,32 @@ function fsSaveItem(oid, iid, btn) {
     $.ajax({
         url: FS_AJAX,
         method: "POST",
-        data: { action: "save_item", order_id: oid, order_item_id: iid, mode: mode, value: value },
+        // currency tells the server how to interpret a custom price (GHS -> USD).
+        data: { action: "save_item", order_id: oid, order_item_id: iid, mode: mode, value: value, currency: cur },
         dataType: "json",
         success: function (r) {
             $(btn).prop("disabled", false);
             if (r && r.ok) {
                 $(btn).removeClass("btn-success").addClass("btn-outline-success");
                 setTimeout(function () { $(btn).removeClass("btn-outline-success").addClass("btn-success"); }, 1200);
-                var $pkgTotal = $(".fs-pkg-body[data-oid='" + oid + "'] .fs-pkg-total");
-                if (r.total_order != null) $pkgTotal.text(Number(r.total_order).toFixed(2));
+
+                // Keep the item's canonical USD in sync.
+                if (mode === "custom") {
+                    var usd = (cur === "ghs") ? (value / fsRate()) : value;
+                    $cust.attr("data-usd", usd.toFixed(2));
+                } else {
+                    $cust.attr("data-usd", "");
+                    $row.find(".fs-equiv").text("");
+                }
+
+                // Update the package total (lives in the package header).
+                if (r.total_order != null) {
+                    var $pkgTotal = $(".fs-pkg-body[data-oid='" + oid + "']").closest(".fs-pkg-card").find(".fs-pkg-total");
+                    $pkgTotal.attr("data-usd", r.total_order).text(fsMoney(r.total_order));
+                }
+
+                // Prepend a line to this package's change log.
+                if (r.history) fsPrependHistory(oid, r.history);
             } else if (r && r.error === "locked") {
                 Swal.fire({ icon: "warning", text: "This package is now being edited by " + (r.by || "another user") + ".", confirmButtonText: "Ok" });
             } else {
@@ -202,6 +271,17 @@ function fsSaveItem(oid, iid, btn) {
     });
 }
 
+// Drop a freshly-recorded change at the top of the package's change log.
+function fsPrependHistory(oid, h) {
+    var $log = $(".fs-pkg-body[data-oid='" + oid + "'] .fs-history");
+    if (!$log.length) return;
+    $log.find(".fs-history-empty").remove();
+    var line = '<div class="fs-hist-item"><b>' + (h.who || "Someone") + '</b> ' +
+               $("<span>").text(h.what || "").html() +
+               ' <span class="text-muted">— ' + (h.when || "just now") + '</span></div>';
+    $log.find(".fs-history-list").prepend(line);
+}
+
 function fsIsNumber(evt) {
     var c = evt.which ? evt.which : evt.keyCode;
     if (c > 31 && (c < 48 || c > 57) && c !== 46 && c !== 8) return false;
@@ -209,7 +289,6 @@ function fsIsNumber(evt) {
 }
 
 /* ------------------------------ Export --------------------------------- */
-// One PDF per consolidation (opens in a new tab).
 function fsExportConsolidation(cid) {
     window.open("views/print/print_financial_sheet.php?consolidate_id=" + encodeURIComponent(cid), "_blank");
 }

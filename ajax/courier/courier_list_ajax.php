@@ -89,10 +89,9 @@ $per_page = (($_REQUEST['per_page'] ?? '') === 'all') ? 1000000000 : (in_array((
 $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
-$db->cdp_query("UPDATE cdb_add_order SET  status_invoice =3  WHERE due_date<now() and status_invoice !=1 and order_payment_method >1");
-
-
-$db->cdp_execute();
+// Throttled (was a full-scan UPDATE on every page load):
+if (!function_exists('cdp_markOverdueInvoices')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/overdue_invoices.php')) { $d = dirname($d); } if (is_file($d . '/helpers/overdue_invoices.php')) require_once $d . '/helpers/overdue_invoices.php'; }
+cdp_markOverdueInvoices($db);
 
 
 $sql = "SELECT a.order_incomplete, a.recipient_type, a.status_invoice, a.is_consolidate, a.is_dangerous_good, a.is_pickup, a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM
@@ -105,9 +104,9 @@ $sql = "SELECT a.order_incomplete, a.recipient_type, a.status_invoice, a.is_cons
 			 ";
 
 
-$db->cdp_query($sql);
-$db->cdp_execute();
-$numrows = $db->cdp_rowCount();
+$db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
+$cdp_cnt_row = $db->cdp_registro();
+$numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
@@ -162,38 +161,63 @@ if ($numrows > 0) { ?>
 					<?php
 
 					$count = 0;
+
+					// Status styles are constant for every row — fetch once, not per iteration.
+					$db->cdp_query("SELECT * FROM cdb_styles where id= '14'");
+					$status_style_pickup = $db->cdp_registro();
+					$db->cdp_query("SELECT * FROM cdb_styles where id= '13'");
+					$status_style_consolidate = $db->cdp_registro();
+					// --- De-N+1: bulk-prefetch per-row lookups once, then read from maps in the loop.
+					$fs_senderIds = $fs_payIds = $fs_recvUserIds = $fs_recvRecipIds = $fs_tracks = [];
+					foreach ($data as $row) {
+					    if ((int) $row->sender_id > 0)      $fs_senderIds[(int) $row->sender_id] = 1;
+					    if ((int) $row->order_pay_mode > 0) $fs_payIds[(int) $row->order_pay_mode] = 1;
+					    $rtype = isset($row->recipient_type) ? $row->recipient_type : 'recipient';
+					    if ((int) $row->receiver_id > 0) {
+					        if ($rtype === 'user') $fs_recvUserIds[(int) $row->receiver_id] = 1;
+					        else                   $fs_recvRecipIds[(int) $row->receiver_id] = 1;
+					    }
+					    $fs_tracks[$row->order_prefix . $row->order_no] = 1;
+					}
+					$sender_map = $recv_user_map = $recv_recip_map = $paymode_map = $address_map = [];
+					if ($fs_senderIds) {
+					    $db->cdp_query("SELECT * FROM cdb_users WHERE id IN (" . implode(',', array_keys($fs_senderIds)) . ")");
+					    foreach ($db->cdp_registros() as $r) $sender_map[(int) $r->id] = $r;
+					}
+					if ($fs_payIds) {
+					    $db->cdp_query("SELECT * FROM cdb_met_payment WHERE id IN (" . implode(',', array_keys($fs_payIds)) . ")");
+					    foreach ($db->cdp_registros() as $r) $paymode_map[(int) $r->id] = $r;
+					}
+					if ($fs_recvUserIds) {
+					    $db->cdp_query("SELECT id, fname, lname FROM cdb_users WHERE id IN (" . implode(',', array_keys($fs_recvUserIds)) . ")");
+					    foreach ($db->cdp_registros() as $r) $recv_user_map[(int) $r->id] = $r;
+					}
+					if ($fs_recvRecipIds) {
+					    $db->cdp_query("SELECT id, fname, lname FROM cdb_recipients WHERE id IN (" . implode(',', array_keys($fs_recvRecipIds)) . ")");
+					    foreach ($db->cdp_registros() as $r) $recv_recip_map[(int) $r->id] = $r;
+					}
+					if ($fs_tracks) {
+					    $fs_trk = implode(',', array_map(function ($t) { return "'" . str_replace("'", "''", $t) . "'"; }, array_keys($fs_tracks)));
+					    $db->cdp_query("SELECT * FROM cdb_address_shipments WHERE order_track IN ($fs_trk)");
+					    foreach ($db->cdp_registros() as $r) { if (!isset($address_map[$r->order_track])) $address_map[$r->order_track] = $r; }
+					}
+
 					foreach ($data as $row) {
 
-						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
-						$sender_data = $db->cdp_registro();
+						$sender_data = $sender_map[(int) $row->sender_id] ?? null;
 
 						$recipient_type = isset($row->recipient_type) ? $row->recipient_type : 'recipient';
 
-                        if ($recipient_type === 'user') {
-                            $db->cdp_query("SELECT id, fname, lname FROM cdb_users where id= '" . intval($row->receiver_id) . "'");
-                        } else {
-                            $db->cdp_query("SELECT id, fname, lname FROM cdb_recipients where id= '" . intval($row->receiver_id) . "'");
-                        }
-                        
-						$receiver_data = $db->cdp_registro();
+						$receiver_data = ($recipient_type === 'user')
+							? ($recv_user_map[(int) $row->receiver_id] ?? null)
+							: ($recv_recip_map[(int) $row->receiver_id] ?? null);
 
-						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->driver_id . "'");
-						$driver_data = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_courier_com where id= '" . $row->order_courier . "'");
-						$courier_com = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_met_payment where id= '" . $row->order_pay_mode . "'");
-						$met_payment = $db->cdp_registro();
+						$met_payment = $paymode_map[(int) $row->order_pay_mode] ?? null;
 
-						$db->cdp_query("SELECT * FROM cdb_shipping_mode where id= '" . $row->order_service_options . "'");
-						$order_service_options = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_styles where id= '14'");
-						$status_style_pickup = $db->cdp_registro();
 
-						$db->cdp_query("SELECT * FROM cdb_styles where id= '13'");
-						$status_style_consolidate = $db->cdp_registro();
 
                         $postal_tracking = cdp_getPackageTrackingLegacyAware((int) $row->order_id);
 
@@ -212,8 +236,7 @@ if ($numrows > 0) { ?>
 
 
 
-						$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row->order_prefix . $row->order_no . "'");
-						$address_order = $db->cdp_registro();
+						$address_order = $address_map[$row->order_prefix . $row->order_no] ?? null;
 
                         $db->cdp_query("SELECT consolidate_id FROM cdb_consolidate_detail where order_no='" . $row->order_no . "'");
 						$consolidate_id = $db->cdp_registro() -> consolidate_id;
@@ -224,8 +247,6 @@ if ($numrows > 0) { ?>
                         $db->cdp_query("SELECT * FROM cdb_styles where id='" . $consolidate_status_courier . "'");
 						$consolidate_style = $db->cdp_registro();
                         
-                        $db->cdp_query("SELECT t_date FROM cdb_courier_track where order_track='" . $row->order_prefix . $row->order_no . "' AND (status_courier = 15 OR status_courier = 8)");
-						$package_tracking = $db->cdp_registro();
 
 
 					?>

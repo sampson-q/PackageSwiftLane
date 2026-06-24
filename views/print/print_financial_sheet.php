@@ -38,14 +38,21 @@ if (!$consol) {
 $cNo = htmlspecialchars(($consol->c_prefix ?? '') . ($consol->c_no ?? ''));
 $sym = htmlspecialchars($core->currency ?? 'USD');
 
-// Packages in this consolidation (detail links by tracking prefix + no).
-$db->cdp_query("SELECT a.order_id AS oid, a.order_prefix, a.order_no, a.sender_id,
-                       a.total_weight, a.total_order,
+// Packages in this consolidation. (order_prefix, order_no) is not unique in
+// cdb_add_order, so map each detail row to exactly ONE order (prefer the exact
+// numeric order_id match, else the lowest matching id) — otherwise the list and
+// totals multiply. The per-row weight comes from the detail row itself.
+$db->cdp_query("SELECT a.order_id AS oid, d.order_prefix, d.order_no, a.sender_id,
+                       d.weight AS detail_weight, a.total_order,
                        COALESCE(NULLIF(pt.tracking_number,''), a.tracking_num) AS carrier_tracking
                 FROM cdb_consolidate_detail d
-                INNER JOIN cdb_add_order a ON a.order_prefix = d.order_prefix AND a.order_no = d.order_no
+                INNER JOIN cdb_add_order a ON a.order_id = (
+                    SELECT a2.order_id FROM cdb_add_order a2
+                    WHERE a2.order_prefix = d.order_prefix AND a2.order_no = d.order_no
+                    ORDER BY (a2.order_id = CAST(d.order_id AS UNSIGNED)) DESC, a2.order_id ASC
+                    LIMIT 1)
                 LEFT JOIN cdb_package_tracking_number pt ON pt.order_id = a.order_id
-                WHERE d.consolidate_id = :cid ORDER BY a.order_id ASC");
+                WHERE d.consolidate_id = :cid ORDER BY d.detail_id ASC");
 $db->bind(':cid', $cid);
 $db->cdp_execute();
 $packages = $db->cdp_registros();
@@ -60,10 +67,25 @@ $h  = '<style>
         .r { text-align:right; }
       </style>';
 
-$h .= '<h2>Financial Sheet &mdash; Consolidation ' . $cNo . '</h2>';
+// Consolidation weight AND total are the sum of its member packages' own values
+// (the stored cdb_consolidate.total_weight / total_order are always 0), matching
+// the on-screen sheet.
+$calcWeight = 0.0;
+$calcTotal  = 0.0;
+if ($packages) {
+    foreach ($packages as $p) {
+        $calcWeight += (float) $p->detail_weight;
+        $calcTotal  += (float) $p->total_order;
+    }
+}
+$isDg = ((int) ($consol->is_dangerous_good ?? 0) === 1);
+
+$h .= '<h2>Financial Sheet &mdash; Consolidation ' . $cNo
+    . ($isDg ? ' <span style="background:#ff6d00;color:#fff;font-size:9px;padding:2px 6px;border-radius:8px;">&#9888; DANGEROUS GOODS</span>' : '')
+    . '</h2>';
 $h .= '<div class="sub">Date: ' . htmlspecialchars((string) $consol->c_date)
-    . ' &nbsp;|&nbsp; Total weight: ' . (float) $consol->total_weight
-    . ' &nbsp;|&nbsp; Consolidation total: ' . $sym . ' ' . cdb_money_format_bar($consol->total_order)
+    . ' &nbsp;|&nbsp; Total weight: ' . round($calcWeight, 2)
+    . ' &nbsp;|&nbsp; Consolidation total: ' . $sym . ' ' . cdb_money_format_bar($calcTotal)
     . ' &nbsp;|&nbsp; Generated ' . date('Y-m-d H:i') . '</div>';
 
 $h .= '<table><thead><tr>'
@@ -115,7 +137,7 @@ if (!$packages) {
             . '<td>' . $carrier . '</td>'
             . '<td class="r">' . $qtyCol . '</td>'
             . '<td>' . $descCol . '</td>'
-            . '<td class="r">' . number_format((float) $p->total_weight, 2) . '</td>'
+            . '<td class="r">' . number_format((float) $p->detail_weight, 2) . '</td>'
             . '<td class="r">' . $sym . ' ' . cdb_money_format_bar($p->total_order) . '</td>'
             . '</tr>';
         $sn++;

@@ -51,7 +51,7 @@ $data = array();
 
 for ($month = 1; $month <= 12; $month++) {
 
-	$sql = "SELECT IFNULL(SUM(total_order), 0) as total FROM cdb_consolidate_packages WHERE month(c_date)='$month' AND year(c_date)='$year' $sWhere";
+	$sql = "SELECT IFNULL(SUM(total_order), 0) as total FROM cdb_consolidate_packages WHERE c_date >= '$year-$month-01' AND c_date < DATE('$year-$month-01') + INTERVAL 1 MONTH $sWhere";
 
 	$db->cdp_query($sql);
 	$total_data = $db->cdp_registro();

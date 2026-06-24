@@ -64,9 +64,9 @@ $sql = "SELECT a.volumetric_percentage,  a.total_order, a.order_id, a.order_pref
 			 order by a.order_id desc";
 
 
-$db->cdp_query($sql);
-$db->cdp_execute();
-$numrows = $db->cdp_rowCount();
+$db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
+$cdp_cnt_row = $db->cdp_registro();
+$numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");

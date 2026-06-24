@@ -47,7 +47,7 @@ $currentMonth = date('n');
 // Obtener el nombre del mes actual
 $monthName = obtenerNombreMes($currentMonth);
 
-$sql = "SELECT order_id, total_order FROM cdb_add_order WHERE status_courier != 21 AND order_payment_method > 1 AND MONTH(order_date) = :month AND YEAR(order_date) = :year" . $agency_where . " ORDER BY order_id DESC";
+$sql = "SELECT order_id, total_order FROM cdb_add_order WHERE status_courier != 21 AND order_payment_method > 1 AND order_date >= MAKEDATE(:year,1) + INTERVAL (:month-1) MONTH AND order_date < MAKEDATE(:year,1) + INTERVAL :month MONTH" . $agency_where . " ORDER BY order_id DESC";
 $db->cdp_query($sql);
 $db->bind(':month', $month);
 $db->bind(':year', $year);

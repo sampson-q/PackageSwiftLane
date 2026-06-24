@@ -46,9 +46,9 @@ $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
 $sql = "SELECT $fields FROM  $tables where $sWhere";
-$db->cdp_query($sql);
-$db->cdp_execute();
-$numrows = $db->cdp_rowCount();
+$db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
+$cdp_cnt_row = $db->cdp_registro();
+$numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");

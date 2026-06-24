@@ -45,6 +45,12 @@ if ($action === 'lock' || $action === 'unlock' || $action === 'save_item') {
     $order_item_id = (int) ($_REQUEST['order_item_id'] ?? 0);
     $mode  = (($_REQUEST['mode'] ?? 'weight') === 'custom') ? 'custom' : 'weight';
     $value = (float) str_replace(',', '', (string) ($_REQUEST['value'] ?? '0'));
+    // The sheet can be edited in GHS (operator view) while storage stays USD.
+    // Only the custom price is a monetary value — weight is currency-agnostic.
+    $currency = (strtolower((string) ($_REQUEST['currency'] ?? 'usd')) === 'ghs') ? 'ghs' : 'usd';
+    if ($mode === 'custom' && $currency === 'ghs' && $value > 0) {
+        $value = round(cdp_ghsToUsd($value, (float) $core->exchange_rate), 2);
+    }
 
     // The lock must still be held by this user.
     $lock = cdp_fsAcquireLock($order_id, $uid, $uname);
@@ -75,10 +81,42 @@ if ($action === 'lock' || $action === 'unlock' || $action === 'save_item') {
 
     $totals = cdp_recalcCourierShipmentTotals($order_id);
 
+    // ---- Audit: record who changed what on this package (the change log). -----
+    $db->cdp_query("SELECT order_prefix, order_no FROM cdb_add_order WHERE order_id = :oid LIMIT 1");
+    $db->bind(':oid', $order_id);
+    $db->cdp_execute();
+    $ord   = $db->cdp_registro();
+    $track = $ord ? ($ord->order_prefix . $ord->order_no) : '';
+
+    $db->cdp_query("SELECT order_item_description FROM cdb_add_order_item WHERE order_item_id = :iid LIMIT 1");
+    $db->bind(':iid', $order_item_id);
+    $db->cdp_execute();
+    $itRow = $db->cdp_registro();
+    $desc  = $itRow ? trim((string) $itRow->order_item_description) : '';
+    if ($desc === '') $desc = 'item';
+
+    // $value is already canonical USD here (GHS input was converted above).
+    $what = ($mode === 'custom')
+        ? 'set "' . $desc . '" custom price to $' . number_format($value, 2) . ' USD'
+        : 'set "' . $desc . '" weight to ' . rtrim(rtrim(number_format($value, 2, '.', ''), '0'), '.');
+
+    $history = null;
+    if (function_exists('cdp_insertCourierShipmentUserHistory')) {
+        cdp_insertCourierShipmentUserHistory([
+            'user_id'      => $uid,
+            'order_id'     => $order_id,
+            'order_track'  => $track,
+            'action'       => 'Financial Sheet — ' . $what,
+            'date_history' => date('Y-m-d H:i:s'),
+        ]);
+        $history = ['who' => $uname, 'what' => $what, 'when' => date('Y-m-d H:i')];
+    }
+
     echo json_encode([
         'ok'          => true,
         'total_order' => $totals ? $totals['total_order'] : null,
         'sub_total'   => $totals ? $totals['sub_total'] : null,
+        'history'     => $history,
     ]);
     exit;
 }
@@ -113,7 +151,7 @@ if ($action === 'items') {
                 <th>Description</th>
                 <th style="width:160px;">Pricing mode</th>
                 <th style="width:120px;">Weight</th>
-                <th style="width:130px;">Custom Price</th>
+                <th style="width:180px;">Custom Price</th>
                 <th style="width:70px;"></th>
             </tr>
         </thead>
@@ -144,11 +182,21 @@ if ($action === 'items') {
                            onkeypress="return fsIsNumber(event)">
                 </td>
                 <td>
+                    <div class="btn-group btn-group-sm fs-cur-mini mb-1" role="group" aria-label="Entry currency">
+                        <button type="button" class="btn btn-primary active fs-cur-btn" data-cur="usd"
+                                onclick="fsToggleItemCur(<?php echo $iid; ?>, 'usd')" <?php echo $editable ? '' : 'disabled'; ?>>$</button>
+                        <button type="button" class="btn btn-outline-secondary fs-cur-btn" data-cur="ghs"
+                                onclick="fsToggleItemCur(<?php echo $iid; ?>, 'ghs')" <?php echo $editable ? '' : 'disabled'; ?>>&#8373;</button>
+                    </div>
                     <input type="text" class="form-control form-control-sm fs-custom"
+                           data-usd="<?php echo $useCustom ? (float) $custom : ''; ?>"
+                           data-cur="usd"
                            value="<?php echo $useCustom ? ($custom ?: '') : ''; ?>"
                            placeholder="<?php echo $useCustom ? 'USD' : '—'; ?>"
                            <?php echo (!$useCustom || !$editable) ? 'disabled' : ''; ?>
+                           onkeyup="fsCustomLiveEquiv(this)"
                            onkeypress="return fsIsNumber(event)">
+                    <small class="text-muted fs-equiv d-block" style="font-size:11px;line-height:1.2;"></small>
                 </td>
                 <td>
                     <?php if ($editable): ?>
@@ -163,6 +211,43 @@ if ($action === 'items') {
         </tbody>
     </table>
     <?php
+    // Change log for this package (financial-sheet edits only). Filter on the
+    // indexed order_track first (idx_hist_order_track) so this stays fast even
+    // when there are no matches, then keep order_id for precision (prefix+no can
+    // collide across orders).
+    $db->cdp_query("SELECT order_prefix, order_no FROM cdb_add_order WHERE order_id = :oid LIMIT 1");
+    $db->bind(':oid', $order_id);
+    $db->cdp_execute();
+    $ordRow   = $db->cdp_registro();
+    $ordTrack = $ordRow ? ($ordRow->order_prefix . $ordRow->order_no) : '';
+
+    $db->cdp_query("SELECT h.action, h.date_history,
+                           COALESCE(NULLIF(TRIM(CONCAT(COALESCE(u.fname,''),' ',COALESCE(u.lname,''))),''), u.username, CONCAT('User ', h.user_id)) AS uname
+                    FROM cdb_order_user_history h
+                    LEFT JOIN cdb_users u ON u.id = h.user_id
+                    WHERE h.order_track = :track AND h.order_id = :oid AND h.action LIKE 'Financial Sheet%'
+                    ORDER BY h.history_id DESC LIMIT 12");
+    $db->bind(':track', $ordTrack);
+    $db->bind(':oid', $order_id);
+    $db->cdp_execute();
+    $hist = $db->cdp_registros();
+    ?>
+    <div class="fs-history">
+        <div class="fs-history-title"><i class="mdi mdi-history"></i> Change log</div>
+        <div class="fs-history-list">
+            <?php if ($hist): foreach ($hist as $hh):
+                $act = preg_replace('/^Financial Sheet\s*[—-]\s*/u', '', (string) $hh->action);
+            ?>
+                <div class="fs-hist-item"><b><?php echo htmlspecialchars($hh->uname); ?></b>
+                    <?php echo htmlspecialchars($act); ?>
+                    <span class="text-muted">— <?php echo htmlspecialchars(date('Y-m-d H:i', strtotime((string) $hh->date_history))); ?></span>
+                </div>
+            <?php endforeach; else: ?>
+                <div class="fs-hist-item fs-history-empty text-muted">No changes recorded yet.</div>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php
     exit;
 }
 
@@ -172,13 +257,21 @@ if ($action === 'items') {
 if ($action === 'packages') {
     $consolidate_id = (int) ($_REQUEST['consolidate_id'] ?? 0);
 
-    // cdb_consolidate_detail links to packages by tracking (prefix + no), not by
-    // the numeric order_id — its order_id column actually holds the tracking string.
-    $db->cdp_query("SELECT a.order_id AS oid, a.order_prefix, a.order_no, a.total_weight
+    // Map each detail row to EXACTLY ONE order. (order_prefix, order_no) is not
+    // unique in cdb_add_order, so a plain join multiplies rows. Newer detail rows
+    // carry the numeric order_id; older ones store the tracking string in order_id
+    // and only resolve by prefix+no. The subquery prefers the exact order_id match,
+    // else the lowest matching order_id — one package per member, no duplicates.
+    $db->cdp_query("SELECT a.order_id AS oid, d.order_prefix, d.order_no,
+                           d.weight AS detail_weight, a.total_order
                     FROM cdb_consolidate_detail d
-                    INNER JOIN cdb_add_order a ON a.order_prefix = d.order_prefix AND a.order_no = d.order_no
+                    INNER JOIN cdb_add_order a ON a.order_id = (
+                        SELECT a2.order_id FROM cdb_add_order a2
+                        WHERE a2.order_prefix = d.order_prefix AND a2.order_no = d.order_no
+                        ORDER BY (a2.order_id = CAST(d.order_id AS UNSIGNED)) DESC, a2.order_id ASC
+                        LIMIT 1)
                     WHERE d.consolidate_id = :cid
-                    ORDER BY a.order_id ASC");
+                    ORDER BY d.detail_id ASC");
     $db->bind(':cid', $consolidate_id);
     $db->cdp_execute();
     $packages = $db->cdp_registros();
@@ -191,15 +284,21 @@ if ($action === 'packages') {
         $oid = (int) $p->oid;
         $pkgNo = htmlspecialchars(($p->order_prefix ?? '') . ($p->order_no ?? ''));
     ?>
-        <div class="card mb-1 border">
-            <div class="card-header p-2" style="background:#fbfcfd;cursor:pointer;"
+        <div class="card mb-1 fs-pkg-card">
+            <div class="card-header fs-pkg-header p-2"
                  onclick="fsTogglePackage(this, <?php echo $oid; ?>)">
+                <span class="fs-level-chip fs-chip-pkg">PACKAGE</span>
                 <i class="mdi mdi-package-variant-closed"></i>
-                <b>Package <?php echo $pkgNo; ?></b>
-                <span class="text-muted ml-2">Total weight: <?php echo (float) $p->total_weight; ?></span>
-                <i class="mdi mdi-chevron-down float-right fs-pkg-caret"></i>
+                <b><?php echo $pkgNo; ?></b>
+                <span class="text-muted ml-2" title="Package weight">
+                    <i class="mdi mdi-weight-kilogram"></i> <?php echo round((float) $p->detail_weight, 2); ?>
+                </span>
+                <span class="float-right">
+                    <span class="fs-money fs-pkg-total" data-usd="<?php echo (float) $p->total_order; ?>">$<?php echo number_format((float) $p->total_order, 2); ?></span>
+                    <i class="mdi mdi-chevron-down fs-pkg-caret ml-2"></i>
+                </span>
             </div>
-            <div class="collapse fs-pkg-body" data-oid="<?php echo $oid; ?>">
+            <div class="fs-pkg-body" data-oid="<?php echo $oid; ?>" style="display:none;">
                 <div class="card-body p-2 fs-items" data-loaded="0">
                     <div class="text-muted small">Loading items…</div>
                 </div>
@@ -216,14 +315,29 @@ $search = isset($_REQUEST['q']) ? cdp_sanitize($_REQUEST['q']) : '';
 
 $sqlWhere = '';
 if ($search !== '') {
-    $sqlWhere = " WHERE CONCAT(COALESCE(c_prefix,''), COALESCE(c_no,'')) LIKE :q ";
+    $sqlWhere = " WHERE CONCAT(COALESCE(c.c_prefix,''), COALESCE(c.c_no,'')) LIKE :q ";
 }
-$sql = "SELECT consolidate_id, c_prefix, c_no, c_date, total_weight, total_order, status_courier
-        FROM cdb_consolidate $sqlWhere ORDER BY consolidate_id DESC LIMIT 200";
+// Consolidation weight is NOT the (always-0) stored cdb_consolidate.total_weight.
+// It is the sum of the member packages' weights, read straight from each detail
+// row (cdb_consolidate_detail.weight). We deliberately do NOT join to
+// cdb_add_order here: (order_prefix, order_no) is NOT unique in cdb_add_order, so
+// that join multiplies rows (e.g. consol 29: 88 members -> 434 joined rows) and
+// badly inflates the total. The money total is summed from the de-duplicated
+// package list when a consolidation is expanded (see the 'packages' action + JS).
+$sql = "SELECT c.consolidate_id, c.c_prefix, c.c_no, c.c_date, c.status_courier,
+               c.is_dangerous_good,
+               (SELECT COALESCE(SUM(d.weight),0)
+                  FROM cdb_consolidate_detail d
+                  WHERE d.consolidate_id = c.consolidate_id) AS calc_weight
+        FROM cdb_consolidate c $sqlWhere ORDER BY c.consolidate_id DESC LIMIT 200";
 $db->cdp_query($sql);
 if ($search !== '') $db->bind(':q', '%' . $search . '%');
 $db->cdp_execute();
 $consolidations = $db->cdp_registros();
+
+// Dangerous-goods badge style (cached). Falls back to the marker's standard orange.
+$dgStyle = function_exists('cdp_getDangerousGoodsStyle') ? cdp_getDangerousGoodsStyle() : null;
+$dgColor = ($dgStyle && !empty($dgStyle->color)) ? $dgStyle->color : '#ff6d00';
 
 if (!$consolidations) {
     echo '<div id="report-has-data" data-has="0"></div>';
@@ -237,12 +351,20 @@ if (!$consolidations) {
         $cid = (int) $c->consolidate_id;
         $cNo = htmlspecialchars(($c->c_prefix ?? '') . ($c->c_no ?? ''));
     ?>
-    <div class="card mb-2">
+    <div class="card mb-2 fs-consol-card">
         <div class="card-header fs-consol-header" onclick="fsToggleConsolidation(this, <?php echo $cid; ?>)">
             <i class="fas fa-boxes"></i>
-            <b>Consolidation <?php echo $cNo; ?></b>
-            <span class="ml-3 fs-dim"><?php echo htmlspecialchars((string) $c->c_date); ?></span>
-            <span class="ml-3 fs-dim">Total weight: <?php echo (float) $c->total_weight; ?></span>
+            <b><?php echo $cNo; ?></b>
+            <span class="ml-3 fs-dim"><i class="mdi mdi-calendar-blank"></i> <?php echo htmlspecialchars((string) $c->c_date); ?></span>
+            <span class="ml-3 fs-dim" title="Sum of package weights">
+                <i class="mdi mdi-weight-kilogram"></i> <?php echo round((float) $c->calc_weight, 2); ?>
+            </span>
+            <?php if ((int) $c->is_dangerous_good === 1): ?>
+                <span class="fs-dg-badge" style="background:<?php echo htmlspecialchars($dgColor); ?>;"
+                      title="This consolidation contains dangerous goods">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </span>
+            <?php endif; ?>
             <span class="float-right">
                 <button type="button" class="btn btn-sm btn-light"
                         onclick="event.stopPropagation(); fsExportConsolidation(<?php echo $cid; ?>);"
@@ -252,7 +374,7 @@ if (!$consolidations) {
                 <i class="mdi mdi-chevron-down fs-consol-caret ml-2"></i>
             </span>
         </div>
-        <div class="collapse fs-consol-body" data-cid="<?php echo $cid; ?>">
+        <div class="fs-consol-body" data-cid="<?php echo $cid; ?>" style="display:none;">
             <div class="card-body p-2 fs-packages" data-loaded="0">
                 <div class="text-muted small">Loading packages…</div>
             </div>

@@ -47,7 +47,7 @@ if ($userData->userlevel == 3) {
 // Customers (userlevel 1) see ALL their own shipments on the dashboard — the
 // current-month/year scoping is only for staff activity overviews.
 if ((int)$userData->userlevel !== 1) {
-	$swhere .= " and month(a.order_date)='$month' AND year(a.order_date)='$year'";
+	$swhere .= " and a.order_date >= '$year-$month-01' AND a.order_date < DATE('$year-$month-01') + INTERVAL 1 MONTH";
 }
 
 if (isset($_REQUEST['search'])) {
@@ -78,9 +78,9 @@ $sql = "SELECT a.status_invoice, a.recipient_type, a.order_incomplete,  a.is_con
 			 ";
 
 
-$db->cdp_query($sql);
-$db->cdp_execute();
-$numrows = $db->cdp_rowCount();
+$db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
+$cdp_cnt_row = $db->cdp_registro();
+$numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");

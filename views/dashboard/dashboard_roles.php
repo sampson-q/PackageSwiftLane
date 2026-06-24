@@ -150,8 +150,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                                     WHERE status_courier != 21 
                                                     AND status_invoice != 0 
                                                     AND order_payment_method > 1 
-                                                    AND MONTH(order_date) = :month 
-                                                    AND YEAR(order_date) = :year 
+                                                    AND order_date >= MAKEDATE(:year,1) + INTERVAL (:month-1) MONTH AND order_date < MAKEDATE(:year,1) + INTERVAL :month MONTH 
                                                     $agency_where";
 
                                             // Preparar la consulta
@@ -208,8 +207,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                         <?php echo $core->currency; ?>
                                         <?php
                                             $db->cdp_query('SELECT IFNULL(SUM(total_order),0) as total FROM cdb_add_order where status_courier != 21 and order_incomplete != 0 and is_pickup = 1
-                                                AND MONTH(order_date) = :month 
-                                                AND YEAR(order_date) = :year' . $agency_where);
+                                                AND order_date >= MAKEDATE(:year,1) + INTERVAL (:month-1) MONTH AND order_date < MAKEDATE(:year,1) + INTERVAL :month MONTH' . $agency_where);
                                             // Vincular parámetros
                                             $db->bind(':month', $month);
                                             $db->bind(':year', $year);
@@ -235,8 +233,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                         <?php echo $core->currency; ?>
                                         <?php
                                         $db->cdp_query('SELECT IFNULL(SUM(total_order),0) as total FROM cdb_add_order where status_courier != 21 and is_pickup = 0
-                                            AND MONTH(order_date) = :month 
-                                            AND YEAR(order_date) = :year' . $agency_where);
+                                            AND order_date >= MAKEDATE(:year,1) + INTERVAL (:month-1) MONTH AND order_date < MAKEDATE(:year,1) + INTERVAL :month MONTH' . $agency_where);
                                         // Vincular parámetros
                                         $db->bind(':month', $month);
                                         $db->bind(':year', $year);
@@ -264,8 +261,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                         <?php
 
                                         $db->cdp_query('SELECT IFNULL(SUM(total_order),0) as total FROM cdb_customers_packages where status_courier != 21
-                                            AND MONTH(order_date) = :month 
-                                            AND YEAR(order_date) = :year' . $agency_where_cp);
+                                            AND order_date >= MAKEDATE(:year,1) + INTERVAL (:month-1) MONTH AND order_date < MAKEDATE(:year,1) + INTERVAL :month MONTH' . $agency_where_cp);
                                         // Vincular parámetros
                                         $db->bind(':month', $month);
                                         $db->bind(':year', $year);
@@ -314,8 +310,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                                         <?php
                                                         // Ejecutar la consulta SQL para obtener el total de órdenes de compra
                                                         $db->cdp_query('SELECT IFNULL(SUM(total_order),0) as total FROM cdb_add_order where status_courier != 21 and order_incomplete != 0 and is_pickup = 1
-                                                            AND MONTH(order_date) = :month 
-                                                            AND YEAR(order_date) = :year' . $agency_where);
+                                                            AND order_date >= MAKEDATE(:year,1) + INTERVAL (:month-1) MONTH AND order_date < MAKEDATE(:year,1) + INTERVAL :month MONTH' . $agency_where);
                                                         // Vincular parámetros
                                                         $db->bind(':month', $month);
                                                         $db->bind(':year', $year);
@@ -359,8 +354,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                                         <?php
                                                         // Ejecutar la consulta SQL para obtener el total de órdenes de compra
                                                         $db->cdp_query('SELECT IFNULL(SUM(total_order),0) as total FROM cdb_add_order where status_courier != 21 and is_pickup = 0
-                                                            AND MONTH(order_date) = :month 
-                                                            AND YEAR(order_date) = :year' . $agency_where);
+                                                            AND order_date >= MAKEDATE(:year,1) + INTERVAL (:month-1) MONTH AND order_date < MAKEDATE(:year,1) + INTERVAL :month MONTH' . $agency_where);
                                                         // Vincular parámetros
                                                         $db->bind(':month', $month);
                                                         $db->bind(':year', $year);
@@ -404,8 +398,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                                         <?php
                                                             // Ejecutar la consulta SQL para obtener el total de órdenes de compra
                                                         $db->cdp_query('SELECT IFNULL(SUM(total_order),0) as total FROM cdb_consolidate where status_courier != 21
-                                                            AND MONTH(c_date) = :month 
-                                                            AND YEAR(c_date) = :year' . $agency_where_consolidate);
+                                                            AND c_date >= MAKEDATE(:year,1) + INTERVAL (:month-1) MONTH AND c_date < MAKEDATE(:year,1) + INTERVAL :month MONTH' . $agency_where_consolidate);
                                                         // Vincular parámetros
                                                         $db->bind(':month', $month);
                                                         $db->bind(':year', $year);
@@ -450,8 +443,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                                         <?php
                                                         // Ejecutar la consulta SQL para obtener el total de órdenes de compra
                                                         $db->cdp_query('SELECT IFNULL(SUM(total_order),0) as total FROM cdb_consolidate_packages where status_courier != 21
-                                                            AND MONTH(c_date) = :month 
-                                                            AND YEAR(c_date) = :year' . $agency_where_packages);
+                                                            AND c_date >= MAKEDATE(:year,1) + INTERVAL (:month-1) MONTH AND c_date < MAKEDATE(:year,1) + INTERVAL :month MONTH' . $agency_where_packages);
                                                         // Vincular parámetros
                                                         $db->bind(':month', $month);
                                                         $db->bind(':year', $year);

@@ -47,7 +47,7 @@
 
 	for ($month = 1; $month <= 12; $month ++){
 
-    	$sql="SELECT IFNULL(SUM(total_order), 0) as total FROM cdb_add_order WHERE status_courier!=21 and order_payment_method >1  and month(order_date)='$month' AND year(order_date)='$year' $sWhere"; 
+    	$sql="SELECT IFNULL(SUM(total_order), 0) as total FROM cdb_add_order WHERE status_courier!=21 and order_payment_method >1  and order_date >= '$year-$month-01' AND order_date < DATE('$year-$month-01') + INTERVAL 1 MONTH $sWhere"; 
 	       
         $db->cdp_query($sql); 
         $total_data= $db->cdp_registro();

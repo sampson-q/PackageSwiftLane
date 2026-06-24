@@ -155,6 +155,28 @@ function cdp_usdToGhs($usd, $rate = null)
 }
 
 /**
+ * Convert a GHS amount to USD using the system exchange rate. Inverse of
+ * cdp_usdToGhs(). Used when an operator enters a value in cedis (e.g. the
+ * Financial Sheet custom-price input) but storage stays canonical USD.
+ *
+ * @param float      $ghs
+ * @param float|null $rate  Pass cdb_settings.exchange_rate when you already have
+ *                          it; null fetches it once.
+ */
+function cdp_ghsToUsd($ghs, $rate = null)
+{
+    if ($rate === null) {
+        $db = new Conexion;
+        $db->cdp_query('SELECT exchange_rate FROM cdb_settings LIMIT 1');
+        $db->cdp_execute();
+        $row  = $db->cdp_registro();
+        $rate = $row ? (float) $row->exchange_rate : 1.0;
+    }
+    $rate = ((float) $rate > 0) ? (float) $rate : 1.0;
+    return (float) $ghs / $rate;
+}
+
+/**
  * Handling fee (GHS) for a given GHS amount, per the tiered schedule.
  * Computed on the fly — never stored.
  */

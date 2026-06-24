@@ -88,10 +88,9 @@ $offset = ($page - 1) * $per_page;
 
 
 
-$db->cdp_query("UPDATE cdb_add_order SET  status_invoice =3  WHERE due_date<now() and status_invoice !=1 and order_payment_method >1");
-
-
-$db->cdp_execute();
+// Throttled (was a full-scan UPDATE on every page load):
+if (!function_exists('cdp_markOverdueInvoices')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/overdue_invoices.php')) { $d = dirname($d); } if (is_file($d . '/helpers/overdue_invoices.php')) require_once $d . '/helpers/overdue_invoices.php'; }
+cdp_markOverdueInvoices($db);
 
 
 $sql = "SELECT * FROM cdb_add_order where order_payment_method >1
@@ -102,9 +101,9 @@ $sql = "SELECT * FROM cdb_add_order where order_payment_method >1
 			 ";
 
 
-$db->cdp_query($sql);
-$db->cdp_execute();
-$numrows = $db->cdp_rowCount();
+$db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
+$cdp_cnt_row = $db->cdp_registro();
+$numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
