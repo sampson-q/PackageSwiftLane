@@ -6,6 +6,8 @@
 <!----Footer End--->
 
 <script src="<?= cdp_asset('assets/template/assets/libs/jquery/dist/jquery.min.js') ?>"></script>
+<!-- Persistent multi-select for AJAX list tables (checked rows survive filter/search/pagination). -->
+<script src="<?= cdp_asset('dataJs/persist_selection.js') ?>"></script>
 <script>
     (function ($) {
         if (!$ || !$.ajaxSetup) return;
