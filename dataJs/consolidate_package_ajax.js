@@ -72,12 +72,7 @@ $("#send_checkbox_status").on("submit", function (event) {
 
   var parametros = $(this).serialize();
   var checked_data = new Array();
-  $(".custom-table-checkbox")
-    .find("tr > td:first-child")
-    .find("input[type=checkbox]:checked")
-    .each(function () {
-      checked_data.push($(this).val());
-    });
+  checked_data = (typeof cdpSelGet === 'function') ? cdpSelGet() : checked_data;
 
   var status = $("#status_courier_modal").val();
 
@@ -115,12 +110,7 @@ $("#send_checkbox_status").on("submit", function (event) {
 function cdp_printMultipleLabel() {
   var checked_data = []; // Array para almacenar los datos de los paquetes seleccionados
   // Recorremos las casillas de verificación seleccionadas
-  $(".custom-table-checkbox")
-    .find("tr > td:first-child")
-    .find("input[type=checkbox]:checked")
-    .each(function () {
-      checked_data.push($(this).val()); // Agregamos el valor de la casilla de verificación al array
-    });
+  checked_data = (typeof cdpSelGet === 'function') ? cdpSelGet() : checked_data;
 
   // Mostramos una alerta de confirmación utilizando SweetAlert
   Swal.fire({
@@ -154,13 +144,7 @@ $("#driver_update_multiple").on("submit", function (event) {
 
   var parametros = $(this).serialize();
   var checked_data = new Array();
-  $(".custom-table-checkbox")
-    .find("tr > td:first-child")
-    .find("input[type=checkbox]:checked")
-    .each(function () {
-      // $('.custom-table-checkbox input:checkbox:checked').each(function() {
-      checked_data.push($(this).val());
-    });
+  checked_data = (typeof cdpSelGet === 'function') ? cdpSelGet() : checked_data;
 
   var driver = $("#driver_id_multiple").val();
 

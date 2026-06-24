@@ -70,8 +70,7 @@ $(function () {
 
         } else {
 
-            $('#div-actions-checked').addClass('hide');
-            $('#countChecked').addClass('hide');
+            if (typeof cdpSelClear === 'function') cdpSelClear();
         }
 
 
@@ -89,10 +88,7 @@ $("#send_checkbox_status").on('submit', function (event) {
     $('#guardar_datos').attr("disabled", true);
 
     var parametros = $(this).serialize();
-    var checked_data = new Array();
-    $('.custom-table-checkbox').find('tr > td:first-child').find('input[type=checkbox]:checked').each(function () {
-        checked_data.push($(this).val());
-    });
+    var checked_data = (typeof cdpSelGet === 'function') ? cdpSelGet() : [];
 
     var status = $('#status_courier_modal').val();
 
@@ -112,8 +108,7 @@ $("#send_checkbox_status").on('submit', function (event) {
 
             cdp_load(1);
 
-            $('#div-actions-checked').addClass('hide');
-            $('#countChecked').addClass('hide');
+            if (typeof cdpSelClear === 'function') cdpSelClear();
             $('html, body').animate({
                 scrollTop: 0
             }, 600);
@@ -131,12 +126,7 @@ $("#send_checkbox_status").on('submit', function (event) {
 function cdp_printMultipleLabel() {
   var checked_data = []; // Array para almacenar los datos de los paquetes seleccionados
   // Recorremos las casillas de verificación seleccionadas
-  $(".custom-table-checkbox")
-    .find("tr > td:first-child")
-    .find("input[type=checkbox]:checked")
-    .each(function () {
-      checked_data.push($(this).val()); // Agregamos el valor de la casilla de verificación al array
-    });
+  checked_data = (typeof cdpSelGet === 'function') ? cdpSelGet() : checked_data;
 
   // Mostramos una alerta de confirmación utilizando SweetAlert
   Swal.fire({
@@ -168,10 +158,7 @@ $("#driver_update_multiple").on('submit', function (event) {
     $('#update_driver2').attr("disabled", true);
 
     var parametros = $(this).serialize();
-    var checked_data = new Array();
-    $('.custom-table-checkbox').find('tr > td:first-child').find('input[type=checkbox]:checked').each(function () {
-        checked_data.push($(this).val());
-    });
+    var checked_data = (typeof cdpSelGet === 'function') ? cdpSelGet() : [];
 
     var driver = $('#driver_id_multiple').val();
 
@@ -191,8 +178,7 @@ $("#driver_update_multiple").on('submit', function (event) {
 
             cdp_load(1);
 
-            $('#div-actions-checked').addClass('hide');
-            $('#countChecked').addClass('hide');
+            if (typeof cdpSelClear === 'function') cdpSelClear();
             $('html, body').animate({
                 scrollTop: 0
             }, 600);
