@@ -304,8 +304,7 @@ if ($order_items) {
 
         .credits {
             text-align: center;
-            font-size: 9.0px;
-            line-height: 1.25;
+            font-size: 12px;
             margin-top: 5mm;
         }
 
@@ -429,7 +428,7 @@ if ($order_items) {
         <div class="topbar">
             <div class="brand-wrap">
                 <div class="logo">
-                    <?php echo ($core->logo) ? '<img src="assets/uploads/SWIFT LOGO PNG-04.PNG" alt="' . htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8') . '"/>' : '<h3>' . htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8') . '</h3>'; ?>
+                    <?php echo ($core->logo) ? '<img src="assets/uploads/SWIFT LOGO PNG-04.png" alt="' . htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8') . '"/>' : '<h3>' . htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8') . '</h3>'; ?>
                 </div>
                 <div class="brand-text" style="color:#000 !important;">
                     <p class="brand-name"><?php echo htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -658,16 +657,10 @@ if ($order_items) {
                 </div> -->
             <!-- </div> -->
 
-            <div class="row credits">
-                <div class="col-5">
-                    Developed by <strong>iSolveAfrica</strong>
-                </div>
-                <div class="col-3">
-                    +233(0)591447845
-                </div>
-                <div class="col-4">
-                    https://www.isolveafrica.com/
-                </div>
+            <div class="credits text-center">
+                Designed by <b>iSolveAfrica</b><br>
+                +233 (0) 591 447 845<br>
+                https://www.isolveafrica.com
             </div>
         </div>
     </div>
