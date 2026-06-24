@@ -8,6 +8,8 @@
 <script src="<?= cdp_asset('assets/template/assets/libs/jquery/dist/jquery.min.js') ?>"></script>
 <!-- Persistent multi-select for AJAX list tables (checked rows survive filter/search/pagination). -->
 <script src="<?= cdp_asset('dataJs/persist_selection.js') ?>"></script>
+<!-- Sender auto-fill: selecting a sender fills the first address/recipient/recipient-address on every form. -->
+<script src="<?= cdp_asset('dataJs/sender_autofill.js') ?>"></script>
 <script>
     (function ($) {
         if (!$ || !$.ajaxSetup) return;
