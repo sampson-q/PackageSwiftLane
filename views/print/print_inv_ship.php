@@ -635,7 +635,7 @@ if ($order_items) {
                     <tr>
                         <td colspan="2">
                             <strong>Original Package Weight</strong> :
-                            <?php echo htmlspecialchars((string)($row->total_weight ?? $total_weight ?? '—'), ENT_QUOTES, 'UTF-8') . ', <b>Total Items:</b> ' . $total_qty; ?>
+                            <?php echo htmlspecialchars((string)($row->total_weight ?? $total_weight ?? '—'), ENT_QUOTES, 'UTF-8') . '<br><b>Total Items:</b> ' . $total_qty; ?>
                         </td>
                     </tr>
                 </tfoot>
