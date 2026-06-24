@@ -59,12 +59,14 @@ if ($order_items):
 
         $db->cdp_query("SELECT * FROM cdb_styles where id='" . $order_details->status_courier . "'");
         $package_style = $db->cdp_registro();
+
+        $postal_tracking = cdp_getPackageTrackingLegacyAware($row_order_item->order_id);
         ?>
         <tr class="card-hover">
             <td><b><?php echo $sender_name; ?></b></td>
             <td><span class="label" style="background-color: <?php echo $package_style->color; ?>"><?php echo $package_style->mod_style; ?></span></td>
             <td><b><?php echo $row_order_item->order_prefix . $row_order_item->order_no; ?></b></td>
-
+            <td><b><?php echo $postal_tracking->tracking_number; ?></b></td>
             <td class="text-right">
                 <?php foreach ($items as $item) { ?>
                     <b><?php echo (int) $item->order_item_quantity; ?></b><br>
