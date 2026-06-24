@@ -13,15 +13,27 @@ var FS_AJAX = "./ajax/reports/financial_sheet_ajax.php";
 var fsOpenLocks = {};      // oid -> true (packages we currently hold the lock for)
 var fsHeartbeat = null;
 
-function fsRate() { return Number(window.FS_RATE) > 0 ? Number(window.FS_RATE) : 1; }
-function fsMoney(usd) { return "$" + (Number(usd) || 0).toFixed(2); }
+function fsRate() {
+    return Number(window.FS_RATE) > 0 ? Number(window.FS_RATE) : 1;
+}
+
+function fsMoney(usd) {
+    return "$" + (Number(usd) || 0).toFixed(2);
+}
 
 $(function () {
     $("#fs_rate_label").text(fsRate().toFixed(2));
     fsLoad();
 
-    $("#fs_search").on("keyup", function (e) { if (e.key === "Enter") fsLoad(); });
+    $("#fs_search").on("keyup", function (e) {
+        if (e.key === "Enter") fsLoad();
+    });
     $("#fs_search_btn").on("click", fsLoad);
+
+    $("#fs_search_package").on("keyup", function (e) {
+        if (e.key === "Enter") fsLoadPackages();
+    });
+    $("#fs_search_package_btn").on("click", fsLoadPackages);
 
     // Release every lock we hold when leaving the page.
     window.addEventListener("beforeunload", function () {
@@ -44,6 +56,22 @@ function fsLoad() {
     });
 }
 
+function fsLoadPackages() {
+    var q = $("#fs_search_package").val() || "";
+    if (!q.trim()) {
+        fsLoad();
+        return;
+    }
+
+    $("#loader").fadeIn("fast");
+    $.ajax({
+        url: FS_AJAX,
+        data: { action: "search_package", q: q },
+        success: function (html) { $(".outer_div").html(html); },
+        complete: function () { $("#loader").fadeOut("fast"); }
+    });
+}
+
 /* ----------------------- Accordion: consolidation ----------------------- */
 // One consolidation open at a time. Opening loads + shows its packages and
 // tints the whole card so the packages sit on the active background.
@@ -54,14 +82,18 @@ function fsToggleConsolidation(header, cid) {
 
     $(".fs-consol-body:visible").each(function () {
         if (String($(this).data("cid")) !== String(cid)) {
-            $(this).find(".fs-pkg-body:visible").each(function () { fsStopLock($(this).data("oid")); });
+            $(this).find(".fs-pkg-body:visible").each(function () {
+                fsStopLock($(this).data("oid"));
+            });
             $(this).slideUp(120);
         }
     });
     $(".fs-consol-card.fs-active, .fs-pkg-card.fs-active").removeClass("fs-active");
 
     if (!willOpen) {
-        $body.find(".fs-pkg-body:visible").each(function () { fsStopLock($(this).data("oid")); });
+        $body.find(".fs-pkg-body:visible").each(function () {
+            fsStopLock($(this).data("oid"));
+        });
         $body.slideUp(120);
         return;
     }
@@ -85,7 +117,7 @@ function fsToggleConsolidation(header, cid) {
 function fsTogglePackage(header, oid) {
     var $card = $(header).closest(".fs-pkg-card");
     var $body = $(".fs-pkg-body[data-oid='" + oid + "']");
-    var $box  = $body.find(".fs-items").first();
+    var $box = $body.find(".fs-items").first();
     var willOpen = $body.is(":hidden");
 
     // One package open at a time within a consolidation (releases sibling locks).
@@ -158,10 +190,10 @@ function fsStopLock(oid) {
 
 /* --------------------------- Item editing ------------------------------ */
 function fsSetMode(iid, mode) {
-    var $row    = $("tr[data-iid='" + iid + "']");
+    var $row = $("tr[data-iid='" + iid + "']");
     var $weight = $row.find(".fs-weight");
     var $custom = $row.find(".fs-custom");
-    var $btns   = $row.find(".fs-mode .btn");
+    var $btns = $row.find(".fs-mode .btn");
 
     $row.find(".fs-mode-val").val(mode);
     $btns.eq(0).toggleClass("btn-dark", mode === "weight").toggleClass("btn-outline-dark", mode !== "weight");
@@ -180,23 +212,26 @@ function fsSetMode(iid, mode) {
 
 /* Per-input currency toggle: switch ONE custom-price box between USD and GHS,
    converting whatever is currently typed. Storage stays USD (server converts). */
-function fsItemCur(iid) { return $("tr[data-iid='" + iid + "'] .fs-custom").attr("data-cur") || "usd"; }
+function fsItemCur(iid) {
+    return $("tr[data-iid='" + iid + "'] .fs-custom").attr("data-cur") || "usd";
+}
 
 function fsToggleItemCur(iid, cur) {
     cur = (cur === "ghs") ? "ghs" : "usd";
     var $row = $("tr[data-iid='" + iid + "']");
-    var $i   = $row.find(".fs-custom");
-    var old  = $i.attr("data-cur") || "usd";
+    var $i = $row.find(".fs-custom");
+    var old = $i.attr("data-cur") || "usd";
 
     if (old !== cur) {
         var raw = parseFloat(String($i.val() || "").replace(/,/g, ""));
         if (!isNaN(raw) && raw > 0) {
-            var usd   = (old === "ghs") ? raw / fsRate() : raw;        // normalise to USD
-            var shown = (cur === "ghs") ? usd * fsRate() : usd;        // re-express
+            var usd = (old === "ghs") ? raw / fsRate() : raw;        // normalise to USD
+            var shown = (cur === "ghs") ? usd * fsRate() : usd;      // re-express
             $i.val(shown.toFixed(2));
         }
         $i.attr("data-cur", cur).attr("placeholder", cur.toUpperCase());
     }
+
     $row.find(".fs-cur-btn").removeClass("active btn-primary").addClass("btn-outline-secondary");
     $row.find(".fs-cur-btn[data-cur='" + cur + "']").addClass("active btn-primary").removeClass("btn-outline-secondary");
     fsCustomLiveEquiv($i[0]);
@@ -204,10 +239,11 @@ function fsToggleItemCur(iid, cur) {
 
 // Live "≈ $X / ≈ ₵X" helper under a custom-price input, based on ITS toggle.
 function fsCustomLiveEquiv(input) {
-    var $i  = $(input);
+    var $i = $(input);
     var $eq = $i.closest("td").find(".fs-equiv");
     var raw = parseFloat(String($i.val() || "").replace(/,/g, ""));
     if (isNaN(raw) || raw <= 0) { $eq.text(""); return; }
+
     if (($i.attr("data-cur") || "usd") === "ghs") {
         $eq.text("≈ $" + (raw / fsRate()).toFixed(2) + " USD");
     } else {
@@ -216,11 +252,11 @@ function fsCustomLiveEquiv(input) {
 }
 
 function fsSaveItem(oid, iid, btn) {
-    var $row  = $("tr[data-iid='" + iid + "']");
-    var mode  = $row.find(".fs-mode-val").val() || "weight";
+    var $row = $("tr[data-iid='" + iid + "']");
+    var mode = $row.find(".fs-mode-val").val() || "weight";
     var $cust = $row.find(".fs-custom");
-    var cur   = $cust.attr("data-cur") || "usd";
-    var raw   = (mode === "custom") ? $cust.val() : $row.find(".fs-weight").val();
+    var cur = $cust.attr("data-cur") || "usd";
+    var raw = (mode === "custom") ? $cust.val() : $row.find(".fs-weight").val();
     var value = parseFloat(String(raw || "").replace(/,/g, ""));
 
     if (!value || value <= 0) {
@@ -277,8 +313,8 @@ function fsPrependHistory(oid, h) {
     if (!$log.length) return;
     $log.find(".fs-history-empty").remove();
     var line = '<div class="fs-hist-item"><b>' + (h.who || "Someone") + '</b> ' +
-               $("<span>").text(h.what || "").html() +
-               ' <span class="text-muted">— ' + (h.when || "just now") + '</span></div>';
+        $("<span>").text(h.what || "").html() +
+        ' <span class="text-muted">— ' + (h.when || "just now") + '</span></div>';
     $log.find(".fs-history-list").prepend(line);
 }
 
