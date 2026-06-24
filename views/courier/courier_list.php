@@ -196,6 +196,9 @@ $statusrow = $core->cdp_getStatusByType(1);
                                             <?php } ?>
 
                                         </div>
+                                        <button type="button" class="btn btn-outline-secondary ml-2" onclick="cdpSelClear();" title="Clear selection">
+                                            <i class="ti-close"></i> <?php echo $lang['fs-clear-selection'] ?? 'Clear'; ?>
+                                        </button>
                                     </div>
 
                                 </div>
@@ -243,7 +246,7 @@ $statusrow = $core->cdp_getStatusByType(1);
     <!-- ============================================================== -->
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="<?= cdp_asset('dataJs/courier.js') ?>"></script> 
+    <script src="<?= cdp_asset('dataJs/courier.js') ?>"></script>
     <script src="<?= cdp_asset('dataJs/courier_ajax.js') ?>"></script>
 
 
