@@ -139,10 +139,7 @@ $("#send_checkbox_status").on('submit', function (event) {
     $('#guardar_datos').attr("disabled", true);
 
     var parametros = $(this).serialize();
-    var checked_data = new Array();
-    $('.custom-table-checkbox').find('tr > td:first-child').find('input[type=checkbox]:checked').each(function () {
-        checked_data.push($(this).val());
-    });
+    var checked_data = (typeof cdpSelGet === 'function') ? cdpSelGet() : [];
 
     var status = $('#status_courier_modal').val();
 
@@ -158,11 +155,10 @@ $("#send_checkbox_status").on('submit', function (event) {
             $('#guardar_datos').attr("disabled", false);
             $('#modalCheckboxStatus').modal('hide');
 
- 
+
             cdp_load(1);
 
-            $('#div-actions-checked').addClass('hide');
-            $('#countChecked').addClass('hide');
+            if (typeof cdpSelClear === 'function') cdpSelClear();
             $('html, body').animate({
                 scrollTop: 0
             }, 600);
