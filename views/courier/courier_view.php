@@ -1301,7 +1301,7 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['edit-clien6'] ?></b></h5>
-                                            <p class="text-muted  m-l-5"><?php echo $sender_data->fname . ' ' . $sender_data->lname; ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo $sender_data->fname . ' ' . $sender_data->lname . ' <b>(' . $sender_data->locker . ')</b>'; ?></p>
 
                                         </div>
                                     </div>
