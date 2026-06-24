@@ -1,86 +1,8 @@
 "use strict";
-var count = 0;
-
-$(".sl-all").on('click', function () {
-
-    $('.custom-table-checkbox input:checkbox').not(this).prop('checked', this.checked);
-
-    if ($('.custom-table-checkbox input:checkbox').is(':checked')) {
-
-        $('.custom-table-checkbox').find('tr > td:first-child').find('input[type=checkbox]').parents('tr').css('background', '#fff8e1');
-
-    } else {
-
-        $('.custom-table-checkbox input:checkbox').parents('tr').css('background', '');
-
-    }
-
-    var $checkboxes = $('.custom-table-checkbox').find('tr > td:first-child').find('input[type=checkbox]');
-
-    count = $checkboxes.filter(':checked').length;
-
-    if (count > 0) {
-
-        $('#div-actions-checked').removeClass('hide');
-        $('#countChecked').removeClass('hide');
-
-    } else {
-
-        $('#div-actions-checked').addClass('hide');
-        $('#countChecked').addClass('hide');
-    }
-
-    $('#countChecked').html(count);
-
-
-});
-
-
-
-$('.custom-table-checkbox').find('tr > td:first-child').find('input[type=checkbox]').on('change', function () {
-
-    if ($(this).is(':checked')) {
-
-        $(this).parents('tr').css('background', '#fff8e1');
-
-    } else {
-
-        $(this).parents('tr').css('background', '');
-    }
-
-
-});
-
-
-
-
-$(function () {
-
-    var $checkboxes = $('.custom-table-checkbox').find('tr > td:first-child').find('input[type=checkbox]');
-
-    $checkboxes.on('change', function () {
-
-        count = $checkboxes.filter(':checked').length;
-
-        if (count > 0) {
-
-            $('#div-actions-checked').removeClass('hide');
-            $('#countChecked').removeClass('hide');
-
-        } else {
-
-            $('#div-actions-checked').addClass('hide');
-            $('#countChecked').addClass('hide');
-        }
-
-
-        $('#countChecked').html(count);
-
-    });
-
-});
-
-
+// Multi-select persistence (checked rows survive search / filter / pagination)
+// is handled centrally by dataJs/persist_selection.js. The bulk actions below
+// read the current selection via cdpSelGet(); destructive ones call cdpSelClear()
+// once the action has been applied.
 
 
 $("#send_checkbox_status").on('submit', function (event) {
@@ -88,10 +10,7 @@ $("#send_checkbox_status").on('submit', function (event) {
     $('#guardar_datos').attr("disabled", true);
 
     var parametros = $(this).serialize();
-    var checked_data = new Array();
-    $('.custom-table-checkbox').find('tr > td:first-child').find('input[type=checkbox]:checked').each(function () {
-        checked_data.push($(this).val());
-    });
+    var checked_data = (typeof cdpSelGet === 'function') ? cdpSelGet() : [];
 
     var status = $('#status_courier_modal').val();
 
@@ -110,8 +29,7 @@ $("#send_checkbox_status").on('submit', function (event) {
 
             cdp_load(1);
 
-            $('#div-actions-checked').addClass('hide');
-            $('#countChecked').addClass('hide');
+            if (typeof cdpSelClear === 'function') cdpSelClear();
             $('html, body').animate({
                 scrollTop: 0
             }, 600);
@@ -126,14 +44,12 @@ $("#send_checkbox_status").on('submit', function (event) {
 
  // Función para imprimir etiquetas de envios
 function cdp_printMultipleLabel() {
-  var checked_data = []; // Array para almacenar los datos de los paquetes seleccionados
-  // Recorremos las casillas de verificación seleccionadas
-  $(".custom-table-checkbox")
-    .find("tr > td:first-child")
-    .find("input[type=checkbox]:checked")
-    .each(function () {
-      checked_data.push($(this).val()); // Agregamos el valor de la casilla de verificación al array
-    });
+  var checked_data = (typeof cdpSelGet === 'function') ? cdpSelGet() : [];
+
+  if (checked_data.length === 0) {
+    Swal.fire({ text: "Please select at least one shipment.", icon: "warning", confirmButtonText: "OK" });
+    return;
+  }
 
   // Mostramos una alerta de confirmación utilizando SweetAlert
   Swal.fire({
@@ -163,13 +79,7 @@ function cdp_printMultipleLabel() {
 // Bulk-print the shipment invoice/receipt for every selected shipment.
 // Opens a single tab that auto-prints each receipt one after the other.
 function cdp_printMultipleInvoice() {
-  var checked_data = []; // order_no values of the selected shipments
-  $(".custom-table-checkbox")
-    .find("tr > td:first-child")
-    .find("input[type=checkbox]:checked")
-    .each(function () {
-      checked_data.push($(this).val());
-    });
+  var checked_data = (typeof cdpSelGet === 'function') ? cdpSelGet() : [];
 
   if (checked_data.length === 0) {
     Swal.fire({ text: "Please select at least one shipment.", icon: "warning", confirmButtonText: "OK" });
@@ -205,10 +115,7 @@ $("#driver_update_multiple").on('submit', function (event) {
     $('#update_driver2').attr("disabled", true);
 
     var parametros = $(this).serialize();
-    var checked_data = new Array();
-    $('.custom-table-checkbox').find('tr > td:first-child').find('input[type=checkbox]:checked').each(function () {
-        checked_data.push($(this).val());
-    });
+    var checked_data = (typeof cdpSelGet === 'function') ? cdpSelGet() : [];
 
     var driver = $('#driver_id_multiple').val();
 
@@ -227,8 +134,7 @@ $("#driver_update_multiple").on('submit', function (event) {
 
             cdp_load(1);
 
-            $('#div-actions-checked').addClass('hide');
-            $('#countChecked').addClass('hide');
+            if (typeof cdpSelClear === 'function') cdpSelClear();
             $('html, body').animate({
                 scrollTop: 0
             }, 600);
