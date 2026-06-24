@@ -414,6 +414,16 @@
 					</li>
 					<?php } ?>
 
+					<?php if ($user->cdp_is_Admin()) { ?>
+					<!-- pickup aging -->
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="pickup_aging.php" aria-expanded="false">
+							<iconify-icon icon="mdi:clock-alert-outline" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo "Pickup Aging" ?></span>
+						</a>
+					</li>
+					<?php } ?>
+
 					<?php 
 
 						$perModule = [
