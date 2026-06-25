@@ -174,6 +174,21 @@ $shipment_total = count($order_list);
             word-break: break-word;
         }
 
+        .sn-row {
+            align-items: baseline;
+        }
+
+        .sn-value {
+            font-size: 26px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .sn-total {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
         .items-panel {
             border: 0.35mm solid #000;
             padding: 1.2mm 1.4mm;
@@ -407,6 +422,14 @@ $shipment_total = count($order_list);
 
             $package_tracking = cdp_getPackageTrackingLegacyAware($order_id);
 
+            // Financial-sheet S/N for this package (cached per consolidation).
+            // Optional consolidate_id pins all labels to one sheet (default: newest).
+            $financial_serial = cdp_getOrderFinancialSerial(
+                $row->order_prefix,
+                $row->order_no,
+                (int) ($_REQUEST['consolidate_id'] ?? 0)
+            );
+
             $total_qty    = 0;
             $total_weight = 0;
 
@@ -481,6 +504,14 @@ $shipment_total = count($order_list);
                         <div class="k">Category:</div>
                         <div class="v"><?php echo htmlspecialchars($category ? $category->name_item : 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
+
+                    <?php if ($financial_serial) : ?>
+                        <div style="width:100%; text-align:right;">
+                            <span style="display:inline-block; background:#000; color:#fff; border-radius:999px; padding:4px 10px;">
+                                <?php echo (int) $financial_serial['sn']; ?>
+                            </span>
+                        </div>
+                    <?php endif; ?>
 
                     <?php if (!empty($package_tracking->tracking_number)) : ?>
                         <div class="barcode">

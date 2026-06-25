@@ -46,6 +46,15 @@ $address_order = $db->cdp_registro();
 // Get tracking and ETA
 $package_tracking = cdp_getPackageTrackingLegacyAware((int)$_GET['id']);
 
+// Financial-sheet S/N (position of this package in its consolidation's
+// sender-sorted financial sheet). Null when the order isn't consolidated.
+// An optional consolidate_id pins it to a specific sheet (default: newest).
+$financial_serial = cdp_getOrderFinancialSerial(
+    $row->order_prefix,
+    $row->order_no,
+    (int) ($_REQUEST['consolidate_id'] ?? 0)
+);
+
 if ($order_items) {
     foreach ($order_items as $item) {
         $total_weight += (float) $item->order_item_weight;
@@ -192,6 +201,21 @@ if ($order_items) {
         .kv .v {
             min-width: 0;
             word-break: break-word;
+        }
+
+        .sn-row {
+            align-items: baseline;
+        }
+
+        .sn-value {
+            font-size: 26px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .sn-total {
+            font-size: 15px;
+            font-weight: 700;
         }
 
         .items-panel {
@@ -493,6 +517,15 @@ if ($order_items) {
                 <div class="k">Category:</div>
                 <div class="v"><?php echo htmlspecialchars($category ? $category->name_item : 'N/A', ENT_QUOTES, 'UTF-8'); ?></div>
             </div>
+
+
+            <?php if ($financial_serial) : ?>
+                <div style="width:100%; text-align:right;">
+                    <span style="display:inline-block; background:#000; color:#fff; border-radius:999px; padding:4px 10px;">
+                        <?php echo (int) $financial_serial['sn']; ?>
+                    </span>
+                </div>
+            <?php endif; ?>
 
             <?php if (!empty($package_tracking->tracking_number)) : ?>
                 <div class="barcode">
