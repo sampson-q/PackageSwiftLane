@@ -370,21 +370,7 @@ $shipment_total = count($order_list);
 
     <div class="label-page">
         <!-- ONE HEADER ONLY -->
-        <div class="topbar">
-            <div class="brand-wrap">
-                <div class="logo">
-                    <?php echo ($core->logo) ? '<img src="assets/uploads/SWIFT LOGO PNG-04.png" alt="' . htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8') . '"/>' : '<h3>' . htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8') . '</h3>'; ?>
-                </div>
-                <div class="brand-text" style="color:#000 !important;">
-                    <p class="brand-name"><?php echo htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8'); ?></p>
-                    <p class="brand-lines">
-                        <strong><?php echo $lang['inv-shipping2']; ?>:</strong> <?php echo htmlspecialchars("+233(0)243438799 || +233(0)342292798", ENT_QUOTES, 'UTF-8'); ?><br>
-                        <strong><?php echo $lang['inv-shipping3']; ?>:</strong> <?php echo htmlspecialchars($core->site_email, ENT_QUOTES, 'UTF-8'); ?><br>
-                        <strong>Address:</strong> <?php echo htmlspecialchars("#01, Adaman Crescent, Behind The Allied Filling Station, Tesano Abeka Junction", ENT_QUOTES, 'UTF-8'); ?>
-                    </p>
-                </div>
-            </div>
-        </div>
+        
 
         <?php
         foreach ($order_list as $order_no) {
@@ -432,6 +418,22 @@ $shipment_total = count($order_list);
             }
         ?>
             <div class="shipment-block">
+                <div class="topbar">
+                    <div class="brand-wrap">
+                        <div class="logo">
+                            <?php echo ($core->logo) ? '<img src="assets/uploads/SWIFT LOGO PNG-04.png" alt="' . htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8') . '"/>' : '<h3>' . htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8') . '</h3>'; ?>
+                        </div>
+                        <div class="brand-text" style="color:#000 !important;">
+                            <p class="brand-name"><?php echo htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8'); ?></p>
+                            <p class="brand-lines">
+                                <strong><?php echo $lang['inv-shipping2']; ?>:</strong> <?php echo htmlspecialchars("+233(0)243438799 || +233(0)342292798", ENT_QUOTES, 'UTF-8'); ?><br>
+                                <strong><?php echo $lang['inv-shipping3']; ?>:</strong> <?php echo htmlspecialchars($core->site_email, ENT_QUOTES, 'UTF-8'); ?><br>
+                                <strong>Address:</strong> <?php echo htmlspecialchars("#01, Adaman Crescent, Behind The Allied Filling Station, Tesano Abeka Junction", ENT_QUOTES, 'UTF-8'); ?>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="barcode">
                     <img src="https://barcode.tec-it.com/barcode.ashx?data=<?php echo urlencode($row->order_prefix . $row->order_no); ?>&code=Code128&multiplebarcodes=false&translate-esc=false&unit=Fit&dpi=92&imagetype=Gif&rotation=0&color=%23000000&bgcolor=%23ffffff&qunit=Mm&quiet=0&modulewidth=50" alt="">
                 </div>
@@ -511,34 +513,30 @@ $shipment_total = count($order_list);
                             <tr>
                                 <td colspan="2">
                                     <strong>Original Package Weight</strong> :
-                                    <?php echo htmlspecialchars((string) ($row->total_weight ?? $total_weight ?? '—'), ENT_QUOTES, 'UTF-8') . ', <b>Total Items:</b> ' . $total_qty; ?>
+                                    <?php echo htmlspecialchars((string) ($row->total_weight ?? $total_weight ?? '—'), ENT_QUOTES, 'UTF-8') . '<br><b>Total Items:</b> ' . $total_qty; ?>
                                 </td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
-            </div>
-            <div class="row text-muted" style="margin-top: -1.5mm; margin-bottom: 5mm;">
-                <div class="col-3"><hr></div>
-                <div class="col-6 text-center" style="line-height: 8mm;">end of shipment</div>
-                <div class="col-3"><hr></div>
+                <div class="footer">
+                    <div class="signature">
+                        <div class="line"><?php echo 'Signature / Stamp' ?></div>
+                    </div>
+
+                    <div class="credits text-center">
+                        Designed by <b>iSolveAfrica</b><br>
+                        +233 (0) 591 447 845<br>
+                        https://www.isolveafrica.com
+                    </div>
+                </div>
             </div>
         <?php
         } // end foreach
         ?>
 
         <!-- ONE FOOTER ONLY -->
-        <div class="footer">
-            <div class="signature">
-                <div class="line"><?php echo 'Signature / Stamp' ?></div>
-            </div>
-
-            <div class="credits text-center">
-                Designed by <b>iSolveAfrica</b><br>
-                +233 (0) 591 447 845<br>
-                https://www.isolveafrica.com
-            </div>
-        </div>
+        
     </div>
 
     <script>
