@@ -2899,6 +2899,153 @@ function cdp_getCourierPrintMultiple($id)
 }
 
 
+/*
+ * ---------------------------------------------------------------------------
+ * Financial-sheet serial number (S/N)
+ * ---------------------------------------------------------------------------
+ * The Financial Sheet PDF (views/print/print_financial_sheet.php) lists every
+ * package in a consolidation sorted by sender name and numbers them 1..N.
+ * The two functions below are the SINGLE source of truth for that ordering so
+ * the S/N printed on an individual shipment label always matches the S/N on
+ * the sheet. Do not duplicate this ORDER BY anywhere else — call these instead.
+ */
+
+/**
+ * Returns every package in a consolidation, in financial-sheet order, with a
+ * 1-based ->sn attached to each row. Results are cached per request so a bulk
+ * print numbering many labels from the same consolidation only sorts once.
+ *
+ * @param  int   $consolidate_id
+ * @return array stdClass rows (oid, order_prefix, order_no, detail_weight,
+ *               total_order, carrier_tracking, sender_id, fname, lname, locker, sn)
+ */
+function cdp_getConsolidationFinancialRows($consolidate_id)
+{
+    static $cache = [];
+
+    $cid = (int) $consolidate_id;
+    if ($cid <= 0) {
+        return [];
+    }
+    if (array_key_exists($cid, $cache)) {
+        return $cache[$cid];
+    }
+
+    $db = new Conexion;
+    $db->cdp_query("
+        SELECT
+            a.order_id AS oid,
+            d.order_prefix,
+            d.order_no,
+            d.weight AS detail_weight,
+            a.total_order,
+            COALESCE(NULLIF(pt.tracking_number,''), a.tracking_num) AS carrier_tracking,
+            a.sender_id,
+            u.fname,
+            u.lname,
+            u.locker
+        FROM cdb_consolidate_detail d
+        INNER JOIN cdb_add_order a ON a.order_id = (
+            SELECT a2.order_id
+            FROM cdb_add_order a2
+            WHERE a2.order_prefix = d.order_prefix
+              AND a2.order_no = d.order_no
+            ORDER BY (a2.order_id = CAST(d.order_id AS UNSIGNED)) DESC, a2.order_id ASC
+            LIMIT 1
+        )
+        LEFT JOIN cdb_package_tracking_number pt ON pt.order_id = a.order_id
+        LEFT JOIN cdb_users u ON u.id = a.sender_id
+        WHERE d.consolidate_id = :cid
+        ORDER BY
+            COALESCE(u.lname, '') ASC,
+            COALESCE(u.fname, '') ASC,
+            COALESCE(u.locker, '') ASC,
+            d.detail_id ASC
+    ");
+    $db->bind(':cid', $cid);
+    $rows = $db->cdp_registros();
+
+    if (!is_array($rows)) {
+        $rows = [];
+    }
+
+    $sn = 1;
+    foreach ($rows as $r) {
+        $r->sn = $sn++;
+    }
+
+    $cache[$cid] = $rows;
+    return $rows;
+}
+
+/**
+ * Resolves the financial-sheet S/N for a single order. Returns null when the
+ * order is not part of any consolidation (so the label can simply omit it).
+ *
+ * A handful of orders appear in more than one consolidation over their life.
+ * Labels are printed from order lists with no consolidation context, so we
+ * default to the order's NEWEST consolidation (highest consolidate_id) — the
+ * sheet a user is most likely working from. Callers that DO know the
+ * consolidation (e.g. printing labels straight from a consolidation view) can
+ * pass $preferred_cid for an exact match.
+ *
+ * @param  string     $order_prefix
+ * @param  string     $order_no
+ * @param  int        $preferred_cid Consolidation to use when known (0 = auto)
+ * @return array|null ['consolidate_id' => int, 'sn' => int, 'total' => int]
+ */
+function cdp_getOrderFinancialSerial($order_prefix, $order_no, $preferred_cid = 0)
+{
+    $key = $order_prefix . $order_no;
+    $cid = (int) $preferred_cid;
+
+    // Honour an explicit consolidation only if the order is actually in it.
+    if ($cid > 0) {
+        $rows = cdp_getConsolidationFinancialRows($cid);
+        foreach ($rows as $r) {
+            if (($r->order_prefix . $r->order_no) === $key) {
+                return [
+                    'consolidate_id' => $cid,
+                    'sn'             => (int) $r->sn,
+                    'total'          => count($rows),
+                ];
+            }
+        }
+    }
+
+    $db = new Conexion;
+    $db->cdp_query("
+        SELECT consolidate_id
+        FROM cdb_consolidate_detail
+        WHERE order_prefix = :p AND order_no = :n AND consolidate_id IS NOT NULL
+        ORDER BY consolidate_id DESC
+        LIMIT 1
+    ");
+    $db->bind(':p', (string) $order_prefix);
+    $db->bind(':n', (string) $order_no);
+    $det = $db->cdp_registro();
+
+    if (!$det || empty($det->consolidate_id)) {
+        return null;
+    }
+
+    $cid  = (int) $det->consolidate_id;
+    $rows = cdp_getConsolidationFinancialRows($cid);
+
+    foreach ($rows as $r) {
+        if (($r->order_prefix . $r->order_no) === $key) {
+            return [
+                'consolidate_id' => $cid,
+                'sn'             => (int) $r->sn,
+                'total'          => count($rows),
+            ];
+        }
+    }
+
+    return null;
+}
+
+
 function cdp_getPackagePrintMultiple($id)
 {
     $db = new Conexion;
