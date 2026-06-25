@@ -38,44 +38,12 @@ $cNo = htmlspecialchars(($consol->c_prefix ?? '') . ($consol->c_no ?? ''));
 $sym = htmlspecialchars($core->currency ?? 'USD');
 
 /*
- * Pull everything in one query:
- * - map each detail row to exactly one order
- * - bring sender data with the row
- * - sort by sender name
+ * Pull every package in this consolidation, already sorted by sender name and
+ * numbered 1..N. This is the same helper the individual shipment labels use to
+ * stamp their S/N, so the sheet and the labels can never disagree.
+ * (See cdp_getConsolidationFinancialRows in helpers/querys.php.)
  */
-$db->cdp_query("
-    SELECT
-        a.order_id AS oid,
-        d.order_prefix,
-        d.order_no,
-        d.weight AS detail_weight,
-        a.total_order,
-        COALESCE(NULLIF(pt.tracking_number,''), a.tracking_num) AS carrier_tracking,
-        a.sender_id,
-        u.fname,
-        u.lname,
-        u.locker
-    FROM cdb_consolidate_detail d
-    INNER JOIN cdb_add_order a ON a.order_id = (
-        SELECT a2.order_id
-        FROM cdb_add_order a2
-        WHERE a2.order_prefix = d.order_prefix
-          AND a2.order_no = d.order_no
-        ORDER BY (a2.order_id = CAST(d.order_id AS UNSIGNED)) DESC, a2.order_id ASC
-        LIMIT 1
-    )
-    LEFT JOIN cdb_package_tracking_number pt ON pt.order_id = a.order_id
-    LEFT JOIN cdb_users u ON u.id = a.sender_id
-    WHERE d.consolidate_id = :cid
-    ORDER BY
-        COALESCE(u.lname, '') ASC,
-        COALESCE(u.fname, '') ASC,
-        COALESCE(u.locker, '') ASC,
-        d.detail_id ASC
-");
-$db->bind(':cid', $cid);
-$db->cdp_execute();
-$packages = $db->cdp_registros();
+$packages = cdp_getConsolidationFinancialRows($cid);
 
 /*
  * Compact A4 layout:
@@ -195,8 +163,6 @@ $h .= '<table>
 if (!$packages) {
     $h .= '<tr><td colspan="6">No packages in this consolidation.</td></tr>';
 } else {
-    $sn = 1;
-
     foreach ($packages as $p) {
         $senderName = 'N/A';
         if (!empty($p->fname) || !empty($p->lname) || !empty($p->locker)) {
@@ -232,15 +198,13 @@ if (!$packages) {
         $carrier   = htmlspecialchars($p->carrier_tracking ?: 'N/A');
 
         $h .= '<tr>'
-            . '<td class="sn">' . $sn . '</td>'
+            . '<td class="sn">' . (int) $p->sn . '</td>'
             . '<td class="sender">' . $senderName . '</td>'
             . '<td class="swift">' . $shipTrack . '</td>'
             . '<td class="tracking">' . $carrier . '</td>'
             . '<td class="qty">' . $qtyCol . '</td>'
             . '<td class="desc">' . $descCol . '</td>'
             . '</tr>';
-
-        $sn++;
     }
 }
 
