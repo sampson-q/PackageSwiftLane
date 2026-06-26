@@ -329,11 +329,13 @@ $shipment_total = count($order_list);
             align-items:center;
             justify-content:center;
 
-            width:28px;
+            min-width:28px;
             height:28px;
 
+            padding:0 8px;
+
             border:2px solid #000;
-            border-radius:50%;
+            border-radius:999px;
 
             background:#fff;
             color:#000 !important;
@@ -341,6 +343,7 @@ $shipment_total = count($order_list);
             font-weight:800;
             font-size:15px;
             line-height:1;
+            white-space:nowrap;
 
             -webkit-print-color-adjust:exact;
             print-color-adjust:exact;
