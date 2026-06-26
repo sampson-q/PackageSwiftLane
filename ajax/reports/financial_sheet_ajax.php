@@ -609,6 +609,11 @@ if (!$consolidations) {
                             title="Export this consolidation to PDF">
                         <i class="fa fa-file-pdf text-danger"></i> PDF
                     </button>
+                    <button type="button" class="btn btn-sm btn-light"
+                            onclick="event.stopPropagation(); fsExportConsolidationExcel(<?php echo $cid; ?>);"
+                            title="Export this consolidation to Excel">
+                        <i class="fa fa-file-excel text-success"></i> Excel
+                    </button>
                     <i class="mdi mdi-chevron-down fs-consol-caret ml-2"></i>
                 </span>
             </div>
