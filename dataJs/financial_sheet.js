@@ -328,3 +328,8 @@ function fsIsNumber(evt) {
 function fsExportConsolidation(cid) {
     window.open("views/print/print_financial_sheet.php?consolidate_id=" + encodeURIComponent(cid), "_blank");
 }
+
+// Excel export (.xls download). Long tracking numbers are kept as text server-side.
+function fsExportConsolidationExcel(cid) {
+    window.location.href = "views/print/print_financial_sheet_excel.php?consolidate_id=" + encodeURIComponent(cid);
+}
