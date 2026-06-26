@@ -54,7 +54,7 @@ $packages = cdp_getConsolidationFinancialRows($cid);
  */
 $h  = '<style>
     @page {
-        margin: 6mm 5mm 6mm 5mm;
+        margin: 12mm 11mm 12mm 11mm;
     }
     body {
         font-family: sans-serif;
@@ -65,8 +65,9 @@ $h  = '<style>
     }
     h2 {
         font-size: 13px;
-        margin: 0 0 2mm 0;
+        margin: 0 0 3mm 0;
         padding: 0;
+        text-align: center;
     }
     .sub {
         font-size: 8px;
@@ -139,13 +140,6 @@ $isDg = ((int) ($consol->is_dangerous_good ?? 0) === 1);
 $h .= '<h2>Financial Sheet &mdash; Consolidation ' . $cNo
     . ($isDg ? ' <span style="background:#ff6d00;color:#fff;font-size:8px;padding:2px 6px;border-radius:8px;">&#9888; DANGEROUS GOODS</span>' : '')
     . '</h2>';
-
-$h .= '<div class="sub">'
-    . 'Date: ' . htmlspecialchars((string) $consol->c_date)
-    . ' &nbsp;|&nbsp; Total weight: ' . round($calcWeight, 2)
-    . ' &nbsp;|&nbsp; Consolidation total: ' . $sym . ' ' . cdb_money_format_bar($calcTotal)
-    . ' &nbsp;|&nbsp; Generated ' . date('Y-m-d H:i')
-    . '</div>';
 
 $h .= '<table>
     <thead>
