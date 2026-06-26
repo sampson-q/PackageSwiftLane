@@ -391,6 +391,27 @@ if ($order_items) {
             image-rendering: crisp-edges;
         }
 
+        .financial-sn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+
+            width:28px;
+            height:28px;
+
+            border:2px solid #000;
+            border-radius:50%;
+
+            background:#fff;
+            color:#000 !important;
+
+            font-weight:800;
+            font-size:15px;
+            line-height:1;
+
+            -webkit-print-color-adjust:exact;
+            print-color-adjust:exact;
+        }
 
         @media print {
             html, body {
@@ -521,7 +542,7 @@ if ($order_items) {
 
             <?php if ($financial_serial) : ?>
                 <div style="width:100%; text-align:right;">
-                    <span style="display:inline-block; background:#000; color:#fff; border-radius:999px; padding:4px 10px;">
+                    <span class="financial-sn">
                         <?php echo (int) $financial_serial['sn']; ?>
                     </span>
                 </div>
