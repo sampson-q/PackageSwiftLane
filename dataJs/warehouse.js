@@ -116,6 +116,81 @@ function cdp_exportPrint() {
 }
 
 
+// New delivery flow (single row's "Deliver Package" or the bulk "Deliver
+// Selected") — deliberately separate from the old courier_deliver_shipment.php
+// page, which is no longer linked from here but stays untouched in the system.
+// Preview the package(s) for an explicit confirm, then flip their status.
+function cdpWarehouseDeliver(orderNos) {
+    if (!orderNos || !orderNos.length) {
+        Swal.fire({ icon: "warning", text: "Please select at least one package.", confirmButtonText: "Ok" });
+        return;
+    }
+
+    $.ajax({
+        url: "./ajax/courier/warehouse_deliver_ajax.php",
+        method: "POST",
+        data: { action: "preview", order_nos: JSON.stringify(orderNos) },
+        dataType: "json",
+        success: function (r) {
+            if (!r || !r.ok || !r.packages || !r.packages.length) {
+                Swal.fire({ icon: "error", text: (r && r.message) ? r.message : "Could not load package details.", confirmButtonText: "Ok" });
+                return;
+            }
+
+            var rows = r.packages.map(function (p) {
+                var warn = p.already_delivered ? ' <span style="color:#dc3545;">(already delivered)</span>' : "";
+                return '<div style="text-align:left;border-bottom:1px solid #eee;padding:6px 2px;">' +
+                    "<b>" + $("<div>").text(p.tracking).html() + "</b>" + warn + "<br>" +
+                    '<span style="font-size:12px;color:#666;">' +
+                    $("<div>").text(p.name).html() + " &middot; Carrier: " + $("<div>").text(p.carrier).html() +
+                    "</span></div>";
+            }).join("");
+
+            Swal.fire({
+                title: "Confirm Delivery",
+                html: '<div style="max-height:260px;overflow-y:auto;">' + rows + "</div>" +
+                      "<p class='mt-2 mb-0'>Mark " + (r.packages.length === 1 ? "this package" : "these " + r.packages.length + " packages") + " as delivered?</p>",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Yes, deliver",
+                cancelButtonText: "Cancel",
+                reverseButtons: true,
+                preConfirm: function () {
+                    return $.ajax({
+                        url: "./ajax/courier/warehouse_deliver_ajax.php",
+                        method: "POST",
+                        data: { action: "deliver", order_nos: JSON.stringify(orderNos) },
+                        dataType: "json"
+                    }).then(
+                        function (dr) {
+                            if (!dr || !dr.ok) {
+                                Swal.showValidationMessage((dr && dr.message) || "Could not mark as delivered.");
+                                return false;
+                            }
+                            return dr;
+                        },
+                        function () {
+                            Swal.showValidationMessage("Request failed.");
+                            return false;
+                        }
+                    );
+                }
+            }).then(function (result) {
+                if (!result.isConfirmed) return;
+                var n = (result.value && result.value.delivered) || 0;
+                Swal.fire({ icon: "success", text: n + " package(s) marked as delivered.", confirmButtonText: "Ok" }).then(function () {
+                    cdp_load(1);
+                    if (typeof cdpSelClear === "function") cdpSelClear();
+                });
+            });
+        },
+        error: function () {
+            Swal.fire({ icon: "error", text: "Request failed.", confirmButtonText: "Ok" });
+        }
+    });
+}
+
+
 // Bulk status update
 $("#send_checkbox_status").on('submit', function (event) {
 
