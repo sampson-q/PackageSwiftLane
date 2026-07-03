@@ -42,7 +42,7 @@ if (empty($errors)) {
         'id' => trim($_POST['id'])
     );
 
-    $insert = cdp_updateItemConsolidate($data);
+    $insert = cdp_freeConsolidatedItem($data);
     $delete = cdp_deleteItemConsolidate($data);
 
 
