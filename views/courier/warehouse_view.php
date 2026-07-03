@@ -132,19 +132,9 @@ $statusrow = $core->cdp_getStatusMultiple(1, 4, 8, 15, 16, 23, 32, 33);
                                                 <?php echo $lang['global-1'] ?>
                                             </button>
                                             <div class="dropdown-menu">
-                                                <?php if ($user->cdp_hasPermission('select_change_status_courier')) { ?>
-                                                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalCheckboxStatus">
-                                                        <i style="color:#20c997" class="ti-reload"></i>&nbsp;<?php echo $lang['left21550'] ?>
-                                                    </a>
-                                                <?php } ?>
-                                                <?php if ($user->cdp_hasPermission('assign_drivers')) { ?>
-                                                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalDriverCheckbox">
-                                                        <i style="color:#ff0000" class="fas fa-car"></i>&nbsp;<?php echo $lang['left208'] ?>
-                                                    </a>
-                                                <?php } ?>
-                                                <?php if ($user->cdp_hasPermission('print_label')) { ?>
-                                                    <a class="dropdown-item" onclick="cdp_printMultipleLabel();" target="_blank">
-                                                        <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?>
+                                                <?php if ($user->cdp_hasPermission('courier_deliver_shipment')) { ?>
+                                                    <a class="dropdown-item" href="javascript:void(0)" onclick="cdpWarehouseDeliver((typeof cdpSelGet === 'function') ? cdpSelGet() : []);">
+                                                        <i style="color:#343a40" class="fa fa-box"></i>&nbsp;Deliver Selected
                                                     </a>
                                                 <?php } ?>
                                             </div>
