@@ -12,6 +12,13 @@ $user        = new User;
 $core        = new Core;
 $userData    = $user->cdp_getUserData();
 $permissions = $user->cdp_getUserPermissions();
+// Row checkboxes (and the bulk-action bar) only need to render when at least
+// one bulk action is actually available to this user.
+$canBulkDeliver = $user->cdp_hasPermission('courier_deliver_shipment');
+$canBulkAny     = $canBulkDeliver
+    || $user->cdp_hasPermission('select_change_status_courier')
+    || $user->cdp_hasPermission('assign_drivers')
+    || $user->cdp_hasPermission('print_label');
 
 $search         = cdp_sanitize($_REQUEST['search']);
 $status_courier = intval($_REQUEST['status_courier']);
@@ -102,6 +109,14 @@ if ($numrows > 0) { ?>
         <table id="zero_config" class="table table-condensed table-hover table-striped custom-table-checkbox">
             <thead>
                 <tr>
+                    <?php if ($canBulkAny) { ?>
+                        <th>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input sl-all" id="cstall">
+                                <label class="custom-control-label" for="cstall"></label>
+                            </div>
+                        </th>
+                    <?php } ?>
                     <th><b><?php echo 'Swift ' . $lang['ltracking'] ?></b></th>
                     <th><b><?php echo $lang['ltracking'] ?></b></th>
                     <th><b><?php echo $lang['ddate'] ?></b></th>
@@ -180,6 +195,16 @@ if ($numrows > 0) { ?>
 
                         <tr class="card-hovera">
 
+                            <?php if ($canBulkAny) { ?>
+                                <td>
+                                    <?php if ($row->status_courier != 8) { ?>
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" value="<?php echo $row->order_no; ?>" name="checkbox[]" id="cst_<?php echo $count; ?>">
+                                            <label class="custom-control-label" for="cst_<?php echo $count; ?>">&nbsp;</label>
+                                        </div>
+                                    <?php } ?>
+                                </td>
+                            <?php } ?>
                             <td><b><a href="courier_view.php?id=<?php echo $row->order_id; ?>"><?php echo $row->order_prefix . $row->order_no; ?></a></b></td>
                             <td><?php echo $postal_tracking->tracking_number; ?></td>
 
@@ -235,9 +260,10 @@ if ($numrows > 0) { ?>
 							            <i class="fas fa-ellipsis-v"></i> <!-- Utiliza el icono de puntos suspensivos -->
 							        </button>
 							        <div class="dropdown-menu" style="overflow-y: auto; max-height: 200px;">
-							            <!-- VER DETALLES DE ENVÍO PERMISO -->
-							            <?php if ($user->cdp_hasPermission('courier_deliver_shipment')) { ?>
-							                <a class="dropdown-item" href="courier_deliver_shipment.php?id=<?php echo $row->order_id; ?>" title="<?php echo 'Deliver Package' ?>">
+							            <?php if ($canBulkDeliver) { ?>
+							                <a class="dropdown-item" href="javascript:void(0)"
+							                   onclick="cdpWarehouseDeliver(<?php echo htmlspecialchars(json_encode([(string) $row->order_no]), ENT_QUOTES); ?>)"
+							                   title="<?php echo 'Deliver Package' ?>">
 							                    <i style="color:#343a40" class="fa fa-box"></i>&nbsp;<?php echo 'Deliver Package' ?>
 							                </a>
 							            <?php } ?>
