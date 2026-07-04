@@ -1,6 +1,8 @@
 <?php
 // *************************************************************************
-// * DEPRIXA PRO - Financial Sheet (consolidation -> packages -> items)    *
+// * DEPRIXA PRO - Financial Sheet (consolidation list + search)            *
+// * Hierarchy: consolidation -> customer -> packages -> items              *
+// * Each consolidation opens in its own page (financial_sheet_consolidation)*
 // *************************************************************************
 
 if ((!$user->cdp_is_Admin() && (int) ($user->userlevel ?? 0) !== 3)) {
@@ -9,54 +11,20 @@ if ((!$user->cdp_is_Admin() && (int) ($user->userlevel ?? 0) !== 3)) {
 
 $userData = $user->cdp_getUserData();
 
-/**
- * Return existing columns for a table in the current database.
- */
-function cdp_fs_get_table_columns($db, $table)
-{
-    static $cache = [];
-
-    if (isset($cache[$table])) {
-        return $cache[$table];
-    }
-
-    $cache[$table] = [];
-
-    try {
-        $db->cdp_query("
-            SELECT COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = :table_name
-        ");
-        $db->bind(':table_name', $table);
-        $db->cdp_execute();
-        $rows = $db->cdp_registros();
-
-        if ($rows) {
-            foreach ($rows as $row) {
-                $name = strtolower((string) ($row->COLUMN_NAME ?? $row->column_name ?? ''));
-                if ($name !== '') {
-                    $cache[$table][$name] = true;
-                }
-            }
-        }
-    } catch (Throwable $e) {
-        // Fallback to empty list; the search code still works with the base columns.
-    }
-
-    return $cache[$table];
-}
-
-function cdp_fs_has_column($columns, $name)
-{
-    return isset($columns[strtolower($name)]);
-}
-
-function cdp_fs_escape_like_column($column)
-{
-    // The column names are only chosen from a trusted whitelist / schema check.
-    return $column;
+// Last exchange-rate change (audit) — shown next to the rate hint.
+$fs_rate_log = null;
+try {
+    $fs_db = new Conexion;
+    $fs_db->cdp_query("SELECT l.new_rate, l.changed_at,
+                              COALESCE(NULLIF(TRIM(CONCAT(COALESCE(u.fname,''),' ',COALESCE(u.lname,''))),''),
+                                       u.username, CONCAT('User ', l.changed_by)) AS uname
+                       FROM cdb_exchange_rate_log l
+                       LEFT JOIN cdb_users u ON u.id = l.changed_by
+                       ORDER BY l.id DESC LIMIT 1");
+    $fs_db->cdp_execute();
+    $fs_rate_log = $fs_db->cdp_registro();
+} catch (Throwable $e) {
+    // Rate-log table missing (financial_sheet_v2.sql §5 not run).
 }
 ?>
 <!DOCTYPE html>
@@ -69,163 +37,7 @@ function cdp_fs_escape_like_column($column)
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
     <title>Financial Sheet | <?php echo $core->site_name ?></title>
     <?php include 'views/inc/head_scripts.php'; ?>
-    <link rel="stylesheet" type="text/css" href="assets/template/assets/libs/select2/dist/css/select2.min.css">
-    <style type="text/css">
-        /* ----- Three-level visual hierarchy: consolidation > package > items ----- */
-        .fs-level-chip {
-            display: inline-block;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: .5px;
-            padding: 2px 7px;
-            border-radius: 10px;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-
-        .fs-chip-consol {
-            background: #1d2c9e;
-            color: #fff;
-        }
-
-        .fs-chip-pkg {
-            background: #cfd8e3;
-            color: #2b3a4a;
-        }
-
-        /* Level 1 — consolidation card */
-        .fs-consol-card {
-            border: 1px solid #c7cfdb;
-            border-left: 5px solid #1d2c9e;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-
-        .fs-consol-header {
-            background: #f4f6fb;
-            color: #1f2d3d;
-            cursor: pointer;
-            font-size: 15px;
-        }
-
-        .fs-consol-header b {
-            color: #16245f;
-        }
-
-        .fs-consol-header .btn-light,
-        .fs-consol-header .btn-light i {
-            color: #212529 !important;
-        }
-
-        .fs-consol-header .fs-dim {
-            opacity: .85;
-            font-size: 13px;
-        }
-
-        /* Active consolidation: tint the WHOLE card so its packages sit on this bg. */
-        .fs-consol-card.fs-active {
-            background: #e7ecfb;
-            box-shadow: inset 0 0 0 2px #1d2c9e;
-        }
-
-        .fs-consol-card.fs-active>.fs-consol-header {
-            background: #dbe3fb;
-        }
-
-        /* Level 2 — package card (sits on the consolidation's background) */
-        .fs-pkg-card {
-            border: 1px solid #dfe4ea;
-            border-left: 4px solid #8aa0bd;
-            border-radius: 5px;
-            margin-left: 12px;
-            background: #fff;
-            overflow: hidden;
-        }
-
-        .fs-pkg-header {
-            background: #f7f9fb;
-            color: #26333f;
-            cursor: pointer;
-        }
-
-        .fs-pkg-header b,
-        .fs-pkg-header i {
-            color: #26333f;
-        }
-
-        /* Active package: a DIFFERENT bg so its items stand out from the consolidation. */
-        .fs-pkg-card.fs-active {
-            background: #fff7e6;
-            box-shadow: inset 0 0 0 2px #e0a800;
-        }
-
-        .fs-pkg-card.fs-active>.fs-pkg-header {
-            background: #ffeec6;
-        }
-
-        /* Level 3 — items */
-        .fs-items-table {
-            margin-left: 6px;
-            background: #fff;
-        }
-
-        .fs-items-table input:disabled {
-            background: #f3f4f6;
-        }
-
-        /* Money */
-        .fs-money {
-            font-weight: 700;
-            color: #1b8a4b;
-            white-space: nowrap;
-        }
-
-        /* Dangerous-goods marker: warning icon only, in a coloured circle. */
-        .fs-dg-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            color: #fff;
-            font-size: 11px;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
-
-        /* Per-input currency toggle (tiny, above the custom-price box) */
-        .fs-cur-mini .fs-cur-btn {
-            padding: 0 7px;
-            font-size: 12px;
-            line-height: 18px;
-            height: 20px;
-            font-weight: 700;
-        }
-
-        /* Package change log */
-        .fs-history {
-            margin-top: 10px;
-            padding-top: 6px;
-            border-top: 1px solid #e3e6ea;
-            font-size: 12px;
-        }
-
-        .fs-history-title {
-            font-weight: 700;
-            color: #5a6b7b;
-            margin-bottom: 3px;
-        }
-
-        .fs-hist-item {
-            padding: 2px 0;
-        }
-
-        .fs-pkg-caret,
-        .fs-consol-caret {
-            transition: transform .2s;
-        }
-    </style>
+    <?php include 'views/reports/financial_sheet/fs_styles.php'; ?>
 </head>
 
 <body>
@@ -242,25 +54,40 @@ function cdp_fs_escape_like_column($column)
                             <h4 class="card-title ml-4 mt-3"><i class="fas fa-file-invoice-dollar"></i> Financial Sheet</h4>
 
                             <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col-md-3">
+                                <div class="row fs-toolbar">
+                                    <div class="col-md-3 mb-2">
                                         <div class="input-group">
-                                            <input type="text" id="fs_search" class="form-control" placeholder="Search by consolidation number...">
-                                            <div class="input-group-append">
-                                                <button id="fs_search_btn" class="btn btn-secondary" type="button">Search</button>
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fas fa-boxes"></i></span>
                                             </div>
+                                            <input type="text" id="fs_q_consol" class="form-control" placeholder="Consolidation #" autocomplete="off">
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-3 mb-2">
                                         <div class="input-group">
-                                            <input type="text" id="fs_search_package" class="form-control" placeholder="Search by package / tracking...">
-                                            <div class="input-group-append">
-                                                <button id="fs_search_package_btn" class="btn btn-secondary" type="button">Search</button>
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="mdi mdi-package-variant-closed"></i></span>
                                             </div>
+                                            <input type="text" id="fs_q_package" class="form-control" placeholder="Package / tracking #" autocomplete="off">
                                         </div>
                                     </div>
-                                    <div class="col-md-6 text-right">
-                                        <small class="text-muted">Rate: $1 = &#8373;<span id="fs_rate_label"></span> &middot; custom prices can be entered in $ or &#8373; &middot; the <b>PDF</b> button exports a consolidation.</small>
+                                    <div class="col-md-3 mb-2">
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="mdi mdi-account-search"></i></span>
+                                            </div>
+                                            <input type="text" id="fs_q_customer" class="form-control" placeholder="Customer name or locker" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-2 text-right">
+                                        <div class="fs-hint mt-2">
+                                            Filters apply as you type &middot;
+                                            Rate: $1 = &#8373;<span id="fs_rate_label"></span>
+                                            <?php if ($fs_rate_log): ?>
+                                                <span title="Exchange-rate audit log">(updated by <?php echo htmlspecialchars($fs_rate_log->uname); ?>
+                                                on <?php echo htmlspecialchars(date('Y-m-d H:i', strtotime((string) $fs_rate_log->changed_at))); ?>)</span>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -268,7 +95,7 @@ function cdp_fs_escape_like_column($column)
                                     <i class="fa fa-spinner fa-spin fa-2x text-muted"></i>
                                 </div>
 
-                                <div class="outer_div mt-4"></div>
+                                <div class="outer_div mt-2"></div>
                             </div>
                         </div>
                     </div>
@@ -281,11 +108,10 @@ function cdp_fs_escape_like_column($column)
 
     <?php include('helpers/languages/translate_to_js.php'); ?>
     <script>
-        // Storage stays canonical USD; the per-input toggle only controls how an
-        // operator-typed custom price is interpreted before conversion to USD.
+        // Storage stays canonical USD; the per-input $/₵ toggle only controls how
+        // an operator-typed custom price is interpreted before conversion to USD.
         window.FS_RATE = <?php echo (float) ($core->exchange_rate ?: 1); ?>;
     </script>
-    <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
     <script src="<?= cdp_asset('dataJs/financial_sheet.js') ?>"></script>
 </body>
 
