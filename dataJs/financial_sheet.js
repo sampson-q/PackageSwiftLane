@@ -86,8 +86,31 @@ function fsLoadInto(data) {
     $.ajax({
         url: FS_AJAX,
         data: data,
-        success: function (html) { $(".outer_div").html(html); },
+        success: function (html) {
+            $(".outer_div").html(html);
+            // The list renders instantly with "…" placeholders; the heavy
+            // numbers (due/fees/weight/priced/received) stream in right after.
+            if (data.action === "list") fsLoadListStats();
+        },
         complete: function () { $("#loader").fadeOut("fast"); }
+    });
+}
+
+function fsLoadListStats() {
+    var cids = $(".outer_div .fs-consol-total[data-cid]").map(function () {
+        return $(this).data("cid");
+    }).get();
+    if (!cids.length) return;
+    $.ajax({
+        url: FS_AJAX,
+        data: { action: "list_stats", cids: cids.join(",") },
+        dataType: "json",
+        success: function (r) {
+            if (!r || !r.ok || !r.stats) return;
+            $.each(r.stats, function (cid, s) {
+                fsApplyConsolSummary(cid, s);
+            });
+        }
     });
 }
 
@@ -352,10 +375,16 @@ function fsApplyConsolSummary(cid, s) {
     if ($fees.length && s.base_usd != null) {
         $fees.text(fsMoney(s.base_usd) + " + " + fsMoney(s.fee_usd) + " fees");
     }
-    // Consolidation-level "Received" is displayed in USD.
+    // Consolidation-level "Received" is displayed in USD (list chips stay
+    // hidden until there is actually something received).
     var $paid = $(".fs-consol-paid[data-cid='" + cid + "']");
     if ($paid.length && s.paid_usd != null) {
         $paid.text("Received " + fsMoney(s.paid_usd));
+        if (s.paid_usd > 0) $paid.show();
+    }
+    var $weight = $(".fs-consol-weight[data-cid='" + cid + "']");
+    if ($weight.length && s.weight != null) {
+        $weight.html('<i class="mdi mdi-weight"></i> ' + Number(s.weight).toFixed(2) + " lb");
     }
     var $badge = $(".fs-consol-custpriced[data-cid='" + cid + "']");
     if ($badge.length && s.custs != null) {

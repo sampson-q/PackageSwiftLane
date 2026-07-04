@@ -22,6 +22,13 @@ require_once(__DIR__ . '/../../helpers/pickup_aging.php');
 require_once(__DIR__ . '/../notify_whatsapp/api_whatsapp_service_v2.php');
 require_login();
 
+// Release the PHP session lock immediately: nothing below writes to the
+// session, and a long report query would otherwise block EVERY other request
+// from the same browser (pages appear frozen, even logout hangs).
+if (session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
+}
+
 $db   = new Conexion;
 $user = new User;
 $core = new Core;
@@ -1670,7 +1677,84 @@ function cdp_fs_build_package_search_where($db)
 }
 
 // ----------------------------------------------------------------------------
-// LIST consolidations (default, HTML) — top-level accordions.
+// LIST STATS (JSON) — heavy per-consolidation numbers (due/fees/weight/priced/
+// received), fetched AFTER the list renders so the page never blocks on them.
+// ----------------------------------------------------------------------------
+if ($action === 'list_stats') {
+    header('Content-Type: application/json; charset=UTF-8');
+
+    $cids = array_slice(array_values(array_filter(array_map('intval', explode(',', (string) ($_REQUEST['cids'] ?? ''))))), 0, 200);
+    if (!$cids) {
+        echo json_encode(['ok' => true, 'stats' => new stdClass()]);
+        exit;
+    }
+    $in = implode(',', $cids);
+
+    $stats = [];
+    foreach ($cids as $c) {
+        $stats[$c] = ['base_usd' => 0.0, 'fee_usd' => 0.0, 'due_usd' => 0.0, 'weight' => 0.0,
+                      'custs' => 0, 'custs_priced' => 0, 'paid_usd' => 0.0];
+    }
+
+    // Per (consolidation, customer): money, weight, fully-priced flag — deduped
+    // ((order_prefix, order_no) is NOT unique in cdb_add_order).
+    $db->cdp_query("
+        SELECT d.consolidate_id AS cid, a.sender_id AS sid,
+               SUM(a.total_order) AS money,
+               SUM(COALESCE(NULLIF(a.total_weight, 0), d.weight)) AS wsum,
+               MIN(CASE WHEN EXISTS (SELECT 1 FROM cdb_add_order_item i
+                                     WHERE i.order_id = a.order_id AND i.priced_at IS NULL)
+                        THEN 0 ELSE 1 END) AS all_priced
+        FROM cdb_consolidate_detail d
+        INNER JOIN cdb_add_order a ON a.order_id = (
+            SELECT a2.order_id FROM cdb_add_order a2
+            WHERE a2.order_prefix = d.order_prefix AND a2.order_no = d.order_no
+            ORDER BY (a2.order_id = CAST(d.order_id AS UNSIGNED)) DESC, a2.order_id ASC
+            LIMIT 1)
+        WHERE d.consolidate_id IN ($in)
+        GROUP BY d.consolidate_id, a.sender_id");
+    $db->cdp_execute();
+    $rateNow = (float) $core->exchange_rate;
+    $feesGhs = [];
+    foreach ((array) $db->cdp_registros() as $t) {
+        $tcid = (int) $t->cid;
+        if (!isset($stats[$tcid])) {
+            continue;
+        }
+        $stats[$tcid]['base_usd']     += (float) $t->money;
+        $stats[$tcid]['weight']       += (float) $t->wsum;
+        $stats[$tcid]['custs']        += 1;
+        $stats[$tcid]['custs_priced'] += (int) $t->all_priced;
+        // One handling fee per customer, from their TOTAL payable.
+        $feesGhs[$tcid] = ($feesGhs[$tcid] ?? 0.0) + cdp_handlingFeeGhs(cdp_usdToGhs((float) $t->money, $rateNow));
+    }
+
+    $db->cdp_query("SELECT consolidate_id AS cid, COALESCE(SUM(paid_ghs),0) AS paid
+                    FROM cdb_consolidate_customer_billing
+                    WHERE consolidate_id IN ($in) AND paid_ghs IS NOT NULL
+                    GROUP BY consolidate_id");
+    $db->cdp_execute();
+    $paidMap = [];
+    foreach ((array) $db->cdp_registros() as $t) {
+        $paidMap[(int) $t->cid] = (float) $t->paid;
+    }
+
+    foreach ($stats as $c => &$s) {
+        $s['base_usd'] = round($s['base_usd'], 2);
+        $s['fee_usd']  = round(cdp_ghsToUsd($feesGhs[$c] ?? 0.0, $rateNow), 2);
+        $s['due_usd']  = round($s['base_usd'] + $s['fee_usd'], 2);
+        $s['weight']   = round($s['weight'], 2);
+        $s['paid_usd'] = round(cdp_ghsToUsd($paidMap[$c] ?? 0.0, $rateNow), 2);
+    }
+    unset($s);
+
+    echo json_encode(['ok' => true, 'stats' => $stats]);
+    exit;
+}
+
+// ----------------------------------------------------------------------------
+// LIST consolidations (default, HTML) — renders instantly from cdb_consolidate
+// alone; the heavy numbers arrive via list_stats right after.
 // ----------------------------------------------------------------------------
 $search = isset($_REQUEST['q']) ? cdp_sanitize($_REQUEST['q']) : '';
 
@@ -1696,58 +1780,6 @@ if (!$consolidations) {
     return;
 }
 
-// Per (consolidation, customer): money + "fully priced" flag, deduped: each
-// detail row maps to EXACTLY ONE order ((order_prefix, order_no) is NOT unique
-// in cdb_add_order — a plain join multiplies rows and inflates totals). A
-// customer is priced when NONE of their packages has an item without priced_at.
-$cids = array_map(function ($c) { return (int) $c->consolidate_id; }, $consolidations);
-$totMap = [];
-if ($cids) {
-    $in = implode(',', $cids);
-    $db->cdp_query("
-        SELECT d.consolidate_id AS cid, a.sender_id AS sid,
-               SUM(a.total_order) AS money,
-               SUM(COALESCE(NULLIF(a.total_weight, 0), d.weight)) AS wsum,
-               MIN(CASE WHEN EXISTS (SELECT 1 FROM cdb_add_order_item i
-                                     WHERE i.order_id = a.order_id AND i.priced_at IS NULL)
-                        THEN 0 ELSE 1 END) AS all_priced
-        FROM cdb_consolidate_detail d
-        INNER JOIN cdb_add_order a ON a.order_id = (
-            SELECT a2.order_id FROM cdb_add_order a2
-            WHERE a2.order_prefix = d.order_prefix AND a2.order_no = d.order_no
-            ORDER BY (a2.order_id = CAST(d.order_id AS UNSIGNED)) DESC, a2.order_id ASC
-            LIMIT 1)
-        WHERE d.consolidate_id IN ($in)
-        GROUP BY d.consolidate_id, a.sender_id");
-    $db->cdp_execute();
-    $rateNow = (float) $core->exchange_rate;
-    foreach ((array) $db->cdp_registros() as $t) {
-        $tcid = (int) $t->cid;
-        if (!isset($totMap[$tcid])) {
-            $totMap[$tcid] = ['money' => 0.0, 'fees_ghs' => 0.0, 'weight' => 0.0, 'custs' => 0, 'custs_priced' => 0, 'paid' => 0.0];
-        }
-        $totMap[$tcid]['money']        += (float) $t->money;
-        // One handling fee per customer, from their TOTAL payable.
-        $totMap[$tcid]['fees_ghs']     += cdp_handlingFeeGhs(cdp_usdToGhs((float) $t->money, $rateNow));
-        $totMap[$tcid]['weight']       += (float) $t->wsum;
-        $totMap[$tcid]['custs']        += 1;
-        $totMap[$tcid]['custs_priced'] += (int) $t->all_priced;
-    }
-
-    // Amount paid so far per consolidation (stage-2 payments, GHS).
-    $db->cdp_query("SELECT consolidate_id AS cid, COALESCE(SUM(paid_ghs),0) AS paid
-                    FROM cdb_consolidate_customer_billing
-                    WHERE consolidate_id IN ($in) AND paid_ghs IS NOT NULL
-                    GROUP BY consolidate_id");
-    $db->cdp_execute();
-    foreach ((array) $db->cdp_registros() as $t) {
-        $tcid = (int) $t->cid;
-        if (isset($totMap[$tcid])) {
-            $totMap[$tcid]['paid'] = (float) $t->paid;
-        }
-    }
-}
-
 $dgStyle = function_exists('cdp_getDangerousGoodsStyle') ? cdp_getDangerousGoodsStyle() : null;
 $dgColor = ($dgStyle && !empty($dgStyle->color)) ? $dgStyle->color : '#ff6d00';
 ?>
@@ -1756,15 +1788,6 @@ $dgColor = ($dgStyle && !empty($dgStyle->color)) ? $dgStyle->color : '#ff6d00';
     <?php foreach ($consolidations as $c):
         $cid = (int) $c->consolidate_id;
         $cNo = htmlspecialchars(($c->c_prefix ?? '') . ($c->c_no ?? ''));
-        $t   = $totMap[$cid] ?? null;
-        $money = $t ? $t['money'] : 0.0;
-        $feeUsd = $t ? cdp_ghsToUsd($t['fees_ghs'], (float) $core->exchange_rate) : 0.0;
-        $dueUsd = $money + $feeUsd;
-        $weight = $t ? $t['weight'] : 0.0;
-        $custs = $t ? $t['custs'] : 0;
-        $custsPriced = $t ? $t['custs_priced'] : 0;
-        $paid  = $t ? $t['paid'] : 0.0;
-        $custBadgeCls = ($custs > 0 && $custsPriced >= $custs) ? 'badge-success' : 'badge-warning';
         ?>
         <div class="card mb-2 fs-consol-card">
             <div class="card-header fs-consol-header"
@@ -1773,12 +1796,12 @@ $dgColor = ($dgStyle && !empty($dgStyle->color)) ? $dgStyle->color : '#ff6d00';
                 <i class="fas fa-boxes"></i>
                 <b><?php echo $cNo; ?></b>
                 <span class="fs-dim ml-3"><i class="mdi mdi-calendar-blank"></i> <?php echo htmlspecialchars((string) $c->c_date); ?></span>
-                <span class="fs-dim ml-3" title="Sum of package weights">
-                    <i class="mdi mdi-weight"></i> <?php echo round($weight, 2); ?> lb
+                <span class="fs-dim ml-3 fs-consol-weight" data-cid="<?php echo $cid; ?>" title="Sum of package weights">
+                    <i class="mdi mdi-weight"></i> …
                 </span>
-                <span class="badge <?php echo $custBadgeCls; ?> ml-3 fs-consol-custpriced" data-cid="<?php echo $cid; ?>"
+                <span class="badge badge-light ml-3 fs-consol-custpriced" data-cid="<?php echo $cid; ?>"
                       title="Customers whose packages are fully priced">
-                    <i class="mdi mdi-account-check"></i> <?php echo $custsPriced; ?>/<?php echo $custs; ?> customers priced
+                    <i class="mdi mdi-account-check"></i> …
                 </span>
                 <?php if ((int) $c->is_dangerous_good === 1): ?>
                     <span class="fs-dg-badge" style="background:<?php echo htmlspecialchars($dgColor); ?>;"
@@ -1788,13 +1811,11 @@ $dgColor = ($dgStyle && !empty($dgStyle->color)) ? $dgStyle->color : '#ff6d00';
                 <?php endif; ?>
                 <span class="fs-spacer"></span>
                 <span class="fs-dim fs-consol-fees" data-cid="<?php echo $cid; ?>"
-                      title="Packages + handling fees">$<?php echo number_format($money, 2); ?> + $<?php echo number_format($feeUsd, 2); ?> fees</span>
-                <span class="fs-money fs-consol-total" data-cid="<?php echo $cid; ?>" data-usd="<?php echo $dueUsd; ?>"
-                      title="Amount due incl. handling fees">Due $<?php echo number_format($dueUsd, 2); ?></span>
-                <?php if ($paid > 0): ?>
-                    <span class="fs-chip-paid fs-consol-paid" data-cid="<?php echo $cid; ?>"
-                          title="Amount received from customers so far">Received $<?php echo number_format(cdp_ghsToUsd($paid, (float) $core->exchange_rate), 2); ?></span>
-                <?php endif; ?>
+                      title="Packages + handling fees">…</span>
+                <span class="fs-money fs-consol-total" data-cid="<?php echo $cid; ?>" data-usd="0"
+                      title="Amount due incl. handling fees">Due …</span>
+                <span class="fs-chip-paid fs-consol-paid" data-cid="<?php echo $cid; ?>" style="display:none;"
+                      title="Amount received from customers so far"></span>
                 <button type="button" class="btn btn-sm btn-light ml-2"
                         onclick="event.stopPropagation(); fsExportConsolidation(<?php echo $cid; ?>);"
                         title="Export this consolidation to PDF">
