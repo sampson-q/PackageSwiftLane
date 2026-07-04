@@ -919,6 +919,10 @@ $categories   = $core->cdp_getCategoriesById(27);
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
 
     <!-- Tu automatización -->
+    <script>
+        // USD<->GHS rate for the per-item custom-price entry toggle (storage stays USD).
+        window.CDP_RATE = <?php echo (float) ($core->exchange_rate ?: 1); ?>;
+    </script>
     <script src="<?= cdp_asset('dataJs/courier_add.js') ?>"></script>
 </body>
 </html>

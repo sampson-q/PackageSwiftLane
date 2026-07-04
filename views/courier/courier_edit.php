@@ -803,10 +803,15 @@ $numrows     = $db->cdp_rowCount();
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
     <!-- select2.min.js intentionally NOT loaded: loading it after the full build
          overrides full-build modules and degrades the ajax selects. -->
-    <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+    <?php /* v11 (vendor) — the template's v7 bundle lacks isConfirmed/didOpen used by courier_edit.js */ ?>
+    <script src="<?= cdp_asset('assets/vendor/libs/sweetalert2/sweetalert2.js') ?>"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
     <script src="assets/template/dist/js/app-style-switcher.js"></script>
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
+    <script>
+        // USD<->GHS rate for the per-item custom-price entry toggle (storage stays USD).
+        window.CDP_RATE = <?php echo (float) ($core->exchange_rate ?: 1); ?>;
+    </script>
     <script src="<?= cdp_asset('dataJs/courier_edit.js') ?>"></script>
 </body>
 </html>
