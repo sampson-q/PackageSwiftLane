@@ -214,6 +214,7 @@ if (empty($errors)) {
             $packages = json_decode($_POST['packages']);
 
             $base_packages = 0.0; // USD base = Σ(weight*qty*rate) + Σ(custom_price*qty)
+            $seen_groups   = []; // "priced together" batches count ONCE, no qty multiplier
 
             if ($packages && is_array($packages)) {
                 foreach ($packages as $package) {
@@ -237,6 +238,11 @@ if (empty($errors)) {
                     $fixed    = isset($package->fixed_value)    ? floatval($package->fixed_value)    : 0;
                     $descr    = isset($package->description)    ? trim($package->description)        : '';
 
+                    // Financial-sheet marks travel with the item so an edit save
+                    // never destroys "priced together" groups / priced_at.
+                    $wgroup    = isset($package->weight_group) ? trim((string) $package->weight_group) : '';
+                    $priced_at = (isset($package->priced_at) && $package->priced_at !== '') ? $package->priced_at : null;
+
                     cdp_insertCourierShipmentPackages(array(
                         'order_id'       => $shipment_id,
                         'qty'            => $qty,
@@ -248,7 +254,24 @@ if (empty($errors)) {
                         'declared_value' => $declared,
                         'fixed_value'    => $fixed,
                         'custom_price'   => $use_custom ? $custom_price : null,
+                        'weight_group'   => $wgroup,
+                        'priced_at'      => $priced_at,
                     ));
+
+                    $sum_declared += $declared * $qty;
+                    $sum_fixed    += $fixed    * $qty;
+
+                    if ($wgroup !== '') {
+                        // Grouped batch: the recorded value covers every unit —
+                        // count it ONCE, with no quantity multiplier (mirrors
+                        // cdp_recalcCourierShipmentTotals).
+                        if (!isset($seen_groups[$wgroup])) {
+                            $seen_groups[$wgroup] = true;
+                            $base_packages   += $use_custom ? $custom_price : $weight * $price_lb;
+                            $sum_weight_real += $weight;
+                        }
+                        continue;
+                    }
 
                     // Per-item USD line total (mirrors computeLineTotal in courier_edit.js).
                     if ($use_custom) {
@@ -256,10 +279,7 @@ if (empty($errors)) {
                     } else {
                         $base_packages += $weight * $qty * $price_lb;
                     }
-
-                    $sum_weight_real += $weight   * $qty;
-                    $sum_declared    += $declared * $qty;
-                    $sum_fixed       += $fixed    * $qty;
+                    $sum_weight_real += $weight * $qty;
                 }
             }
 

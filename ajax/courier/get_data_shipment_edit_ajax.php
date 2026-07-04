@@ -42,9 +42,9 @@ $data = $db->cdp_registros();
 
 foreach ($data as $key) {
     // New pricing model: an item is priced EITHER by weight OR by a custom USD
-    // price. Derive the mode from the stored custom_price (NULL/0 => weight).
-    $custom_price = isset($key->custom_price) ? (float) $key->custom_price : 0.0;
-    $use_custom   = $custom_price > 0 ? 1 : 0;
+    // price. NULL custom_price => weight mode (0 is a valid custom price).
+    $raw_custom   = $key->custom_price ?? null;
+    $use_custom   = ($raw_custom !== null) ? 1 : 0;
 
     $list[] = array(
         'id' => $key->order_item_id,
@@ -56,8 +56,11 @@ foreach ($data as $key) {
         'weight' => $key->order_item_weight,
         'declared_value' => $key->order_item_declared_value,
         'fixed_value' => $key->order_item_fixed_value,
-        'custom_price' => $custom_price,
+        'custom_price' => $use_custom ? (float) $raw_custom : 0.0,
         'use_custom_price' => $use_custom,
+        // Financial-sheet marks: "priced together" batch token + priced-at.
+        'weight_group' => $key->order_item_weight_group ?? null,
+        'priced_at' => $key->priced_at ?? null,
     );
 }
 
