@@ -96,18 +96,37 @@ function fsLoadInto(data) {
     });
 }
 
+var fsStatsCache = {}; // cid -> summary; lives for the page session
+var fsStatsXhr = null;
+
 function fsLoadListStats() {
     var cids = $(".outer_div .fs-consol-total[data-cid]").map(function () {
         return $(this).data("cid");
     }).get();
     if (!cids.length) return;
-    $.ajax({
+
+    // Serve already-fetched consolidations from cache (filtering re-renders the
+    // same cards constantly — don't re-run the heavy query for them).
+    var missing = [];
+    cids.forEach(function (cid) {
+        if (fsStatsCache[cid]) {
+            fsApplyConsolSummary(cid, fsStatsCache[cid]);
+        } else {
+            missing.push(cid);
+        }
+    });
+    if (!missing.length) return;
+
+    // Never stack heavy stats queries: a newer list load supersedes the old one.
+    if (fsStatsXhr && fsStatsXhr.readyState !== 4) fsStatsXhr.abort();
+    fsStatsXhr = $.ajax({
         url: FS_AJAX,
-        data: { action: "list_stats", cids: cids.join(",") },
+        data: { action: "list_stats", cids: missing.join(",") },
         dataType: "json",
         success: function (r) {
             if (!r || !r.ok || !r.stats) return;
             $.each(r.stats, function (cid, s) {
+                fsStatsCache[cid] = s;
                 fsApplyConsolSummary(cid, s);
             });
         }
