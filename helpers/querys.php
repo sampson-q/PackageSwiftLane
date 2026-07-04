@@ -322,7 +322,7 @@ function cdp_getEmailTemplatesdg1i4($id)
  * PHPMailer must already be loaded by the caller for SMTP. Returns
  * ['ok' => bool, 'error' => string?].
  */
-function cdp_sendTemplateEmail($templateId, $toEmail, array $replacements = [])
+function cdp_sendTemplateEmail($templateId, $toEmail, array $replacements = [], $subjectOverride = null)
 {
     $core = new Core;
     $tpl  = cdp_getEmailTemplatesdg1i4($templateId);
@@ -338,7 +338,9 @@ function cdp_sendTemplateEmail($templateId, $toEmail, array $replacements = [])
 
     $body    = str_replace(array_keys($map), array_values($map), $tpl->body);
     $body    = function_exists('cdp_cleanOut') ? cdp_cleanOut($body) : $body;
-    $subject = $tpl->subject;
+    // Some generic templates (e.g. #29 "Push Notifications") ship with a blank
+    // stored subject — callers supply their own via $subjectOverride.
+    $subject = ($subjectOverride !== null && $subjectOverride !== '') ? $subjectOverride : $tpl->subject;
 
     if ($core->mailer === 'PHP') {
         $headers  = "MIME-Version: 1.0\r\n";
@@ -2931,6 +2933,10 @@ function cdp_getConsolidationFinancialRows($consolidate_id)
         return $cache[$cid];
     }
 
+    // NOTE: deliberately NO is_consolidate filter — the sheet and the exports
+    // show every package that is a member of the consolidation, billed or not.
+    // Billing state lives in cdb_consolidate_customer_billing and only affects
+    // the on-screen billed badge / pricing lock, never membership.
     $db = new Conexion;
     $db->cdp_query("
         SELECT
@@ -2938,6 +2944,7 @@ function cdp_getConsolidationFinancialRows($consolidate_id)
             d.order_prefix,
             d.order_no,
             d.weight AS detail_weight,
+            a.total_weight AS pkg_weight,
             a.total_order,
             COALESCE(NULLIF(pt.tracking_number,''), a.tracking_num) AS carrier_tracking,
             a.sender_id,
@@ -3210,8 +3217,7 @@ function cdp_deleteItemConsolidate($datos)
 }
 
 
-function cdp_updateItemConsolidate($datos)
-{
+function cdp_freeConsolidatedItem($datos) {
 
     $db = new Conexion;
 
@@ -6544,22 +6550,42 @@ function cdp_recalcCourierShipmentTotals($order_id)
     $reexpedicion_value = (float) $o->total_reexp;
 
     $db->cdp_query("SELECT order_item_quantity, order_item_weight, custom_price,
-                           order_item_declared_value, order_item_fixed_value
+                           order_item_declared_value, order_item_fixed_value,
+                           order_item_weight_group
                     FROM cdb_add_order_item WHERE order_id = :oid");
     $db->bind(':oid', $order_id);
     $db->cdp_execute();
     $items = $db->cdp_registros();
 
     $base_packages = 0.0; $sum_weight_real = 0.0; $sum_declared = 0.0; $sum_fixed = 0.0;
+    $seen_groups = [];
     foreach ($items as $it) {
         $qty    = (float) $it->order_item_quantity; if ($qty <= 0) $qty = 1;
         $weight = (float) $it->order_item_weight;
-        $custom = isset($it->custom_price) ? (float) $it->custom_price : 0.0;
-        if ($custom > 0) { $base_packages += $custom * $qty; }
+        // 0 is a legitimate stored custom price — NULL (not >0) means "priced by weight".
+        $hasCustom = ($it->custom_price !== null);
+        $custom    = $hasCustom ? (float) $it->custom_price : 0.0;
+        $group     = isset($it->order_item_weight_group) ? trim((string) $it->order_item_weight_group) : '';
+
+        // Declared/fixed values belong to each physical item regardless of grouping.
+        $sum_declared += (float) $it->order_item_declared_value * $qty;
+        $sum_fixed    += (float) $it->order_item_fixed_value * $qty;
+
+        if ($group !== '') {
+            // Items weighed/priced together carry the batch value on every member
+            // row: count it ONCE per group, with no quantity multiplier (the
+            // recorded value already covers every unit in the batch).
+            if (isset($seen_groups[$group])) { continue; }
+            $seen_groups[$group] = true;
+            if ($hasCustom) { $base_packages += $custom; }
+            else            { $base_packages += $weight * $price_lb; }
+            $sum_weight_real += $weight;
+            continue;
+        }
+
+        if ($hasCustom) { $base_packages += $custom * $qty; }
         else            { $base_packages += $weight * $qty * $price_lb; }
         $sum_weight_real += $weight * $qty;
-        $sum_declared    += (float) $it->order_item_declared_value * $qty;
-        $sum_fixed       += (float) $it->order_item_fixed_value * $qty;
     }
     $base_packages   = round($base_packages, 2);
     $sum_weight_real = round($sum_weight_real, 2);
@@ -6686,10 +6712,11 @@ function cdp_insertCourierShipmentPackages($datos) {
     order_item_height,
     order_item_fixed_value,
     order_item_declared_value,
-    custom_price
-                    
+    custom_price,
+    order_item_weight_group,
+    priced_at
     )
-    VALUES 
+    VALUES
     (
     :order_id,
     :order_item_description,
@@ -6700,7 +6727,9 @@ function cdp_insertCourierShipmentPackages($datos) {
     :order_item_height,
     :order_item_fixed_value,
     :order_item_declared_value,
-    :custom_price
+    :custom_price,
+    :weight_group,
+    :priced_at
     )
   ");
 
@@ -6714,6 +6743,11 @@ function cdp_insertCourierShipmentPackages($datos) {
     $db->bind(':order_item_fixed_value',  $datos["fixed_value"]);
     $db->bind(':order_item_declared_value',  $datos["declared_value"]);
     $db->bind(':custom_price', isset($datos['custom_price']) ? (float) $datos['custom_price'] : null);
+    // Financial-sheet pricing marks: preserved on courier_edit re-inserts so an
+    // edit never wipes "priced together" groups or the priced_at audit mark.
+    // (Requires financial_sheet_v2.sql §1 — deploy the migration BEFORE this code.)
+    $db->bind(':weight_group', (isset($datos['weight_group']) && $datos['weight_group'] !== '') ? $datos['weight_group'] : null);
+    $db->bind(':priced_at', (isset($datos['priced_at']) && $datos['priced_at'] !== '') ? $datos['priced_at'] : null);
 
     return  $db->cdp_execute();
 }
