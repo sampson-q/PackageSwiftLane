@@ -490,14 +490,22 @@ function loadPackages() {
                 </td>
 
                 <td class="${useCustom ? '' : 'pkg-disabled-cell'}">
-                    <input type="text"
-                        class="form-control form-control-sm custom-price-input"
-                        name="custom_price" id="customPrice_${index}"
-                        value="${useCustom ? nf(item.custom_price,0) || '' : ''}"
-                        placeholder="${useCustom ? 'USD' : '—'}"
-                        ${!useCustom ? 'disabled' : ''}
-                        onkeypress="return isNumberKey(event,this)"
-                        oninput="changePackage(this)">
+                    <div class="input-group input-group-sm">
+                        <input type="text"
+                            class="form-control form-control-sm custom-price-input"
+                            name="custom_price" id="customPrice_${index}" data-cur="usd"
+                            value="${useCustom ? nf(item.custom_price,0) || '' : ''}"
+                            placeholder="${useCustom ? 'USD' : '—'}"
+                            ${!useCustom ? 'disabled' : ''}
+                            onkeypress="return isNumberKey(event,this)"
+                            oninput="changePackage(this)">
+                        <div class="input-group-append" ${!useCustom ? 'style="display:none;"' : ''}>
+                            <button type="button" class="btn btn-dark py-0 px-2" id="curUsd_${index}"
+                                onclick="setEntryCurrency(${index}, 'usd')">$</button>
+                            <button type="button" class="btn btn-outline-dark py-0 px-2" id="curGhs_${index}"
+                                onclick="setEntryCurrency(${index}, 'ghs')">&#8373;</button>
+                        </div>
+                    </div>
                 </td>
 
                 <td class="text-center">
@@ -562,7 +570,7 @@ function changePackage(el) {
             if (field === "qty")          item.qty          = nf(val, 1);
             if (field === "description")  item.description  = val;
             if (field === "weight")       item.weight       = nf(val, 0);
-            if (field === "custom_price") item.custom_price = nf(val, 0);
+            if (field === "custom_price") item.custom_price = cdpEntryToUsd(idx, nf(val, 0));
         }
         return item;
     });
@@ -1135,9 +1143,9 @@ function cdp_showSuccess(message, shipment_id) {
         cancelButtonText: "Add a New Shipment"
     }).then(function (result) {
         if (result.isConfirmed) {
-            window.location.href = "print_label_ship.php?id=" + shipment_id;
+            window.open("print_label_ship.php?id=" + shipment_id, "_blank");
         } else if (result.isDenied) {
-            window.location.href = "courier_edit.php?id=" + shipment_id;
+            window.open("courier_edit.php?id=" + shipment_id, "_blank");
         } else if (result.dismiss === Swal.DismissReason.cancel) {
             window.location.reload();
         }
@@ -1634,6 +1642,34 @@ function setPricingMode(index, useCustom) {
 
     // Put the cursor in the now-active field for fast data entry.
     $("#" + (useCustom ? "customPrice_" : "weight_") + index).trigger("focus");
+}
+
+/* ---- Custom-price entry currency ($ / ₵) ---------------------------------
+   Storage (packagesItems + what is submitted) is ALWAYS USD; the toggle only
+   controls how the typed value is interpreted. No handling fee applies here. */
+function cdpEntryRate() {
+    return Number(window.CDP_RATE) > 0 ? Number(window.CDP_RATE) : 0;
+}
+
+function cdpEntryToUsd(index, value) {
+    var cur = $("#customPrice_" + index).attr("data-cur") || "usd";
+    return (cur === "ghs" && cdpEntryRate() > 0) ? value / cdpEntryRate() : value;
+}
+
+function setEntryCurrency(index, cur) {
+    cur = (cur === "ghs" && cdpEntryRate() > 0) ? "ghs" : "usd";
+    var $i = $("#customPrice_" + index);
+    var old = $i.attr("data-cur") || "usd";
+    if (old !== cur) {
+        var raw = nf($i.val(), 0);
+        if (raw > 0) {
+            var usd = (old === "ghs") ? raw / cdpEntryRate() : raw;
+            $i.val(r2(cur === "ghs" ? usd * cdpEntryRate() : usd));
+        }
+        $i.attr("data-cur", cur).attr("placeholder", cur.toUpperCase());
+    }
+    $("#curUsd_" + index).toggleClass("btn-dark", cur === "usd").toggleClass("btn-outline-dark", cur !== "usd");
+    $("#curGhs_" + index).toggleClass("btn-dark", cur === "ghs").toggleClass("btn-outline-dark", cur !== "ghs");
 }
 
 /**

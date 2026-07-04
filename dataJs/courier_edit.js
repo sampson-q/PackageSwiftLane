@@ -134,10 +134,23 @@ function loadPackages() {
   }
 
   var priceLb = nf($("#price_lb").val(), 0);
+  var seenGroups = {};
 
   packagesItems.forEach(function (item, index) {
     var useCustom = !!item.use_custom_price;
-    var lineTotal = computeLineTotal(item, priceLb);
+    // "Priced together" on the Financial Sheet: the batch value covers every
+    // member (no qty multiplier) and is only edited from the sheet — pricing
+    // controls are locked here and the value counts ONCE (on the first member).
+    var grouped = !!item.weight_group;
+    var groupFirst = false;
+    if (grouped && !seenGroups[item.weight_group]) {
+      seenGroups[item.weight_group] = true;
+      groupFirst = true;
+    }
+    var lineTotal = grouped
+      ? (groupFirst ? (useCustom ? nf(item.custom_price, 0) : nf(item.weight, 0) * priceLb) : 0)
+      : computeLineTotal(item, priceLb);
+    var priceLocked = grouped;
 
     var tr = `
       <tr id="row_id_${index}">
@@ -152,6 +165,7 @@ function loadPackages() {
               value="${item.description != null ? item.description : ''}"
               placeholder="${typeof translate_description !== 'undefined' ? translate_description : 'Description'}"
               oninput="changePackage(this)">
+          ${grouped ? '<span class="badge badge-info mt-1" title="Priced as one batch on the Financial Sheet — edit the price there">priced together (Financial Sheet)</span>' : ''}
           <input type="hidden" name="fixed_value"    id="fixedValue_${index}"    value="${Number(item.fixed_value || 0)}">
           <input type="hidden" name="declared_value" id="declaredValue_${index}" value="${Number(item.declared_value || 0)}">
           <input type="hidden" name="use_custom_price" id="useCustomPrice_${index}" value="${useCustom ? '1' : '0'}">
@@ -161,11 +175,13 @@ function loadPackages() {
           <div class="btn-group btn-group-sm pricing-mode-toggle" role="group" aria-label="Pricing mode">
             <button type="button" id="modeWeight_${index}"
                 class="btn ${useCustom ? 'btn-outline-dark' : 'btn-dark'}"
+                ${priceLocked ? 'disabled' : ''}
                 onclick="setPricingMode(${index}, false)">
                 <i class="fa fa-balance-scale"></i> Weight
             </button>
             <button type="button" id="modeCustom_${index}"
                 class="btn ${useCustom ? 'btn-success' : 'btn-outline-success'}"
+                ${priceLocked ? 'disabled' : ''}
                 onclick="setPricingMode(${index}, true)">
                 <i class="fa fa-dollar-sign"></i> Custom
             </button>
@@ -177,22 +193,30 @@ function loadPackages() {
               name="weight" id="weight_${index}"
               value="${useCustom ? '' : nf(item.weight, 0) || ''}"
               placeholder="${useCustom ? '—' : 'weight'}"
-              ${useCustom ? 'disabled' : ''}
+              ${(useCustom || priceLocked) ? 'disabled' : ''}
               onkeypress="return isNumberKey(event,this)"
               oninput="changePackage(this)"></td>
 
         <td class="${useCustom ? '' : 'pkg-disabled-cell'}">
-          <input type="text" class="form-control form-control-sm custom-price-input"
-              name="custom_price" id="customPrice_${index}"
-              value="${useCustom ? nf(item.custom_price, 0) || '' : ''}"
-              placeholder="${useCustom ? 'USD' : '—'}"
-              ${!useCustom ? 'disabled' : ''}
-              onkeypress="return isNumberKey(event,this)"
-              oninput="changePackage(this)"></td>
+          <div class="input-group input-group-sm">
+            <input type="text" class="form-control form-control-sm custom-price-input"
+                name="custom_price" id="customPrice_${index}" data-cur="usd"
+                value="${useCustom ? nf(item.custom_price, 0) || '' : ''}"
+                placeholder="${useCustom ? 'USD' : '—'}"
+                ${(!useCustom || priceLocked) ? 'disabled' : ''}
+                onkeypress="return isNumberKey(event,this)"
+                oninput="changePackage(this)">
+            <div class="input-group-append" ${(!useCustom || priceLocked) ? 'style="display:none;"' : ''}>
+              <button type="button" class="btn btn-dark py-0 px-2" id="curUsd_${index}"
+                  onclick="setEntryCurrency(${index}, 'usd')">$</button>
+              <button type="button" class="btn btn-outline-dark py-0 px-2" id="curGhs_${index}"
+                  onclick="setEntryCurrency(${index}, 'ghs')">&#8373;</button>
+            </div>
+          </div></td>
 
         <td class="text-center">
           <span id="lineTotal_${index}" class="font-weight-bold text-success"
-              style="font-size:0.95rem; white-space:nowrap;">${r2(lineTotal)}</span>
+              style="font-size:0.95rem; white-space:nowrap;">${grouped && !groupFirst ? 'grouped' : r2(lineTotal)}</span>
         </td>
 
         <td class="text-center">
@@ -225,6 +249,34 @@ function deletePackage(index) {
   });
 }
 
+/* ---- Custom-price entry currency ($ / ₵) ---------------------------------
+   Storage (packagesItems + what is submitted) is ALWAYS USD; the toggle only
+   controls how the typed value is interpreted. No handling fee applies here. */
+function cdpEntryRate() {
+  return Number(window.CDP_RATE) > 0 ? Number(window.CDP_RATE) : 0;
+}
+
+function cdpEntryToUsd(index, value) {
+  var cur = $("#customPrice_" + index).attr("data-cur") || "usd";
+  return (cur === "ghs" && cdpEntryRate() > 0) ? value / cdpEntryRate() : value;
+}
+
+function setEntryCurrency(index, cur) {
+  cur = (cur === "ghs" && cdpEntryRate() > 0) ? "ghs" : "usd";
+  var $i = $("#customPrice_" + index);
+  var old = $i.attr("data-cur") || "usd";
+  if (old !== cur) {
+    var raw = nf($i.val(), 0);
+    if (raw > 0) {
+      var usd = (old === "ghs") ? raw / cdpEntryRate() : raw;
+      $i.val(r2(cur === "ghs" ? usd * cdpEntryRate() : usd));
+    }
+    $i.attr("data-cur", cur).attr("placeholder", cur.toUpperCase());
+  }
+  $("#curUsd_" + index).toggleClass("btn-dark", cur === "usd").toggleClass("btn-outline-dark", cur !== "usd");
+  $("#curGhs_" + index).toggleClass("btn-dark", cur === "ghs").toggleClass("btn-outline-dark", cur !== "ghs");
+}
+
 function changePackage(el) {
   var parts = el.id.split("_");
   var idx   = parseInt(parts[parts.length - 1], 10);
@@ -236,15 +288,18 @@ function changePackage(el) {
       if (field === "qty")          item.qty          = nf(val, 0);
       if (field === "description")  item.description  = val;
       if (field === "weight")       item.weight       = nf(val, 0);
-      if (field === "custom_price") item.custom_price = nf(val, 0);
+      if (field === "custom_price") item.custom_price = cdpEntryToUsd(idx, nf(val, 0));
     }
     return item;
   });
 
-  // Update just this row's line total live without re-rendering the whole table.
-  var priceLb   = nf($("#price_lb").val(), 0);
-  var lineTotal = computeLineTotal(packagesItems[idx], priceLb);
-  $("#lineTotal_" + idx).text(r2(lineTotal));
+  // Update just this row's line total live without re-rendering the whole
+  // table (grouped rows are handled by calculateFinalTotal's group pass).
+  if (!packagesItems[idx].weight_group) {
+    var priceLb   = nf($("#price_lb").val(), 0);
+    var lineTotal = computeLineTotal(packagesItems[idx], priceLb);
+    $("#lineTotal_" + idx).text(r2(lineTotal));
+  }
 
   calculateFinalTotal();
   if (!$("#tariff_mode").is(":checked") && (field === "weight" || field === "qty")) {
@@ -259,6 +314,7 @@ function changePackage(el) {
  */
 function setPricingMode(index, useCustom) {
   useCustom = !!useCustom;
+  if (packagesItems[index].weight_group) return; // batch-priced on the Financial Sheet
   if (packagesItems[index].use_custom_price === useCustom) return;
 
   packagesItems[index].use_custom_price = useCustom;
@@ -314,21 +370,37 @@ function calculateFinalTotal(element) {
   var sum_fixed       = 0;
   var sum_lines_usd   = 0; // sum of all per-row line totals (USD)
   var sum_custom_usd  = 0; // sum of custom-priced rows (USD) — mirrors courier_add
+  var seenGroups      = {}; // "priced together" batches count ONCE, no qty multiplier
 
   (packagesItems || []).forEach(function (item, i) {
     var qty    = Math.max(1, nf(item.qty, 1));
     var weight = nf(item.weight);
 
-    sum_weight_real += weight * qty;
-    sum_declared    += nf(item.declared_value) * qty;
-    sum_fixed       += nf(item.fixed_value) * qty;
-    if (item.use_custom_price) { sum_custom_usd += nf(item.custom_price, 0) * qty; }
+    sum_declared += nf(item.declared_value) * qty;
+    sum_fixed    += nf(item.fixed_value) * qty;
 
-    var lineTotal = computeLineTotal(item, price_lb);
+    var g = item.weight_group || "";
+    var lineTotal;
+    var groupTail = false;
+    if (g) {
+      if (seenGroups[g]) {
+        lineTotal = 0;
+        groupTail = true;
+      } else {
+        seenGroups[g] = true;
+        lineTotal = item.use_custom_price ? nf(item.custom_price, 0) : weight * price_lb;
+        sum_weight_real += weight;
+        if (item.use_custom_price) { sum_custom_usd += nf(item.custom_price, 0); }
+      }
+    } else {
+      sum_weight_real += weight * qty;
+      if (item.use_custom_price) { sum_custom_usd += nf(item.custom_price, 0) * qty; }
+      lineTotal = computeLineTotal(item, price_lb);
+    }
     sum_lines_usd += lineTotal;
 
     // Update the row's live display.
-    $("#lineTotal_" + i).text(r2(lineTotal));
+    $("#lineTotal_" + i).text(groupTail ? 'grouped' : r2(lineTotal));
   });
 
   // Chargeable weight = real weight (volumetric retired).
