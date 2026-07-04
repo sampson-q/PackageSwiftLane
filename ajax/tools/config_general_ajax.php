@@ -117,9 +117,28 @@ if (CDP_APP_MODE_DEMO === true) {
         );
 
 
+        // Audit the exchange rate BEFORE the update overwrites it.
+        $fs_old_rate = (float) (new Core)->exchange_rate;
+
         $insert = cdp_updateConfigGeneral0gqr5($data);
 
         if ($insert) {
+            // Exchange-rate audit: who changed it, from what to what, when.
+            $fs_new_rate = (float) $data['exchange_rate'];
+            if (abs($fs_new_rate - $fs_old_rate) > 0.0001) {
+                try {
+                    $fs_db = new Conexion;
+                    $fs_db->cdp_query("INSERT INTO cdb_exchange_rate_log (old_rate, new_rate, changed_by, changed_at)
+                                       VALUES (:o, :n, :by, NOW())");
+                    $fs_db->bind(':o', $fs_old_rate);
+                    $fs_db->bind(':n', $fs_new_rate);
+                    $fs_db->bind(':by', (int) ($_SESSION['userid'] ?? 0));
+                    $fs_db->cdp_execute();
+                } catch (Throwable $e) {
+                    // Log table missing (financial_sheet_v2.sql §5 not run) — settings still save.
+                }
+            }
+
             $response['status'] = 'success';
             $response['message'] = $lang['message_ajax_success_updated'];
         } else {
