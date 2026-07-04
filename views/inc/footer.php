@@ -145,7 +145,27 @@
 <!-- solar icons -->
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
-<script src="<?= cdp_asset('assets/template/assets/libs/sweetalert2/sweetalert2.all.min.js') ?>"></script>
+<?php /* SweetAlert2 v11 (assets/vendor) replaces the template's v7 bundle: the
+         codebase widely uses v10+ APIs (result.isConfirmed, didOpen,
+         Swal.showValidationMessage) that silently no-op'd under v7. */ ?>
+<script src="<?= cdp_asset('assets/vendor/libs/sweetalert2/sweetalert2.js') ?>"></script>
+<script>
+    /* Back-compat shim for legacy v7 call styles still present in older files:
+       maps {type:...} to {icon:...} and restores the lowercase swal() alias. */
+    (function () {
+        if (!window.Swal || !window.Swal.fire) return;
+        var orig = window.Swal.fire.bind(window.Swal);
+        window.Swal.fire = function () {
+            var a = arguments;
+            if (a.length === 1 && a[0] && typeof a[0] === 'object' && a[0].type && !a[0].icon) {
+                a[0].icon = a[0].type;
+                delete a[0].type;
+            }
+            return orig.apply(null, a);
+        };
+        if (!window.swal) { window.swal = window.Swal.fire; }
+    })();
+</script>
 <script src="<?= cdp_asset('assets/template/assets/libs/select2/dist/js/select2.full.min.js') ?>"></script>
 
 <script src="<?= cdp_asset('assets/template/assets/libs/intlTelInput/intlTelInput.js') ?>"></script>
