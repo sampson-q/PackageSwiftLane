@@ -582,7 +582,8 @@ $shipment_total = count($order_list);
 
                     <div class="credits text-center">
                         Designed by <b>iSolveAfrica</b><br>
-                        +233 (0) 591 447 845<br>
+                        +233 (0) 591 447 845 / +233 (0) 50 550 5009<br>
+                        Email: hello@isolveafrica.com<br>
                         https://www.isolveafrica.com
                     </div>
                 </div>
