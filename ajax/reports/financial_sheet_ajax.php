@@ -1791,8 +1791,8 @@ $dgColor = ($dgStyle && !empty($dgStyle->color)) ? $dgStyle->color : '#ff6d00';
         ?>
         <div class="card mb-2 fs-consol-card">
             <div class="card-header fs-consol-header"
-                 onclick="window.open('financial_sheet_consolidation.php?id=<?php echo $cid; ?>', '_blank')"
-                 title="Open this consolidation in a new tab">
+                 onclick="window.location.href = 'financial_sheet_consolidation.php?id=<?php echo $cid; ?>'"
+                 title="Open this consolidation">
                 <i class="fas fa-boxes"></i>
                 <b><?php echo $cNo; ?></b>
                 <span class="fs-dim ml-3"><i class="mdi mdi-calendar-blank"></i> <?php echo htmlspecialchars((string) $c->c_date); ?></span>
@@ -1826,7 +1826,7 @@ $dgColor = ($dgStyle && !empty($dgStyle->color)) ? $dgStyle->color : '#ff6d00';
                         title="Export this consolidation to Excel">
                     <i class="fa fa-file-excel text-success"></i> Excel
                 </button>
-                <i class="mdi mdi-open-in-new fs-caret ml-2"></i>
+                <i class="mdi mdi-chevron-right fs-caret ml-2"></i>
             </div>
         </div>
     <?php endforeach; ?>

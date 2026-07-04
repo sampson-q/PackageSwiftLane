@@ -114,11 +114,8 @@ $fs_dg_color = ($fs_dg_style && !empty($fs_dg_style->color)) ? $fs_dg_style->col
                         <div class="card card-outline" style="border-top: 3px solid #bbb">
                             <h4 class="card-title ml-4 mt-3">
                                 <i class="fas fa-file-invoice-dollar"></i> Financial Sheet
-                                <?php /* This page opens in its own tab — Close returns to the list tab.
-                                         Falls back to navigating when the tab can't be script-closed. */ ?>
-                                <a href="javascript:void(0)" class="btn btn-sm btn-outline-secondary ml-3"
-                                   onclick="window.close(); setTimeout(function () { window.location.href = 'financial_sheet.php'; }, 300); return false;">
-                                    <i class="mdi mdi-close"></i> Close
+                                <a href="financial_sheet.php" class="btn btn-sm btn-outline-secondary ml-3">
+                                    <i class="mdi mdi-arrow-left"></i> All consolidations
                                 </a>
                             </h4>
 
