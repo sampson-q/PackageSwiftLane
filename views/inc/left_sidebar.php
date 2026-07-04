@@ -414,6 +414,7 @@
 					</li>
 					<?php } ?>
 
+                    <li class="sidebar-item">----------------------------------------</li>
 					<?php if ($user->cdp_is_Admin()) { ?>
 					<!-- pickup aging -->
 					<li class="sidebar-item">
