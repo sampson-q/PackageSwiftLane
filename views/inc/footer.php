@@ -22,19 +22,21 @@
             return $('meta[name="csrf-param"]').attr('content') || '_csrf_token';
         }
 
-        $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-                var method = (((settings || {}).type) || 'GET').toUpperCase();
-                if (['POST', 'PUT', 'PATCH', 'DELETE'].indexOf(method) === -1) return;
+        // ajaxPrefilter (not ajaxSetup.beforeSend): a per-request beforeSend in
+        // $.ajax options REPLACES the global one, so ~150 dataJs files with their
+        // own spinner beforeSend were posting WITHOUT the token (= 419).
+        // Prefilters always run and cannot be overridden per-request.
+        $.ajaxPrefilter(function (options, originalOptions, jqXHR) {
+            var method = ((options || {}).type || 'GET').toUpperCase();
+            if (['POST', 'PUT', 'PATCH', 'DELETE'].indexOf(method) === -1) return;
 
-                var token = csrfToken();
-                if (!token) return;
+            var token = csrfToken();
+            if (!token) return;
 
-                xhr.setRequestHeader('X-CSRF-Token', token);
+            jqXHR.setRequestHeader('X-CSRF-Token', token);
 
-                if (settings && settings.data && typeof FormData !== 'undefined' && settings.data instanceof FormData) {
-                    settings.data.append(csrfParam(), token);
-                }
+            if (options && options.data && typeof FormData !== 'undefined' && options.data instanceof FormData) {
+                options.data.append(csrfParam(), token);
             }
         });
     })(window.jQuery);
