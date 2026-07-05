@@ -143,7 +143,8 @@ if (active_stripe == 1) {
         fetch("./ajax/customers_packages/add_payment_stripe_method_ajax.php", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "X-CSRF-Token": (document.querySelector('meta[name="csrf-token"]') || {}).content || ''
             },
             body: JSON.stringify({
                 email_property_card_stripe: document.getElementById('email_property_card_stripe').value,

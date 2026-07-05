@@ -128,6 +128,7 @@ if (active_stripe == 1) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "X-CSRF-Token": (document.querySelector('meta[name="csrf-token"]') || {}).content || ''
       },
       body: JSON.stringify({
         email_property_card_stripe: document.getElementById(
