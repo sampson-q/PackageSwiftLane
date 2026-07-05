@@ -54,9 +54,39 @@ function require_permission($permission) {
     // The page controllers do the same: they call cdp_getUserPermissions() explicitly
     // before cdp_hasPermission(). Mirror that here so AJAX and page behave identically.
     $user->cdp_getUserPermissions();
-    // if (!$user->cdp_hasPermission($perms)) {
-    //     _ajax_guard_send(403, ['success' => false, 'error' => 'Forbidden', 'message' => 'No permission for this action']);
-    // }
+    if ($user->cdp_hasPermission($perms)) {
+        return;
+    }
+
+    // Denied. Behaviour depends on CDP_RBAC_MODE (set in config/config.php):
+    //   'off'     -> allow silently (legacy behaviour while the check was commented out)
+    //   'audit'   -> allow, but log RBAC_DENY so perm names can be reconciled without lockouts
+    //   'enforce' -> 403
+    // Default is 'audit': config.php is gitignored, so an env without the constant
+    // must never fail closed.
+    $mode = defined('CDP_RBAC_MODE') ? strtolower((string)CDP_RBAC_MODE) : 'audit';
+    if ($mode === 'off') {
+        return;
+    }
+
+    if ($mode !== 'enforce') {
+        error_log(sprintf(
+            'RBAC_DENY uid=%s role=%s need=[%s] script=%s uri=%s',
+            $user->uid ?? '?',
+            $user->userlevel ?? '?',
+            implode(',', $perms),
+            basename($_SERVER['SCRIPT_NAME'] ?? ''),
+            $_SERVER['REQUEST_URI'] ?? ''
+        ));
+        return;
+    }
+
+    $body = ['success' => false, 'error' => 'Forbidden', 'message' => 'No permission for this action'];
+    if (defined('CDP_DEBUG_RBAC') && CDP_DEBUG_RBAC) {
+        $body['required'] = $perms;
+        $body['role_id'] = $user->userlevel;
+    }
+    _ajax_guard_send(403, $body);
 }
 
 /**
