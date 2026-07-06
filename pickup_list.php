@@ -31,7 +31,7 @@
 
         $permissions = $user->cdp_getUserPermissions();
 
-        if (!$user->cdp_hasPermission('view_pickup_list_')) {
+        if (!$user->cdp_hasPermission('view_pickup_list')) {
             header("location: error403.php");
             exit;
         }
