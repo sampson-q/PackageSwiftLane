@@ -41,9 +41,7 @@ if (!function_exists('cdp_roleFlagsMap')) {
 if (!function_exists('cdp_roleRankById')) {
     function cdp_roleRankById($roleId)
     {
-        $roleId = (int)$roleId;
-        $map = cdp_roleFlagsMap();
-        $r = $map[$roleId] ?? null;
+        $r = cdp_effectiveRoleRow($roleId);
         if ($r && isset($r->is_superadmin)) {
             if (!empty($r->is_superadmin)) return 4;
             if (!empty($r->is_admin))      return 3;
@@ -53,15 +51,43 @@ if (!function_exists('cdp_roleRankById')) {
         }
         // Legacy fallback (flag columns not present)
         $legacy = [9 => 4, 2 => 3, 4 => 2, 3 => 1, 6 => 1, 1 => 0];
-        return $legacy[$roleId] ?? 0;
+        return $legacy[(int)$roleId] ?? 0;
+    }
+}
+
+if (!function_exists('cdp_effectiveRoleRow')) {
+    /**
+     * The role row that defines a role's TYPE — its own if it carries any type
+     * flag, otherwise the nearest ancestor up parent_role_id that does. This is
+     * what makes a new department role (all flags 0) created under Employee
+     * behave as staff automatically, and keeps type consistent if the parent
+     * is changed later. Cycle-safe. Returns null if the role isn't in the map.
+     */
+    function cdp_effectiveRoleRow($roleId)
+    {
+        $map = cdp_roleFlagsMap();
+        $seen = [];
+        $cur = (int)$roleId;
+        $depth = 0;
+        $selfRow = $map[$cur] ?? null;
+        while ($cur && !isset($seen[$cur]) && $depth < 20) {
+            $seen[$cur] = true;
+            $r = $map[$cur] ?? null;
+            if (!$r) { break; }
+            $hasType = !empty($r->is_superadmin) || !empty($r->is_admin) || !empty($r->is_staff)
+                    || !empty($r->is_client) || !empty($r->is_driver) || !empty($r->is_agency);
+            if ($hasType) { return $r; }
+            $cur = (isset($r->parent_role_id) && !empty($r->parent_role_id)) ? (int)$r->parent_role_id : 0;
+            $depth++;
+        }
+        return $selfRow;
     }
 }
 
 if (!function_exists('cdp_roleHasFlag')) {
     function cdp_roleHasFlag($roleId, $flag)
     {
-        $map = cdp_roleFlagsMap();
-        $r = $map[(int)$roleId] ?? null;
+        $r = cdp_effectiveRoleRow($roleId);
         if ($r && isset($r->$flag)) {
             return !empty($r->$flag);
         }
@@ -81,13 +107,12 @@ if (!function_exists('cdp_roleHasFlag')) {
 if (!function_exists('cdp_dashboardType')) {
     /**
      * Which dashboard a role lands on: 'admin' | 'client' | 'driver' | 'roles'.
-     * Reads the cdb_user_roles.dashboard_type flag, legacy fallback otherwise.
-     * New roles default to 'roles' (the generic permission-aware dashboard).
+     * Uses the type-defining row (self or nearest typed ancestor), legacy
+     * fallback otherwise. New roles inherit their parent's dashboard.
      */
     function cdp_dashboardType($roleId)
     {
-        $map = cdp_roleFlagsMap();
-        $r = $map[(int)$roleId] ?? null;
+        $r = cdp_effectiveRoleRow($roleId);
         if ($r && isset($r->dashboard_type) && $r->dashboard_type !== '') {
             return $r->dashboard_type;
         }
