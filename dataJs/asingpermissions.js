@@ -120,6 +120,7 @@ $(document).ready(function () {
         const formData = {
             role_name: roleName,
             description: description,
+            parent_role_id: $("#parent_role_id").val(),
             permissions: permissions,
         };
 

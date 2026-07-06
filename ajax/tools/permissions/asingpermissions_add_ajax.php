@@ -32,6 +32,7 @@ $response = [];
 $roleName = $_POST['role_name'] ?? null;
 $description = $_POST['description'] ?? null;
 $permissions = $_POST['permissions'] ?? [];
+$parentRoleId = (isset($_POST['parent_role_id']) && $_POST['parent_role_id'] !== '') ? intval($_POST['parent_role_id']) : null;
 
 // Validar datos
 if (empty($roleName)) {
@@ -62,12 +63,18 @@ if (!empty($errors)) {
 if (!isset($response['status'])) {
     $db = new Conexion;
 
-    // Crear nuevo rol
-    $db->cdp_query('INSERT INTO cdb_user_roles (role_name, description, rol_active, created_at) 
-                     VALUES (:role_name, :description, :rol_active, NOW())');
+    // Crear nuevo rol (con rol padre opcional para herencia).
+    // Type: a role WITH a parent inherits its type from the chain (flags 0).
+    // A top-level role (no parent) defaults to staff so it isn't type-less
+    // (which would leave it without a sidebar / unranked).
+    $isStaffDefault = ($parentRoleId === null) ? 1 : 0;
+    $db->cdp_query('INSERT INTO cdb_user_roles (role_name, description, rol_active, parent_role_id, is_staff, created_at)
+                     VALUES (:role_name, :description, :rol_active, :parent_role_id, :is_staff, NOW())');
     $db->bind(':role_name', $roleName);
     $db->bind(':description', $description);
     $db->bind(':rol_active', 1);
+    $db->bind(':parent_role_id', $parentRoleId);
+    $db->bind(':is_staff', $isStaffDefault);
 
     if (!$db->cdp_execute()) {
         echo json_encode(['status' => 'error', 'message' => $lang['message_ajax_error1']]);
