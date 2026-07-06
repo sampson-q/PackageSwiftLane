@@ -16,8 +16,11 @@ require_permission('edit_user');
 $db = new Conexion;
 
 $target_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
-$overrides = $_POST['overrides'] ?? [];
-if (!is_array($overrides)) { $overrides = []; }
+// Delta payload: { action_id => 'allow' | 'deny' | 'inherit' }.
+// Applied incrementally (does NOT touch other overrides), so this endpoint
+// serves both instant single-change saves and multi-select bulk applies.
+$changes = $_POST['changes'] ?? [];
+if (!is_array($changes)) { $changes = []; }
 
 if ($target_id < 1) {
     echo json_encode(['status' => 'error', 'message' => 'Invalid user.']);
@@ -52,27 +55,32 @@ $valid = [];
 foreach ($validRows as $r) { $valid[(int)$r->id] = true; }
 
 try {
-    // Replace the whole override set for this user in one pass.
-    $db->cdp_query("DELETE FROM cdb_user_permission_overrides WHERE user_id = :uid");
-    $db->bind(':uid', $target_id);
-    $db->cdp_execute();
-
-    $count = 0;
-    foreach ($overrides as $actionId => $permitted) {
+    $applied = [];
+    foreach ($changes as $actionId => $state) {
         $actionId = (int)$actionId;
         if (!isset($valid[$actionId])) { continue; }
-        $permitted = ((int)$permitted === 1) ? 1 : 0;
-        $db->cdp_query("INSERT INTO cdb_user_permission_overrides (user_id, module_action_id, permitted)
-                        VALUES (:uid, :aid, :p)
-                        ON DUPLICATE KEY UPDATE permitted = VALUES(permitted)");
-        $db->bind(':uid', $target_id);
-        $db->bind(':aid', $actionId);
-        $db->bind(':p', $permitted);
-        $db->cdp_execute();
-        $count++;
+        $state = strtolower((string)$state);
+
+        if ($state === 'inherit') {
+            $db->cdp_query("DELETE FROM cdb_user_permission_overrides WHERE user_id = :uid AND module_action_id = :aid");
+            $db->bind(':uid', $target_id);
+            $db->bind(':aid', $actionId);
+            $db->cdp_execute();
+            $applied[$actionId] = 'inherit';
+        } elseif ($state === 'allow' || $state === 'deny') {
+            $permitted = ($state === 'allow') ? 1 : 0;
+            $db->cdp_query("INSERT INTO cdb_user_permission_overrides (user_id, module_action_id, permitted)
+                            VALUES (:uid, :aid, :p)
+                            ON DUPLICATE KEY UPDATE permitted = VALUES(permitted)");
+            $db->bind(':uid', $target_id);
+            $db->bind(':aid', $actionId);
+            $db->bind(':p', $permitted);
+            $db->cdp_execute();
+            $applied[$actionId] = $state;
+        }
     }
 
-    echo json_encode(['status' => 'success', 'message' => "Saved ($count override(s))."]);
+    echo json_encode(['status' => 'success', 'applied' => $applied, 'count' => count($applied)]);
 } catch (Throwable $e) {
     echo json_encode(['status' => 'error', 'message' => 'Save failed.']);
 }

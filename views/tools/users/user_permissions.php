@@ -67,11 +67,25 @@ if ($target_name === '') { $target_name = $target->username; }
     <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <?php include 'views/inc/head_scripts.php'; ?>
     <style>
+        .perm-search-bar { margin-bottom:14px; }
+        .perm-search-bar .form-control { height:36px; font-size:13px; }
         .perm-mod-card { margin-bottom: 18px; }
-        .perm-row { display:flex; align-items:center; justify-content:space-between; padding:6px 4px; border-bottom:1px solid #f0f0f0; }
+        .perm-card-head { display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #f0f0f0; padding-bottom:6px; margin-bottom:6px; gap:8px; }
+        .perm-card-head h5 { margin:0; font-size:15px; }
+        .perm-card-selall { font-size:11px; color:#9aa0ac; cursor:pointer; white-space:nowrap; margin:0; }
+        .perm-card-selall input { vertical-align:middle; }
+        /* Per-card bulk bar — shows only when rows in THIS card are selected. */
+        .perm-card-bulk { display:none; align-items:center; gap:6px; background:#eef2fb; border:1px solid #cdd8f3; border-radius:6px; padding:5px 8px; margin-bottom:8px; font-size:12px; }
+        .perm-card-bulk.show { display:flex; }
+        .perm-card-bulk .btn { padding:2px 8px; font-size:11px; }
+        /* Fixed card height: list scrolls internally when actions overflow. */
+        .perm-card-actions { max-height:300px; overflow-y:auto; padding-right:4px; }
+        .perm-row { display:flex; align-items:center; justify-content:space-between; padding:6px 4px; border-bottom:1px solid #f0f0f0; gap:8px; }
         .perm-row:last-child { border-bottom:none; }
-        .perm-label { font-size:13px; color:#333; }
-        .perm-label small { color:#9aa0ac; display:block; }
+        .perm-row.hidden { display:none; }
+        .perm-row .row-check { flex:0 0 auto; margin:0 2px 0 0; }
+        .perm-label { font-size:13px; color:#333; flex:1 1 auto; min-width:0; }
+        .perm-label small { color:#9aa0ac; display:block; word-break:break-all; }
         .perm-choice { display:flex; gap:4px; flex:0 0 auto; }
         .perm-choice label { font-size:11px; margin:0; padding:3px 8px; border:1px solid #d9d9d9; border-radius:4px; cursor:pointer; background:#fff; }
         .perm-choice input { display:none; }
@@ -83,6 +97,11 @@ if ($target_name === '') { $target_name = $target->username; }
         .perm-badge { font-size:10px; padding:1px 6px; border-radius:8px; margin-left:6px; }
         .perm-badge.on { background:#e5f6ea; color:#1a8a3a; }
         .perm-badge.off { background:#fbeaea; color:#c0392b; }
+        .perm-row.saving { opacity:.55; }
+        /* Kill the SweetAlert backdrop entirely — the toast must never cover or
+           block the page. Container is click-through; only the toast catches clicks. */
+        .swal2-container { background:transparent !important; pointer-events:none !important; }
+        .swal2-container .swal2-toast { pointer-events:auto !important; }
     </style>
 </head>
 <body>
@@ -107,49 +126,68 @@ if ($target_name === '') { $target_name = $target->username; }
                                     <a href="users_list.php" class="btn btn-outline-secondary btn-sm"><i class="ti-arrow-left"></i> Back</a>
                                 </div>
                                 <hr>
-                                <div id="msgholder"></div>
+                                <div id="user_perms" data-user-id="<?php echo $target_id; ?>">
+                                    <div class="perm-search-bar row align-items-center">
+                                        <div class="col-md-7">
+                                            <input type="text" id="perm_search" class="form-control" placeholder="Filter permissions by name, description or module…" autocomplete="off">
+                                        </div>
+                                        <div class="col-md-5 text-right" style="font-size:12px;color:#9aa0ac;">
+                                            <span id="perm_visible_count">0</span> shown &middot; changes save instantly
+                                        </div>
+                                    </div>
 
-                                <form id="user_perms_form" method="post">
-                                    <input type="hidden" name="user_id" value="<?php echo $target_id; ?>">
                                     <div class="row">
                                     <?php foreach ($byModule as $moduleName => $actions): ?>
-                                        <div class="col-md-6">
+                                        <div class="col-md-6 perm-mod-group" data-module="<?php echo htmlspecialchars(strtolower($moduleName ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
                                             <div class="card perm-mod-card">
                                                 <div class="card-body">
-                                                    <h5 style="border-bottom:2px solid #f0f0f0;padding-bottom:6px;">
-                                                        <?php echo htmlspecialchars($moduleName ?? 'Module', ENT_QUOTES, 'UTF-8'); ?>
-                                                    </h5>
-                                                    <?php foreach ($actions as $a):
-                                                        $aid = (int)$a->action_id;
-                                                        $inheritedOn = isset($rolePerms[$a->action_name]);
-                                                        $state = array_key_exists($aid, $overrides) ? ($overrides[$aid] === 1 ? 'allow' : 'deny') : 'inherit';
-                                                        $label = $a->description_module ?: $a->action_name;
-                                                    ?>
-                                                        <div class="perm-row">
-                                                            <span class="perm-label">
-                                                                <?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?>
-                                                                <small><?php echo htmlspecialchars($a->action_name, ENT_QUOTES, 'UTF-8'); ?>
-                                                                    <span class="perm-badge <?php echo $inheritedOn ? 'on' : 'off'; ?>"><?php echo $inheritedOn ? 'role: allowed' : 'role: none'; ?></span>
-                                                                </small>
-                                                            </span>
-                                                            <span class="perm-choice" data-aid="<?php echo $aid; ?>">
-                                                                <label class="inh"><input type="radio" name="ov[<?php echo $aid; ?>]" value="inherit" <?php echo $state==='inherit'?'checked':''; ?>><span>Inherit</span></label>
-                                                                <label class="allow"><input type="radio" name="ov[<?php echo $aid; ?>]" value="allow" <?php echo $state==='allow'?'checked':''; ?>><span>Allow</span></label>
-                                                                <label class="deny"><input type="radio" name="ov[<?php echo $aid; ?>]" value="deny" <?php echo $state==='deny'?'checked':''; ?>><span>Deny</span></label>
-                                                            </span>
-                                                        </div>
-                                                    <?php endforeach; ?>
+                                                    <div class="perm-card-head">
+                                                        <h5><?php echo htmlspecialchars($moduleName ?? 'Module', ENT_QUOTES, 'UTF-8'); ?></h5>
+                                                        <label class="perm-card-selall"><input type="checkbox" class="card-select-all"> select all</label>
+                                                    </div>
+                                                    <div class="perm-card-bulk">
+                                                        <span><strong class="card-sel-count">0</strong> selected:</span>
+                                                        <button type="button" class="btn btn-outline-success" data-bulk="allow">Allow</button>
+                                                        <button type="button" class="btn btn-outline-danger" data-bulk="deny">Deny</button>
+                                                        <button type="button" class="btn btn-outline-secondary" data-bulk="inherit">Inherit</button>
+                                                        <button type="button" class="btn btn-link card-sel-clear" style="padding:2px 4px;">clear</button>
+                                                    </div>
+                                                    <div class="perm-card-actions">
+                                                        <?php foreach ($actions as $a):
+                                                            $aid = (int)$a->action_id;
+                                                            $inheritedOn = isset($rolePerms[$a->action_name]);
+                                                            $state = array_key_exists($aid, $overrides) ? ($overrides[$aid] === 1 ? 'allow' : 'deny') : 'inherit';
+                                                            $label = $a->description_module ?: $a->action_name;
+                                                            $haystack = strtolower(($label) . ' ' . $a->action_name . ' ' . $moduleName);
+                                                            // Badge shows the EFFECTIVE result for this person, and updates live:
+                                                            //   allow -> allowed | deny -> denied | inherit -> role baseline.
+                                                            if ($state === 'allow')      { $bClass='on';  $bText='allowed'; }
+                                                            elseif ($state === 'deny')   { $bClass='off'; $bText='denied'; }
+                                                            else                         { $bClass=$inheritedOn?'on':'off'; $bText=$inheritedOn?'role: allowed':'role: none'; }
+                                                        ?>
+                                                            <div class="perm-row" data-aid="<?php echo $aid; ?>" data-role-on="<?php echo $inheritedOn ? 1 : 0; ?>" data-search="<?php echo htmlspecialchars($haystack, ENT_QUOTES, 'UTF-8'); ?>">
+                                                                <input type="checkbox" class="row-check" title="Select for bulk action">
+                                                                <span class="perm-label">
+                                                                    <?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?>
+                                                                    <small><?php echo htmlspecialchars($a->action_name, ENT_QUOTES, 'UTF-8'); ?>
+                                                                        <span class="perm-badge <?php echo $bClass; ?>"><?php echo $bText; ?></span>
+                                                                    </small>
+                                                                </span>
+                                                                <span class="perm-choice">
+                                                                    <label class="inh"><input type="radio" name="ov[<?php echo $aid; ?>]" value="inherit" <?php echo $state==='inherit'?'checked':''; ?>><span>Inherit</span></label>
+                                                                    <label class="allow"><input type="radio" name="ov[<?php echo $aid; ?>]" value="allow" <?php echo $state==='allow'?'checked':''; ?>><span>Allow</span></label>
+                                                                    <label class="deny"><input type="radio" name="ov[<?php echo $aid; ?>]" value="deny" <?php echo $state==='deny'?'checked':''; ?>><span>Deny</span></label>
+                                                                </span>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     <?php endforeach; ?>
                                     </div>
-
-                                    <div class="form-group mt-3">
-                                        <button class="btn btn-outline-danger" type="submit"><?php echo $lang['asingmodule20'] ?? 'Save'; ?> <i class="icon-ok"></i></button>
-                                        <a href="users_list.php" class="btn btn-outline-secondary">Cancel</a>
-                                    </div>
-                                </form>
+                                    <div id="perm_no_results" style="display:none;padding:20px;text-align:center;color:#9aa0ac;">No permissions match your filter.</div>
+                                </div>
                             </div>
                         </div>
                     </div>
