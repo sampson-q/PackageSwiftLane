@@ -4,7 +4,7 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/querys.php');
 require_login();
-require_permission('view_warehouse');
+require_permission('warehouse_view');
 
 
 $db          = new Conexion;
@@ -14,7 +14,7 @@ $userData    = $user->cdp_getUserData();
 $permissions = $user->cdp_getUserPermissions();
 // Row checkboxes (and the bulk-action bar) only need to render when at least
 // one bulk action is actually available to this user.
-$canBulkDeliver = $user->cdp_hasPermission('courier_deliver_shipment');
+$canBulkDeliver = $user->cdp_hasPermission('deliver_shipment');
 $canBulkAny     = $canBulkDeliver
     || $user->cdp_hasPermission('select_change_status_courier')
     || $user->cdp_hasPermission('assign_drivers')
@@ -42,7 +42,7 @@ if ($status_courier > 0) {
     $sWhere .= " and a.status_courier = '" . $status_courier . "'";
 }
 
-// Date range filter — same approach as report_top_users_ajax_air.php
+// Date range filter Ã¢â‚¬â€ same approach as report_top_users_ajax_air.php
 $range = cdp_sanitize($_REQUEST['range'] ?? '');
 if (!empty($range)) {
     $parts      = explode(' - ', $range);

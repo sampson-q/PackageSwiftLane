@@ -103,7 +103,7 @@ $statusrow = $core->cdp_getStatusMultiple(1, 4, 8, 15, 16, 23, 32, 33);
                                                 </span>
                                             </div>
                                             <input type="text" name="daterange-warehouse" id="daterange-warehouse" class="form-control float-right" placeholder="<?php echo $lang['report-text90'] ?>" />
-                                            <button type="button" id="btn-clear-daterange" class="btn btn-outline-secondary ml-2" title="Clear period">✕</button>
+                                            <button type="button" id="btn-clear-daterange" class="btn btn-outline-secondary ml-2" title="Clear period">âœ•</button>
                                         </div>
                                     </div>
 
@@ -132,7 +132,7 @@ $statusrow = $core->cdp_getStatusMultiple(1, 4, 8, 15, 16, 23, 32, 33);
                                                 <?php echo $lang['global-1'] ?>
                                             </button>
                                             <div class="dropdown-menu">
-                                                <?php if ($user->cdp_hasPermission('courier_deliver_shipment')) { ?>
+                                                <?php if ($user->cdp_hasPermission('deliver_shipment')) { ?>
                                                     <a class="dropdown-item" href="javascript:void(0)" onclick="cdpWarehouseDeliver((typeof cdpSelGet === 'function') ? cdpSelGet() : []);">
                                                         <i style="color:#343a40" class="fa fa-box"></i>&nbsp;Deliver Selected
                                                     </a>
