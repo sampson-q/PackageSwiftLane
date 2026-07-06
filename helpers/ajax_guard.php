@@ -61,7 +61,13 @@ function require_permission($permission) {
     // Denied. Behaviour depends on CDP_RBAC_MODE (set in config/config.php):
     //   'off'     -> allow silently (legacy behaviour while the check was commented out)
     //   'audit'   -> allow, but log RBAC_DENY so perm names can be reconciled without lockouts
-    //   'enforce' -> 403
+    //   'enforce' -> GRADUATED: 403 for staff-and-up (staff/admin/superadmin), but only
+    //                audit-log for customer/driver/agency. Rationale: the whole granular
+    //                RBAC is about STAFF capabilities, and staff endpoints are fully
+    //                reconciled. Many customer/driver/agency-facing handlers are still
+    //                gated with staff permission names (historical), so hard-enforcing
+    //                them would false-403 real customer flows (4800+ users viewing their
+    //                own packages). They stay audit-only until reconciled via the logs.
     // Default is 'audit': config.php is gitignored, so an env without the constant
     // must never fail closed.
     $mode = defined('CDP_RBAC_MODE') ? strtolower((string)CDP_RBAC_MODE) : 'audit';
@@ -69,9 +75,18 @@ function require_permission($permission) {
         return;
     }
 
-    if ($mode !== 'enforce') {
+    // Rank: staff-and-up = enforce; below = audit. cdp_roleRankById lives in
+    // helpers/rbac.php (rank 2+ = staff/admin/superadmin).
+    if (!function_exists('cdp_roleRankById')) {
+        require_once __DIR__ . '/rbac.php';
+    }
+    $isStaffUp = cdp_roleRankById((int)$user->userlevel) >= 2;
+    $shouldEnforce = ($mode === 'enforce') && $isStaffUp;
+
+    if (!$shouldEnforce) {
         error_log(sprintf(
-            'RBAC_DENY uid=%s role=%s need=[%s] script=%s uri=%s',
+            'RBAC_DENY mode=%s enforced=0 uid=%s role=%s need=[%s] script=%s uri=%s',
+            $mode,
             $user->uid ?? '?',
             $user->userlevel ?? '?',
             implode(',', $perms),
