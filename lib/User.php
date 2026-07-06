@@ -282,31 +282,98 @@ class User
             return $this->permissions;
         }
 
+        // Resolve the role's parent chain [self, parent, grandparent, ...].
+        // Cycle-safe (visited set) and depth-capped. parent_role_id may be
+        // absent on un-migrated envs → the chain is just [self].
+        $chain = [];
+        try {
+            $visited = [];
+            $current = (int)$this->userlevel;
+            $depth = 0;
+            while ($current && !isset($visited[$current]) && $depth < 20) {
+                $visited[$current] = true;
+                $chain[] = $current;
+                $this->db->cdp_query("SELECT parent_role_id FROM cdb_user_roles WHERE role_id = :rid AND rol_active = 1");
+                $this->db->bind(':rid', $current);
+                $this->db->cdp_execute();
+                $prow = $this->db->cdp_registro();
+                $current = ($prow && !empty($prow->parent_role_id)) ? (int)$prow->parent_role_id : 0;
+                $depth++;
+            }
+        } catch (Throwable $e) {
+            $chain = [(int)$this->userlevel];
+        }
+        if (empty($chain)) {
+            $chain = [(int)$this->userlevel];
+        }
+
+        // Fetch every explicit grant across the chain, then apply NEAREST-WINS:
+        // walking child→ancestor, the first role that has an explicit row for
+        // an action decides it (permitted=1 grants, permitted=0 blocks a
+        // grant a further ancestor would give). Roles at the same distance are
+        // the same role, so ordering within a level is irrelevant.
+        $in = implode(',', array_map('intval', $chain));
         $sql = "
-            SELECT DISTINCT ma.action_name AS permission_name
+            SELECT rp.role_id, ma.action_name AS permission_name, rp.permitted
             FROM cdb_user_role_permissions rp
             JOIN cdb_user_roles r ON rp.role_id = r.role_id
             JOIN cdb_user_module_actions ma ON rp.module_action_id = ma.id
-            WHERE rp.role_id = :role_id
-              AND rp.permitted = 1
+            WHERE rp.role_id IN ($in)
               AND r.rol_active = 1
         ";
-
-        // Preparar y ejecutar la consulta
         $this->db->cdp_query($sql);
-        $this->db->bind(':role_id', (int)$this->userlevel); // Asocia el userlevel al rol
         $this->db->cdp_execute();
-
-        // cdp_registros() devuelve array de objetos; array_column no funciona con objetos
         $rows = $this->db->cdp_registros();
-        $perms = [];
+
+        $rank = array_flip($chain); // role_id => distance (0 = self)
+        $decided = []; // action_name => [distance, permitted]
         if ($rows) {
             foreach ($rows as $row) {
-                if (!empty($row->permission_name)) {
-                    $perms[] = $row->permission_name;
+                if (empty($row->permission_name)) {
+                    continue;
+                }
+                $name = $row->permission_name;
+                $dist = $rank[(int)$row->role_id] ?? PHP_INT_MAX;
+                if (!isset($decided[$name]) || $dist < $decided[$name][0]) {
+                    $decided[$name] = [$dist, (int)$row->permitted];
                 }
             }
         }
+        $perms = [];
+        foreach ($decided as $name => $info) {
+            if ($info[1] === 1) {
+                $perms[] = $name;
+            }
+        }
+
+        // Per-user overrides (cdb_user_permission_overrides) on top of the role:
+        // permitted=1 adds an action for this user, permitted=0 removes one the
+        // role grants. try/catch: envs where the table doesn't exist yet must
+        // keep working on role permissions alone.
+        try {
+            $this->db->cdp_query("
+                SELECT ma.action_name, o.permitted
+                FROM cdb_user_permission_overrides o
+                JOIN cdb_user_module_actions ma ON ma.id = o.module_action_id
+                WHERE o.user_id = :uid
+            ");
+            $this->db->bind(':uid', (int)$this->uid);
+            $this->db->cdp_execute();
+            $overrides = $this->db->cdp_registros();
+            if ($overrides) {
+                foreach ($overrides as $ov) {
+                    if ((int)$ov->permitted === 1) {
+                        $perms[] = $ov->action_name;
+                    } else {
+                        $perms = array_diff($perms, [$ov->action_name]);
+                    }
+                }
+                $perms = array_values(array_unique($perms));
+            }
+        } catch (Throwable $e) {
+            // overrides table absent — role permissions only
+        }
+
         $this->permissions = $perms;
         return $this->permissions;
     }
