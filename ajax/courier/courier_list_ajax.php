@@ -162,7 +162,7 @@ if ($numrows > 0) { ?>
 
 					$count = 0;
 
-					// Status styles are constant for every row — fetch once, not per iteration.
+					// Status styles are constant for every row Ã¢â‚¬â€ fetch once, not per iteration.
 					$db->cdp_query("SELECT * FROM cdb_styles where id= '14'");
 					$status_style_pickup = $db->cdp_registro();
 					$db->cdp_query("SELECT * FROM cdb_styles where id= '13'");
@@ -367,7 +367,7 @@ if ($numrows > 0) { ?>
 							            <i class="fas fa-ellipsis-v"></i> <!-- Utiliza el icono de puntos suspensivos -->
 							        </button>
 							        <div class="dropdown-menu" style="overflow-y: auto; max-height: 200px;">
-							            <!-- VER DETALLES DE ENVÍO PERMISO -->
+							            <!-- VER DETALLES DE ENVÃƒÂO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('view_shipment_details')) { ?>
 							                <a class="dropdown-item" href="courier_view.php?id=<?php echo $row->order_id; ?>" title="<?php echo $lang['tooledit'] ?>">
 							                    <i style="color:#343a40" class="fa fa-search"></i>
@@ -375,7 +375,7 @@ if ($numrows > 0) { ?>
 							                </a>
 							            <?php } ?>
 
-							            <!-- VERIFICAR PAGOS DE ENVÍOS PERMISO -->
+							            <!-- VERIFICAR PAGOS DE ENVÃƒÂOS PERMISO -->
 							            <?php if ($row->status_invoice == 2 && $user->cdp_hasPermission('verify_payments')) { ?>
 							                <?php if ($userData->userlevel == 1) { ?>
 							                    <a class="dropdown-item" href="add_payment_gateways_courier.php?id_order=<?php echo $row->order_id; ?>">
@@ -385,7 +385,7 @@ if ($numrows > 0) { ?>
 							                <?php } ?>
 							            <?php } ?>
 
-							            <!-- VERIFICAR PAGOS DE ENVÍOS (Status = 3) PERMISO -->
+							            <!-- VERIFICAR PAGOS DE ENVÃƒÂOS (Status = 3) PERMISO -->
 							            <?php if ($row->status_invoice == 3 && $user->cdp_hasPermission('verify_payments')) { ?>
 							                <?php if ($userData->userlevel != 1) { ?>
 							                    <a class="dropdown-item" data-toggle="modal" data-target="#detail_payment_packages" data-id="<?php echo $row->order_id; ?>" data-customer="<?php echo $row->sender_id; ?>">
@@ -395,7 +395,7 @@ if ($numrows > 0) { ?>
 							                <?php } ?>
 							            <?php } ?>
 
-							            <!-- ACEPTAR ENVÍO PERMISO -->
+							            <!-- ACEPTAR ENVÃƒÂO PERMISO -->
 							            <?php if ($row->order_incomplete == 0 && $row->is_pickup == 0 && $user->cdp_hasPermission('complete_client_shipment') && $userData->userlevel != 1) { ?>
 							                <a class="dropdown-item" href="courier_accept.php?id=<?php echo $row->order_id; ?>" title="<?php echo $lang['tooledit'] ?>">
 							                    <i style="color:#343a40" class="ti-pencil"></i>
@@ -403,7 +403,7 @@ if ($numrows > 0) { ?>
 							                </a>
 							            <?php } ?>
 
-							            <!-- IMPRIMIR ETIQUETA DE ENVÍO PERMISO -->
+							            <!-- IMPRIMIR ETIQUETA DE ENVÃƒÂO PERMISO -->
 							            <?php if ($row->order_incomplete == 0 && $user->cdp_hasPermission('print_label')) { ?>
 							                <a class="dropdown-item" href="print_label_ship.php?id=<?php echo $row->order_id; ?>" target="_blank">
 							                    <i style="color:#343a40" class="ti-printer"></i>
@@ -411,7 +411,7 @@ if ($numrows > 0) { ?>
 							                </a>
 							            <?php } ?>
 
-							            <!-- EDITAR ENVÍO PERMISO -->
+							            <!-- EDITAR ENVÃƒÂO PERMISO -->
 							            <?php if ($row->order_incomplete == 1 && $user->cdp_hasPermission('edit_shipment')) { ?>
 							                <?php //if ($row->is_consolidate == 0 ) { ?>
 							                    <?php if ($row->status_courier != 8) { ?>
@@ -423,7 +423,7 @@ if ($numrows > 0) { ?>
 							                <?php } ?>
 							            <?php } ?>
 
-							            <!-- ANULAR ENVÍO PERMISO -->
+							            <!-- ANULAR ENVÃƒÂO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('cancel_shipment')) { ?>
 						                    <?php if ($row->status_courier != 21 && $row->status_courier != 12) { ?>
 						                        <a class="dropdown-item" data-id="<?php echo $row->order_id; ?>" href="#" data-toggle="modal" data-target="#myModalCancel">
@@ -433,7 +433,7 @@ if ($numrows > 0) { ?>
 						                    <?php } ?>
 							            <?php } ?>
 
-							            <!-- ELIMINAR ENVÍO PERMISO -->
+							            <!-- ELIMINAR ENVÃƒÂO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('delete_shipment')) { ?>
 						                    <?php if ($row->is_consolidate == 0 && $row->status_courier != 8) { ?>
 						                        <a class="dropdown-item" data-id="<?php echo $row->order_id; ?>" href="#" data-toggle="modal" data-target="#myModalDeletes">
@@ -443,7 +443,7 @@ if ($numrows > 0) { ?>
 						                    <?php } ?>
 							            <?php } ?>
 
-							            <!-- ASIGNAR CONDUCTOR A ENVÍO PERMISO -->
+							            <!-- ASIGNAR CONDUCTOR A ENVÃƒÂO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('assign_drivers')) { ?>
 							                <?php if ($row->status_courier != 21 && $row->status_courier != 12 && $row->status_courier != 8) { ?>
 							                    <a class="dropdown-item" data-toggle="modal" data-target="#modalDriver" data-id_shipment="<?php echo $row->order_id; ?>">
@@ -453,7 +453,7 @@ if ($numrows > 0) { ?>
 							                <?php } ?>
 							            <?php } ?>
 
-							            <!-- SEGUIMIENTO DE ENVÍO PERMISO -->
+							            <!-- SEGUIMIENTO DE ENVÃƒÂO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('track_shipment')) { ?>
 							                <?php if ($row->status_courier != 21 && $row->status_courier != 12) { ?>
 							                    <a class="dropdown-item" href="courier_shipment_tracking.php?id=<?php echo $row->order_id; ?>" title="<?php echo $lang['toolupdate'] ?>">
@@ -462,14 +462,14 @@ if ($numrows > 0) { ?>
 							                <?php } ?>
 							            <?php } ?>
 
-                                        <?php if ($user->cdp_hasPermission('print_shipment_label')) { ?>
+                                        <?php if ($user->cdp_hasPermission('print_label')) { ?>
 							                <a class="dropdown-item" target="blank" href="print_label_ship.php?id=<?php echo $row->order_id; ?>">
 							                    <i style="color:#343a40" class="ti-printer"></i>
 							                    &nbsp;<?php echo 'Print Label'; ?>
 							                </a>
 							            <?php } ?>
 
-							            <!-- IMPRIMIR ENVÍO PERMISO -->
+							            <!-- IMPRIMIR ENVÃƒÂO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('print_shipment')) { ?>
 							                <a class="dropdown-item" target="blank" href="print_inv_ship.php?id=<?php echo $row->order_id; ?>">
 							                    <i style="color:#343a40" class="ti-printer"></i>
@@ -485,7 +485,7 @@ if ($numrows > 0) { ?>
 							                </a>
 							            <?php } ?>
 
-                                        <?php if ($user->cdp_hasPermission('courier_deliver_shipment')) { ?>
+                                        <?php if ($user->cdp_hasPermission('deliver_shipment')) { ?>
 							                <a class="dropdown-item" target="blank" href="courier_deliver_shipment.php?id=<?php echo $row->order_id; ?>">
 							                    &nbsp;<i style="color:#343a40" class="fa fa-box"></i>&nbsp;<?php echo 'Deliver Package' ?>
 							                </a>
