@@ -4,7 +4,8 @@
 		<!-- Sidebar navigation-->
 		<nav class="sidebar-nav">
 
-			<?php if ($userData->userlevel == 9) { ?>
+			<?php require_once('helpers/rbac.php'); ?>
+			<?php if (cdp_roleHasFlag($userData->userlevel, 'is_superadmin')) { ?>
 				<!-- User Profile SUPER ADMIN-->
 				<ul id="sidebarnav">
 					<li>
@@ -887,7 +888,7 @@
 				</ul>
 
 
-			<?php } else if (in_array($userData->userlevel, [2, 4, 6])) { ?>
+			<?php } else if (cdp_roleHasFlag($userData->userlevel, 'is_staff') || cdp_roleHasFlag($userData->userlevel, 'is_agency')) { ?>
 
 				<!-- User Profile ADMINISTRATOR / EMPLOYEE / AGENCY (permisos por rol)-->
 				<ul id="sidebarnav">
@@ -1674,7 +1675,7 @@
 				</ul>
 
 
-			<?php } else if ($userData->userlevel == 1) { ?>
+			<?php } else if (cdp_roleHasFlag($userData->userlevel, 'is_client')) { ?>
 				<!-- User Profile CUSTOMER-->
 				<ul id="sidebarnav">
 					<li>
@@ -1968,7 +1969,7 @@
 
 
 				<!-- User Profile DRIVER-->
-			<?php } else if ($userData->userlevel == 3) { ?>
+			<?php } else if (cdp_roleHasFlag($userData->userlevel, 'is_driver')) { ?>
 				<ul id="sidebarnav">
 					<!-- User Profile-->
 					<li>
