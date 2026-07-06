@@ -27,9 +27,10 @@ if (intval($user->uid) !== intval($_GET['user']) && !$user->cdp_is_Admin()) {
 }
 
 require_once('helpers/querys.php');
+require_once('helpers/rbac.php');
 
 if (isset($_GET['user'])) {
-	$data = cdp_getUserEdit4bozo($_GET['user']);
+	$data = cdp_getUserEdit4bozo(intval($_GET['user']));
 }
 
 if (!isset($_GET['user']) or $data['rowCount'] != 1) {
@@ -38,13 +39,15 @@ if (!isset($_GET['user']) or $data['rowCount'] != 1) {
 
 $row_user = $data['data'];
 
-if ((int)$row_user->userlevel === 9 && (int)$user->userlevel !== 9) {
+// Only accounts of strictly lower rank are manageable (superadmin: anyone);
+// viewing your own account is allowed.
+if ((int)$row_user->id !== (int)$user->uid && !cdp_canManageUser($user, (int)$row_user->userlevel)) {
 	cdp_redirect_to("users_list.php");
 	exit;
 }
 
 
-$db->cdp_query("SELECT * FROM cdb_users_multiple_addresses WHERE user_id='" . $_GET['user'] . "'");
+$db->cdp_query("SELECT * FROM cdb_users_multiple_addresses WHERE user_id='" . intval($_GET['user']) . "'");
 $user_addreses = $db->cdp_registros();
 
 
@@ -373,12 +376,12 @@ $current_role = $role_query['rowCount'] ? $role_query['data']->role_name : '';
                                        <div class="form-group">
                                        <label for="emailAddress1"><?php echo $lang['user_manage15'] ?></label>
                                        <select class="custom-select form-control" id="userlevel" name="userlevel">
-                                       <?php echo $user->cdp_getUserLevels($lang, $row_user->userlevel); ?>
+                                       <?php echo cdp_roleOptionsHtml($user, (int)$row_user->userlevel, $lang); ?>
                                        </select>
                                        </div>
                                        </div>
 
-													<?php if ($row_user->userlevel == 9) { ?>
+													<?php if (false) { // removed: duplicate role select; its 'role' field was ignored by users_edit_ajax ?>
 
 														<div class="col-md-6">
 															<div class="form-group">

@@ -208,9 +208,7 @@ $office = $core->cdp_getOffices();
 											        <label for="emailAddress1"><?php echo $lang['user_manage15'] ?></label>
                                                     <select class="custom-select form-control" id="userlevel" name="role" onchange="toggleDriverFields()" >
                                                         <option value="" selected disabled><?php echo $lang['left393']; ?></option>
-                                                        <?php foreach ($roles as $role) : ?>
-                                                            <option value="<?php echo $role->role_id; ?>"><?php echo isset($lang['role_'.$role->role_id]) ? $lang['role_'.$role->role_id] : $role->role_name; ?></option>
-                                                        <?php endforeach; ?>
+                                                        <?php require_once('helpers/rbac.php'); echo cdp_roleOptionsHtml($user, 0, $lang); ?>
                                                     </select>
 											    </div>
 											</div>
