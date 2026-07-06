@@ -4,7 +4,7 @@ require '../../helpers/stripe/init.php';
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
-require_permission('view_consolidate_package');
+require_permission(['view_consolidate_package', 'view_consolidate_package_list']);
 
 
 $core = new Core;
