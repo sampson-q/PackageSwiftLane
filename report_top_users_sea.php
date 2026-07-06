@@ -7,7 +7,7 @@
     if ($user->cdp_loginCheck() == true) {
         $permissions = $user->cdp_getUserPermissions();
 
-        if (!$user->cdp_hasPermission('view_top_users_air')) {
+        if (!$user->cdp_hasPermission('view_top_users_sea')) {
             header("location: error403.php");
             exit;
         }
