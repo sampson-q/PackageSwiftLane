@@ -38,28 +38,23 @@ $permissions = $user->cdp_getUserPermissions();
 
 // Verifica si estamos autenticados
 if ($user->cdp_loginCheck() == true) {
-    // Agencia (6) siempre va al dashboard por roles; no debe ver el de administración
-    if (isset($_SESSION['userlevel']) && (int)$_SESSION['userlevel'] === 6) {
-        include('dashboard_roles.php');
-        exit;
-    }
-    // Determina la vista a cargar según el nivel de usuario
-    switch ($_SESSION['userlevel']) {
-        case 9:
-        case 2:
-        case 4:
-            // Super Admin, Administrator, Employee: dashboard de administración
+    // Route to a dashboard by the role's dashboard_type flag (not a hardcoded
+    // userlevel switch) so new department roles land somewhere sensible:
+    //   'admin'  -> full admin dashboard   'client' -> customer dashboard
+    //   'driver' -> driver dashboard       'roles'  -> generic permission-aware
+    // A brand-new staff role defaults to 'roles' until configured otherwise.
+    require_once("helpers/rbac.php");
+    switch (cdp_dashboardType($_SESSION['userlevel'] ?? 0)) {
+        case 'admin':
             include('views/dashboard/index.php');
             break;
-        case 1:
+        case 'client':
             include('views/dashboard/dashboard_client.php');
             break;
-        case 3:
+        case 'driver':
             include('views/dashboard/dashboard_driver.php');
             break;
-        case 6:
-            include('dashboard_roles.php');
-            break;
+        case 'roles':
         default:
             include('dashboard_roles.php');
             break;
