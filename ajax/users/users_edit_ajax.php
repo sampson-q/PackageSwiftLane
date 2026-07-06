@@ -14,7 +14,8 @@ header('Content-type: application/json; charset=UTF-8');
 
 try {
     require_login();
-    require_permission('view_user_list');
+    require_permission('edit_user');
+require_once(__DIR__ . '/../../helpers/rbac.php');
 
     $user = new User;
     $core = new Core;
@@ -60,7 +61,8 @@ try {
     // STEP 3: PERMISSION CHECK
     // ============================================================
 
-    if ((int)$currentUser->userlevel === 9 && (int)$user->userlevel !== 9) {
+    $isSelf = ((int)$user_id === (int)$user->uid);
+    if (!$isSelf && !cdp_canManageUser($user, (int)$currentUser->userlevel)) {
         http_response_code(403);
         echo json_encode(['status' => 'error', 'message' => 'No permission to edit this user']);
         exit;
@@ -85,6 +87,13 @@ try {
         'document_number' => $_POST['document_number'] ?? '',
         'userlevel'     => isset($_POST['userlevel']) ? intval($_POST['userlevel']) : (int)$currentUser->userlevel,
     );
+
+    // Role changes only downward from the editor's own rank (superadmin: any).
+    if ((int)$newData['userlevel'] !== (int)$currentUser->userlevel && !cdp_canAssignRole($user, (int)$newData['userlevel'])) {
+        http_response_code(403);
+        echo json_encode(['status' => 'error', 'message' => 'No permission to assign that role']);
+        exit;
+    }
 
     // Detect what changed
     $fieldsChanged = array(

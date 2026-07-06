@@ -25,11 +25,12 @@ require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
-require_permission('view_user_list');
+require_permission('delete_user');
+require_once(__DIR__ . '/../../helpers/rbac.php');
 
 $db = new Conexion;
 
-$id = $_REQUEST['id'];
+$id = intval($_REQUEST['id'] ?? 0);
 
 $errors = array();
 
@@ -40,8 +41,12 @@ if ($id == 1) {
     $db->bind(':id', $id);
     $db->cdp_execute();
     $row = $db->cdp_registro();
-    if ($row && (int)$row->userlevel === 9) {
+    if ($row && cdp_roleHasFlag((int)$row->userlevel, 'is_superadmin')) {
         $errors['admin'] = isset($lang['super_admin_no_delete']) ? $lang['super_admin_no_delete'] : 'You cannot delete a Super Admin user.';
+    } elseif ($id === (int)$user->uid) {
+        $errors['admin'] = 'You cannot delete your own account.';
+    } elseif ($row && !cdp_canManageUser($user, (int)$row->userlevel)) {
+        $errors['admin'] = 'No permission to delete this user.';
     }
 }
 

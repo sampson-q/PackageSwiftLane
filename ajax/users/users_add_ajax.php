@@ -25,7 +25,8 @@ require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
-require_permission('view_user_list');
+require_permission('add_user');
+require_once(__DIR__ . '/../../helpers/rbac.php');
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -98,6 +99,14 @@ if (empty($errors)) {
     
         
         $response = array();
+
+        // New accounts only with a role below the creator's own rank (superadmin: any).
+        if (!cdp_canAssignRole($user, intval($_POST['role'] ?? 0))) {
+            http_response_code(403);
+            header('Content-type: application/json; charset=UTF-8');
+            echo json_encode(['status' => 'error', 'message' => 'No permission to create a user with that role']);
+            exit;
+        }
 
         $data = array(
             'username' => cdp_sanitize($_POST['username']),
