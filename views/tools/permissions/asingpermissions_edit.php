@@ -237,6 +237,11 @@ if (isset($_GET['id'])) {
 
                                     <section>
                                         <h2 class="role-title"><?php echo $lang['asingmodule19']; ?></h2>
+                                        <div class="row mb-2">
+                                            <div class="col-md-6">
+                                                <input type="text" id="role_perm_search" class="form-control" placeholder="Filter permissions by name or module…" autocomplete="off">
+                                            </div>
+                                        </div>
                                         <div class="row">
                                             <?php
                                             $count = 0;
@@ -337,6 +342,28 @@ if (isset($_GET['id'])) {
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
     <script src="<?= cdp_asset('dataJs/asingpermissions.js') ?>"></script>
+    <script>
+        // Live filter across the role's permission checkboxes.
+        (function () {
+            var input = document.getElementById('role_perm_search');
+            if (!input) return;
+            input.addEventListener('input', function () {
+                var q = (input.value || '').toLowerCase().trim();
+                document.querySelectorAll('.module-container').forEach(function (mc) {
+                    var col = mc.closest('.col-md-6') || mc;
+                    var modName = (mc.querySelector('h5 span') ? mc.querySelector('h5 span').textContent : '').toLowerCase();
+                    var anyVisible = false;
+                    mc.querySelectorAll('.form-check').forEach(function (fc) {
+                        var label = (fc.querySelector('label') ? fc.querySelector('label').textContent : '').toLowerCase();
+                        var match = !q || label.indexOf(q) !== -1 || modName.indexOf(q) !== -1;
+                        fc.style.display = match ? '' : 'none';
+                        if (match) anyVisible = true;
+                    });
+                    col.style.display = anyVisible ? '' : 'none';
+                });
+            });
+        })();
+    </script>
 
 </body>
 
