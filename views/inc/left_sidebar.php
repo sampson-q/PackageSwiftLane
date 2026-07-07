@@ -580,6 +580,14 @@
 								</a>
 							</li>
 							<?php } ?>
+								<?php if ($user->cdp_hasPermission('view_role_assignment')) { ?>
+								<li class="sidebar-item">
+									<a class="sidebar-link waves-effect waves-dark" href="departments.php" aria-expanded="false">
+										<iconify-icon icon="solar:users-group-rounded-line-duotone" class="fs-5" style="color:#fc3f7"></iconify-icon>
+										<span class="hide-menu"> Departments </span>
+									</a>
+								</li>
+								<?php } ?>
 						</ul>
 					</li>
 					<?php } ?>
