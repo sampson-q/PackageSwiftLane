@@ -42,13 +42,6 @@ if (isset($_GET['id'])) {
     $row_off = $data['data']; // Datos del rol
     $id = $_GET['id']; // ID del rol
 
-    // Roles selectable as parent (all active roles except this one).
-    $db->cdp_query("SELECT role_id, role_name FROM cdb_user_roles WHERE rol_active = 1 AND role_id != :id ORDER BY role_name");
-    $db->bind(':id', $id);
-    $db->cdp_execute();
-    $parent_roles = $db->cdp_registros() ?: [];
-    $current_parent = isset($row_off->parent_role_id) ? (int)$row_off->parent_role_id : 0;
-
     // Obtener los permisos asociados al rol
     $db->cdp_query('
         SELECT 
@@ -186,25 +179,9 @@ if (isset($_GET['id'])) {
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="description"><?php echo $lang['rolesp4']; ?></label>
-                                                    <input type="text" class="form-control required" name="description" id="description"
-                                                           value="<?php echo htmlspecialchars($row_off->description); ?>"
+                                                    <input type="text" class="form-control required" name="description" id="description" 
+                                                           value="<?php echo htmlspecialchars($row_off->description); ?>" 
                                                            placeholder="<?php echo $lang['rolesp13']; ?>">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="parent_role_id">Inherits from (parent role)</label>
-                                                    <select class="form-control" name="parent_role_id" id="parent_role_id">
-                                                        <option value="">— None (top-level role) —</option>
-                                                        <?php foreach ($parent_roles as $pr): ?>
-                                                            <option value="<?php echo (int)$pr->role_id; ?>" <?php echo ($current_parent === (int)$pr->role_id) ? 'selected' : ''; ?>>
-                                                                <?php echo htmlspecialchars(isset($lang['role_'.$pr->role_id]) ? $lang['role_'.$pr->role_id] : $pr->role_name, ENT_QUOTES, 'UTF-8'); ?>
-                                                            </option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                    <small class="text-muted">This role inherits all the parent's permissions. The boxes below grant <em>additional</em> permissions on top. To block a specific permission for one person, use their user Permissions page.</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -237,11 +214,6 @@ if (isset($_GET['id'])) {
 
                                     <section>
                                         <h2 class="role-title"><?php echo $lang['asingmodule19']; ?></h2>
-                                        <div class="row mb-2">
-                                            <div class="col-md-6">
-                                                <input type="text" id="role_perm_search" class="form-control" placeholder="Filter permissions by name or module…" autocomplete="off">
-                                            </div>
-                                        </div>
                                         <div class="row">
                                             <?php
                                             $count = 0;
@@ -342,28 +314,6 @@ if (isset($_GET['id'])) {
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
     <script src="<?= cdp_asset('dataJs/asingpermissions.js') ?>"></script>
-    <script>
-        // Live filter across the role's permission checkboxes.
-        (function () {
-            var input = document.getElementById('role_perm_search');
-            if (!input) return;
-            input.addEventListener('input', function () {
-                var q = (input.value || '').toLowerCase().trim();
-                document.querySelectorAll('.module-container').forEach(function (mc) {
-                    var col = mc.closest('.col-md-6') || mc;
-                    var modName = (mc.querySelector('h5 span') ? mc.querySelector('h5 span').textContent : '').toLowerCase();
-                    var anyVisible = false;
-                    mc.querySelectorAll('.form-check').forEach(function (fc) {
-                        var label = (fc.querySelector('label') ? fc.querySelector('label').textContent : '').toLowerCase();
-                        var match = !q || label.indexOf(q) !== -1 || modName.indexOf(q) !== -1;
-                        fc.style.display = match ? '' : 'none';
-                        if (match) anyVisible = true;
-                    });
-                    col.style.display = anyVisible ? '' : 'none';
-                });
-            });
-        })();
-    </script>
 
 </body>
 

@@ -147,23 +147,6 @@ $modules = $db->cdp_registros();
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="parent_role_id">Inherits from (parent role)</label>
-                                                    <select class="form-control" name="parent_role_id" id="parent_role_id">
-                                                        <option value="">— None (top-level role) —</option>
-                                                        <?php
-                                                        $db->cdp_query("SELECT role_id, role_name FROM cdb_user_roles WHERE rol_active = 1 ORDER BY role_name");
-                                                        $db->cdp_execute();
-                                                        foreach (($db->cdp_registros() ?: []) as $pr): ?>
-                                                            <option value="<?php echo (int)$pr->role_id; ?>"><?php echo htmlspecialchars(isset($lang['role_'.$pr->role_id]) ? $lang['role_'.$pr->role_id] : $pr->role_name, ENT_QUOTES, 'UTF-8'); ?></option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                    <small class="text-muted">A department (e.g. Finance) usually inherits from Employee, then adds its own permissions below.</small>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </section>
                                     <br>
                                     <section>

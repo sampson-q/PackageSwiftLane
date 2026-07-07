@@ -120,7 +120,6 @@ $(document).ready(function () {
         const formData = {
             role_name: roleName,
             description: description,
-            parent_role_id: $("#parent_role_id").val(),
             permissions: permissions,
         };
 
@@ -169,7 +168,6 @@ $("#update_data").submit(function (event) {
     const roleId = $("#role_id").val(); // Agregar el ID del rol
     const roleName = $("#role_name").val();
     const description = $("#description").val();
-    const parentRoleId = $("#parent_role_id").val();
     const permissions = $("input[name='permissions[]']:checked")
         .map(function () {
             return this.value;
@@ -201,7 +199,6 @@ $("#update_data").submit(function (event) {
         role_id: roleId, // Incluye el role_id
         role_name: roleName,
         description: description,
-        parent_role_id: parentRoleId,
         permissions: permissions,
     };
 

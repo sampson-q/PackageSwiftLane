@@ -46,30 +46,6 @@ $roleId = intval($_POST['role_id']);
 $roleName = $_POST['role_name'] ?? null;
 $description = $_POST['description'] ?? null;
 $permissions = $_POST['permissions'] ?? [];
-$parentRoleId = (isset($_POST['parent_role_id']) && $_POST['parent_role_id'] !== '') ? intval($_POST['parent_role_id']) : null;
-
-// Cycle guard: a role can't be its own parent, and its parent must not be a
-// descendant of it (that would loop the inheritance chain).
-if ($parentRoleId !== null) {
-    if ($parentRoleId === $roleId) {
-        echo json_encode(['status' => 'error', 'message' => 'A role cannot inherit from itself.']);
-        exit;
-    }
-    $dbc = new Conexion;
-    $walk = $parentRoleId; $seen = []; $ok = true;
-    while ($walk && !isset($seen[$walk])) {
-        if ($walk === $roleId) { $ok = false; break; }
-        $seen[$walk] = true;
-        $dbc->cdp_query("SELECT parent_role_id FROM cdb_user_roles WHERE role_id = :r");
-        $dbc->bind(':r', $walk); $dbc->cdp_execute();
-        $pr = $dbc->cdp_registro();
-        $walk = ($pr && !empty($pr->parent_role_id)) ? (int)$pr->parent_role_id : 0;
-    }
-    if (!$ok) {
-        echo json_encode(['status' => 'error', 'message' => 'That parent would create an inheritance loop.']);
-        exit;
-    }
-}
 
 
 
@@ -114,11 +90,10 @@ if (!isset($response['status'])) {
             exit;
         }
 
-        // Actualizar datos del rol (incl. rol padre para herencia)
-        $db->cdp_query("UPDATE cdb_user_roles SET role_name = :role_name, description = :description, parent_role_id = :parent_role_id WHERE role_id = :role_id");
+        // Actualizar datos del rol
+        $db->cdp_query("UPDATE cdb_user_roles SET role_name = :role_name, description = :description WHERE role_id = :role_id");
         $db->bind(':role_name', $roleName);
         $db->bind(':description', $description);
-        $db->bind(':parent_role_id', $parentRoleId);
         $db->bind(':role_id', $roleId);
 
         if (!$db->cdp_execute()) {

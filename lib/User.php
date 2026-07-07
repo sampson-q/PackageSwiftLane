@@ -346,6 +346,47 @@ class User
             }
         }
 
+        // Department layer (cdb_departments): the user's department memberships
+        // add/remove permissions on top of the role baseline. UNION across all
+        // the user's departments, where ALLOW wins within this layer (a deny in
+        // one department is overridden by an allow in another). Departments
+        // override the role; individual overrides (below) then win over all.
+        // try/catch: envs without the department tables keep working.
+        try {
+            $this->db->cdp_query("
+                SELECT ma.action_name, dp.permitted
+                FROM cdb_department_members dm
+                JOIN cdb_department_permissions dp ON dp.department_id = dm.department_id
+                JOIN cdb_user_module_actions ma ON ma.id = dp.module_action_id
+                WHERE dm.user_id = :uid
+            ");
+            $this->db->bind(':uid', (int)$this->uid);
+            $this->db->cdp_execute();
+            $deptRows = $this->db->cdp_registros();
+            if ($deptRows) {
+                $deptAllow = [];
+                $deptDeny = [];
+                foreach ($deptRows as $dr) {
+                    if ((int)$dr->permitted === 1) {
+                        $deptAllow[$dr->action_name] = true;
+                    } else {
+                        $deptDeny[$dr->action_name] = true;
+                    }
+                }
+                foreach ($deptAllow as $name => $_) {
+                    $perms[] = $name;
+                }
+                foreach ($deptDeny as $name => $_) {
+                    if (!isset($deptAllow[$name])) { // allow wins within the layer
+                        $perms = array_diff($perms, [$name]);
+                    }
+                }
+                $perms = array_values(array_unique($perms));
+            }
+        } catch (Throwable $e) {
+            // department tables absent — role permissions only
+        }
+
         // Per-user overrides (cdb_user_permission_overrides) on top of the role:
         // permitted=1 adds an action for this user, permitted=0 removes one the
         // role grants. try/catch: envs where the table doesn't exist yet must
