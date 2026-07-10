@@ -82,7 +82,7 @@ cdp_markOverdueInvoices($db);
 
 $warehouse_statuses = implode(',', [1, 4, 8, 15, 16, 23,32, 33]);
 
-$sql = "SELECT a.order_incomplete, a.status_invoice, a.is_consolidate, a.is_pickup, a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options, b.mod_style, b.color
+$sql = "SELECT a.order_incomplete, a.status_invoice, a.is_consolidate, a.is_pickup, a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.receiver_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options, a.fs_cleared_for_delivery, b.mod_style, b.color
         FROM cdb_add_order AS a
         INNER JOIN cdb_styles AS b ON a.status_courier = b.id
         $sWhere
@@ -261,11 +261,11 @@ if ($numrows > 0) { ?>
 							        </button>
 							        <div class="dropdown-menu" style="overflow-y: auto; max-height: 200px;">
 							            <?php if ($canBulkDeliver) { ?>
-							                <a class="dropdown-item" href="javascript:void(0)"
+							                <?php if ((int) $row->fs_cleared_for_delivery === 1) { ?><a class="dropdown-item" href="javascript:void(0)"
 							                   onclick="cdpWarehouseDeliver(<?php echo htmlspecialchars(json_encode([(string) $row->order_no]), ENT_QUOTES); ?>)"
 							                   title="<?php echo 'Deliver Package' ?>">
 							                    <i style="color:#343a40" class="fa fa-box"></i>&nbsp;<?php echo 'Deliver Package' ?>
-							                </a>
+							                </a><?php } else { ?><span class="dropdown-item text-muted" title="Accounts has not cleared this package for delivery yet"><i class="fa fa-lock"></i>&nbsp;Awaiting clearance</span><?php } ?>
 							            <?php } ?>
 							        </div>
 							    </div>

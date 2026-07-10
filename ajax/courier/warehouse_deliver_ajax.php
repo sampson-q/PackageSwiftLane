@@ -76,9 +76,16 @@ if ($action === 'deliver') {
     $uid      = (int) ($userData->id ?? ($_SESSION['userid'] ?? 0));
 
     $delivered = 0;
+    $skippedUncleared = 0;
     foreach ($orderNos as $no) {
         $row = cdp_getCourierMultiple($no);
         if (!$row || (int) $row->status_courier === CDP_WH_DELIVERED_STATUS) {
+            continue;
+        }
+        // Finance must have cleared the package first — never deliver an
+        // uncleared package even if the request is crafted directly.
+        if ((int) ($row->fs_cleared_for_delivery ?? 0) !== 1) {
+            $skippedUncleared++;
             continue;
         }
 
@@ -92,7 +99,7 @@ if ($action === 'deliver') {
         $delivered++;
     }
 
-    echo json_encode(['ok' => true, 'delivered' => $delivered]);
+    echo json_encode(['ok' => true, 'delivered' => $delivered, 'skipped_uncleared' => $skippedUncleared]);
     exit;
 }
 
