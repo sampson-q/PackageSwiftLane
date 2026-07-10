@@ -454,7 +454,13 @@
 							<?php } ?>
 
 							<?php if ($user->cdp_hasPermission('view_receivable_accounts')) { ?>
-							<li class="sidebar-item">
+							<?php if ($user->cdp_hasPermission('view_financial_overview')) { ?><li class="sidebar-item">
+									<a class="sidebar-link waves-effect waves-dark" href="financial_overview.php" aria-expanded="false">
+										<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+										<span class="hide-menu">Financial Overview</span>
+									</a>
+								</li><?php } ?>
+								<li class="sidebar-item">
 								<a href="accounts_receivable.php" class="sidebar-link">
 									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
 									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-29'] ?> </span>
@@ -469,6 +475,12 @@
 									<span class="hide-menu"><?php echo $lang['left-menu-sidebar-12'] ?> </span>
 								</a>
 							</li>
+								<?php if ($user->cdp_hasPermission('view_transactions')) { ?><li class="sidebar-item">
+									<a class="sidebar-link waves-effect waves-dark" href="transactions.php" aria-expanded="false">
+										<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+										<span class="hide-menu">Transactions</span>
+									</a>
+								</li><?php } ?>
 							<?php } ?>
 						</ul>
 					</li>
@@ -588,6 +600,14 @@
 									</a>
 								</li>
 								<?php } ?>
+										<?php if ($user->cdp_hasPermission('view_role_assignment')) { ?>
+										<li class="sidebar-item">
+											<a class="sidebar-link waves-effect waves-dark" href="manage_permissions.php" aria-expanded="false">
+												<iconify-icon icon="solar:key-square-line-duotone" class="fs-5" style="color:#fc3f7"></iconify-icon>
+												<span class="hide-menu"> Manage Permissions </span>
+											</a>
+										</li>
+										<?php } ?>
 						</ul>
 					</li>
 					<?php } ?>
@@ -598,6 +618,14 @@
 						<a class="sidebar-link waves-effect waves-dark" href="warehouse.php" aria-expanded="false">
 							<iconify-icon icon="mdi:warehouse" class="fs-5"></iconify-icon>
 							<span class="hide-menu"> <?php echo 'Warehouse View' ?></span>
+						</a>
+					</li>
+					<?php } ?>
+					<?php if ($user->cdp_hasPermission('deliver_shipment')) { ?>
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="warehouse_delivery.php" aria-expanded="false">
+							<iconify-icon icon="mdi:truck-delivery" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> Warehouse Delivery </span>
 						</a>
 					</li>
 					<?php } ?>
@@ -1303,7 +1331,13 @@
 							<?php } ?>
 
 							<?php if ($user->cdp_hasPermission('view_receivable_accounts')) { ?>
-							<li class="sidebar-item">
+							<?php if ($user->cdp_hasPermission('view_financial_overview')) { ?><li class="sidebar-item">
+									<a class="sidebar-link waves-effect waves-dark" href="financial_overview.php" aria-expanded="false">
+										<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+										<span class="hide-menu">Financial Overview</span>
+									</a>
+								</li><?php } ?>
+								<li class="sidebar-item">
 								<a href="accounts_receivable.php" class="sidebar-link">
 									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
 									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-29'] ?> </span>
@@ -1318,6 +1352,12 @@
 									<span class="hide-menu"><?php echo $lang['left-menu-sidebar-12'] ?> </span>
 								</a>
 							</li>
+								<?php if ($user->cdp_hasPermission('view_transactions')) { ?><li class="sidebar-item">
+									<a class="sidebar-link waves-effect waves-dark" href="transactions.php" aria-expanded="false">
+										<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+										<span class="hide-menu">Transactions</span>
+									</a>
+								</li><?php } ?>
 							<?php } ?>
 						</ul>
 					</li>
