@@ -23,6 +23,36 @@ function fsRate() {
     return Number(window.FS_RATE) > 0 ? Number(window.FS_RATE) : 1;
 }
 
+/* ---- Display currency toggle (GH₵ / $). Billed chips carry their own stored
+   rate (data-usd); package/consolidation totals convert at the live rate (a
+   current-value estimate). The billing log keeps its per-transaction rates. --- */
+var fsCurrency = null; // null = native (server-rendered): totals $, chips ₵
+function fsCurFmt(n) {
+    return Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fsSetCurrency(c) {
+    fsCurrency = (c === "usd") ? "usd" : "ghs";
+    $("#fs_cur_ghs").toggleClass("btn-dark", fsCurrency === "ghs").toggleClass("btn-outline-dark", fsCurrency !== "ghs");
+    $("#fs_cur_usd").toggleClass("btn-dark", fsCurrency === "usd").toggleClass("btn-outline-dark", fsCurrency !== "usd");
+    fsApplyCurrency();
+}
+function fsApplyCurrency(root) {
+    if (!fsCurrency) return; // native — leave server-rendered values
+    var $scope = root ? $(root) : $(document);
+    // Chips with both stored values.
+    $scope.find(".fs-cur-chip").each(function () {
+        var v = (fsCurrency === "usd") ? $(this).data("usd") : $(this).data("ghs");
+        $(this).text((fsCurrency === "usd" ? "$" : "₵") + fsCurFmt(v));
+    });
+    // USD-canonical totals (package / customer / consolidation).
+    $scope.find(".fs-money").each(function () {
+        var usd = Number($(this).data("usd")) || 0;
+        var pre = $(this).hasClass("fs-consol-total") ? "Due " : "";
+        var val = (fsCurrency === "usd") ? usd : usd * fsRate();
+        $(this).text(pre + (fsCurrency === "usd" ? "$" : "₵") + fsCurFmt(val));
+    });
+}
+
 function fsMoney(usd) {
     return "$" + (Number(usd) || 0).toFixed(2);
 }
@@ -88,6 +118,7 @@ function fsLoadInto(data) {
         data: data,
         success: function (html) {
             $(".outer_div").html(html);
+            fsApplyCurrency();
             // The list renders instantly with "…" placeholders; the heavy
             // numbers (due/fees/weight/priced/received) stream in right after.
             if (data.action === "list") fsLoadListStats();
@@ -152,6 +183,7 @@ function fsReloadCustomers(cid) {
         data: { action: "customers", consolidate_id: cid },
         success: function (html) {
             $box.attr("data-loaded", "1").html(html);
+            fsApplyCurrency($box);
             if (openSid != null) {
                 var $hdr = $box.find(".fs-cust-card[data-sid='" + openSid + "'] .fs-cust-header").first();
                 if ($hdr.length) {
@@ -213,14 +245,16 @@ function fsToggleCustomer(header, ev) {
         $.ajax({
             url: FS_AJAX,
             data: { action: "packages", consolidate_id: cid, sender_id: sid },
-            success: function (html) { $box.html(html); },
+            success: function (html) { $box.html(html); fsApplyCurrency($box); },
             error: function () { $box.attr("data-loaded", "0").html('<div class="text-danger small">Failed to load packages.</div>'); }
         });
     }
 }
 
 /* -------------------------- Accordion: package -------------------------- */
-function fsTogglePackage(header, oid) {
+function fsTogglePackage(header, oid, ev) {
+    // Clicks inside Package Actions must not toggle the accordion.
+    if (ev && $(ev.target).closest(".fs-pkg-actions").length) return;
     var $card = $(header).closest(".fs-pkg-card");
     var $body = $(".fs-pkg-body[data-oid='" + oid + "']");
     var $box = $body.find(".fs-items").first();
@@ -412,12 +446,14 @@ function fsApplyConsolSummary(cid, s) {
             .attr("data-cid", cid)
             .html('<i class="mdi mdi-account-check"></i> ' + s.custs_priced + "/" + s.custs + " customers priced");
     }
+    fsApplyCurrency(); // re-flip the "Due" total to the chosen currency
 }
 
 function fsApplyAggregates(oid, r) {
     var $pkgCard = $(".fs-pkg-body[data-oid='" + oid + "']").closest(".fs-pkg-card");
     if (r.package_total != null) {
         $pkgCard.find(".fs-pkg-total").attr("data-usd", r.package_total).text(fsMoney(r.package_total));
+        fsApplyCurrency($pkgCard);
     }
     // Per-package "n/m priced" badge follows every save live.
     if (r.pkg_stat) {
@@ -659,7 +695,7 @@ function fsBillCustomer(btn) {
             '<ul class="pl-3 mb-0">' +
             '<li>notify the customer by WhatsApp and email' + (rebill ? ' <b>with the updated bill</b>' : '') + ',</li>' +
             (rebill
-                ? '<li>update the recorded bill (packages are <b>not</b> moved again),</li>'
+                ? '<li>update the recorded bill,</li>'
                 : '<li>move the package(s) to <b>Ready for PickUp</b>,</li>') +
             '<li>log this action under your name.</li>' +
             '</ul>' +
@@ -729,84 +765,193 @@ function fsBillCustomer(btn) {
 
 /* --------------------------- Record payment ----------------------------- */
 // Stage 2: the customer pays on pickup. The discount (bill − paid) is
-// auto-calculated live; the small ₵/$ toggle (courier_add style) switches the
-// currency the discount is DISPLAYED in — payment itself is entered in GHS.
+// Payment is PER PACKAGE: fetch the customer's packages, present them as a
+// checklist (all checked by default), and the amount = sum of the checked
+// (not-yet-cleared) packages + the one-time handling fee. "You don't pick a
+// package you didn't pay for."
 function fsRecordPayment(btn) {
     var $b = $(btn);
     var cid = $b.data("cid"), sid = $b.data("sid");
     var name = $b.data("name") || "this customer";
-    var bill = parseFloat($b.data("bill")) || 0;
-    var prevPaid = $b.data("paid");
 
-    function discountHtml(paid, cur) {
-        var d = Math.max(0, bill - paid);
-        var shown = (cur === "usd") ? "$" + (d / fsRate()).toFixed(2) : "₵" + d.toFixed(2);
-        return shown;
-    }
+    $.ajax({
+        url: FS_AJAX, method: "POST", dataType: "json",
+        data: { action: "payment_form", consolidate_id: cid, sender_id: sid }
+    }).then(function (f) {
+        if (!f || !f.ok) {
+            Swal.fire("Cannot record payment", (f && f.message) ? f.message : "Could not load the packages.", "warning");
+            return;
+        }
+        fsOpenPaymentDialog(cid, sid, name, f);
+    }, function () {
+        Swal.fire("Error", "Could not load the packages — server error.", "error");
+    });
+}
 
-    var isUpdate = (prevPaid !== "" && prevPaid != null);
+function fsOpenPaymentDialog(cid, sid, name, f) {
+    var pkgs = f.packages || [];
+    // Gross value of ALL packages, and net-per-gross so a cleared subset can be
+    // valued against the customer's net bill (which folds in fee − discount).
+    var grossAll = 0;
+    pkgs.forEach(function (p) { grossAll += Number(p.ghs) || 0; });
+    var netPerGross = grossAll > 0 ? (Number(f.net_ghs) / grossAll) : 1;
+
+    var rows = pkgs.map(function (p) {
+        var cleared = !!p.cleared;
+        return '<label class="d-flex align-items-center justify-content-between mb-1" style="gap:8px; cursor:pointer;">' +
+            '<span><input type="checkbox" class="fsp-pkg" data-oid="' + p.oid + '" data-ghs="' + Number(p.ghs) + '" ' +
+            (cleared ? 'checked disabled' : 'checked') + '> ' +
+            '<span style="font-family:SFMono-Regular,Consolas,monospace;">' + p.no + '</span>' +
+            (cleared ? ' <span class="badge badge-success">cleared</span>' : '') + '</span>' +
+            '<b>₵' + Number(p.ghs).toFixed(2) + '</b></label>';
+    }).join('');
 
     Swal.fire({
-        title: (isUpdate ? "Update payment — " : "Record payment — ") + name,
+        title: "Record Payment — " + name,
         html:
             '<div class="text-left" style="font-size:14px;">' +
-            '<p class="mb-2">Bill: <b>₵' + bill.toFixed(2) + '</b></p>' +
-            '<label class="mb-1">Amount paid</label>' +
+            '<div class="d-flex justify-content-between mb-1"><span>Bill (net):</span><b>₵' + Number(f.net_ghs).toFixed(2) + '</b></div>' +
+            (Number(f.paid_ghs) > 0 ? '<div class="d-flex justify-content-between mb-1"><span>Already paid:</span><b>₵' + Number(f.paid_ghs).toFixed(2) + '</b></div>' : '') +
+            '<div class="d-flex justify-content-between mb-2"><span>Balance:</span><b>₵' + Number(f.balance_ghs).toFixed(2) + '</b></div>' +
+            '<div class="mb-1"><b>Clear These Packages for Delivery</b> <span class="text-muted">(untick any the customer isn\'t paying for)</span></div>' +
+            '<div style="max-height:170px; overflow:auto; border:1px solid #eee; border-radius:6px; padding:6px;">' + (rows || '<div class="text-muted">No packages.</div>') + '</div>' +
+            '<div class="d-flex justify-content-between mt-1"><span class="text-muted">Value of ticked packages:</span><b id="fsp_val">₵0.00</b></div>' +
+            '<label class="mb-1 mt-2">Payment Method</label>' +
+            '<select id="fsp_mode" class="form-control mb-2">' +
+            '<option value="cash">Cash</option>' +
+            '<option value="paystack">Paystack</option>' +
+            '<option value="hubtel">Hubtel</option>' +
+            '</select>' +
+            // Cash block: manual amount received (physical cash has no e-record).
+            '<div id="fsp_cash">' +
+            '<label class="mb-1">Amount Received</label>' +
             '<div class="input-group">' +
             '<div class="input-group-prepend"><span class="input-group-text">GH₵</span></div>' +
-            '<input id="fsp_paid" class="form-control" placeholder="0.00" value="' + (isUpdate ? Number(prevPaid).toFixed(2) : '') + '">' +
+            '<input id="fsp_paid" class="form-control" placeholder="0.00">' +
             '</div>' +
-            '<div class="d-flex align-items-center mt-2" style="gap:8px;">' +
-            '<span>Discount: <b id="fsp_discount">' + discountHtml(parseFloat(prevPaid) || 0, "ghs") + '</b></span>' +
-            '<span class="btn-group btn-group-sm" role="group" aria-label="Discount display currency">' +
-            '<button type="button" id="fsp_cur_ghs" class="btn btn-dark py-0 px-2">₵</button>' +
-            '<button type="button" id="fsp_cur_usd" class="btn btn-outline-dark py-0 px-2">$</button>' +
-            '</span>' +
+            '<div id="fsp_warn" class="mt-1" style="display:none; font-size:12.5px;"></div>' +
             '</div>' +
-            '<label class="mb-1 mt-2">Note <span class="text-muted">(internal use only — never sent to the customer)</span></label>' +
+            // Online block: no manual amount — the gateway is charged & confirms it.
+            '<div id="fsp_online" style="display:none;">' +
+            '<div class="d-flex justify-content-between mb-1"><span>Amount to Charge:</span><b id="fsp_charge">₵0.00</b></div>' +
+            '<button type="button" id="fsp_init" class="btn btn-sm btn-outline-primary mb-1">Start Checkout</button>' +
+            '<div id="fsp_init_msg" class="text-muted mb-1" style="font-size:12px;"></div>' +
+            '<label class="mb-1">Transaction Reference</label>' +
+            '<input id="fsp_ref" class="form-control" placeholder="Filled by checkout — verified on save">' +
+            '</div>' +
+            '<label class="mb-1 mt-1">Note <span class="text-muted">(internal use only)</span></label>' +
             '<textarea id="fsp_note" class="form-control" rows="2" placeholder="Optional note…"></textarea>' +
             '<p class="text-muted mt-2 mb-0" style="font-size:12px;">The customer will receive a payment receipt by WhatsApp and email.</p>' +
             '</div>',
-        width: 560,
+        width: 580,
         showCancelButton: true,
-        confirmButtonText: isUpdate ? "Update payment" : "Save payment",
+        confirmButtonText: "Save Payment",
         showLoaderOnConfirm: true,
         allowOutsideClick: function () { return !Swal.isLoading(); },
         didOpen: function () {
-            var cur = "ghs";
-            function refresh() {
-                var paid = parseFloat(String($("#fsp_paid").val() || "").replace(/,/g, "")) || 0;
-                $("#fsp_discount").text(discountHtml(paid, cur));
+            // Net value of the packages that WILL be cleared after this save.
+            function clearedAfterNet() {
+                var g = 0;
+                $(".fsp-pkg").each(function () {
+                    if ($(this).is(":checked")) { g += parseFloat($(this).data("ghs")) || 0; }
+                });
+                return g * netPerGross;
             }
+            // Net value of the newly-ticked packages only (the online charge).
+            function newlyTickedNet() {
+                var g = 0;
+                $(".fsp-pkg").each(function () {
+                    if ($(this).is(":checked") && !$(this).is(":disabled")) { g += parseFloat($(this).data("ghs")) || 0; }
+                });
+                return g * netPerGross;
+            }
+            function isOnline() { return $("#fsp_mode").val() !== "cash"; }
+            function refresh() {
+                $("#fsp_val").text("₵" + (clearedAfterNet() / netPerGross).toFixed(2)); // gross value display
+                $("#fsp_charge").text("₵" + newlyTickedNet().toFixed(2));
+                if (isOnline()) { $("#fsp_warn").hide(); return; }
+                // Cash tally: does total-paid-after cover the net value of cleared pkgs?
+                var clearedNet = clearedAfterNet();
+                var paidAfter = Number(f.paid_ghs) + (parseFloat(String($("#fsp_paid").val() || "").replace(/,/g, "")) || 0);
+                var diff = paidAfter - clearedNet;
+                var $w = $("#fsp_warn");
+                if (diff < -0.01) {
+                    $w.attr("class", "mt-1 alert alert-warning py-1 px-2 mb-0").html(
+                        "⚠ Short by ₵" + Math.abs(diff).toFixed(2) + " — you're clearing packages worth ₵" +
+                        clearedNet.toFixed(2) + " but only ₵" + paidAfter.toFixed(2) + " will have been received in total."
+                    ).show();
+                } else if (diff > 0.01) {
+                    var unticked = $(".fsp-pkg").length - $(".fsp-pkg:checked").length;
+                    $w.attr("class", "mt-1 alert alert-warning py-1 px-2 mb-0").html(
+                        "⚠ ₵" + paidAfter.toFixed(2) + " received, but the cleared packages are only worth ₵" +
+                        clearedNet.toFixed(2) + (unticked > 0 ? " — " + unticked + " package(s) left un-cleared." : " (overpayment).")
+                    ).show();
+                } else {
+                    $w.hide().empty();
+                }
+            }
+            $(".fsp-pkg").on("change", refresh);
             $("#fsp_paid").on("input", refresh);
-            $("#fsp_cur_ghs").on("click", function () {
-                cur = "ghs";
-                $(this).addClass("btn-dark").removeClass("btn-outline-dark");
-                $("#fsp_cur_usd").addClass("btn-outline-dark").removeClass("btn-dark");
+            $("#fsp_mode").on("change", function () {
+                var online = isOnline();
+                $("#fsp_cash").toggle(!online);
+                $("#fsp_online").toggle(online);
+                $("#fsp_init_msg").empty();
                 refresh();
             });
-            $("#fsp_cur_usd").on("click", function () {
-                cur = "usd";
-                $(this).addClass("btn-dark").removeClass("btn-outline-dark");
-                $("#fsp_cur_ghs").addClass("btn-outline-dark").removeClass("btn-dark");
-                refresh();
+            $("#fsp_init").on("click", function () {
+                var mode = $("#fsp_mode").val();
+                var amt = Math.round(newlyTickedNet() * 100) / 100;
+                if (amt <= 0) { $("#fsp_init_msg").html('<span class="text-danger">Tick at least one package to charge for.</span>'); return; }
+                $("#fsp_init_msg").text("Starting " + mode + " checkout…");
+                $.ajax({
+                    url: FS_AJAX, method: "POST", dataType: "json",
+                    data: { action: "gateway_init", consolidate_id: cid, sender_id: sid, mode: mode, amount: amt }
+                }).then(function (r) {
+                    if (r && r.ok && r.url) {
+                        $("#fsp_ref").val(r.reference || "");
+                        window.open(r.url, "_blank");
+                        $("#fsp_init_msg").html('<span class="text-success">Checkout opened — complete it, then Save to verify.</span>');
+                    } else {
+                        $("#fsp_init_msg").html('<span class="text-danger">' + ((r && r.message) ? r.message : "Could not start checkout.") + '</span>');
+                    }
+                }, function () {
+                    $("#fsp_init_msg").html('<span class="text-danger">Could not reach the gateway.</span>');
+                });
             });
+            refresh();
         },
         preConfirm: function () {
-            var raw = String($("#fsp_paid").val() || "").replace(/,/g, "").trim();
-            var paid = parseFloat(raw);
-            if (raw === "" || isNaN(paid) || paid < 0) {
-                Swal.showValidationMessage("Enter an amount of 0 or more.");
-                return false;
+            var oids = [];
+            $(".fsp-pkg").each(function () {
+                if ($(this).is(":checked") && !$(this).is(":disabled")) {
+                    oids.push(parseInt($(this).data("oid"), 10));
+                }
+            });
+            var mode = $("#fsp_mode").val();
+            var data = {
+                action: "record_payment", consolidate_id: cid, sender_id: sid,
+                orders: JSON.stringify(oids), mode: mode,
+                note: String($("#fsp_note").val() || "").trim()
+            };
+            if (mode === "cash") {
+                var raw = String($("#fsp_paid").val() || "").replace(/,/g, "").trim();
+                var amt = parseFloat(raw);
+                if (raw === "" || isNaN(amt) || amt <= 0) {
+                    Swal.showValidationMessage("Enter the amount received (greater than 0).");
+                    return false;
+                }
+                data.paid = amt;
+            } else {
+                var ref = String($("#fsp_ref").val() || "").trim();
+                if (ref === "") {
+                    Swal.showValidationMessage("Start the " + mode + " checkout first (it fills the reference).");
+                    return false;
+                }
+                data.reference = ref;
             }
             return $.ajax({
-                url: FS_AJAX,
-                method: "POST",
-                data: {
-                    action: "record_payment", consolidate_id: cid, sender_id: sid,
-                    paid: paid, note: String($("#fsp_note").val() || "").trim()
-                },
-                dataType: "json"
+                url: FS_AJAX, method: "POST", dataType: "json", data: data
             }).then(function (r) {
                 if (!r || !r.ok) {
                     Swal.showValidationMessage((r && r.message) ? r.message : "Could not save the payment.");
@@ -821,10 +966,13 @@ function fsRecordPayment(btn) {
     }).then(function (res) {
         if (!res.isConfirmed || !res.value) return;
         var r = res.value;
+        var nCleared = (r.cleared_orders && r.cleared_orders.length) || 0;
         var lines =
             '<div class="text-left" style="font-size:14px;">' +
-            '<p class="mb-1">Paid: <b>₵' + Number(r.paid_ghs).toFixed(2) + '</b> of ₵' + Number(r.bill_ghs).toFixed(2) +
-            (Number(r.discount_ghs) > 0 ? ' — discount <b>₵' + Number(r.discount_ghs).toFixed(2) + '</b>' : '') + '</p>' +
+            '<p class="mb-1">Received: <b>₵' + Number(r.this_payment).toFixed(2) + '</b> (' + (r.mode || 'cash') + ')</p>' +
+            '<p class="mb-1">Total paid: <b>₵' + Number(r.paid_ghs).toFixed(2) + '</b> of ₵' + Number(r.net_ghs).toFixed(2) +
+            ' — balance <b>₵' + Number(r.balance_ghs).toFixed(2) + '</b></p>' +
+            '<p class="mb-1 text-success">' + nCleared + ' package(s) cleared for delivery.</p>' +
             '<p class="mb-1">Receipt: WhatsApp ' + (r.sent_whatsapp ? '<span class="text-success">sent</span>' : '<span class="text-danger">not sent</span>') +
             ' &middot; Email ' + (r.sent_email ? '<span class="text-success">sent</span>' : '<span class="text-danger">not sent</span>') + '</p>' +
             ((r.warnings && r.warnings.length)
@@ -833,13 +981,136 @@ function fsRecordPayment(btn) {
             '</div>';
         Swal.fire({
             icon: "success",
-            title: isUpdate ? "Payment updated" : "Payment recorded",
+            title: "Payment Recorded",
             html: lines,
             confirmButtonText: "Ok"
         }).then(function () {
             fsApplyConsolSummary(cid, r.consol);
             fsReloadCustomers(cid);
         });
+    });
+}
+
+/* ---------------------- Customer Actions: discount ---------------------- */
+function fsApplyDiscount(el) {
+    var $b = $(el);
+    var cid = $b.data("cid"), sid = $b.data("sid");
+    var name = $b.data("name") || "this customer";
+    var billGhs = parseFloat($b.data("bill")) || 0;   // customer's gross bill (GHS)
+    var existing = parseFloat($b.data("disc")) || 0;
+
+    Swal.fire({
+        title: "Discount — " + name,
+        html:
+            '<div class="text-left" style="font-size:14px;">' +
+            '<div class="d-flex justify-content-between mb-2"><span>Customer bill:</span><b>₵' + billGhs.toFixed(2) + '</b></div>' +
+            '<label class="mb-1">Discount</label>' +
+            '<div class="input-group">' +
+            '<span class="input-group-prepend btn-group btn-group-sm" role="group">' +
+            '<button type="button" id="fsd_amt" class="btn btn-dark py-0 px-2">₵</button>' +
+            '<button type="button" id="fsd_pct" class="btn btn-outline-dark py-0 px-2">%</button>' +
+            '</span>' +
+            '<input id="fsd_val" class="form-control" placeholder="0.00" value="' + (existing > 0 ? existing.toFixed(2) : '') + '">' +
+            '</div>' +
+            '<div class="mt-1">Discount amount: <b id="fsd_preview">₵' + existing.toFixed(2) + '</b></div>' +
+            '<label class="mb-1 mt-2">Reason <span class="text-muted">(optional, internal)</span></label>' +
+            '<input id="fsd_reason" class="form-control" placeholder="e.g. loyalty, damage, goodwill">' +
+            '</div>',
+        width: 520,
+        showCancelButton: true,
+        confirmButtonText: "Save discount",
+        showLoaderOnConfirm: true,
+        allowOutsideClick: function () { return !Swal.isLoading(); },
+        didOpen: function () {
+            var type = "amount";
+            function preview() {
+                var v = parseFloat(String($("#fsd_val").val() || "").replace(/,/g, "")) || 0;
+                var amt = (type === "percent") ? (billGhs * Math.min(v, 100) / 100) : v;
+                if (amt > billGhs) amt = billGhs;
+                $("#fsd_preview").text("₵" + amt.toFixed(2));
+            }
+            $("#fsd_val").on("input", preview);
+            $("#fsd_amt").on("click", function () {
+                type = "amount";
+                $(this).addClass("btn-dark").removeClass("btn-outline-dark");
+                $("#fsd_pct").addClass("btn-outline-dark").removeClass("btn-dark");
+                preview();
+            });
+            $("#fsd_pct").on("click", function () {
+                type = "percent";
+                $(this).addClass("btn-dark").removeClass("btn-outline-dark");
+                $("#fsd_amt").addClass("btn-outline-dark").removeClass("btn-dark");
+                preview();
+            });
+            $("#fsd_amt").data("get", function () { return type; });
+        },
+        preConfirm: function () {
+            var raw = String($("#fsd_val").val() || "").replace(/,/g, "").trim();
+            var v = parseFloat(raw);
+            if (raw === "" || isNaN(v) || v <= 0) {
+                Swal.showValidationMessage("Enter a discount greater than 0.");
+                return false;
+            }
+            var type = $("#fsd_amt").data("get") ? $("#fsd_amt").data("get")() : "amount";
+            return $.ajax({
+                url: FS_AJAX, method: "POST", dataType: "json",
+                data: {
+                    action: "apply_discount", consolidate_id: cid, sender_id: sid,
+                    disc_type: type, value: v, reason: String($("#fsd_reason").val() || "").trim()
+                }
+            }).then(function (r) {
+                if (!r || !r.ok) {
+                    Swal.showValidationMessage((r && r.message) ? r.message : "Could not save the discount.");
+                    return false;
+                }
+                return r;
+            }, function () {
+                Swal.showValidationMessage("Could not save the discount — server error.");
+                return false;
+            });
+        }
+    }).then(function (res) {
+        if (!res.isConfirmed || !res.value) return;
+        var r = res.value;
+        Swal.fire({ icon: "success", title: "Discount applied", html: "Discount: <b>₵" + Number(r.discount_ghs).toFixed(2) + "</b>", confirmButtonText: "Ok" })
+            .then(function () {
+                if (r.consol) fsApplyConsolSummary(cid, r.consol);
+                fsReloadCustomers(cid);
+            });
+    });
+}
+
+function fsRemoveDiscount(el) {
+    var $b = $(el);
+    var cid = $b.data("cid"), sid = $b.data("sid");
+    Swal.fire({
+        title: "Remove discount?",
+        text: "Remove this customer's discount?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Remove",
+        showLoaderOnConfirm: true,
+        allowOutsideClick: function () { return !Swal.isLoading(); },
+        preConfirm: function () {
+            return $.ajax({
+                url: FS_AJAX, method: "POST", dataType: "json",
+                data: { action: "remove_discount", consolidate_id: cid, sender_id: sid }
+            }).then(function (r) {
+                if (!r || !r.ok) {
+                    Swal.showValidationMessage((r && r.message) ? r.message : "Could not remove the discount.");
+                    return false;
+                }
+                return r;
+            }, function () {
+                Swal.showValidationMessage("Could not remove the discount — server error.");
+                return false;
+            });
+        }
+    }).then(function (res) {
+        if (!res.isConfirmed || !res.value) return;
+        var r = res.value;
+        if (r.consol) fsApplyConsolSummary(cid, r.consol);
+        fsReloadCustomers(cid);
     });
 }
 

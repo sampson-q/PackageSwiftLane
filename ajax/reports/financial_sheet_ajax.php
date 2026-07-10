@@ -19,6 +19,7 @@ require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/autoload_lang.php');
 require_once(__DIR__ . '/../../helpers/pickup_aging.php');
+require_once(__DIR__ . '/../../helpers/fs_gateways.php');
 require_once(__DIR__ . '/../notify_whatsapp/api_whatsapp_service_v2.php');
 require_login();
 
@@ -41,6 +42,23 @@ if ($uname === '') {
 }
 
 $action = isset($_REQUEST['action']) ? cdp_sanitize($_REQUEST['action']) : 'list';
+
+// Per-action RBAC: viewing needs 'financial_sheet'; each mutation needs its own
+// permission so the Accounts department can delegate who may price / bill /
+// take payment / discount. Superadmin (userlevel 9) passes via the wildcard.
+$fsPermMap = [
+    'save_item'      => 'fs_price_items',
+    'save_group'     => 'fs_price_items',
+    'clear_group'    => 'fs_price_items',
+    'bill_customer'  => 'fs_bill_customer',
+    'bill_preview'   => 'fs_bill_customer',
+    'payment_form'   => 'fs_record_payment',
+    'gateway_init'   => 'fs_record_payment',
+    'record_payment' => 'fs_record_payment',
+    'apply_discount' => 'fs_apply_discount',
+    'remove_discount' => 'fs_apply_discount',
+];
+require_permission($fsPermMap[$action] ?? 'financial_sheet');
 
 // Amount lines in customer notifications (bill + payment receipt): pending a
 // final decision on whether customers may be sent money values. Flip to false
@@ -291,6 +309,88 @@ function fs_customer_billed($cid, $sid)
     return isset($map[(int) $sid]) ? $map[(int) $sid] : null;
 }
 
+/** Sum of a customer's recorded payments (GHS) for a consolidation. Resilient
+ *  if the ledger table isn't migrated yet (returns 0). */
+function fs_paid_total($cid, $sid)
+{
+    try {
+        $db = new Conexion;
+        $db->cdp_query("SELECT COALESCE(SUM(amount_ghs),0) AS t FROM cdb_fs_payments
+                        WHERE consolidate_id = :cid AND sender_id = :sid");
+        $db->bind(':cid', (int) $cid);
+        $db->bind(':sid', (int) $sid);
+        $db->cdp_execute();
+        $r = $db->cdp_registro();
+        return $r ? round((float) $r->t, 2) : 0.0;
+    } catch (Throwable $e) {
+        return 0.0;
+    }
+}
+
+/** Sum of a customer's applied discounts (GHS) for a consolidation. */
+function fs_discount_total($cid, $sid)
+{
+    try {
+        $db = new Conexion;
+        $db->cdp_query("SELECT COALESCE(SUM(amount_ghs),0) AS t FROM cdb_fs_discounts
+                        WHERE consolidate_id = :cid AND sender_id = :sid");
+        $db->bind(':cid', (int) $cid);
+        $db->bind(':sid', (int) $sid);
+        $db->cdp_execute();
+        $r = $db->cdp_registro();
+        return $r ? round((float) $r->t, 2) : 0.0;
+    } catch (Throwable $e) {
+        return 0.0;
+    }
+}
+
+/** Accumulative outstanding balance for a customer across ALL of their billed
+ *  consolidations (GHS): Σ max(0, bill − discount − paid). This is the debt
+ *  signal finance sees on the customer accordion / Customer Actions. */
+function fs_customer_outstanding($sid)
+{
+    try {
+        $db = new Conexion;
+        $db->cdp_query("SELECT COALESCE(SUM(GREATEST(0,
+                                COALESCE(amount_ghs,0) - COALESCE(discount_ghs,0) - COALESCE(paid_ghs,0))),0) AS owed
+                        FROM cdb_consolidate_customer_billing WHERE sender_id = :sid");
+        $db->bind(':sid', (int) $sid);
+        $db->cdp_execute();
+        $r = $db->cdp_registro();
+        return $r ? round((float) $r->owed, 2) : 0.0;
+    } catch (Throwable $e) {
+        return 0.0;
+    }
+}
+
+/** Recompute the denormalized paid/discount caches on the billing row from the
+ *  two ledgers (called after any payment/discount mutation). Keeps the fast
+ *  list/summary queries reading a single column instead of re-SUMming. */
+function fs_sync_billing_cache($cid, $sid, $uid = null)
+{
+    $paid = fs_paid_total($cid, $sid);
+    $disc = fs_discount_total($cid, $sid);
+    $db = new Conexion;
+    // paid_by/paid_at reflect the LAST payment; only touch them when there is
+    // at least one payment, so a discount-only change doesn't fake a payment.
+    if ($paid > 0 && $uid !== null) {
+        $db->cdp_query("UPDATE cdb_consolidate_customer_billing
+                        SET paid_ghs = :p, discount_ghs = :d, paid_by = :by, paid_at = NOW()
+                        WHERE consolidate_id = :cid AND sender_id = :sid");
+        $db->bind(':by', (int) $uid);
+    } else {
+        $db->cdp_query("UPDATE cdb_consolidate_customer_billing
+                        SET paid_ghs = :p, discount_ghs = :d
+                        WHERE consolidate_id = :cid AND sender_id = :sid");
+    }
+    $db->bind(':p', $paid > 0 ? $paid : null);
+    $db->bind(':d', $disc);
+    $db->bind(':cid', (int) $cid);
+    $db->bind(':sid', (int) $sid);
+    $db->cdp_execute();
+    return ['paid' => $paid, 'discount' => $disc];
+}
+
 // ----------------------------------------------------------------------------
 // Shared HTML renderers
 // ----------------------------------------------------------------------------
@@ -334,6 +434,19 @@ function fs_render_price_ctl($kind, $key, $mode, $value, $editable)
     return ob_get_clean();
 }
 
+/** Live USD→GHS rate (cached per request) — used only for USD-view estimates of
+ *  values that have no stored per-transaction rate (package/consolidation
+ *  totals). Billed amounts use their own stored rate for audit stability. */
+function fs_live_rate()
+{
+    static $r = null;
+    if ($r === null) {
+        $c = new Core;
+        $r = (float) $c->exchange_rate;
+    }
+    return $r > 0 ? $r : 1.0;
+}
+
 /** One customer tier (accordion level 2). $bodyHtml pre-fills the body (search). */
 function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = null)
 {
@@ -375,6 +488,15 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
     }
     $canBill = $pkgCount > 0 && $pkgPriced >= $pkgCount;
 
+    // Money state for a billed customer: gross bill, discount (from Package
+    // Actions), amount paid so far (split payments), and outstanding balance.
+    $discGhs = $billedRow ? (float) $billedRow->discount_ghs : 0.0;
+    $paidGhs = ($billedRow && $billedRow->paid_ghs !== null) ? (float) $billedRow->paid_ghs : 0.0;
+    $netGhs  = round(max(0, $billGhs - $discGhs), 2);
+    $balGhs  = round(max(0, $netGhs - $paidGhs), 2);
+    // Accumulative debt across ALL of this customer's consolidations.
+    $owedGhs = fs_customer_outstanding($sid);
+
     ob_start();
     ?>
     <div class="card mb-2 fs-cust-card" data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>">
@@ -382,10 +504,27 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
             <span class="fs-avatar"><?php echo htmlspecialchars($initials); ?><?php if ($hasPaid): ?><span class="fs-avatar-billed" title="Payment received — expand for details."><i class="mdi mdi-currency-usd"></i></span><?php endif; ?></span>
             <b><?php echo htmlspecialchars($g['label']); ?></b>
             <span class="ml-2"><?php echo $pricedBadge; ?></span>
-            <?php if ($hasPaid): ?>
-                <span class="fs-chip-paid" title="Amount paid by the customer">Paid &#8373;<?php echo number_format((float) $billedRow->paid_ghs, 2); ?></span>
-                <?php if ((float) $billedRow->discount_ghs > 0): ?>
-                    <span class="fs-chip-discount" title="Auto-calculated: bill minus amount paid">Discount &#8373;<?php echo number_format((float) $billedRow->discount_ghs, 2); ?></span>
+            <?php
+            // USD equivalents use this customer's OWN billing rate (audit-stable),
+            // falling back to the live rate only if a bill predates rate capture.
+            $custRate = ($billedRow && (float) $billedRow->exchange_rate > 0) ? (float) $billedRow->exchange_rate : fs_live_rate();
+            $ghsUsd = function ($ghs) use ($custRate) { return $custRate > 0 ? (float) $ghs / $custRate : 0.0; };
+            ?>
+            <?php if ($billedRow): ?>
+                <?php if ($discGhs > 0): ?>
+                    <span class="fs-chip-discount" title="Discount applied (Customer Actions)">Discount <span class="fs-cur-chip" data-ghs="<?php echo $discGhs; ?>" data-usd="<?php echo round($ghsUsd($discGhs), 2); ?>">&#8373;<?php echo number_format($discGhs, 2); ?></span></span>
+                <?php endif; ?>
+                <?php // Paid / Balance / Settled only appear once a payment exists. ?>
+                <?php if ($hasPaid): ?>
+                    <span class="fs-chip-paid" title="Amount paid by the customer (all payments)">Paid <span class="fs-cur-chip" data-ghs="<?php echo $paidGhs; ?>" data-usd="<?php echo round($ghsUsd($paidGhs), 2); ?>">&#8373;<?php echo number_format($paidGhs, 2); ?></span></span>
+                    <?php if ($balGhs > 0): ?>
+                        <span class="fs-chip-balance" title="Outstanding balance for this consolidation">Balance <span class="fs-cur-chip" data-ghs="<?php echo $balGhs; ?>" data-usd="<?php echo round($ghsUsd($balGhs), 2); ?>">&#8373;<?php echo number_format($balGhs, 2); ?></span></span>
+                    <?php else: ?>
+                        <span class="fs-chip-settled" title="Fully paid"><i class="mdi mdi-check"></i> Settled</span>
+                    <?php endif; ?>
+                    <?php if ($owedGhs > 0): ?>
+                        <span class="fs-chip-owed" title="Total outstanding across ALL of this customer's consolidations"><i class="mdi mdi-alert-circle-outline"></i> Owes <span class="fs-cur-chip" data-ghs="<?php echo $owedGhs; ?>" data-usd="<?php echo round($ghsUsd($owedGhs), 2); ?>">&#8373;<?php echo number_format($owedGhs, 2); ?></span> total</span>
+                    <?php endif; ?>
                 <?php endif; ?>
             <?php endif; ?>
             <span class="fs-spacer"></span>
@@ -402,22 +541,45 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
             <?php else: ?>
             <div class="btn-group btn-group-sm fs-actions ml-1">
                 <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
-                        aria-haspopup="true" aria-expanded="false">Actions</button>
+                        aria-haspopup="true" aria-expanded="false">Customer Actions</button>
                 <div class="dropdown-menu dropdown-menu-right">
+                        <?php if ($hasPaid): ?>
+                        <h6 class="dropdown-header">
+                            Balance (this consolidation): &#8373;<?php echo number_format($balGhs, 2); ?>
+                            <?php if ($owedGhs > 0): ?><br><span class="text-danger">Total owed: &#8373;<?php echo number_format($owedGhs, 2); ?></span><?php endif; ?>
+                        </h6>
+                        <div class="dropdown-divider"></div>
+                        <?php endif; ?>
                         <a class="dropdown-item fs-pay-btn" href="javascript:void(0)"
                            data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>"
                            data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
-                           data-bill="<?php echo $billGhs; ?>"
-                           data-paid="<?php echo $hasPaid ? (float) $billedRow->paid_ghs : ''; ?>"
+                           data-bill="<?php echo $netGhs; ?>"
+                           data-paid="<?php echo $paidGhs; ?>"
+                           data-balance="<?php echo $balGhs; ?>"
                            onclick="fsRecordPayment(this);">
                             <i class="mdi mdi-cash-multiple"></i> <?php echo $hasPaid ? 'Update Payment' : 'Record Payment'; ?>
                         </a>
+                        <a class="dropdown-item fs-disc-apply" href="javascript:void(0)"
+                           data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>"
+                           data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
+                           data-bill="<?php echo $billGhs; ?>"
+                           data-disc="<?php echo $discGhs; ?>"
+                           onclick="fsApplyDiscount(this);">
+                            <i class="mdi mdi-sale"></i> <?php echo $discGhs > 0 ? 'Edit Discount' : 'Apply Discount'; ?>
+                        </a>
+                        <?php if ($discGhs > 0): ?>
+                        <a class="dropdown-item fs-disc-remove text-danger" href="javascript:void(0)"
+                           data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>"
+                           onclick="fsRemoveDiscount(this);">
+                            <i class="mdi mdi-close-circle-outline"></i> Remove Discount
+                        </a>
+                        <?php endif; ?>
                         <a class="dropdown-item fs-bill-btn" href="javascript:void(0)"
                            data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>"
                            data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
                            data-pkgs="<?php echo $pkgCount; ?>" data-rebill="1"
                            onclick="fsBillCustomer(this);">
-                            <i class="mdi mdi-cash-refund"></i> Re-bill
+                            <i class="mdi mdi-refresh"></i> Re-bill
                         </a>
                         <a class="dropdown-item" href="javascript:void(0)"
                            data-orders='<?php echo $ordersJson; ?>'
@@ -439,8 +601,9 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
     return ob_get_clean();
 }
 
-/** One package card (accordion level 3). */
-function fs_render_package($p, $stat = null)
+/** One package card (accordion level 3). $cleared = this package has been paid
+ *  for and cleared for delivery (per-package payment status). */
+function fs_render_package($p, $stat = null, $cleared = false)
 {
     $oid   = (int) $p->oid;
     $pkgNo = htmlspecialchars(($p->order_prefix ?? '') . ($p->order_no ?? ''));
@@ -458,7 +621,7 @@ function fs_render_package($p, $stat = null)
     ob_start();
     ?>
     <div class="card mb-1 fs-pkg-card">
-        <div class="card-header fs-pkg-header p-2" onclick="fsTogglePackage(this, <?php echo $oid; ?>)">
+        <div class="card-header fs-pkg-header p-2" onclick="fsTogglePackage(this, <?php echo $oid; ?>, event)">
             <span class="fs-level-chip fs-chip-pkg">PACKAGE</span>
             <i class="mdi mdi-package-variant-closed"></i>
             <b><?php echo $pkgNo; ?></b>
@@ -466,6 +629,11 @@ function fs_render_package($p, $stat = null)
                 <i class="mdi mdi-weight"></i> <?php echo round($w, 2); ?> lb
             </span>
             <?php echo $itemsBadge; ?>
+            <?php if ($cleared): ?>
+                <span class="fs-pkg-paid fs-chip-settled ml-2" title="Paid for &amp; cleared for delivery"><i class="mdi mdi-check-decagram"></i> Paid</span>
+            <?php else: ?>
+                <span class="fs-pkg-unpaid fs-chip-balance ml-2" title="Not yet paid / cleared for delivery">Unpaid</span>
+            <?php endif; ?>
             <span class="fs-spacer"></span>
             <span class="fs-money fs-pkg-total" data-usd="<?php echo (float) $p->total_order; ?>">$<?php echo number_format((float) $p->total_order, 2); ?></span>
             <i class="mdi mdi-chevron-down fs-caret ml-2"></i>
@@ -820,19 +988,24 @@ if ($action === 'bill_customer') {
     $feeGhs  = $breakdown['fee_ghs'];
 
     $db->cdp_query("INSERT INTO cdb_consolidate_customer_billing
-                        (consolidate_id, sender_id, amount_usd, amount_ghs, handling_ghs, billed_by, billed_at)
-                    VALUES (:cid, :sid, :amt, :ghs, :fee, :by, NOW())
+                        (consolidate_id, sender_id, amount_usd, amount_ghs, handling_ghs, exchange_rate, billed_by, billed_at)
+                    VALUES (:cid, :sid, :amt, :ghs, :fee, :rate, :by, NOW())
                     ON DUPLICATE KEY UPDATE
                         amount_usd = VALUES(amount_usd), amount_ghs = VALUES(amount_ghs),
-                        handling_ghs = VALUES(handling_ghs), billed_by = VALUES(billed_by),
-                        billed_at = VALUES(billed_at)");
+                        handling_ghs = VALUES(handling_ghs), exchange_rate = VALUES(exchange_rate),
+                        billed_by = VALUES(billed_by), billed_at = VALUES(billed_at)");
     $db->bind(':cid', $cid);
     $db->bind(':sid', $sid);
     $db->bind(':amt', round($total, 2));
     $db->bind(':ghs', $billGhs);
     $db->bind(':fee', $feeGhs);
+    $db->bind(':rate', (float) $core->exchange_rate);
     $db->bind(':by', $uid);
     $db->cdp_execute();
+
+    // Refresh paid/discount caches from the ledgers (pre-existing package
+    // discounts must reduce the net immediately after billing).
+    fs_sync_billing_cache($cid, $sid, null);
 
     // ---- 2) First bill only: packages exit the consolidation and become
     // Ready for PickUp. A RE-bill must NOT repeat these side effects — it only
@@ -1035,24 +1208,141 @@ if ($action === 'bill_preview') {
 }
 
 // ----------------------------------------------------------------------------
-// RECORD PAYMENT (JSON) — stage 2: the customer pays on pickup. The discount
-// (bill − paid, never negative) is auto-calculated. Re-recording is allowed;
-// every action is logged and the customer gets a receipt message best-effort.
+// PAYMENT FORM (JSON) — data for the per-package payment checklist: the
+// customer's packages (with GHS price + current cleared state), the one-time
+// handling fee (if unpaid), and the running bill / paid / balance.
+// ----------------------------------------------------------------------------
+if ($action === 'payment_form') {
+    header('Content-Type: application/json; charset=UTF-8');
+
+    $cid = (int) ($_REQUEST['consolidate_id'] ?? 0);
+    $sid = (int) ($_REQUEST['sender_id'] ?? 0);
+
+    $billedRow = fs_customer_billed($cid, $sid);
+    if (!$billedRow) {
+        echo json_encode(['ok' => false, 'error' => 'not_billed', 'message' => 'Bill this customer first, then record their payment.']);
+        exit;
+    }
+
+    $rate   = (float) $core->exchange_rate;
+    $groups = fs_customer_groups($cid);
+    if (!isset($groups[$sid])) {
+        echo json_encode(['ok' => false, 'error' => 'no_packages', 'message' => 'No packages for this customer.']);
+        exit;
+    }
+
+    $oids = array_map('intval', $groups[$sid]['oids']);
+    $clearedNow = [];
+    if ($oids) {
+        $in = implode(',', $oids);
+        $db->cdp_query("SELECT order_id, fs_cleared_for_delivery FROM cdb_add_order WHERE order_id IN ($in)");
+        $db->cdp_execute();
+        foreach ((array) $db->cdp_registros() as $r) {
+            $clearedNow[(int) $r->order_id] = (int) $r->fs_cleared_for_delivery;
+        }
+    }
+
+    $packages = [];
+    foreach ($groups[$sid]['rows'] as $p) {
+        $oid = (int) $p->oid;
+        $packages[] = [
+            'oid'     => $oid,
+            'no'      => (string) ($p->order_prefix . $p->order_no),
+            'ghs'     => round(cdp_usdToGhs((float) $p->total_order, $rate), 2),
+            'cleared' => !empty($clearedNow[$oid]),
+        ];
+    }
+
+    $billGhs = ($billedRow->amount_ghs !== null)
+        ? (float) $billedRow->amount_ghs
+        : (float) cdp_customerPayableGhs((float) $billedRow->amount_usd, true, $rate)['total'];
+    $disc    = (float) $billedRow->discount_ghs;
+    $paid    = ($billedRow->paid_ghs !== null) ? (float) $billedRow->paid_ghs : 0.0;
+    $net     = round(max(0, $billGhs - $disc), 2);
+    $feeGhs  = ($billedRow->handling_ghs !== null) ? (float) $billedRow->handling_ghs : 0.0;
+
+    echo json_encode([
+        'ok'          => true,
+        'packages'    => $packages,
+        'bill_ghs'    => round($billGhs, 2),
+        'discount_ghs' => round($disc, 2),
+        'net_ghs'     => $net,
+        'paid_ghs'    => round($paid, 2),
+        'balance_ghs' => round(max(0, $net - $paid), 2),
+        'fee_ghs'     => $feeGhs,
+        'fee_paid'    => ((int) ($billedRow->fee_paid ?? 0) === 1),
+    ]);
+    exit;
+}
+
+// ----------------------------------------------------------------------------
+// GATEWAY INIT (JSON) — start a Paystack/Hubtel checkout for an amount. Returns
+// the checkout URL the customer completes + the reference to verify with. Falls
+// back gracefully to "unconfigured" until the API keys are set in Settings.
+// ----------------------------------------------------------------------------
+if ($action === 'gateway_init') {
+    header('Content-Type: application/json; charset=UTF-8');
+
+    $cid    = (int) ($_REQUEST['consolidate_id'] ?? 0);
+    $sid    = (int) ($_REQUEST['sender_id'] ?? 0);
+    $mode   = strtolower(trim((string) ($_REQUEST['mode'] ?? '')));
+    $amount = round((float) str_replace(',', '', (string) ($_REQUEST['amount'] ?? '0')), 2);
+
+    if (!in_array($mode, ['paystack', 'hubtel'], true) || $amount <= 0) {
+        echo json_encode(['ok' => false, 'message' => 'Pick an online mode and enter an amount first.']);
+        exit;
+    }
+
+    // Context for the gateway (customer email + return/callback URLs).
+    $email = '';
+    if ($sid > 0) {
+        $db->cdp_query("SELECT email FROM cdb_users WHERE id = :sid LIMIT 1");
+        $db->bind(':sid', $sid);
+        $db->cdp_execute();
+        $u = $db->cdp_registro();
+        $email = $u ? trim((string) $u->email) : '';
+    }
+    $base = rtrim((string) $core->site_url, '/');
+    $ctx = [
+        'email'        => $email !== '' ? $email : null,
+        'description'  => 'PackageSwiftLane payment',
+        'callback_url' => $base . '/financial_sheet.php',
+        'return_url'   => $base . '/financial_sheet.php',
+        'cancel_url'   => $base . '/financial_sheet.php',
+    ];
+    echo json_encode(cdp_fsGatewayInit($mode, $amount, '', $ctx));
+    exit;
+}
+
+// ----------------------------------------------------------------------------
+// RECORD PAYMENT (JSON) — payment is now PER PACKAGE. The operator ticks which
+// of the customer's packages this payment covers (all checked by default); the
+// amount equals the SUM of the checked packages' GHS prices (+ the one-time
+// handling fee on the first payment). Each checked package is marked paid and
+// CLEARED FOR DELIVERY (fs_cleared_for_delivery + status_invoice=1) — you can't
+// pick a package you didn't pay for. Split payments accumulate. Online modes
+// are verified against the gateway. Best-effort receipt to the customer.
 // ----------------------------------------------------------------------------
 if ($action === 'record_payment') {
     header('Content-Type: application/json; charset=UTF-8');
 
-    $cid  = (int) ($_REQUEST['consolidate_id'] ?? 0);
-    $sid  = (int) ($_REQUEST['sender_id'] ?? 0);
-    $raw  = trim((string) ($_REQUEST['paid'] ?? ''));
-    $paid = (float) str_replace(',', '', $raw);
+    $cid = (int) ($_REQUEST['consolidate_id'] ?? 0);
+    $sid = (int) ($_REQUEST['sender_id'] ?? 0);
+
+    $mode = strtolower(trim((string) ($_REQUEST['mode'] ?? 'cash')));
+    if (!in_array($mode, ['cash', 'paystack', 'hubtel', 'paypal'], true)) {
+        $mode = 'cash';
+    }
+    $reference = trim((string) ($_REQUEST['reference'] ?? ''));
+    $modeLbl   = ucfirst($mode);
+
+    // Packages the customer is paying for now (checkbox list, all on by default).
+    $rawOrders   = $_REQUEST['orders'] ?? '';
+    $decoded     = is_array($rawOrders) ? $rawOrders : json_decode((string) $rawOrders, true);
+    $checkedOids = is_array($decoded) ? array_values(array_unique(array_map('intval', $decoded))) : [];
 
     if ($cid <= 0 || $sid <= 0) {
         echo json_encode(['ok' => false, 'error' => 'bad_request']);
-        exit;
-    }
-    if ($raw === '' || !is_numeric(str_replace(',', '', $raw)) || $paid < 0) {
-        echo json_encode(['ok' => false, 'error' => 'invalid_value', 'message' => 'Enter an amount of 0 or more.']);
         exit;
     }
 
@@ -1062,24 +1352,109 @@ if ($action === 'record_payment') {
         exit;
     }
 
-    $billGhs  = ($billedRow->amount_ghs !== null)
+    $billGhs = ($billedRow->amount_ghs !== null)
         ? (float) $billedRow->amount_ghs
         : (float) cdp_customerPayableGhs((float) $billedRow->amount_usd, true, (float) $core->exchange_rate)['total'];
-    $paid     = round($paid, 2);
-    $discount = round(max(0, $billGhs - $paid), 2);
 
-    $db->cdp_query("UPDATE cdb_consolidate_customer_billing
-                    SET paid_ghs = :p, discount_ghs = :d, paid_by = :by, paid_at = NOW()
-                    WHERE consolidate_id = :cid AND sender_id = :sid");
-    $db->bind(':p', $paid);
-    $db->bind(':d', $discount);
-    $db->bind(':by', $uid);
-    $db->bind(':cid', $cid);
-    $db->bind(':sid', $sid);
-    $db->cdp_execute();
+    // This customer's packages + their GHS prices.
+    $rate   = (float) $core->exchange_rate;
+    $groups = fs_customer_groups($cid);
+    if (!isset($groups[$sid])) {
+        echo json_encode(['ok' => false, 'error' => 'no_packages', 'message' => 'No packages for this customer.']);
+        exit;
+    }
+    $custOids = array_map('intval', $groups[$sid]['oids']);
+    $ghsByOid = [];
+    foreach ($groups[$sid]['rows'] as $p) {
+        $ghsByOid[(int) $p->oid] = round(cdp_usdToGhs((float) $p->total_order, $rate), 2);
+    }
 
-    // Internal-only note (never sent to the customer) — who wrote what, when.
+    // Current clearance state — never re-charge an already-cleared package.
+    $clearedNow = [];
+    if ($custOids) {
+        $in = implode(',', $custOids);
+        $db->cdp_query("SELECT order_id, fs_cleared_for_delivery FROM cdb_add_order WHERE order_id IN ($in)");
+        $db->cdp_execute();
+        foreach ((array) $db->cdp_registros() as $r) {
+            $clearedNow[(int) $r->order_id] = (int) $r->fs_cleared_for_delivery;
+        }
+    }
+    $toClear = [];
+    foreach ($checkedOids as $o) {
+        if (in_array($o, $custOids, true) && empty($clearedNow[$o])) {
+            $toClear[] = $o;
+        }
+    }
+    // ---- Verify first (cash is a manual in-person receipt; online modes are
+    // confirmed against the gateway). --------------------------------------------
+    $verify = cdp_fsVerifyPayment($mode, $reference, null);
+    if (empty($verify['ok'])) {
+        echo json_encode(['ok' => false, 'error' => 'verify_failed',
+                          'message' => $verify['message'] ?: 'Payment could not be verified.']);
+        exit;
+    }
+
+    // Amount: CASH is entered by the operator (only way to record physical cash).
+    // Electronic modes take the GATEWAY-CONFIRMED amount — never re-typed.
+    if ($mode === 'cash') {
+        $raw  = trim((string) ($_REQUEST['paid'] ?? ''));
+        $paid = round((float) str_replace(',', '', $raw), 2);
+        if ($raw === '' || !is_numeric(str_replace(',', '', $raw)) || $paid <= 0) {
+            echo json_encode(['ok' => false, 'error' => 'invalid_value', 'message' => 'Enter the amount received (greater than 0).']);
+            exit;
+        }
+    } else {
+        $paid = round((float) ($verify['amount'] ?? 0), 2);
+        if ($paid <= 0) {
+            echo json_encode(['ok' => false, 'error' => 'gateway_no_amount',
+                              'message' => 'The gateway did not report a paid amount for this reference.']);
+            exit;
+        }
+    }
+
+    // ---- Insert the payment row (records which packages it cleared). ----------
     $note = trim((string) ($_REQUEST['note'] ?? ''));
+    try {
+        $db->cdp_query("INSERT INTO cdb_fs_payments
+                            (consolidate_id, sender_id, amount_ghs, mode, reference,
+                             gateway_status, gateway_payload, cleared_for_delivery, cleared_orders, note,
+                             exchange_rate, recorded_by, recorded_at)
+                        VALUES
+                            (:cid, :sid, :amt, :mode, :ref,
+                             :gs, :gp, 1, :co, :note, :rate, :by, NOW())");
+        $db->bind(':cid', $cid);
+        $db->bind(':sid', $sid);
+        $db->bind(':amt', $paid);
+        $db->bind(':mode', $mode);
+        $db->bind(':ref', $reference !== '' ? $reference : null);
+        $db->bind(':gs', $verify['status'] ?? null);
+        $db->bind(':gp', $verify['payload'] ?? null);
+        $db->bind(':co', json_encode($toClear));
+        $db->bind(':note', $note !== '' ? $note : null);
+        $db->bind(':rate', (float) $core->exchange_rate);
+        $db->bind(':by', $uid);
+        $db->cdp_execute();
+    } catch (Throwable $e) {
+        echo json_encode(['ok' => false, 'error' => 'ledger_missing',
+                          'message' => 'Payment ledger not found — run sql/fs_transactions.sql, then try again.']);
+        exit;
+    }
+
+    // ---- Mark each paid package cleared for delivery + Paid (status_invoice=1)
+    // so the existing invoice / package-list labels reflect it immediately. ------
+    foreach ($toClear as $o) {
+        $db->cdp_query("UPDATE cdb_add_order
+                        SET fs_cleared_for_delivery = 1, fs_cleared_at = NOW(), fs_cleared_by = :by,
+                            status_invoice = 1
+                        WHERE order_id = :oid");
+        $db->bind(':by', $uid);
+        $db->bind(':oid', $o);
+        $db->cdp_execute();
+        fs_log_history($uid, $o, 'marked paid & cleared for delivery via ' . $modeLbl . ' payment'
+            . ($reference !== '' ? ' (ref ' . $reference . ')' : ''));
+    }
+
+    // Internal-only note (never sent to the customer).
     if ($note !== '') {
         try {
             $db->cdp_query("INSERT INTO cdb_consolidate_billing_notes
@@ -1091,17 +1466,16 @@ if ($action === 'record_payment') {
             $db->bind(':by', $uid);
             $db->cdp_execute();
         } catch (Throwable $e) {
-            // Notes table missing (migration §4 not run) — payment still records.
+            // Notes table missing — payment still records.
         }
     }
 
-    // Log against every package of this customer in the consolidation.
-    $groups = fs_customer_groups($cid);
-    $oids = isset($groups[$sid]) ? $groups[$sid]['oids'] : [];
-    foreach (array_unique($oids) as $oid) {
-        fs_log_history($uid, $oid, 'recorded a payment of ₵' . number_format($paid, 2)
-            . ($discount > 0 ? ' (discount ₵' . number_format($discount, 2) . ')' : ''));
-    }
+    // Recompute the billing-row caches (paid_ghs / discount_ghs) from ledgers.
+    $agg     = fs_sync_billing_cache($cid, $sid, $uid);
+    $paidTot = $agg['paid'];
+    $discTot = $agg['discount'];
+    $netGhs  = round(max(0, $billGhs - $discTot), 2);
+    $balance = round(max(0, $netGhs - $paidTot), 2);
 
     // ---- Receipt message, best-effort. ---------------------------------------
     $warnings = [];
@@ -1124,7 +1498,7 @@ if ($action === 'record_payment') {
 
     $amountBlock = FS_BILL_MSG_INCLUDE_AMOUNT
         ? 'Amount Paid: GH₵' . number_format($paid, 2)
-          . ($discount > 0 ? "\nDiscount Applied: GH₵" . number_format($discount, 2) : '')
+          . ($balance > 0 ? "\nBalance Remaining: GH₵" . number_format($balance, 2) : "\nYour account is now fully settled.")
         : '';
 
     $intro  = 'We have received your payment for your package(s) in consolidation ' . $consolNo . ' — thank you!';
@@ -1184,14 +1558,114 @@ if ($action === 'record_payment') {
     }
 
     echo json_encode([
-        'ok'            => true,
-        'paid_ghs'      => $paid,
-        'discount_ghs'  => $discount,
-        'bill_ghs'      => round($billGhs, 2),
-        'consol'        => fs_consol_summary($cid),
-        'sent_whatsapp' => $sentWa,
-        'sent_email'    => $sentEmail,
-        'warnings'      => $warnings,
+        'ok'             => true,
+        'this_payment'   => $paid,
+        'mode'           => $mode,
+        'paid_ghs'       => $paidTot,
+        'discount_ghs'   => $discTot,
+        'bill_ghs'       => round($billGhs, 2),
+        'net_ghs'        => $netGhs,
+        'balance_ghs'    => $balance,
+        'cleared_orders' => $toClear,
+        'consol'         => fs_consol_summary($cid),
+        'sent_whatsapp'  => $sentWa,
+        'sent_email'     => $sentEmail,
+        'warnings'       => $warnings,
+    ]);
+    exit;
+}
+
+// ----------------------------------------------------------------------------
+// APPLY / REMOVE DISCOUNT (JSON) — PER CUSTOMER (per consolidation), from
+// "Customer Actions". One discount row per (consolidation, customer); Apply
+// replaces any existing. A percentage is taken of the customer's gross bill.
+// ----------------------------------------------------------------------------
+if ($action === 'apply_discount' || $action === 'remove_discount') {
+    header('Content-Type: application/json; charset=UTF-8');
+
+    $cid = (int) ($_REQUEST['consolidate_id'] ?? 0);
+    $sid = (int) ($_REQUEST['sender_id'] ?? 0);
+    if ($cid <= 0 || $sid <= 0) {
+        echo json_encode(['ok' => false, 'error' => 'bad_request']);
+        exit;
+    }
+
+    $billedRow = fs_customer_billed($cid, $sid);
+    if (!$billedRow) {
+        echo json_encode(['ok' => false, 'error' => 'not_billed', 'message' => 'Bill this customer first, then apply a discount.']);
+        exit;
+    }
+    $billGhs = ($billedRow->amount_ghs !== null)
+        ? (float) $billedRow->amount_ghs
+        : (float) cdp_customerPayableGhs((float) $billedRow->amount_usd, true, (float) $core->exchange_rate)['total'];
+
+    // Package list for logging (discount is customer-level; log on each package).
+    $groups = fs_customer_groups($cid);
+    $oids   = isset($groups[$sid]) ? array_unique(array_map('intval', $groups[$sid]['oids'])) : [];
+
+    try {
+        // Replace any existing customer discount (Apply overwrites; Remove clears).
+        $db->cdp_query("DELETE FROM cdb_fs_discounts WHERE consolidate_id = :cid AND sender_id = :sid");
+        $db->bind(':cid', $cid);
+        $db->bind(':sid', $sid);
+        $db->cdp_execute();
+
+        $amountGhs = 0.0;
+        if ($action === 'apply_discount') {
+            $type = (($_REQUEST['disc_type'] ?? 'amount') === 'percent') ? 'percent' : 'amount';
+            $rawV = trim((string) ($_REQUEST['value'] ?? ''));
+            $val  = (float) str_replace(',', '', $rawV);
+            if ($rawV === '' || !is_numeric(str_replace(',', '', $rawV)) || $val <= 0) {
+                echo json_encode(['ok' => false, 'error' => 'invalid_value', 'message' => 'Enter a discount greater than 0.']);
+                exit;
+            }
+            if ($type === 'percent') {
+                if ($val > 100) { $val = 100; }
+                $amountGhs = round($billGhs * $val / 100, 2);
+            } else {
+                $amountGhs = round($val, 2);
+            }
+            if ($amountGhs > $billGhs) { $amountGhs = $billGhs; } // never exceed the bill
+            $reason = trim((string) ($_REQUEST['reason'] ?? ''));
+
+            $db->cdp_query("INSERT INTO cdb_fs_discounts
+                                (consolidate_id, sender_id, order_id, amount_ghs, disc_type, reason, exchange_rate, applied_by, applied_at)
+                            VALUES (:cid, :sid, NULL, :amt, :type, :reason, :rate, :by, NOW())");
+            $db->bind(':cid', $cid);
+            $db->bind(':sid', $sid);
+            $db->bind(':amt', $amountGhs);
+            $db->bind(':type', $type);
+            $db->bind(':reason', $reason !== '' ? $reason : null);
+            $db->bind(':rate', (float) $core->exchange_rate);
+            $db->bind(':by', $uid);
+            $db->cdp_execute();
+
+            foreach ($oids as $o) {
+                fs_log_history($uid, $o, 'applied a ₵' . number_format($amountGhs, 2) . ' customer discount'
+                    . ($type === 'percent' ? ' (' . rtrim(rtrim(number_format($val, 2), '0'), '.') . '%)' : '')
+                    . ($reason !== '' ? ' — ' . $reason : ''));
+            }
+        } else {
+            foreach ($oids as $o) {
+                fs_log_history($uid, $o, 'removed the customer discount');
+            }
+        }
+    } catch (Throwable $e) {
+        echo json_encode(['ok' => false, 'error' => 'ledger_missing',
+                          'message' => 'Discount ledger not found — run sql/fs_transactions.sql, then try again.']);
+        exit;
+    }
+
+    // Refresh the billing caches (discount + net) from the ledger.
+    $agg = fs_sync_billing_cache($cid, $sid, null);
+
+    echo json_encode([
+        'ok'           => true,
+        'discount_ghs' => $agg['discount'],
+        'paid_ghs'     => $agg['paid'],
+        'bill_ghs'     => round($billGhs, 2),
+        'aggregates'   => fs_aggregates($cid, $sid),
+        'consol'       => fs_consol_summary($cid),
     ]);
     exit;
 }
@@ -1348,8 +1822,19 @@ if ($action === 'packages') {
     }
 
     $stats = fs_item_stats($groups[$sid]['oids']);
+    // Per-package paid / cleared-for-delivery state (badge on each card).
+    $clearedMap = [];
+    $oidsC = array_map('intval', $groups[$sid]['oids']);
+    if ($oidsC) {
+        $inC = implode(',', $oidsC);
+        $db->cdp_query("SELECT order_id, fs_cleared_for_delivery FROM cdb_add_order WHERE order_id IN ($inC)");
+        $db->cdp_execute();
+        foreach ((array) $db->cdp_registros() as $r) {
+            $clearedMap[(int) $r->order_id] = ((int) $r->fs_cleared_for_delivery === 1);
+        }
+    }
     foreach ($groups[$sid]['rows'] as $p) {
-        echo fs_render_package($p, $stats[(int) $p->oid] ?? null);
+        echo fs_render_package($p, $stats[(int) $p->oid] ?? null, $clearedMap[(int) $p->oid] ?? false);
     }
 
     // Billing log — the customer-level counterpart of the package change log.
@@ -1362,6 +1847,15 @@ if ($action === 'packages') {
             : (float) cdp_customerPayableGhs((float) $billedRow->amount_usd, true)['total'];
         $feeGhs = ($billedRow->handling_ghs !== null) ? (float) $billedRow->handling_ghs : 0.0;
 
+        // Show the exchange rate a GHS figure was created at (audit anchor): the
+        // GHS numbers never move even after the live rate changes.
+        $fsRateChip = function ($rate) {
+            $rate = (float) $rate;
+            if ($rate <= 0) { return ''; }
+            $r = rtrim(rtrim(number_format($rate, 4), '0'), '.');
+            return ' <span class="fs-rate-chip" title="USD→GHS rate used at the time">@ ' . $r . '</span>';
+        };
+
         $entries = [];
 
         $entries[] = [
@@ -1369,16 +1863,68 @@ if ($action === 'packages') {
             'html' => '<b>' . htmlspecialchars($billedRow->biller) . '</b> billed this customer ₵' . number_format($billGhs, 2)
                 . ' ($' . number_format((float) $billedRow->amount_usd, 2)
                 . ($feeGhs > 0 ? ' + ₵' . number_format($feeGhs, 2) . ' handling fee' : '') . ')'
+                . $fsRateChip($billedRow->exchange_rate ?? 0)
                 . ' <span class="text-muted">— ' . htmlspecialchars(date('Y-m-d H:i', strtotime((string) $billedRow->billed_at))) . '</span>',
         ];
 
-        if ($billedRow->paid_ghs !== null) {
-            $entries[] = [
-                'ts'   => strtotime((string) $billedRow->paid_at),
-                'html' => '<b>' . htmlspecialchars($billedRow->payer) . '</b> recorded a payment of ₵' . number_format((float) $billedRow->paid_ghs, 2)
-                    . ((float) $billedRow->discount_ghs > 0 ? ' (discount ₵' . number_format((float) $billedRow->discount_ghs, 2) . ')' : '')
-                    . ' <span class="text-muted">— ' . htmlspecialchars(date('Y-m-d H:i', strtotime((string) $billedRow->paid_at))) . '</span>',
-            ];
+        // Each recorded payment is its own timeline line (split payments).
+        try {
+            $db->cdp_query("SELECT p.amount_ghs, p.mode, p.reference, p.gateway_status,
+                                   p.cleared_for_delivery, p.recorded_at, p.exchange_rate,
+                                   COALESCE(NULLIF(TRIM(CONCAT(COALESCE(u.fname,''),' ',COALESCE(u.lname,''))),''),
+                                            u.username, CONCAT('User ', p.recorded_by)) AS payer
+                            FROM cdb_fs_payments p
+                            LEFT JOIN cdb_users u ON u.id = p.recorded_by
+                            WHERE p.consolidate_id = :cid AND p.sender_id = :sid
+                            ORDER BY p.id DESC");
+            $db->bind(':cid', $cid);
+            $db->bind(':sid', $sid);
+            $db->cdp_execute();
+            $pays = $db->cdp_registros();
+        } catch (Throwable $e) {
+            $pays = null; // cdb_fs_payments missing — migration not run yet
+        }
+        if ($pays) {
+            foreach ($pays as $pp) {
+                $entries[] = [
+                    'ts'   => strtotime((string) $pp->recorded_at),
+                    'html' => '<i class="mdi mdi-cash"></i> <b>' . htmlspecialchars($pp->payer) . '</b> recorded a '
+                        . htmlspecialchars(ucfirst((string) $pp->mode)) . ' payment of ₵' . number_format((float) $pp->amount_ghs, 2)
+                        . ((string) $pp->reference !== '' ? ' <span class="text-muted">ref ' . htmlspecialchars((string) $pp->reference) . '</span>' : '')
+                        . ((int) $pp->cleared_for_delivery === 1 ? ' <span class="badge badge-success">cleared for delivery</span>' : '')
+                        . $fsRateChip($pp->exchange_rate ?? 0)
+                        . ' <span class="text-muted">— ' . htmlspecialchars(date('Y-m-d H:i', strtotime((string) $pp->recorded_at))) . '</span>',
+                ];
+            }
+        }
+
+        // Applied discount (customer-level, from Customer Actions).
+        try {
+            $db->cdp_query("SELECT d.amount_ghs, d.disc_type, d.reason, d.applied_at, d.exchange_rate,
+                                   COALESCE(NULLIF(TRIM(CONCAT(COALESCE(u.fname,''),' ',COALESCE(u.lname,''))),''),
+                                            u.username, CONCAT('User ', d.applied_by)) AS author
+                            FROM cdb_fs_discounts d
+                            LEFT JOIN cdb_users u ON u.id = d.applied_by
+                            WHERE d.consolidate_id = :cid AND d.sender_id = :sid
+                            ORDER BY d.id DESC");
+            $db->bind(':cid', $cid);
+            $db->bind(':sid', $sid);
+            $db->cdp_execute();
+            $discs = $db->cdp_registros();
+        } catch (Throwable $e) {
+            $discs = null;
+        }
+        if ($discs) {
+            foreach ($discs as $dd) {
+                $entries[] = [
+                    'ts'   => strtotime((string) $dd->applied_at),
+                    'html' => '<i class="mdi mdi-sale"></i> <b>' . htmlspecialchars($dd->author) . '</b> applied a ₵'
+                        . number_format((float) $dd->amount_ghs, 2) . ' discount'
+                        . ((string) $dd->reason !== '' ? ' <span class="text-muted">(' . htmlspecialchars((string) $dd->reason) . ')</span>' : '')
+                        . $fsRateChip($dd->exchange_rate ?? 0)
+                        . ' <span class="text-muted">— ' . htmlspecialchars(date('Y-m-d H:i', strtotime((string) $dd->applied_at))) . '</span>',
+                ];
+            }
         }
 
         // Internal notes (never sent to the customer): who wrote what, when.

@@ -80,7 +80,11 @@ try {
                                         </div>
                                     </div>
                                     <div class="col-md-3 mb-2 text-right">
-                                        <div class="fs-hint mt-2">
+                                        <div class="btn-group btn-group-sm mb-1" role="group" aria-label="Display currency">
+                                            <button type="button" id="fs_cur_ghs" class="btn btn-outline-dark" onclick="fsSetCurrency('ghs');">GH&#8373;</button>
+                                            <button type="button" id="fs_cur_usd" class="btn btn-outline-dark" onclick="fsSetCurrency('usd');">$ USD</button>
+                                        </div>
+                                        <div class="fs-hint">
                                             Filters apply as you type &middot;
                                             Rate: $1 = &#8373;<span id="fs_rate_label"></span>
                                             <?php if ($fs_rate_log): ?>

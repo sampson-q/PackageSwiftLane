@@ -167,6 +167,12 @@ $fs_dg_color = ($fs_dg_style && !empty($fs_dg_style->color)) ? $fs_dg_style->col
                                     </div>
                                 </div>
 
+                                <div class="mt-2">
+                                    <div class="btn-group btn-group-sm" role="group" aria-label="Display currency">
+                                        <button type="button" id="fs_cur_ghs" class="btn btn-outline-dark" onclick="fsSetCurrency('ghs');">GH&#8373;</button>
+                                        <button type="button" id="fs_cur_usd" class="btn btn-outline-dark" onclick="fsSetCurrency('usd');">$ USD</button>
+                                    </div>
+                                </div>
                                 <div class="fs-hint mt-2">
                                     Rate: $1 = &#8373;<span id="fs_rate_label"></span>
                                     <?php if ($fs_rate_log): ?>

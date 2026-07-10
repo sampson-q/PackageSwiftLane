@@ -152,6 +152,49 @@
         white-space: nowrap;
     }
 
+    .fs-chip-balance {
+        background: #fdecea;
+        color: #c62828;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 2px 10px;
+        border-radius: 12px;
+        white-space: nowrap;
+    }
+
+    .fs-chip-settled {
+        background: #e8f5e9;
+        color: #2e7d32;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 2px 10px;
+        border-radius: 12px;
+        white-space: nowrap;
+    }
+
+    .fs-chip-owed {
+        background: #b71c1c;
+        color: #fff;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 2px 10px;
+        border-radius: 12px;
+        white-space: nowrap;
+    }
+
+    /* Exchange-rate anchor shown on each billing-log entry (audit). */
+    .fs-rate-chip {
+        display: inline-block;
+        background: #eef2fb;
+        color: #3f5aa8;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 0 7px;
+        border-radius: 9px;
+        margin: 0 2px;
+        white-space: nowrap;
+    }
+
     /* ---- Level 2 — customer: white card, teal spine, avatar ----
        overflow must stay visible or the Actions dropdown gets clipped
        inside the collapsed card. */
@@ -230,7 +273,8 @@
         border-radius: 5px;
         margin-left: 26px;
         background: #fff;
-        overflow: hidden;
+        /* visible so the Package Actions dropdown isn't clipped by the card */
+        overflow: visible;
     }
 
     .fs-pkg-header {
