@@ -47,28 +47,31 @@ $currentMonth = date('n');
 // Obtener el nombre del mes actual
 $monthName = obtenerNombreMes($currentMonth);
 
-$sql = "SELECT order_id, total_order FROM cdb_add_order WHERE status_courier != 21 AND order_payment_method > 1 AND order_date >= MAKEDATE(:year,1) + INTERVAL (:month-1) MONTH AND order_date < MAKEDATE(:year,1) + INTERVAL :month MONTH" . $agency_where . " ORDER BY order_id DESC";
-$db->cdp_query($sql);
-$db->bind(':month', $month);
-$db->bind(':year', $year);
-$db->cdp_execute();
-$data = $db->cdp_registros();
-$count = 0;
-$sumador_pendiente = 0;
-$sumador_total = 0;
-$sumador_pagado = 0;
+// ---- Now driven by the Financial Sheet ledger (single source of truth). All
+// figures are USD to match $core->currency: billed uses the USD snapshot;
+// received/outstanding convert GHS via each row's OWN stored exchange rate.
+// (Agency-restricted admins currently see company-wide finance — the FS billing
+// ledger has no agency column.)
+$fs_ini = date('Y-m-01 00:00:00');
+$fs_fin = date('Y-m-t 23:59:59');
+$fs_own = ((int) $userData->userlevel === 1) ? (' AND sender_id = ' . (int) $_SESSION['userid']) : '';
 
-foreach ($data as $row) {
-    $db->cdp_query('SELECT IFNULL(SUM(total), 0) AS total FROM cdb_charges_order WHERE order_id = :order_id');
-    $db->bind(':order_id', $row->order_id);
-    $db->cdp_execute();
-    $sum_payment = $db->cdp_registro();
-    $pendiente = $row->total_order - $sum_payment->total;
-    $sumador_pendiente += $pendiente;
-    $sumador_total += $row->total_order;
-    $sumador_pagado += $sum_payment->total;
-    $count++;
-}
+$db->cdp_query("SELECT COALESCE(SUM(amount_usd),0) t FROM cdb_consolidate_customer_billing
+                WHERE billed_at BETWEEN :i AND :f" . $fs_own);
+$db->bind(':i', $fs_ini); $db->bind(':f', $fs_fin); $db->cdp_execute();
+$sumador_total = (float) ($db->cdp_registro()->t ?? 0);   // billed this month
+
+$db->cdp_query("SELECT COALESCE(SUM(amount_ghs/NULLIF(exchange_rate,0)),0) t FROM cdb_fs_payments
+                WHERE recorded_at BETWEEN :i AND :f" . $fs_own);
+$db->bind(':i', $fs_ini); $db->bind(':f', $fs_fin); $db->cdp_execute();
+$sumador_pagado = (float) ($db->cdp_registro()->t ?? 0);  // received this month
+
+$db->cdp_query("SELECT COALESCE(SUM(GREATEST(0, COALESCE(amount_ghs,0)-COALESCE(discount_ghs,0)-COALESCE(paid_ghs,0))/NULLIF(exchange_rate,0)),0) t
+                FROM cdb_consolidate_customer_billing WHERE 1=1" . $fs_own);
+$db->cdp_execute();
+$sumador_pendiente = (float) ($db->cdp_registro()->t ?? 0); // outstanding (all-time)
+
+$count = 0;
 
 ?>
 <!DOCTYPE html>
