@@ -132,9 +132,9 @@ if (!$user->cdp_is_Admin())
                                         <div class="input-group">
                                             <select onchange="cdp_load(1);" class="form-control custom-select" id="gateway" name="gateway">
                                                 <option value="0"><?php echo $lang['left533020032'] ?></option>
-                                                <option value="Stripe"><?php echo $lang['left533020034'] ?></option>
-                                                <option value="PayPal"><?php echo $lang['left533020033'] ?></option>
-                                                <option value="Paystack"><?php echo $lang['left533020035'] ?></option>
+                                                <option value="paystack">Paystack</option>
+                                                <option value="hubtel">Hubtel</option>
+                                                <option value="paypal">PayPal</option>
                                             </select>
                                         </div>
                                     </div>
