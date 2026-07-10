@@ -309,6 +309,11 @@ if (empty($errors)) {
             $price_lb           = floatval($_POST["price_lb"]);
             $insured_value      = floatval($_POST["insured_value"]);
 
+            // Pricing audit: count how the items were priced at creation so we
+            // can log WHO did the pricing (weight vs custom price).
+            $fs_price_custom = 0;
+            $fs_price_weight = 0;
+
             foreach ($packages as $package) {
 
                 // Cantidad (muy importante para que coincida con JS)
@@ -363,8 +368,10 @@ if (empty($errors)) {
                 //   custom item -> custom_price * qty
                 if ($use_custom) {
                     $base_packages += $custom_price * $qty;
+                    if ($custom_price > 0) { $fs_price_custom++; }
                 } else {
                     $base_packages += $weight * $qty * $price_lb;
+                    if ($weight > 0) { $fs_price_weight++; }
                 }
 
                 // Acumulados multiplicando por qty (igual JS)
@@ -647,6 +654,18 @@ if (empty($errors)) {
         );
 
         cdp_insertCourierShipmentUserHistory($dataHistory);
+
+        // Pricing audit — log WHO priced the items at creation (weight/custom).
+        if (($fs_price_custom + $fs_price_weight) > 0) {
+            cdp_insertCourierShipmentUserHistory(array(
+                'user_id'      => $_SESSION['userid'],
+                'order_id'     => $shipment_id,
+                'order_track'  => $order_track,
+                'action'       => 'Pricing — set at creation: ' . $fs_price_weight . ' by weight, '
+                    . $fs_price_custom . ' custom-priced (base $' . number_format((float) $base_packages, 2) . ')',
+                'date_history' => cdp_sanitize(date("Y-m-d H:i:s")),
+            ));
+        }
 
         // Notificación general
         $dataNotification = array(

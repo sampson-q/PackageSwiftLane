@@ -215,6 +215,8 @@ if (empty($errors)) {
 
             $base_packages = 0.0; // USD base = Σ(weight*qty*rate) + Σ(custom_price*qty)
             $seen_groups   = []; // "priced together" batches count ONCE, no qty multiplier
+            $fs_price_custom = 0; // pricing audit: custom-priced item/group count
+            $fs_price_weight = 0; // pricing audit: weight-priced item/group count
 
             if ($packages && is_array($packages)) {
                 foreach ($packages as $package) {
@@ -269,6 +271,8 @@ if (empty($errors)) {
                             $seen_groups[$wgroup] = true;
                             $base_packages   += $use_custom ? $custom_price : $weight * $price_lb;
                             $sum_weight_real += $weight;
+                            if ($use_custom && $custom_price > 0) { $fs_price_custom++; }
+                            elseif (!$use_custom && $weight > 0) { $fs_price_weight++; }
                         }
                         continue;
                     }
@@ -276,8 +280,10 @@ if (empty($errors)) {
                     // Per-item USD line total (mirrors computeLineTotal in courier_edit.js).
                     if ($use_custom) {
                         $base_packages += $custom_price * $qty;
+                        if ($custom_price > 0) { $fs_price_custom++; }
                     } else {
                         $base_packages += $weight * $qty * $price_lb;
+                        if ($weight > 0) { $fs_price_weight++; }
                     }
                     $sum_weight_real += $weight * $qty;
                 }
@@ -429,6 +435,20 @@ if (empty($errors)) {
             'action'       => $lang['notification_shipment7'],
             'date_history' => date("Y-m-d H:i:s"),
         ));
+
+        // Pricing audit — log WHO re-priced the items on this edit.
+        $fs_price_custom = isset($fs_price_custom) ? (int) $fs_price_custom : 0;
+        $fs_price_weight = isset($fs_price_weight) ? (int) $fs_price_weight : 0;
+        if (($fs_price_custom + $fs_price_weight) > 0) {
+            cdp_insertCourierShipmentUserHistory(array(
+                'user_id'      => $_SESSION['userid'],
+                'order_id'     => $shipment_id,
+                'order_track'  => $order_track,
+                'action'       => 'Pricing — updated on edit: ' . $fs_price_weight . ' by weight, '
+                    . $fs_price_custom . ' custom-priced (base $' . number_format((float) $base_packages, 2) . ')',
+                'date_history' => date("Y-m-d H:i:s"),
+            ));
+        }
 
         // =======================
         // ADDRESSES — delete and re-insert
