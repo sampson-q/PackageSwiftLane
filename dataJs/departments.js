@@ -80,7 +80,7 @@ $(function () {
         var id = $(this).data("id");
         var name = $(this).data("name");
         Swal.fire({
-            title: "Delete department?",
+            title: "Delete Department?",
             text: '"' + name + '" and its members/permissions will be removed. Base role and users are untouched.',
             icon: "warning", showCancelButton: true, confirmButtonColor: "#c0392b",
             confirmButtonText: "Delete"

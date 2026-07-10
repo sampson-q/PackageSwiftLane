@@ -28,7 +28,6 @@ $userData = $user->cdp_getUserData();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Departments | <?php echo $core->site_name ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <?php include 'views/inc/head_scripts.php'; ?>
     <style>
         .dept-card { border:1px solid #e6e6e6; border-radius:8px; padding:14px 16px; margin-bottom:14px; }
@@ -178,7 +177,9 @@ $userData = $user->cdp_getUserData();
 
     <?php include('helpers/languages/translate_to_js.php'); ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+    <!-- SweetAlert v11 comes from footer.php's vendor bundle; do NOT re-load the
+         old assets/template v7 build here — it lacks result.isConfirmed and
+         silently breaks confirm dialogs (e.g. Delete department). -->
     <script src="<?= cdp_asset('dataJs/departments.js') ?>"></script>
 </body>
 </html>
