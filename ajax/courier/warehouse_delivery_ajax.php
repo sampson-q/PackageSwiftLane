@@ -1,10 +1,23 @@
 <?php
 // ============================================================================
-// Warehouse Delivery — lists ONLY packages finance has cleared for delivery
-// (cdb_add_order.fs_cleared_for_delivery = 1) that are here in Ghana and not
-// yet delivered/picked-up. Grouped by customer (per-user deliveries). Packages
-// that aren't cleared never appear here, so the warehouse can't deliver them.
-//   action=list -> customer-grouped cards (HTML)
+// Warehouse Delivery — tiered (FS-style) delivery workspace.
+//
+// Mirrors the Financial Sheet's accordion — consolidation -> customer ->
+// package -> item — but with DELIVERY actions instead of finance actions.
+// Delivery is BY PACKAGE only. "Deliver All" delivers just a customer's
+// cleared, not-yet-delivered packages. When every package in a consolidation
+// is Delivered, the consolidation's own status_courier flips to Delivered (8);
+// undoing a package reopens it (and reopens the consolidation if it was
+// closed). Only finance-cleared packages (fs_cleared_for_delivery = 1) can be
+// delivered — enforced server-side, never trust the client.
+//
+// Actions (all require view_warehouse_delivery; writes require their own perm):
+//   list            -> consolidation cards (level 1)
+//   customers       -> ?consolidate_id            customer cards (level 2)
+//   packages        -> ?consolidate_id&sender_id  package + item cards (3/4)
+//   deliver_package -> POST order_no              deliver one package
+//   deliver_user    -> POST consolidate_id&sender_id  deliver a customer's cleared pkgs
+//   undo_package    -> POST order_no              reopen a delivered package
 // ============================================================================
 
 if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
@@ -13,118 +26,435 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once("../../helpers/querys.php");
 require_login();
-require_permission('deliver_shipment');
+require_permission('view_warehouse_delivery');
 
 if (session_status() === PHP_SESSION_ACTIVE) {
     session_write_close();
 }
 
-$db   = new Conexion;
-$user = new User;
+if (!defined('CDP_WD_DELIVERED'))  { define('CDP_WD_DELIVERED', 8); }  // Delivered
+if (!defined('CDP_WD_REOPEN'))     { define('CDP_WD_REOPEN', 4); }     // In_Warehouse (undo target)
+
+// Terminal / exited statuses a package can't be "delivered" out of here.
+$WD_TERMINAL = [15, 16, 21, 27, 35]; // Picked up, Not Picked Up, Cancelled, Returned, Auction
+
+$db       = new Conexion;
+$user     = new User;
 $userData = $user->cdp_getUserData();
+$uid      = (int) ($userData->id ?? ($_SESSION['userid'] ?? 0));
 
-$search = trim((string) ($_REQUEST['search'] ?? ''));
-$status = (int) ($_REQUEST['status_courier'] ?? 0);
+// Per-action capabilities (authoritative; the view mirrors these for the UI).
+$canDeliverPkg  = $user->cdp_hasPermission('warehouse_deliver_package');
+$canDeliverUser = $user->cdp_hasPermission('warehouse_deliver_user');
+$canUndo        = $user->cdp_hasPermission('warehouse_undo_delivery');
 
-// Cleared for delivery AND physically here in the Ghana warehouse:
-//   1 = Pending_Collection, 4 = In_Warehouse, 32 = Ready for PickUp,
-//   33 = Sorting at Accra Office. (Excludes Delivered/Picked-up and any
-//   pre-arrival statuses so only genuinely deliverable packages show.)
-$where = " WHERE a.fs_cleared_for_delivery = 1 AND a.status_courier IN (1, 4, 32, 33) ";
-$bind  = [];
+// userlevel 1 (customer) is defensively limited to their own packages.
+$ownOnly = (isset($userData->userlevel) && (int) $userData->userlevel === 1)
+    ? (' AND a.sender_id = ' . (int) $_SESSION['userid']) : '';
 
-if (isset($userData->userlevel) && (int) $userData->userlevel === 1) {
-    $where .= " AND a.sender_id = :own ";
-    $bind[':own'] = (int) $_SESSION['userid'];
+$action = $_REQUEST['action'] ?? 'list';
+
+// ---------------------------------------------------------------------------
+// Shared helpers
+// ---------------------------------------------------------------------------
+
+/** All packages of a consolidation (deduped detail -> order), with delivery state. */
+function wd_consolidation_packages(Conexion $db, $cid, $ownOnly)
+{
+    $db->cdp_query("SELECT a.order_id, a.order_prefix, a.order_no, a.sender_id, a.status_courier,
+                           a.fs_cleared_for_delivery, a.total_weight,
+                           s.mod_style AS status_name, s.color AS status_color,
+                           COALESCE(NULLIF(TRIM(CONCAT(COALESCE(u.fname,''),' ',COALESCE(u.lname,''))),''),
+                                    CONCAT('User ', a.sender_id)) AS customer,
+                           u.locker AS locker
+                    FROM cdb_consolidate_detail d
+                    INNER JOIN cdb_add_order a ON a.order_id = CAST(d.order_id AS UNSIGNED)
+                    LEFT JOIN cdb_styles s ON s.id = a.status_courier
+                    LEFT JOIN cdb_users u ON u.id = a.sender_id
+                    WHERE d.consolidate_id = :cid $ownOnly
+                    ORDER BY customer ASC, a.order_id DESC");
+    $db->bind(':cid', (int) $cid);
+    $db->cdp_execute();
+    return $db->cdp_registros() ?: [];
 }
-if ($status > 0) {
-    $where .= " AND a.status_courier = :st ";
-    $bind[':st'] = $status;
-}
-if ($search !== '') {
-    $where .= " AND (CONCAT(COALESCE(u.fname,''),' ',COALESCE(u.lname,'')) LIKE :q
-                     OR u.locker LIKE :q
-                     OR CONCAT(COALESCE(a.order_prefix,''),COALESCE(a.order_no,'')) LIKE :q) ";
-    $bind[':q'] = '%' . $search . '%';
+
+/** Delivery state for one package row: 'delivered' | 'ready' | 'awaiting' | 'other'. */
+function wd_pkg_state($p, array $terminal)
+{
+    if ((int) $p->status_courier === CDP_WD_DELIVERED) { return 'delivered'; }
+    if (in_array((int) $p->status_courier, $terminal, true)) { return 'other'; }
+    return ((int) $p->fs_cleared_for_delivery === 1) ? 'ready' : 'awaiting';
 }
 
-$db->cdp_query("SELECT a.order_id, a.order_prefix, a.order_no, a.sender_id, a.status_courier,
-                       a.fs_cleared_at,
-                       b.mod_style AS status_name, b.color AS status_color,
-                       COALESCE(NULLIF(TRIM(CONCAT(COALESCE(u.fname,''),' ',COALESCE(u.lname,''))),''), CONCAT('User ', a.sender_id)) AS customer,
-                       u.locker AS locker
-                FROM cdb_add_order a
-                LEFT JOIN cdb_styles b ON b.id = a.status_courier
-                LEFT JOIN cdb_users u ON u.id = a.sender_id
-                $where
-                ORDER BY customer ASC, a.order_id DESC
-                LIMIT 500");
-foreach ($bind as $k => $v) { $db->bind($k, $v); }
-$db->cdp_execute();
-$rows = $db->cdp_registros() ?: [];
+/** After a delivery/undo, recompute a consolidation's status_courier.
+ *  Delivered (8) only when EVERY package in it is delivered; otherwise, if it
+ *  was previously closed as Delivered, reopen it to In_Warehouse. */
+function wd_sync_consolidation_status(Conexion $db, $cid)
+{
+    $db->cdp_query("SELECT a.status_courier
+                    FROM cdb_consolidate_detail d
+                    INNER JOIN cdb_add_order a ON a.order_id = CAST(d.order_id AS UNSIGNED)
+                    WHERE d.consolidate_id = :cid");
+    $db->bind(':cid', (int) $cid);
+    $db->cdp_execute();
+    $rows = $db->cdp_registros() ?: [];
+    if (!$rows) { return; }
 
-// Group by customer.
-$groups = [];
-foreach ($rows as $r) {
-    $sid = (int) $r->sender_id;
-    if (!isset($groups[$sid])) {
-        $label = trim((string) $r->customer);
-        if ($r->locker) { $label .= ' (' . $r->locker . ')'; }
-        $groups[$sid] = ['label' => $label, 'pkgs' => []];
+    $allDelivered = true;
+    foreach ($rows as $r) {
+        if ((int) $r->status_courier !== CDP_WD_DELIVERED) { $allDelivered = false; break; }
     }
-    $groups[$sid]['pkgs'][] = $r;
+
+    $db->cdp_query("SELECT status_courier FROM cdb_consolidate WHERE consolidate_id = :cid LIMIT 1");
+    $db->bind(':cid', (int) $cid);
+    $db->cdp_execute();
+    $cur = $db->cdp_registro();
+    $curStatus = $cur ? (int) $cur->status_courier : 0;
+
+    if ($allDelivered && $curStatus !== CDP_WD_DELIVERED) {
+        $db->cdp_query("UPDATE cdb_consolidate SET status_courier = :st WHERE consolidate_id = :cid");
+        $db->bind(':st', CDP_WD_DELIVERED);
+        $db->bind(':cid', (int) $cid);
+        $db->cdp_execute();
+    } elseif (!$allDelivered && $curStatus === CDP_WD_DELIVERED) {
+        $db->cdp_query("UPDATE cdb_consolidate SET status_courier = :st WHERE consolidate_id = :cid");
+        $db->bind(':st', CDP_WD_REOPEN);
+        $db->bind(':cid', (int) $cid);
+        $db->cdp_execute();
+    }
 }
 
-$totalPkgs = count($rows);
-$totalCust = count($groups);
-?>
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <div class="text-muted"><b><?php echo $totalPkgs; ?></b> package(s) cleared for delivery &middot; <b><?php echo $totalCust; ?></b> customer(s)</div>
-    <button type="button" class="btn btn-success btn-sm" onclick="cdpWhDeliverSelected();">
-        <i class="mdi mdi-truck-check"></i> Deliver Selected
-    </button>
-</div>
+// ---------------------------------------------------------------------------
+// LIST — consolidation cards (level 1)
+// ---------------------------------------------------------------------------
+if ($action === 'list') {
+    $search = trim((string) ($_REQUEST['search'] ?? ''));
 
-<?php if (!$rows) { ?>
-    <div class="text-center text-muted py-5">
-        <img src="assets/images/alert/ohh_shipment.png" width="130"><br>
-        No packages are cleared for delivery right now.
-    </div>
-<?php } else {
-    foreach ($groups as $sid => $g) {
-        $nos = array_map(function ($p) { return (string) $p->order_no; }, $g['pkgs']);
-        $nosJson = htmlspecialchars(json_encode(array_values($nos)), ENT_QUOTES);
-    ?>
-    <div class="card mb-2 wh-cust-card">
-        <div class="card-header d-flex justify-content-between align-items-center p-2">
-            <div>
-                <input type="checkbox" class="wh-cust-all" onclick="cdpWhToggleCustomer(this);">
-                <b class="ml-1"><?php echo htmlspecialchars($g['label']); ?></b>
-                <span class="badge badge-light ml-1"><?php echo count($g['pkgs']); ?> pkg(s)</span>
+    $where = " WHERE EXISTS (SELECT 1 FROM cdb_consolidate_detail d
+                             INNER JOIN cdb_add_order a ON a.order_id = CAST(d.order_id AS UNSIGNED)
+                             WHERE d.consolidate_id = c.consolidate_id
+                               AND a.fs_cleared_for_delivery = 1 $ownOnly) ";
+    $bind = [];
+    if ($search !== '') {
+        $where .= " AND (CONCAT(COALESCE(c.c_prefix,''),COALESCE(c.c_no,'')) LIKE :q
+                         OR EXISTS (SELECT 1 FROM cdb_consolidate_detail d2
+                                    INNER JOIN cdb_add_order a2 ON a2.order_id = CAST(d2.order_id AS UNSIGNED)
+                                    LEFT JOIN cdb_users u2 ON u2.id = a2.sender_id
+                                    WHERE d2.consolidate_id = c.consolidate_id
+                                      AND (CONCAT(COALESCE(u2.fname,''),' ',COALESCE(u2.lname,'')) LIKE :q
+                                           OR u2.locker LIKE :q
+                                           OR CONCAT(COALESCE(a2.order_prefix,''),COALESCE(a2.order_no,'')) LIKE :q))) ";
+        $bind[':q'] = '%' . $search . '%';
+    }
+
+    $db->cdp_query("SELECT c.consolidate_id, c.c_prefix, c.c_no, c.c_date, c.status_courier
+                    FROM cdb_consolidate c
+                    $where
+                    ORDER BY c.consolidate_id DESC
+                    LIMIT 300");
+    foreach ($bind as $k => $v) { $db->bind($k, $v); }
+    $db->cdp_execute();
+    $consols = $db->cdp_registros() ?: [];
+
+    if (!$consols) {
+        echo '<div class="text-center text-muted py-5">'
+            . '<img src="assets/images/alert/ohh_shipment.png" width="130"><br>'
+            . 'No consolidations have packages cleared for delivery right now.</div>';
+        exit;
+    }
+
+    foreach ($consols as $c) {
+        $cid  = (int) $c->consolidate_id;
+        $no   = htmlspecialchars(($c->c_prefix ?? '') . ($c->c_no ?? ''));
+        $pkgs = wd_consolidation_packages($db, $cid, $ownOnly);
+
+        $total = count($pkgs);
+        $delivered = 0; $ready = 0; $awaiting = 0; $weight = 0.0;
+        $customers = [];
+        foreach ($pkgs as $p) {
+            $weight += (float) $p->total_weight;
+            $customers[(int) $p->sender_id] = true;
+            switch (wd_pkg_state($p, $WD_TERMINAL)) {
+                case 'delivered': $delivered++; break;
+                case 'ready':     $ready++;     break;
+                case 'awaiting':  $awaiting++;  break;
+            }
+        }
+        $custCount = count($customers);
+
+        // Consolidation state chip.
+        if ($total > 0 && $delivered >= $total) {
+            $stateCls = 'wd-chip-done';  $stateTxt = '<i class="mdi mdi-check-all"></i> Delivered';
+        } elseif ($delivered > 0) {
+            $stateCls = 'wd-chip-partial'; $stateTxt = '<i class="mdi mdi-truck-fast"></i> Partially delivered';
+        } elseif ($ready > 0) {
+            $stateCls = 'wd-chip-ready'; $stateTxt = '<i class="mdi mdi-truck-check"></i> Ready to deliver';
+        } else {
+            $stateCls = 'wd-chip-wait'; $stateTxt = '<i class="mdi mdi-lock-clock"></i> Awaiting clearance';
+        }
+        $progCls = ($delivered >= $total && $total > 0) ? 'badge-success' : 'badge-light';
+        ?>
+        <div class="card mb-2 wd-consol-card" data-cid="<?php echo $cid; ?>">
+            <div class="card-header wd-consol-header p-2" onclick="wdToggle(this, event, 'consol')">
+                <i class="mdi mdi-package-variant-closed wd-consol-ico"></i>
+                <b class="wd-mono"><?php echo $no; ?></b>
+                <span class="wd-dim ml-2"><i class="mdi mdi-calendar-blank"></i> <?php echo htmlspecialchars((string) $c->c_date); ?></span>
+                <span class="wd-dim ml-2" title="Sum of package weights"><i class="mdi mdi-weight"></i> <?php echo round($weight, 2); ?> lb</span>
+                <span class="badge <?php echo $progCls; ?> ml-2" title="Packages delivered"><?php echo $delivered; ?>/<?php echo $total; ?> delivered</span>
+                <span class="wd-dim ml-1"><i class="mdi mdi-account-multiple"></i> <?php echo $custCount; ?></span>
+                <span class="wd-spacer"></span>
+                <?php if ($awaiting > 0): ?><span class="wd-chip-wait mr-1" title="Not yet cleared by Accounts"><i class="mdi mdi-lock"></i> <?php echo $awaiting; ?> awaiting</span><?php endif; ?>
+                <span class="<?php echo $stateCls; ?>"><?php echo $stateTxt; ?></span>
+                <i class="mdi mdi-chevron-down wd-caret ml-2"></i>
             </div>
-            <button type="button" class="btn btn-outline-success btn-sm" data-nos='<?php echo $nosJson; ?>' onclick="cdpWhDeliverCustomer(this);">
-                <i class="mdi mdi-truck-check"></i> Deliver All
-            </button>
+            <div class="wd-consol-body" data-cid="<?php echo $cid; ?>" style="display:none;">
+                <div class="card-body p-2 wd-customers" data-cid="<?php echo $cid; ?>" data-loaded="0">
+                    <div class="text-muted small">Loading customers…</div>
+                </div>
+            </div>
         </div>
-        <div class="card-body p-2">
-            <table class="table table-sm mb-0">
-                <tbody>
-                <?php foreach ($g['pkgs'] as $p):
-                    $tracking = ($p->order_prefix ?? '') . $p->order_no;
-                    $color = $p->status_color ?: '#6c757d';
+        <?php
+    }
+    exit;
+}
+
+// ---------------------------------------------------------------------------
+// CUSTOMERS — customer cards for one consolidation (level 2)
+// ---------------------------------------------------------------------------
+if ($action === 'customers') {
+    $cid  = (int) ($_REQUEST['consolidate_id'] ?? 0);
+    $pkgs = wd_consolidation_packages($db, $cid, $ownOnly);
+    if (!$pkgs) { echo '<div class="text-muted small">No packages.</div>'; exit; }
+
+    // Group by customer.
+    $groups = [];
+    foreach ($pkgs as $p) {
+        $sid = (int) $p->sender_id;
+        if (!isset($groups[$sid])) {
+            $label = trim((string) $p->customer);
+            if ($p->locker) { $label .= ' (' . $p->locker . ')'; }
+            $groups[$sid] = ['label' => $label, 'pkgs' => []];
+        }
+        $groups[$sid]['pkgs'][] = $p;
+    }
+
+    foreach ($groups as $sid => $g) {
+        $total = count($g['pkgs']);
+        $delivered = 0; $ready = 0; $awaiting = 0;
+        foreach ($g['pkgs'] as $p) {
+            switch (wd_pkg_state($p, $WD_TERMINAL)) {
+                case 'delivered': $delivered++; break;
+                case 'ready':     $ready++;     break;
+                case 'awaiting':  $awaiting++;  break;
+            }
+        }
+
+        // Avatar initials.
+        $initials = '';
+        foreach (preg_split('/\s+/', trim($g['label'])) as $w) {
+            if ($w !== '' && mb_strlen($initials) < 2) { $initials .= mb_strtoupper(mb_substr($w, 0, 1)); }
+        }
+        if ($initials === '') { $initials = '?'; }
+
+        $badgeCls = ($total > 0 && $delivered >= $total) ? 'badge-success' : 'badge-light';
+        ?>
+        <div class="card mb-2 wd-cust-card" data-cid="<?php echo $cid; ?>" data-sid="<?php echo (int) $sid; ?>">
+            <div class="card-header wd-cust-header p-2" onclick="wdToggle(this, event, 'cust')">
+                <span class="wd-avatar"><?php echo htmlspecialchars($initials); ?></span>
+                <b><?php echo htmlspecialchars($g['label']); ?></b>
+                <span class="badge <?php echo $badgeCls; ?> ml-2"><?php echo $delivered; ?>/<?php echo $total; ?> delivered</span>
+                <?php if ($awaiting > 0): ?><span class="wd-chip-wait ml-1"><i class="mdi mdi-lock"></i> <?php echo $awaiting; ?> awaiting</span><?php endif; ?>
+                <span class="wd-spacer"></span>
+                <?php if ($canDeliverUser && $ready > 0): ?>
+                    <button type="button" class="btn btn-sm wd-btn-deliver wd-actions"
+                            data-cid="<?php echo $cid; ?>" data-sid="<?php echo (int) $sid; ?>"
+                            data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
+                            data-ready="<?php echo $ready; ?>"
+                            onclick="event.stopPropagation(); wdDeliverUser(this);">
+                        <i class="mdi mdi-truck-check"></i> Deliver All (<?php echo $ready; ?>)
+                    </button>
+                <?php endif; ?>
+                <i class="mdi mdi-chevron-down wd-caret ml-2"></i>
+            </div>
+            <div class="wd-cust-body" data-cid="<?php echo $cid; ?>" data-sid="<?php echo (int) $sid; ?>" style="display:none;">
+                <div class="card-body p-2 wd-packages" data-cid="<?php echo $cid; ?>" data-sid="<?php echo (int) $sid; ?>" data-loaded="0">
+                    <div class="text-muted small">Loading packages…</div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+    exit;
+}
+
+// ---------------------------------------------------------------------------
+// PACKAGES — package cards + items for one customer (levels 3 & 4)
+// ---------------------------------------------------------------------------
+if ($action === 'packages') {
+    $cid = (int) ($_REQUEST['consolidate_id'] ?? 0);
+    $sid = (int) ($_REQUEST['sender_id'] ?? 0);
+    $all = wd_consolidation_packages($db, $cid, $ownOnly);
+    $pkgs = array_values(array_filter($all, function ($p) use ($sid) { return (int) $p->sender_id === $sid; }));
+    if (!$pkgs) { echo '<div class="text-muted small">No packages.</div>'; exit; }
+
+    foreach ($pkgs as $p) {
+        $oid     = (int) $p->order_id;
+        $no      = (string) $p->order_no;
+        $track   = htmlspecialchars(($p->order_prefix ?? '') . $p->order_no);
+        $state   = wd_pkg_state($p, $WD_TERMINAL);
+        $stColor = $p->status_color ?: '#6c757d';
+        $stName  = htmlspecialchars(str_replace('_', ' ', (string) $p->status_name));
+
+        // Items (level 4).
+        $db->cdp_query("SELECT order_item_description, order_item_quantity, order_item_weight, order_item_weight_group
+                        FROM cdb_add_order_item WHERE order_id = :oid ORDER BY order_item_id ASC");
+        $db->bind(':oid', $oid);
+        $db->cdp_execute();
+        $items = $db->cdp_registros() ?: [];
+        ?>
+        <div class="card mb-1 wd-pkg-card wd-state-<?php echo $state; ?>" data-oid="<?php echo $oid; ?>" data-cid="<?php echo $cid; ?>" data-sid="<?php echo $sid; ?>">
+            <div class="card-header wd-pkg-header p-2" onclick="wdToggle(this, event, 'pkg')">
+                <span class="wd-level-chip wd-chip-pkg">PACKAGE</span>
+                <b class="wd-mono ml-1"><?php echo $track; ?></b>
+                <span class="badge ml-2" style="background:<?php echo htmlspecialchars($stColor); ?>;color:#fff;"><?php echo $stName; ?></span>
+                <?php
+                if ($state === 'delivered') { echo '<span class="wd-chip-done ml-1"><i class="mdi mdi-check-all"></i> Delivered</span>'; }
+                elseif ($state === 'ready')  { echo '<span class="wd-chip-ready ml-1"><i class="mdi mdi-truck-check"></i> Cleared — ready</span>'; }
+                elseif ($state === 'awaiting') { echo '<span class="wd-chip-wait ml-1"><i class="mdi mdi-lock"></i> Awaiting clearance</span>'; }
                 ?>
-                    <tr>
-                        <td style="width:28px;"><input type="checkbox" class="wh-pkg" value="<?php echo htmlspecialchars((string) $p->order_no); ?>"></td>
-                        <td><b style="font-family:SFMono-Regular,Consolas,monospace;"><?php echo htmlspecialchars($tracking); ?></b></td>
-                        <td><span class="badge" style="background:<?php echo htmlspecialchars($color); ?>;color:#fff;"><?php echo htmlspecialchars(str_replace('_', ' ', (string) $p->status_name)); ?></span></td>
-                        <td class="text-right">
-                            <button type="button" class="btn btn-outline-success btn-xs" data-no="<?php echo htmlspecialchars((string) $p->order_no); ?>" onclick="cdpWhDeliverOne(this);">Deliver</button>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
+                <span class="wd-dim ml-2"><i class="mdi mdi-weight"></i> <?php echo round((float) $p->total_weight, 2); ?> lb</span>
+                <span class="wd-spacer"></span>
+                <?php
+                if ($state === 'ready' && $canDeliverPkg) { ?>
+                    <button type="button" class="btn btn-sm wd-btn-deliver wd-actions"
+                            data-no="<?php echo htmlspecialchars($no, ENT_QUOTES); ?>"
+                            data-track="<?php echo $track; ?>"
+                            data-cid="<?php echo $cid; ?>" data-sid="<?php echo $sid; ?>"
+                            onclick="event.stopPropagation(); wdDeliverOne(this);">
+                        <i class="mdi mdi-truck-check"></i> Deliver
+                    </button>
+                <?php } elseif ($state === 'delivered' && $canUndo) { ?>
+                    <button type="button" class="btn btn-sm btn-outline-danger wd-actions"
+                            data-no="<?php echo htmlspecialchars($no, ENT_QUOTES); ?>"
+                            data-track="<?php echo $track; ?>"
+                            data-cid="<?php echo $cid; ?>" data-sid="<?php echo $sid; ?>"
+                            onclick="event.stopPropagation(); wdUndoOne(this);">
+                        <i class="mdi mdi-undo-variant"></i> Undo
+                    </button>
+                <?php } elseif ($state === 'awaiting') { ?>
+                    <span class="text-muted small" title="Accounts has not cleared this package for delivery yet"><i class="mdi mdi-lock"></i> Awaiting clearance</span>
+                <?php } ?>
+                <i class="mdi mdi-chevron-down wd-caret ml-2"></i>
+            </div>
+            <div class="wd-pkg-body" style="display:none;">
+                <div class="card-body p-2">
+                    <?php if (!$items): ?>
+                        <div class="text-muted small">No item details recorded for this package.</div>
+                    <?php else: ?>
+                    <table class="table table-sm wd-item-table mb-0">
+                        <thead><tr><th>Item</th><th class="text-center">Qty</th><th class="text-right">Weight (lb)</th></tr></thead>
+                        <tbody>
+                        <?php foreach ($items as $it): ?>
+                            <tr>
+                                <td><span class="wd-level-chip wd-chip-item">ITEM</span> <?php echo htmlspecialchars((string) ($it->order_item_description ?: '—')); ?></td>
+                                <td class="text-center"><?php echo (int) $it->order_item_quantity; ?></td>
+                                <td class="text-right"><?php echo round((float) $it->order_item_weight, 2); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
-    </div>
-    <?php }
-} ?>
+        <?php
+    }
+    exit;
+}
+
+// ---------------------------------------------------------------------------
+// Write actions
+// ---------------------------------------------------------------------------
+header('Content-Type: application/json; charset=UTF-8');
+
+/** Deliver a single order (by order_no), enforcing clearance. Returns bool. */
+function wd_do_deliver(Conexion $db, $no, $uid, array $terminal)
+{
+    $row = cdp_getCourierMultiple($no);
+    if (!$row) { return ['ok' => false, 'reason' => 'not_found']; }
+    if ((int) $row->status_courier === CDP_WD_DELIVERED) { return ['ok' => false, 'reason' => 'already']; }
+    if ((int) ($row->fs_cleared_for_delivery ?? 0) !== 1) { return ['ok' => false, 'reason' => 'uncleared']; }
+    if (in_array((int) $row->status_courier, $terminal, true)) { return ['ok' => false, 'reason' => 'terminal']; }
+
+    cdp_updateStatusCourierMultiple($no, CDP_WD_DELIVERED);
+    cdp_freeConsolidatedItem((int) $row->order_id);
+    $tracking = ($row->order_prefix ?? '') . $no;
+    if (function_exists('cdp_updateShipTrackingMultiple')) {
+        cdp_updateShipTrackingMultiple($tracking, CDP_WD_DELIVERED, 'Delivered via Warehouse Delivery', $row->origin_off ?? 0, $uid);
+    }
+    return ['ok' => true, 'order_id' => (int) $row->order_id];
+}
+
+if ($action === 'deliver_package') {
+    if (!$canDeliverPkg) { echo json_encode(['ok' => false, 'message' => 'You do not have permission to deliver packages.']); exit; }
+    $no = trim((string) ($_POST['order_no'] ?? ''));
+    if ($no === '') { echo json_encode(['ok' => false, 'message' => 'No package specified.']); exit; }
+
+    $res = wd_do_deliver($db, $no, $uid, $WD_TERMINAL);
+    if (!$res['ok']) {
+        $msg = ['already' => 'That package is already delivered.',
+                'uncleared' => 'That package is not cleared for delivery.',
+                'terminal' => 'That package can no longer be delivered.',
+                'not_found' => 'Package not found.'][$res['reason']] ?? 'Could not deliver.';
+        echo json_encode(['ok' => false, 'message' => $msg]);
+        exit;
+    }
+    $cid = (int) ($_POST['consolidate_id'] ?? 0);
+    if ($cid) { wd_sync_consolidation_status($db, $cid); }
+    echo json_encode(['ok' => true, 'delivered' => 1]);
+    exit;
+}
+
+if ($action === 'deliver_user') {
+    if (!$canDeliverUser) { echo json_encode(['ok' => false, 'message' => 'You do not have permission to deliver all packages for a customer.']); exit; }
+    $cid = (int) ($_POST['consolidate_id'] ?? 0);
+    $sid = (int) ($_POST['sender_id'] ?? 0);
+    if (!$cid || !$sid) { echo json_encode(['ok' => false, 'message' => 'Missing consolidation or customer.']); exit; }
+
+    $all  = wd_consolidation_packages($db, $cid, $ownOnly);
+    $delivered = 0; $skipped = 0;
+    foreach ($all as $p) {
+        if ((int) $p->sender_id !== $sid) { continue; }
+        if (wd_pkg_state($p, $WD_TERMINAL) !== 'ready') { continue; } // only cleared, undelivered
+        $r = wd_do_deliver($db, (string) $p->order_no, $uid, $WD_TERMINAL);
+        if ($r['ok']) { $delivered++; } else { $skipped++; }
+    }
+    wd_sync_consolidation_status($db, $cid);
+    echo json_encode(['ok' => true, 'delivered' => $delivered, 'skipped' => $skipped]);
+    exit;
+}
+
+if ($action === 'undo_package') {
+    if (!$canUndo) { echo json_encode(['ok' => false, 'message' => 'You do not have permission to undo deliveries.']); exit; }
+    $no = trim((string) ($_POST['order_no'] ?? ''));
+    if ($no === '') { echo json_encode(['ok' => false, 'message' => 'No package specified.']); exit; }
+
+    $row = cdp_getCourierMultiple($no);
+    if (!$row) { echo json_encode(['ok' => false, 'message' => 'Package not found.']); exit; }
+    if ((int) $row->status_courier !== CDP_WD_DELIVERED) {
+        echo json_encode(['ok' => false, 'message' => 'That package is not marked delivered.']);
+        exit;
+    }
+
+    cdp_updateStatusCourierMultiple($no, CDP_WD_REOPEN);
+    $tracking = ($row->order_prefix ?? '') . $no;
+    if (function_exists('cdp_updateShipTrackingMultiple')) {
+        cdp_updateShipTrackingMultiple($tracking, CDP_WD_REOPEN, 'Delivery reversed via Warehouse Delivery', $row->origin_off ?? 0, $uid);
+    }
+    $cid = (int) ($_POST['consolidate_id'] ?? 0);
+    if ($cid) { wd_sync_consolidation_status($db, $cid); }
+    echo json_encode(['ok' => true, 'reopened' => 1]);
+    exit;
+}
+
+echo json_encode(['ok' => false, 'message' => 'Unknown action.']);

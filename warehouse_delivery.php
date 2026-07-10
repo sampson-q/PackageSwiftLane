@@ -10,7 +10,7 @@ $core = new Core();
 
 if ($user->cdp_loginCheck() == true) {
 
-    if (!$user->cdp_hasPermission('deliver_shipment')) {
+    if (!$user->cdp_hasPermission('view_warehouse_delivery')) {
         header("location: error403.php");
         exit;
     }
