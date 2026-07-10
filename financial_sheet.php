@@ -12,7 +12,7 @@ if ($user->cdp_loginCheck() == true) {
 
     $permissions = $user->cdp_getUserPermissions();
 
-    if (!$user->cdp_hasPermission('view_shipment_by_agencies')) {
+    if (!$user->cdp_hasPermission('financial_sheet')) {
         header("location: error403.php");
         exit;
     }
