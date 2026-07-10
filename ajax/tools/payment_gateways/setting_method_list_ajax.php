@@ -106,6 +106,9 @@ if ($numrows > 0) { ?>
 
 						<?php } else if ($row->id == 5) { ?>
 							<a href="payment_mode_wire_edit.php?id=5" data-toggle="tooltip" data-original-title="<?php echo $lang['tools-methodpay16'] ?>"><i class="ti-pencil" aria-hidden="true"></i></a>
+
+						<?php } else if ($row->id == 6) { ?>
+							<a href="payment_mode_hubtel_edit.php?id=6" data-toggle="tooltip" data-original-title="<?php echo $lang['tools-methodpay16'] ?>"><i class="ti-pencil" aria-hidden="true"></i></a>
 						<?php } ?>
 					</td>
 

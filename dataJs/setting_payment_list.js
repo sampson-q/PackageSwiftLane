@@ -599,6 +599,87 @@ $(document).ready(function() {
 
 
 
+//update payment hubtel
+$(document).ready(function () {
+    $('.required').on('input', function () {
+        $(this).toggleClass('highlight', $(this).val() === '');
+    });
+
+    $("#update_data_hubtel").submit(function (event) {
+        event.preventDefault();
+
+        var data = new FormData(this);
+
+        var camposVacios = [];
+        $('.required').each(function () {
+            if ($(this).val() === '') { camposVacios.push($(this).attr('id')); }
+        });
+        $('.required').removeClass('highlight');
+        if (camposVacios.length > 0) {
+            Swal.fire({
+                type: 'error',
+                title: message_error_form21,
+                text: message_error_form22,
+                confirmButtonColor: '#336aea',
+                showConfirmButton: true
+            });
+            camposVacios.forEach(function (campo) { $('#' + campo).addClass('highlight'); });
+            return;
+        }
+
+        $.ajax({
+            url: "./ajax/tools/payment_gateways/setting_payment_hubtel_list_ajax.php",
+            type: 'POST',
+            data: data,
+            contentType: false,
+            cache: false,
+            processData: false,
+            beforeSend: function () {
+                Swal.fire({
+                    title: message_error_form6,
+                    text: message_error_form14,
+                    type: 'info',
+                    showCancelButton: false,
+                    showConfirmButton: false,
+                    allowOutsideClick: false,
+                    onBeforeOpen: () => { Swal.showLoading(); }
+                });
+            },
+            success: function (response) {
+                Swal.close();
+                if (response.status === 'success') {
+                    Swal.fire({
+                        type: 'success',
+                        title: message_error_form15,
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    }).then(() => { window.location.href = 'payment_mode_list.php'; });
+                } else {
+                    Swal.fire({
+                        type: 'error',
+                        title: message_error_form19,
+                        text: response.message || message_error_form17,
+                        confirmButtonColor: '#336aea',
+                        showConfirmButton: true
+                    });
+                }
+            },
+            error: function () {
+                Swal.close();
+                Swal.fire({
+                    type: 'error',
+                    title: message_error_form18,
+                    text: message_error_form19,
+                    confirmButtonColor: '#336aea',
+                    showConfirmButton: true
+                });
+            }
+        });
+    });
+});
+
+
 $(".bt-switch input[type='checkbox'], .bt-switch input[type='radio']").bootstrapSwitch();
 var radioswitch = function () {
 	var bt = function () {
