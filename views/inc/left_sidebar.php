@@ -612,21 +612,31 @@
 					</li>
 					<?php } ?>
                     <li class="sidebar-item">----------------------------------------</li>
-                    <?php if ($user->cdp_hasPermission('view_general_reports')) { ?>
-					<!-- Module general report-->	
+                    <?php if ($user->cdp_hasPermission('view_general_reports') || $user->cdp_hasPermission('view_warehouse_delivery')) { ?>
+					<!-- Module Warehouse -->
 					<li class="sidebar-item">
-						<a class="sidebar-link waves-effect waves-dark" href="warehouse.php" aria-expanded="false">
-							<iconify-icon icon="mdi:warehouse" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> <?php echo 'Warehouse View' ?></span>
+						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
+							<iconify-icon icon="mdi:warehouse" class="fs-5 m-r-5 m-l-5"></iconify-icon>
+							<span class="hide-menu"> Warehouse </span>
 						</a>
-					</li>
-					<?php } ?>
-					<?php if ($user->cdp_hasPermission('deliver_shipment')) { ?>
-					<li class="sidebar-item">
-						<a class="sidebar-link waves-effect waves-dark" href="warehouse_delivery.php" aria-expanded="false">
-							<iconify-icon icon="mdi:truck-delivery" class="fs-5"></iconify-icon>
-							<span class="hide-menu"> Warehouse Delivery </span>
-						</a>
+						<ul aria-expanded="false" class="collapse first-level">
+							<?php if ($user->cdp_hasPermission('view_general_reports')) { ?>
+							<li class="sidebar-item">
+								<a class="sidebar-link waves-effect waves-dark" href="warehouse.php" aria-expanded="false">
+									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"> Warehouse View </span>
+								</a>
+							</li>
+							<?php } ?>
+							<?php if ($user->cdp_hasPermission('view_warehouse_delivery')) { ?>
+							<li class="sidebar-item">
+								<a class="sidebar-link waves-effect waves-dark" href="warehouse_delivery.php" aria-expanded="false">
+									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"> Warehouse Delivery </span>
+								</a>
+							</li>
+							<?php } ?>
+						</ul>
 					</li>
 					<?php } ?>
 
