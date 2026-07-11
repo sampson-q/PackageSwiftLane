@@ -45,27 +45,31 @@ $modules = $db->cdp_registros() ?: [];
                     <!-- Add form -->
                     <div class="col-12 mb-3">
                         <div class="card"><div class="card-body">
-                            <h5 class="card-title">Add Permission</h5>
+                            <h5 class="card-title mb-3">Add Permission</h5>
                             <form id="pa_add_form">
-                                <div class="form-group">
-                                    <label>Name <small class="text-muted">(code key)</small></label>
-                                    <input type="text" class="form-control" id="pa_name" placeholder="e.g. fs_export_pdf" maxlength="50">
-                                    <small class="text-muted">Lowercase letters, digits, underscores. Starts with a letter.</small>
+                                <div class="form-row align-items-end">
+                                    <div class="form-group col-md-3 mb-2">
+                                        <label class="mb-1">Name <small class="text-muted">(code key)</small></label>
+                                        <input type="text" class="form-control" id="pa_name" placeholder="e.g. fs_export_pdf" maxlength="50">
+                                    </div>
+                                    <div class="form-group col-md-3 mb-2">
+                                        <label class="mb-1">Module</label>
+                                        <select class="form-control custom-select" id="pa_module">
+                                            <option value="">— choose a module —</option>
+                                            <?php foreach ($modules as $m): ?>
+                                                <option value="<?php echo (int) $m->id; ?>"><?php echo htmlspecialchars($m->module_name, ENT_QUOTES, 'UTF-8'); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-4 mb-2">
+                                        <label class="mb-1">Description</label>
+                                        <input type="text" class="form-control" id="pa_desc" placeholder="What this permission protects" maxlength="255">
+                                    </div>
+                                    <div class="form-group col-md-2 mb-2">
+                                        <button type="submit" class="btn btn-danger btn-block">Add</button>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label>Module</label>
-                                    <select class="form-control custom-select" id="pa_module">
-                                        <option value="">— choose a module —</option>
-                                        <?php foreach ($modules as $m): ?>
-                                            <option value="<?php echo (int) $m->id; ?>"><?php echo htmlspecialchars($m->module_name, ENT_QUOTES, 'UTF-8'); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Description</label>
-                                    <input type="text" class="form-control" id="pa_desc" placeholder="What this permission protects" maxlength="255">
-                                </div>
-                                <button type="submit" class="btn btn-danger btn-block">Add Permission</button>
+                                <small class="text-muted">Name: lowercase letters, digits and underscores; starts with a letter.</small>
                             </form>
                             <div class="alert alert-info mt-3 mb-0" style="font-size:12.5px;">
                                 Adding a permission only makes it <b>assignable</b>. To make it actually restrict something, a developer must add a <code>require_permission()</code> / <code>cdp_hasPermission()</code> check in code.
