@@ -11,7 +11,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <!-- Favicon icon -->
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/uploads/1643022582_FAV.png">
     <title>ERROR 403</title>
     <!-- Custom CSS -->
     <link href="assets/template/dist/css/style.min.css" rel="stylesheet">

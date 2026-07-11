@@ -64,6 +64,7 @@ $sender_data = $db->cdp_registro();
     <meta property="og:image" content="<?php echo htmlspecialchars($core->og_image, ENT_QUOTES, 'UTF-8'); ?>">
     <!-- Favicon icon -->
     <title>Charge - #<?php echo $row->id_charge; ?></title>
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
 
     <link type='text/css' href='assets/custom_dependencies/print.css' rel='stylesheet' />
 

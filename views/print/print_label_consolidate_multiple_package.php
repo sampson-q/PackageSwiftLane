@@ -6,6 +6,7 @@
 	<link type='text/css' href='assets/custom_dependencies/print_consolidate.css' rel='stylesheet' />
 
 	<title><?php echo $lang['inv-label9'] ?></title>
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
 
 </head>
 

@@ -91,6 +91,7 @@ $address_order = $db->cdp_registro();
     <!-- Favicon icon -->
 
     <title>Print Invoice - <?php echo $row->order_prefix . $row->order_no; ?></title>
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
     <link type='text/css' href='assets/custom_dependencies/print.css' rel='stylesheet' />
 
     <link rel="stylesheet" href="<?= cdp_asset('assets/css/input-css/intlTelInput.css') ?>">

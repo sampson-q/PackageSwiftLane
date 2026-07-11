@@ -150,6 +150,7 @@ if ($track != null) {
 	<!-- iOS Safari -->
 	<meta name="apple-mobile-web-app-status-bar-style" content="#fff">
 	<title>Track Shipment Result | <?php echo $core->site_name; ?></title>
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
 	<!-- favicon -->
     <!-- Bootstrap -->
     <link href="assets/css_main_deprixa/main_deprixa/css/bootstrap.min.css" rel="stylesheet" type="text/css" />

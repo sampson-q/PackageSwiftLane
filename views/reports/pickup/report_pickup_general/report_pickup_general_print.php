@@ -136,6 +136,7 @@ $fecha = str_replace('-', '/', $fecha);
     <link href="assets/custom_dependencies/print_report.css" rel="stylesheet">
 
     <title> <?php echo $lang['report-text66'] ?></title>
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
 
     <style type="text/css">
         table {

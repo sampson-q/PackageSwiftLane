@@ -5,7 +5,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<!-- Favicon icon -->
-	<link rel="icon" type="image/png" sizes="16x16" href="assets/uploads/favicon.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
 	<title><?php echo $lang['print-text12'] ?></title>
 	<link type='text/css' href='<?= cdp_asset('assets/css/label_custom.css') ?>' rel='stylesheet' />
 

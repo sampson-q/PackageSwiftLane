@@ -141,7 +141,7 @@ if ($row->status_invoice == 1) {
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<!-- Favicon icon -->
-	<link rel="icon" type="image/png" sizes="16x16" href="assets/uploads/favicon.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
 	<title><?php echo $lang['status-ship2'] ?> - <?php echo $row->order_prefix . $row->order_no; ?></title>
 	<link type='text/css' href='<?= cdp_asset('assets/css/label_custom.css') ?>' rel='stylesheet' />
 	<link type='text/css' href="assets/custom_dependencies/print_pacakges_label.css" rel='stylesheet' />

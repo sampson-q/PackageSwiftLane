@@ -69,6 +69,7 @@ $address_order = $db->cdp_registro();
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<title><?php echo $lang['status-ship2'] ?> - <?php echo $row_order->c_prefix . $row_order->c_no; ?></title>
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
 	<link type='text/css' href='assets/custom_dependencies/print_consolidate.css' rel='stylesheet' />
 
 </head>

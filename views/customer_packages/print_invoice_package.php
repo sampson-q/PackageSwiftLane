@@ -85,7 +85,7 @@ $address_order = $db->cdp_registro();
     <meta property="og:url" content="<?php echo htmlspecialchars($core->og_url, ENT_QUOTES, 'UTF-8'); ?>">
     <meta property="og:image" content="<?php echo htmlspecialchars($core->og_image, ENT_QUOTES, 'UTF-8'); ?>">
     <!-- Favicon icon -->
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/uploads/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
     <link type='text/css' href='assets/custom_dependencies/print.css' rel='stylesheet' />
 
     <link rel="stylesheet" href="<?= cdp_asset('assets/css/input-css/intlTelInput.css') ?>">

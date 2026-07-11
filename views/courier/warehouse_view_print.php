@@ -71,6 +71,7 @@ $data = $db->cdp_registros();
     <meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo 'Warehouse'; ?> | <?php echo $core->site_name; ?></title>
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
     <link href="assets/custom_dependencies/print_report.css" rel="stylesheet">
     <style type="text/css">
         table {

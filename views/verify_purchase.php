@@ -38,7 +38,7 @@ $api = new License2l6aspi3ekdz14bfnxwtugjycm05hqcdpcoddingproV75(); // Initializ
         <meta name="author" content="Jaomweb">
         <meta name="description" content="">
         <!-- favicon -->
-         <link rel="icon" type="image/png" sizes="16x16" href="assets/uploads/1657300911_favicon.png">
+         <link rel="icon" type="image/png" sizes="16x16" href="assets/uploads/1643022582_FAV.png">
         <!-- CSS only -->
         <link rel="stylesheet" href="assets/custom_dependencies/css/bootstrap.min.css">
         <link rel="stylesheet" href="assets/custom_dependencies/css/bootstrap-icons.css">
