@@ -25,6 +25,12 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once("../../helpers/querys.php");
+// PHPMailer MUST be loaded before anything that can call cdp_sendTemplateEmail
+// (the delivery notification), or the process crashes silently. WhatsApp
+// service powers the "your package was delivered" message.
+require_once(__DIR__ . '/../../helpers/phpmailer/class.phpmailer.php');
+require_once(__DIR__ . '/../../helpers/phpmailer/class.smtp.php');
+require_once(__DIR__ . '/../notify_whatsapp/api_whatsapp_service_v2.php');
 require_login();
 require_permission('view_warehouse_delivery');
 
@@ -40,6 +46,7 @@ $WD_TERMINAL = [15, 16, 21, 27, 35]; // Picked up, Not Picked Up, Cancelled, Ret
 
 $db       = new Conexion;
 $user     = new User;
+$core     = new Core;
 $userData = $user->cdp_getUserData();
 $uid      = (int) ($userData->id ?? ($_SESSION['userid'] ?? 0));
 
@@ -124,6 +131,41 @@ function wd_sync_consolidation_status(Conexion $db, $cid)
     }
 }
 
+/** Consolidation delivery summary as ready-to-inject header HTML fragments
+ *  (progress badge + right-side awaiting/state chips). Keeps the single-
+ *  consolidation page header in sync after a deliver/undo without a reload. */
+function wd_consol_summary(Conexion $db, $cid, array $terminal, $ownOnly)
+{
+    $pkgs = wd_consolidation_packages($db, $cid, $ownOnly);
+    $total = count($pkgs);
+    $delivered = 0; $ready = 0; $awaiting = 0;
+    foreach ($pkgs as $p) {
+        switch (wd_pkg_state($p, $terminal)) {
+            case 'delivered': $delivered++; break;
+            case 'ready':     $ready++;     break;
+            case 'awaiting':  $awaiting++;  break;
+        }
+    }
+    if ($total > 0 && $delivered >= $total) {
+        $stateCls = 'wd-chip-done';    $stateTxt = '<i class="mdi mdi-check-all"></i> Delivered';
+    } elseif ($delivered > 0) {
+        $stateCls = 'wd-chip-partial'; $stateTxt = '<i class="mdi mdi-truck-fast"></i> Partially Delivered';
+    } elseif ($ready > 0) {
+        $stateCls = 'wd-chip-ready';   $stateTxt = '<i class="mdi mdi-truck-check"></i> Ready to Deliver';
+    } else {
+        $stateCls = 'wd-chip-wait';    $stateTxt = '<i class="mdi mdi-lock-clock"></i> Awaiting Clearance';
+    }
+    $progCls = ($delivered >= $total && $total > 0) ? 'badge-success' : 'badge-light';
+
+    $progHtml = '<span class="badge ' . $progCls . ' ml-2" title="Packages delivered">'
+        . $delivered . '/' . $total . ' Delivered</span>';
+    $rightHtml = ($awaiting > 0
+        ? '<span class="wd-chip-wait mr-1" title="Not yet cleared by Accounts"><i class="mdi mdi-lock"></i> ' . $awaiting . ' Awaiting</span>'
+        : '') . '<span class="' . $stateCls . '">' . $stateTxt . '</span>';
+
+    return ['prog_html' => $progHtml, 'right_html' => $rightHtml];
+}
+
 // ---------------------------------------------------------------------------
 // LIST — consolidation cards (level 1)
 // ---------------------------------------------------------------------------
@@ -186,31 +228,28 @@ if ($action === 'list') {
         if ($total > 0 && $delivered >= $total) {
             $stateCls = 'wd-chip-done';  $stateTxt = '<i class="mdi mdi-check-all"></i> Delivered';
         } elseif ($delivered > 0) {
-            $stateCls = 'wd-chip-partial'; $stateTxt = '<i class="mdi mdi-truck-fast"></i> Partially delivered';
+            $stateCls = 'wd-chip-partial'; $stateTxt = '<i class="mdi mdi-truck-fast"></i> Partially Delivered';
         } elseif ($ready > 0) {
-            $stateCls = 'wd-chip-ready'; $stateTxt = '<i class="mdi mdi-truck-check"></i> Ready to deliver';
+            $stateCls = 'wd-chip-ready'; $stateTxt = '<i class="mdi mdi-truck-check"></i> Ready to Deliver';
         } else {
-            $stateCls = 'wd-chip-wait'; $stateTxt = '<i class="mdi mdi-lock-clock"></i> Awaiting clearance';
+            $stateCls = 'wd-chip-wait'; $stateTxt = '<i class="mdi mdi-lock-clock"></i> Awaiting Clearance';
         }
         $progCls = ($delivered >= $total && $total > 0) ? 'badge-success' : 'badge-light';
         ?>
         <div class="card mb-2 wd-consol-card" data-cid="<?php echo $cid; ?>">
-            <div class="card-header wd-consol-header p-2" onclick="wdToggle(this, event, 'consol')">
+            <div class="card-header wd-consol-header wd-link p-2"
+                 onclick="window.location.href = 'warehouse_delivery_consolidation.php?id=<?php echo $cid; ?>'"
+                 title="Open this consolidation">
                 <i class="mdi mdi-package-variant-closed wd-consol-ico"></i>
                 <b class="wd-mono"><?php echo $no; ?></b>
                 <span class="wd-dim ml-2"><i class="mdi mdi-calendar-blank"></i> <?php echo htmlspecialchars((string) $c->c_date); ?></span>
                 <span class="wd-dim ml-2" title="Sum of package weights"><i class="mdi mdi-weight"></i> <?php echo round($weight, 2); ?> lb</span>
-                <span class="badge <?php echo $progCls; ?> ml-2" title="Packages delivered"><?php echo $delivered; ?>/<?php echo $total; ?> delivered</span>
+                <span class="badge <?php echo $progCls; ?> ml-2" title="Packages delivered"><?php echo $delivered; ?>/<?php echo $total; ?> Delivered</span>
                 <span class="wd-dim ml-1"><i class="mdi mdi-account-multiple"></i> <?php echo $custCount; ?></span>
                 <span class="wd-spacer"></span>
-                <?php if ($awaiting > 0): ?><span class="wd-chip-wait mr-1" title="Not yet cleared by Accounts"><i class="mdi mdi-lock"></i> <?php echo $awaiting; ?> awaiting</span><?php endif; ?>
+                <?php if ($awaiting > 0): ?><span class="wd-chip-wait mr-1" title="Not yet cleared by Accounts"><i class="mdi mdi-lock"></i> <?php echo $awaiting; ?> Awaiting</span><?php endif; ?>
                 <span class="<?php echo $stateCls; ?>"><?php echo $stateTxt; ?></span>
-                <i class="mdi mdi-chevron-down wd-caret ml-2"></i>
-            </div>
-            <div class="wd-consol-body" data-cid="<?php echo $cid; ?>" style="display:none;">
-                <div class="card-body p-2 wd-customers" data-cid="<?php echo $cid; ?>" data-loaded="0">
-                    <div class="text-muted small">Loading customers…</div>
-                </div>
+                <i class="mdi mdi-chevron-right wd-caret ml-2"></i>
             </div>
         </div>
         <?php
@@ -262,8 +301,8 @@ if ($action === 'customers') {
             <div class="card-header wd-cust-header p-2" onclick="wdToggle(this, event, 'cust')">
                 <span class="wd-avatar"><?php echo htmlspecialchars($initials); ?></span>
                 <b><?php echo htmlspecialchars($g['label']); ?></b>
-                <span class="badge <?php echo $badgeCls; ?> ml-2"><?php echo $delivered; ?>/<?php echo $total; ?> delivered</span>
-                <?php if ($awaiting > 0): ?><span class="wd-chip-wait ml-1"><i class="mdi mdi-lock"></i> <?php echo $awaiting; ?> awaiting</span><?php endif; ?>
+                <span class="badge <?php echo $badgeCls; ?> ml-2"><?php echo $delivered; ?>/<?php echo $total; ?> Delivered</span>
+                <?php if ($awaiting > 0): ?><span class="wd-chip-wait ml-1"><i class="mdi mdi-lock"></i> <?php echo $awaiting; ?> Awaiting</span><?php endif; ?>
                 <span class="wd-spacer"></span>
                 <?php if ($canDeliverUser && $ready > 0): ?>
                     <button type="button" class="btn btn-sm wd-btn-deliver wd-actions"
@@ -274,7 +313,7 @@ if ($action === 'customers') {
                         <i class="mdi mdi-truck-check"></i> Deliver All (<?php echo $ready; ?>)
                     </button>
                 <?php endif; ?>
-                <i class="mdi mdi-chevron-down wd-caret ml-2"></i>
+                <i class="mdi mdi-chevron-down wd-caret wd-caret-toggle ml-2"></i>
             </div>
             <div class="wd-cust-body" data-cid="<?php echo $cid; ?>" data-sid="<?php echo (int) $sid; ?>" style="display:none;">
                 <div class="card-body p-2 wd-packages" data-cid="<?php echo $cid; ?>" data-sid="<?php echo (int) $sid; ?>" data-loaded="0">
@@ -319,8 +358,8 @@ if ($action === 'packages') {
                 <span class="badge ml-2" style="background:<?php echo htmlspecialchars($stColor); ?>;color:#fff;"><?php echo $stName; ?></span>
                 <?php
                 if ($state === 'delivered') { echo '<span class="wd-chip-done ml-1"><i class="mdi mdi-check-all"></i> Delivered</span>'; }
-                elseif ($state === 'ready')  { echo '<span class="wd-chip-ready ml-1"><i class="mdi mdi-truck-check"></i> Cleared — ready</span>'; }
-                elseif ($state === 'awaiting') { echo '<span class="wd-chip-wait ml-1"><i class="mdi mdi-lock"></i> Awaiting clearance</span>'; }
+                elseif ($state === 'ready')  { echo '<span class="wd-chip-ready ml-1"><i class="mdi mdi-truck-check"></i> Cleared — Ready</span>'; }
+                elseif ($state === 'awaiting') { echo '<span class="wd-chip-wait ml-1"><i class="mdi mdi-lock"></i> Awaiting Clearance</span>'; }
                 ?>
                 <span class="wd-dim ml-2"><i class="mdi mdi-weight"></i> <?php echo round((float) $p->total_weight, 2); ?> lb</span>
                 <span class="wd-spacer"></span>
@@ -342,9 +381,9 @@ if ($action === 'packages') {
                         <i class="mdi mdi-undo-variant"></i> Undo
                     </button>
                 <?php } elseif ($state === 'awaiting') { ?>
-                    <span class="text-muted small" title="Accounts has not cleared this package for delivery yet"><i class="mdi mdi-lock"></i> Awaiting clearance</span>
+                    <span class="text-muted small" title="Accounts has not cleared this package for delivery yet"><i class="mdi mdi-lock"></i> Awaiting Clearance</span>
                 <?php } ?>
-                <i class="mdi mdi-chevron-down wd-caret ml-2"></i>
+                <i class="mdi mdi-chevron-down wd-caret wd-caret-toggle ml-2"></i>
             </div>
             <div class="wd-pkg-body" style="display:none;">
                 <div class="card-body p-2">
@@ -392,7 +431,65 @@ function wd_do_deliver(Conexion $db, $no, $uid, array $terminal)
     if (function_exists('cdp_updateShipTrackingMultiple')) {
         cdp_updateShipTrackingMultiple($tracking, CDP_WD_DELIVERED, 'Delivered via Warehouse Delivery', $row->origin_off ?? 0, $uid);
     }
-    return ['ok' => true, 'order_id' => (int) $row->order_id];
+    return ['ok' => true, 'order_id' => (int) $row->order_id,
+            'tracking' => $tracking, 'sender_id' => (int) $row->sender_id];
+}
+
+/** Best-effort "your package was delivered" message to the customer (WhatsApp +
+ *  email), thanking them by the business name ($core->site_name). Never throws. */
+function wd_notifyDelivered(Conexion $db, $core, $senderId, array $trackings)
+{
+    $trackings = array_values(array_filter(array_map('strval', $trackings), function ($v) { return $v !== ''; }));
+    if (!$senderId || !$trackings) { return; }
+
+    $db->cdp_query("SELECT id, fname, lname, phone, email, locker FROM cdb_users WHERE id = :id LIMIT 1");
+    $db->bind(':id', (int) $senderId);
+    $db->cdp_execute();
+    $sender = $db->cdp_registro();
+    if (!$sender) { return; }
+
+    $custName = trim((string) ($sender->fname ?? '')) ?: 'there';
+    $plural   = count($trackings) > 1;
+    $siteName = (string) ($core->site_name ?? '');
+    $subject  = 'Your Package' . ($plural ? 's Have' : ' Has') . ' Been Delivered';
+
+    $intro = 'Good news! Your package' . ($plural ? 's have' : ' has')
+        . ' been delivered. Thank you for shipping with ' . $siteName . '.';
+    $outro = 'We appreciate your business and look forward to serving you again!';
+
+    $msgWa = $intro . "\n\n*Delivered*\n• " . implode("\n• ", $trackings) . "\n\n" . $outro;
+    $msgEmail = '<p>' . htmlspecialchars($intro) . '</p>'
+        . '<p><b>Delivered</b></p><ul><li>' . implode('</li><li>', array_map('htmlspecialchars', $trackings)) . '</li></ul>'
+        . '<p>' . htmlspecialchars($outro) . '</p>';
+
+    // WhatsApp (best-effort; wrapped in template 12 for site branding).
+    if (trim((string) ($sender->phone ?? '')) !== '' && function_exists('sendNotificationWhatsApp_v2')) {
+        try {
+            $waBody = $msgWa;
+            if (function_exists('getTemplateWhatsApp')) {
+                $tpl = getTemplateWhatsApp(12);
+                if ($tpl) {
+                    $waBody = str_replace(
+                        ['[USERNAME]', '[SUBJECT]', '[SITE_NAME]', '[MESSAGE]', '[URL]'],
+                        [ucfirst($custName), $subject, $siteName, $msgWa, (string) ($core->site_url ?? '')],
+                        $tpl->body
+                    );
+                }
+            }
+            sendNotificationWhatsApp_v2($sender, $waBody, 'GH');
+        } catch (Throwable $e) { /* best-effort */ }
+    }
+
+    // Email (best-effort).
+    if (trim((string) ($sender->email ?? '')) !== '' && function_exists('cdp_sendTemplateEmail')) {
+        try {
+            cdp_sendTemplateEmail(29, trim((string) $sender->email), [
+                '[USERNAME]' => $custName,
+                '[SUBJECT]'  => $subject,
+                '[MESSAGE]'  => $msgEmail,
+            ], $subject . ' — ' . $siteName);
+        } catch (Throwable $e) { /* best-effort */ }
+    }
 }
 
 if ($action === 'deliver_package') {
@@ -411,7 +508,9 @@ if ($action === 'deliver_package') {
     }
     $cid = (int) ($_POST['consolidate_id'] ?? 0);
     if ($cid) { wd_sync_consolidation_status($db, $cid); }
-    echo json_encode(['ok' => true, 'delivered' => 1]);
+    wd_notifyDelivered($db, $core, (int) ($res['sender_id'] ?? 0), [(string) ($res['tracking'] ?? $no)]);
+    echo json_encode(['ok' => true, 'delivered' => 1,
+                      'summary' => $cid ? wd_consol_summary($db, $cid, $WD_TERMINAL, $ownOnly) : null]);
     exit;
 }
 
@@ -422,15 +521,17 @@ if ($action === 'deliver_user') {
     if (!$cid || !$sid) { echo json_encode(['ok' => false, 'message' => 'Missing consolidation or customer.']); exit; }
 
     $all  = wd_consolidation_packages($db, $cid, $ownOnly);
-    $delivered = 0; $skipped = 0;
+    $delivered = 0; $skipped = 0; $notifyTracks = [];
     foreach ($all as $p) {
         if ((int) $p->sender_id !== $sid) { continue; }
         if (wd_pkg_state($p, $WD_TERMINAL) !== 'ready') { continue; } // only cleared, undelivered
         $r = wd_do_deliver($db, (string) $p->order_no, $uid, $WD_TERMINAL);
-        if ($r['ok']) { $delivered++; } else { $skipped++; }
+        if ($r['ok']) { $delivered++; $notifyTracks[] = (string) ($r['tracking'] ?? ''); } else { $skipped++; }
     }
     wd_sync_consolidation_status($db, $cid);
-    echo json_encode(['ok' => true, 'delivered' => $delivered, 'skipped' => $skipped]);
+    if ($notifyTracks) { wd_notifyDelivered($db, $core, $sid, $notifyTracks); }
+    echo json_encode(['ok' => true, 'delivered' => $delivered, 'skipped' => $skipped,
+                      'summary' => wd_consol_summary($db, $cid, $WD_TERMINAL, $ownOnly)]);
     exit;
 }
 
@@ -453,7 +554,8 @@ if ($action === 'undo_package') {
     }
     $cid = (int) ($_POST['consolidate_id'] ?? 0);
     if ($cid) { wd_sync_consolidation_status($db, $cid); }
-    echo json_encode(['ok' => true, 'reopened' => 1]);
+    echo json_encode(['ok' => true, 'reopened' => 1,
+                      'summary' => $cid ? wd_consol_summary($db, $cid, $WD_TERMINAL, $ownOnly) : null]);
     exit;
 }
 
