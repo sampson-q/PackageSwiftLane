@@ -6,6 +6,10 @@
 
 require_once(__DIR__ . '/../../../helpers/pickup_aging.php');
 
+// left_sidebar.php gates its nav blocks on $userData->userlevel — without this
+// the whole sidebar renders empty on this page.
+$userData = $user->cdp_getUserData();
+
 // Refresh the state machine on load (same scan the cron runs).
 cdp_processPickupAging();
 
