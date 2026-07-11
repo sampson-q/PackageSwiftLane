@@ -73,42 +73,14 @@
             });
     };
 
-    // Outstanding-balance heads-up: when a sender is picked, show whether they
-    // owe money (across ALL their consolidations), so staff can ask them to
-    // settle before releasing packages. Non-blocking red banner near the field.
-    window.cdp_showSenderDebt = function (senderId) {
-        var $anchor = $("#sender_id").closest(".form-group");
-        if (!$anchor.length) { $anchor = $("#sender_id").parent(); }
-        var $box = $("#cdp_debt_alert");
-        if (!$box.length) {
-            $box = $('<div id="cdp_debt_alert" class="alert alert-danger mt-2 mb-0" style="display:none;font-size:13px;"></div>');
-            $anchor.after($box);
-        }
-        if (!senderId) { $box.hide().empty(); return; }
-        $.getJSON("ajax/customers/customer_outstanding_ajax.php?sender_id=" + encodeURIComponent(senderId))
-            .done(function (r) {
-                if (r && r.ok && Number(r.ghs) > 0) {
-                    $box.html(
-                        '<i class="mdi mdi-alert-circle-outline"></i> <b>This customer owes GH₵' +
-                        Number(r.ghs).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
-                        '</b> (≈ $' + Number(r.usd).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ')' +
-                        (Number(r.consols) > 0 ? ' across ' + r.consols + ' consolidation(s)' : '') +
-                        '. Please have them settle outstanding balances before releasing packages.'
-                    ).show();
-                } else {
-                    $box.hide().empty();
-                }
-            })
-            .fail(function () { $box.hide().empty(); });
-    };
-
     // A real user picked a sender -> defer one tick so the form's own change
     // handler has reset/re-initialised the child selects, then auto-fill.
+    // (Outstanding-balance info is intentionally NOT shown here — that stays
+    // limited to the Financial Sheet.)
     $(document).on("select2:select", "#sender_id", function () {
         var senderId = $(this).val();
         setTimeout(function () {
             window.cdp_autofillSenderDefaults(senderId);
-            window.cdp_showSenderDebt(senderId);
         }, 0);
     });
 })();
