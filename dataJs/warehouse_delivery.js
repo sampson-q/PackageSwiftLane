@@ -18,29 +18,48 @@ $(function () {
         wdReloadCustomers(window.WD_CID);
     } else {
         cdp_load();
-        $("#search").on("input", function () {
-            clearTimeout(wdTimer);
-            wdTimer = setTimeout(cdp_load, 300);
-        });
+        // Three independent filters (consolidation / package / customer), each
+        // debounced; typing in one clears the others — same behaviour as FS.
+        $("#wd_q_consol").on("input", function () { wdDebouncedSearch("consol"); });
+        $("#wd_q_package").on("input", function () { wdDebouncedSearch("package"); });
+        $("#wd_q_customer").on("input", function () { wdDebouncedSearch("customer"); });
     }
 });
 
 function wdEsc(s) { return $("<div>").text(s == null ? "" : s).html(); }
 function wdResolved() { return $.Deferred().resolve().promise(); }
 
+function wdDebouncedSearch(which) {
+    if (which !== "consol") { $("#wd_q_consol").not(document.activeElement).val(""); }
+    if (which !== "package") { $("#wd_q_package").not(document.activeElement).val(""); }
+    if (which !== "customer") { $("#wd_q_customer").not(document.activeElement).val(""); }
+
+    clearTimeout(wdTimer);
+    wdTimer = setTimeout(function () {
+        var pkg = ($("#wd_q_package").val() || "").trim();
+        var cust = ($("#wd_q_customer").val() || "").trim();
+        if (which === "package" && pkg) { return wdLoadInto({ action: "search_package", q: pkg }); }
+        if (which === "customer" && cust) { return wdLoadInto({ action: "search_customer", q: cust }); }
+        cdp_load();
+    }, 350);
+}
+
 // ---- List page: consolidation cards (each links to its own page) -----------
 function cdp_load() {
+    return wdLoadInto({ action: "list", search: ($("#wd_q_consol").val() || "").trim() });
+}
+
+function wdLoadInto(data) {
     $("#loader").fadeIn("fast");
-    return $.ajax({
-        url: WD_URL,
-        data: { action: "list", search: $("#search").val() || "" }
-    }).done(function (html) {
-        $(".outer_div").html(html);
-        $("#loader").fadeOut("fast");
-    }).fail(function () {
-        $("#loader").fadeOut("fast");
-        $(".outer_div").html('<div class="text-danger p-3">Could not load. Please retry.</div>');
-    });
+    return $.ajax({ url: WD_URL, data: data })
+        .done(function (html) {
+            $(".outer_div").html(html);
+            $("#loader").fadeOut("fast");
+        })
+        .fail(function () {
+            $("#loader").fadeOut("fast");
+            $(".outer_div").html('<div class="text-danger p-3">Could not load. Please retry.</div>');
+        });
 }
 
 // ---- Single-consolidation page: load / reload the customers accordion ------
@@ -117,8 +136,10 @@ function wdPost(data) {
 function wdAfterAction(cid, sid, msg, summary) {
     Swal.fire({ icon: "success", text: msg, timer: 1500, showConfirmButton: false });
     if (summary) {
-        if (summary.prog_html) { $("#wd-hdr-prog").html(summary.prog_html); }
-        if (summary.right_html) { $("#wd-hdr-right").html(summary.right_html); }
+        // Always set both — right_html is often an empty string (no chips), and
+        // a truthiness check would leave a stale "Delivered" chip behind.
+        if (typeof summary.prog_html === "string") { $("#wd-hdr-prog").html(summary.prog_html); }
+        if (typeof summary.right_html === "string") { $("#wd-hdr-right").html(summary.right_html); }
     }
     wdReloadCustomers(cid, sid);
 }

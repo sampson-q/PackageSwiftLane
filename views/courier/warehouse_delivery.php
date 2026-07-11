@@ -39,10 +39,27 @@ $userData = $user->cdp_getUserData();
                 </div>
 
                 <div class="card"><div class="card-body">
-                    <div class="d-flex align-items-center mb-2">
-                        <input type="text" id="search" class="form-control form-control-sm wd-search"
-                               placeholder="Search consolidation, customer, locker or tracking #…">
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text"><i class="mdi mdi-package-variant-closed"></i></span></div>
+                                <input type="text" id="wd_q_consol" class="form-control" placeholder="Consolidation #" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text"><i class="mdi mdi-barcode"></i></span></div>
+                                <input type="text" id="wd_q_package" class="form-control" placeholder="Package / tracking #" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text"><i class="mdi mdi-account-search"></i></span></div>
+                                <input type="text" id="wd_q_customer" class="form-control" placeholder="Customer name / locker" autocomplete="off">
+                            </div>
+                        </div>
                     </div>
+                    <div class="wd-dim mb-2">Filters apply as you type.</div>
 
                     <div id="loader" style="display:none;" class="text-center my-3">
                         <i class="fa fa-spinner fa-spin fa-2x" style="color:#1b8a5a;"></i>

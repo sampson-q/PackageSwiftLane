@@ -42,15 +42,11 @@ foreach ($wd_rows as $r) {
     else { $wd_awaiting++; }
 }
 
-if ($wd_total > 0 && $wd_delivered >= $wd_total) {
-    $wd_stateCls = 'wd-chip-done';    $wd_stateTxt = '<i class="mdi mdi-check-all"></i> Delivered';
-} elseif ($wd_delivered > 0) {
-    $wd_stateCls = 'wd-chip-partial'; $wd_stateTxt = '<i class="mdi mdi-truck-fast"></i> Partially Delivered';
-} elseif ($wd_ready > 0) {
-    $wd_stateCls = 'wd-chip-ready';   $wd_stateTxt = '<i class="mdi mdi-truck-check"></i> Ready to Deliver';
-} else {
-    $wd_stateCls = 'wd-chip-wait';    $wd_stateTxt = '<i class="mdi mdi-lock-clock"></i> Awaiting Clearance';
-}
+// The consolidation only shows a "Delivered" chip once every package is
+// delivered; the n/n Delivered badge conveys progress otherwise.
+$wd_stateChip = ($wd_total > 0 && $wd_delivered >= $wd_total)
+    ? '<span class="wd-chip-done"><i class="mdi mdi-check-all"></i> Delivered</span>'
+    : '';
 $wd_progCls = ($wd_delivered >= $wd_total && $wd_total > 0) ? 'badge-success' : 'badge-light';
 ?>
 <!DOCTYPE html>
@@ -99,7 +95,7 @@ $wd_progCls = ($wd_delivered >= $wd_total && $wd_total > 0) ? 'badge-success' : 
                             <span class="wd-dim ml-2" title="Sum of package weights"><i class="mdi mdi-weight"></i> <?php echo round($wd_weight, 2); ?> lb</span>
                             <span id="wd-hdr-prog"><span class="badge <?php echo $wd_progCls; ?> ml-2" title="Packages delivered"><?php echo $wd_delivered; ?>/<?php echo $wd_total; ?> Delivered</span></span>
                             <span class="wd-spacer"></span>
-                            <span id="wd-hdr-right"><?php if ($wd_awaiting > 0): ?><span class="wd-chip-wait mr-1" title="Not yet cleared by Accounts"><i class="mdi mdi-lock"></i> <?php echo $wd_awaiting; ?> Awaiting</span><?php endif; ?><span class="<?php echo $wd_stateCls; ?>"><?php echo $wd_stateTxt; ?></span></span>
+                            <span id="wd-hdr-right"><?php if ($wd_awaiting > 0): ?><span class="wd-chip-wait mr-1" title="Not yet cleared by Accounts"><i class="mdi mdi-lock"></i> <?php echo $wd_awaiting; ?> Awaiting</span><?php endif; ?><?php echo $wd_stateChip; ?></span>
                         </div>
                         <div class="card-body p-2 wd-customers" data-cid="<?php echo $wd_cid; ?>" data-loaded="0">
                             <div class="text-muted small">Loading customers…</div>
