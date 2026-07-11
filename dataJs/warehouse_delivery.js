@@ -141,6 +141,7 @@ function wdAfterAction(cid, sid, msg, summary) {
         if (typeof summary.prog_html === "string") { $("#wd-hdr-prog").html(summary.prog_html); }
         if (typeof summary.right_html === "string") { $("#wd-hdr-right").html(summary.right_html); }
     }
+    if (typeof window.wdRefreshNavBadge === "function") { window.wdRefreshNavBadge(); }
     wdReloadCustomers(cid, sid);
 }
 

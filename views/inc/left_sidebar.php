@@ -618,6 +618,7 @@
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
 							<iconify-icon icon="mdi:warehouse" class="fs-5 m-r-5 m-l-5"></iconify-icon>
 							<span class="hide-menu"> Warehouse </span>
+								<?php if ($user->cdp_hasPermission('view_warehouse_delivery')) { ?><span class="wd-nav-badge badge badge-danger ml-1" style="display:none;" title="Packages cleared and awaiting delivery"></span><?php } ?>
 						</a>
 						<ul aria-expanded="false" class="collapse first-level">
 							<?php if ($user->cdp_hasPermission('view_general_reports')) { ?>
@@ -633,6 +634,7 @@
 								<a class="sidebar-link waves-effect waves-dark" href="warehouse_delivery.php" aria-expanded="false">
 									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
 									<span class="hide-menu"> Warehouse Delivery </span>
+										<span class="wd-nav-badge badge badge-danger ml-1" style="display:none;" title="Packages cleared and awaiting delivery"></span>
 								</a>
 							</li>
 							<?php } ?>

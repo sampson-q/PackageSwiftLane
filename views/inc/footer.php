@@ -182,6 +182,9 @@
 <script src="<?= cdp_asset('dataJs/check_user_update.js') ?>"></script>
 <?php endif; ?>
 
+<?php /* Real-time "cleared, awaiting delivery" badge on the Warehouse nav item */ ?>
+<script src="<?= cdp_asset('dataJs/warehouse_nav_badge.js') ?>"></script>
+
 <style>
     .swal2-container {
     z-index: 99999 !important;

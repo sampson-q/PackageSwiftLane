@@ -200,6 +200,7 @@ function cdpWarehouseDeliver(orderNos) {
                 Swal.fire({ icon: "success", text: msg, confirmButtonText: "Ok" }).then(function () {
                     cdp_load(1);
                     if (typeof cdpSelClear === "function") cdpSelClear();
+                    if (typeof window.wdRefreshNavBadge === "function") window.wdRefreshNavBadge();
                 });
             });
         },

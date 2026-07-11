@@ -62,6 +62,23 @@ $ownOnly = (isset($userData->userlevel) && (int) $userData->userlevel === 1)
 $action = $_REQUEST['action'] ?? 'list';
 
 // ---------------------------------------------------------------------------
+// COUNT — cleared-for-delivery packages still needing delivery (the WD "ready"
+// universe). Powers the real-time sidebar badge.
+// ---------------------------------------------------------------------------
+if ($action === 'count') {
+    header('Content-Type: application/json; charset=UTF-8');
+    $db->cdp_query("SELECT COUNT(DISTINCT a.order_id) AS n
+                    FROM cdb_consolidate_detail d
+                    INNER JOIN cdb_add_order a ON a.order_id = CAST(d.order_id AS UNSIGNED)
+                    WHERE a.fs_cleared_for_delivery = 1
+                      AND a.status_courier NOT IN (8, 15, 16, 21, 27, 35) $ownOnly");
+    $db->cdp_execute();
+    $row = $db->cdp_registro();
+    echo json_encode(['ok' => true, 'count' => $row ? (int) $row->n : 0]);
+    exit;
+}
+
+// ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
 

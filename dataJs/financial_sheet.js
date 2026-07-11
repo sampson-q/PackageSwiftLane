@@ -1179,6 +1179,7 @@ function fsClearPackage(btn) {
         $card.find(".fs-pkg-unpaid").replaceWith('<span class="fs-pkg-paid fs-chip-settled ml-2" title="Cleared for delivery"><i class="mdi mdi-check-decagram"></i> Cleared</span>');
         // Only action in the menu was Clear — drop the whole Package Actions button.
         $card.find(".fs-pkg-header .fs-pkg-actions").remove();
+        if (typeof window.wdRefreshNavBadge === "function") { window.wdRefreshNavBadge(); }
         Swal.fire({ icon: "success", text: "Package cleared for delivery.", timer: 1400, showConfirmButton: false });
     });
 }
