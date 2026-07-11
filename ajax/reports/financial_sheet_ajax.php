@@ -57,6 +57,7 @@ $fsPermMap = [
     'record_payment' => 'fs_record_payment',
     'apply_discount' => 'fs_apply_discount',
     'remove_discount' => 'fs_apply_discount',
+    'clear_package'  => 'fs_clear_delivery',
 ];
 require_permission($fsPermMap[$action] ?? 'financial_sheet');
 
@@ -601,6 +602,17 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
     return ob_get_clean();
 }
 
+/** Whether the current user may manually clear packages for delivery (cached). */
+function fs_user_can_clear()
+{
+    static $can = null;
+    if ($can === null) {
+        $u = new User();
+        $can = (bool) $u->cdp_hasPermission('fs_clear_delivery');
+    }
+    return $can;
+}
+
 /** One package card (accordion level 3). $cleared = this package has been paid
  *  for and cleared for delivery (per-package payment status). */
 function fs_render_package($p, $stat = null, $cleared = false)
@@ -636,6 +648,20 @@ function fs_render_package($p, $stat = null, $cleared = false)
             <?php endif; ?>
             <span class="fs-spacer"></span>
             <span class="fs-money fs-pkg-total" data-usd="<?php echo (float) $p->total_order; ?>">$<?php echo number_format((float) $p->total_order, 2); ?></span>
+            <?php if (fs_user_can_clear()): ?>
+            <div class="btn-group btn-group-sm fs-pkg-actions ml-2">
+                <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Package Actions</button>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <?php if (!$cleared): ?>
+                    <a class="dropdown-item" href="javascript:void(0)" data-oid="<?php echo $oid; ?>" data-track="<?php echo $pkgNo; ?>" onclick="fsClearPackage(this);">
+                        <i class="mdi mdi-truck-check"></i> Clear Package for Delivery
+                    </a>
+                    <?php else: ?>
+                    <span class="dropdown-item text-muted"><i class="mdi mdi-check-decagram"></i> Cleared for delivery</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
             <i class="mdi mdi-chevron-down fs-caret ml-2"></i>
         </div>
         <div class="fs-pkg-body" data-oid="<?php echo $oid; ?>" style="display:none;">
@@ -728,6 +754,44 @@ if ($action === 'lock' || $action === 'unlock') {
 
     $res = cdp_fsAcquireLock($order_id, $uid, $uname);
     echo json_encode($res['ok'] ? ['ok' => true] : ['ok' => false, 'by' => $res['by']]);
+    exit;
+}
+
+// ----------------------------------------------------------------------------
+// CLEAR PACKAGE FOR DELIVERY (JSON) — manual per-package clearance from the
+// Package Actions menu (fs_cleared_for_delivery = 1, mirrors the payment-time
+// clearance). Gated by fs_clear_delivery.
+// ----------------------------------------------------------------------------
+if ($action === 'clear_package') {
+    header('Content-Type: application/json; charset=UTF-8');
+    $order_id = (int) ($_POST['order_id'] ?? 0);
+    if ($order_id <= 0) {
+        echo json_encode(['ok' => false, 'message' => 'No package specified.']);
+        exit;
+    }
+
+    $db->cdp_query("SELECT fs_cleared_for_delivery FROM cdb_add_order WHERE order_id = :oid LIMIT 1");
+    $db->bind(':oid', $order_id);
+    $db->cdp_execute();
+    $row = $db->cdp_registro();
+    if (!$row) {
+        echo json_encode(['ok' => false, 'message' => 'Package not found.']);
+        exit;
+    }
+    if ((int) $row->fs_cleared_for_delivery === 1) {
+        echo json_encode(['ok' => true, 'already' => true]);
+        exit;
+    }
+
+    $db->cdp_query("UPDATE cdb_add_order
+                    SET fs_cleared_for_delivery = 1, fs_cleared_at = NOW(), fs_cleared_by = :by, status_invoice = 1
+                    WHERE order_id = :oid");
+    $db->bind(':by', $uid);
+    $db->bind(':oid', $order_id);
+    $db->cdp_execute();
+
+    fs_log_history($uid, $order_id, 'package cleared for delivery (manual)');
+    echo json_encode(['ok' => true]);
     exit;
 }
 

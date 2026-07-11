@@ -1155,3 +1155,30 @@ function fsExportConsolidation(cid) {
 function fsExportConsolidationExcel(cid) {
     window.location.href = "views/print/print_financial_sheet_excel.php?consolidate_id=" + encodeURIComponent(cid);
 }
+
+// Package Actions -> Clear Package for Delivery. Sets fs_cleared_for_delivery so
+// the warehouse can release it; updates the package chip in place on success.
+function fsClearPackage(btn) {
+    var $b = $(btn), oid = $b.data("oid"), track = $b.data("track");
+    Swal.fire({
+        title: "Clear Package for Delivery?",
+        html: "Mark <b>" + $("<div>").text(track == null ? "" : track).html() + "</b> as cleared for delivery?",
+        icon: "question", showCancelButton: true, reverseButtons: true,
+        confirmButtonText: "Yes, Clear", confirmButtonColor: "#1b8a5a",
+        showLoaderOnConfirm: true, allowOutsideClick: function () { return !Swal.isLoading(); },
+        preConfirm: function () {
+            return $.ajax({ url: FS_AJAX, method: "POST", data: { action: "clear_package", order_id: oid }, dataType: "json" })
+                .then(function (r) {
+                    if (!r || !r.ok) { Swal.showValidationMessage((r && r.message) || "Could not clear the package."); return false; }
+                    return r;
+                }, function () { Swal.showValidationMessage("Request failed."); return false; });
+        }
+    }).then(function (res) {
+        if (!res.isConfirmed) { return; }
+        var $card = $b.closest(".fs-pkg-card");
+        $card.find(".fs-pkg-unpaid").replaceWith('<span class="fs-pkg-paid fs-chip-settled ml-2" title="Cleared for delivery"><i class="mdi mdi-check-decagram"></i> Cleared</span>');
+        // Only action in the menu was Clear — drop the whole Package Actions button.
+        $card.find(".fs-pkg-header .fs-pkg-actions").remove();
+        Swal.fire({ icon: "success", text: "Package cleared for delivery.", timer: 1400, showConfirmButton: false });
+    });
+}
