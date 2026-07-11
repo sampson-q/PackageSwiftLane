@@ -43,7 +43,7 @@ $modules = $db->cdp_registros() ?: [];
             <div class="container-fluid">
                 <div class="row">
                     <!-- Add form -->
-                    <div class="col-lg-4 mb-3">
+                    <div class="col-12 mb-3">
                         <div class="card"><div class="card-body">
                             <h5 class="card-title">Add Permission</h5>
                             <form id="pa_add_form">
@@ -74,7 +74,7 @@ $modules = $db->cdp_registros() ?: [];
                     </div>
 
                     <!-- List -->
-                    <div class="col-lg-8 mb-3">
+                    <div class="col-12 mb-3">
                         <div class="card"><div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="card-title mb-0">Permissions</h5>
