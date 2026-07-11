@@ -1,11 +1,11 @@
 <?php
 // ============================================================================
-// Warehouse â€” new delivery confirmation flow (single or multi-select).
+// Warehouse — new delivery confirmation flow (single or multi-select).
 // Deliberately separate from the existing courier_deliver_shipment.php page,
 // which is left untouched and unlinked from the warehouse list. This is a
 // lightweight flow: preview the selected package(s) (customer, locker,
 // system + carrier tracking), confirm via SweetAlert, then flip
-// status_courier straight to Delivered â€” no photo/signature capture, no
+// status_courier straight to Delivered — no photo/signature capture, no
 // notifications (none were asked for here).
 //   action=preview : POST order_nos (JSON array) -> package details for the confirm dialog.
 //   action=deliver  : POST order_nos (JSON array) -> marks them Delivered.

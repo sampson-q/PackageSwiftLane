@@ -103,7 +103,7 @@ $statusrow = $core->cdp_getStatusMultiple(1, 4, 8, 15, 16, 23, 32, 33);
                                                 </span>
                                             </div>
                                             <input type="text" name="daterange-warehouse" id="daterange-warehouse" class="form-control float-right" placeholder="<?php echo $lang['report-text90'] ?>" />
-                                            <button type="button" id="btn-clear-daterange" class="btn btn-outline-secondary ml-2" title="Clear period">âœ•</button>
+                                            <button type="button" id="btn-clear-daterange" class="btn btn-outline-secondary ml-2" title="Clear period">&times;</button>
                                         </div>
                                     </div>
 

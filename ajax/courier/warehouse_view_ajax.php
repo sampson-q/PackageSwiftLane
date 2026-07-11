@@ -42,7 +42,7 @@ if ($status_courier > 0) {
     $sWhere .= " and a.status_courier = '" . $status_courier . "'";
 }
 
-// Date range filter Ã¢â‚¬â€ same approach as report_top_users_ajax_air.php
+// Date range filter — same approach as report_top_users_ajax_air.php
 $range = cdp_sanitize($_REQUEST['range'] ?? '');
 if (!empty($range)) {
     $parts      = explode(' - ', $range);
