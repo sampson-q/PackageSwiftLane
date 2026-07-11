@@ -60,13 +60,17 @@ $statusrow = $core->cdp_getStatusMultiple(1, 4, 8, 15, 16, 23, 32, 33);
 
                                 <div class="row mb-3">
 
-                                    <!-- Search -->
+                                    <!-- Search (tracking #) -->
                                     <div class="col-sm-12 col-md-3 mb-2">
                                         <div class="input-group">
                                             <input type="text" name="search" id="search" class="form-control input-sm float-right" placeholder="<?php echo $lang['left21551'] ?>" onkeyup="cdp_load(1);">
-                                            <div class="input-group-append input-sm">
-                                                <button type="button" class="btn btn-outline-danger"><i class="fa fa-search"></i></button>
-                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Customer name / locker filter -->
+                                    <div class="col-sm-12 col-md-3 mb-2">
+                                        <div class="input-group">
+                                            <input type="text" name="search_customer" id="search_customer" class="form-control input-sm float-right" placeholder="Customer name / locker" onkeyup="cdp_load(1);">
                                         </div>
                                     </div>
 

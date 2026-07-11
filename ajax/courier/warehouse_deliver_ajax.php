@@ -58,6 +58,7 @@ if ($action === 'preview') {
             'carrier'           => $carrier->tracking_number ?: 'N/A',
             'name'              => $sender && function_exists('cdp_nameWithLocker') ? cdp_nameWithLocker($sender) : 'N/A',
             'already_delivered' => ((int) $row->status_courier === CDP_WH_DELIVERED_STATUS),
+            'cleared'           => ((int) ($row->fs_cleared_for_delivery ?? 0) === 1),
         ];
     }
 
@@ -95,6 +96,16 @@ if ($action === 'deliver') {
         $tracking = ($row->order_prefix ?? '') . $no;
         if (function_exists('cdp_updateShipTrackingMultiple')) {
             cdp_updateShipTrackingMultiple($tracking, CDP_WH_DELIVERED_STATUS, 'Delivered via Warehouse', $row->origin_off ?? 0, $uid);
+        }
+        // Audit: who delivered this package, when (Warehouse View).
+        if (function_exists('cdp_insertCourierShipmentUserHistory')) {
+            cdp_insertCourierShipmentUserHistory([
+                'user_id'      => $uid,
+                'order_id'     => (int) $row->order_id,
+                'order_track'  => $tracking,
+                'action'       => 'Warehouse — package delivered (Warehouse View)',
+                'date_history' => date('Y-m-d H:i:s'),
+            ]);
         }
         $delivered++;
     }

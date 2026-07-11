@@ -73,19 +73,21 @@ $(function () {
 
 // Load warehouse table via AJAX
 function cdp_load(page) {
-    var search         = $("#search").val();
-    var status_courier = $("#status_courier").val();
-    var filterby       = $("#filterby").val();
-    var range          = $("#daterange-warehouse").val();
-    var per_page       = $("#per_page").val();
+    var search          = $("#search").val();
+    var search_customer = $("#search_customer").val();
+    var status_courier  = $("#status_courier").val();
+    var filterby        = $("#filterby").val();
+    var range           = $("#daterange-warehouse").val();
+    var per_page        = $("#per_page").val();
 
     var parametros = {
-        page:           page,
-        search:         search,
-        status_courier: status_courier,
-        filterby:       filterby,
-        range:          range,
-        per_page:       per_page
+        page:            page,
+        search:          search,
+        search_customer: search_customer,
+        status_courier:  status_courier,
+        filterby:        filterby,
+        range:           range,
+        per_page:        per_page
     };
 
     $("#loader").fadeIn('slow');
@@ -137,8 +139,15 @@ function cdpWarehouseDeliver(orderNos) {
                 return;
             }
 
+            // Only finance-cleared, undelivered packages can actually be
+            // delivered; the rest are shown but flagged and excluded so the
+            // bulk path can't bypass the Awaiting Clearance restriction.
+            var deliverable = r.packages.filter(function (p) { return p.cleared && !p.already_delivered; });
+
             var rows = r.packages.map(function (p) {
-                var warn = p.already_delivered ? ' <span style="color:#dc3545;">(already delivered)</span>' : "";
+                var warn = "";
+                if (p.already_delivered) { warn = ' <span style="color:#dc3545;">(already delivered)</span>'; }
+                else if (!p.cleared) { warn = ' <span style="color:#b26a00;">(Awaiting Clearance — will be skipped)</span>'; }
                 return '<div style="text-align:left;border-bottom:1px solid #eee;padding:6px 2px;">' +
                     "<b>" + $("<div>").text(p.tracking).html() + "</b>" + warn + "<br>" +
                     '<span style="font-size:12px;color:#666;">' +
@@ -146,10 +155,17 @@ function cdpWarehouseDeliver(orderNos) {
                     "</span></div>";
             }).join("");
 
+            if (!deliverable.length) {
+                Swal.fire({ icon: "warning", html: '<div style="max-height:260px;overflow-y:auto;">' + rows + "</div>" +
+                    "<p class='mt-2 mb-0'>None of the selected packages are cleared for delivery.</p>", confirmButtonText: "Ok" });
+                return;
+            }
+            var deliverNos = deliverable.map(function (p) { return String(p.order_no); });
+
             Swal.fire({
                 title: "Confirm Delivery",
                 html: '<div style="max-height:260px;overflow-y:auto;">' + rows + "</div>" +
-                      "<p class='mt-2 mb-0'>Mark " + (r.packages.length === 1 ? "this package" : "these " + r.packages.length + " packages") + " as delivered?</p>",
+                      "<p class='mt-2 mb-0'>Mark " + (deliverable.length === 1 ? "the 1 cleared package" : "the " + deliverable.length + " cleared packages") + " as delivered?</p>",
                 icon: "question",
                 showCancelButton: true,
                 confirmButtonText: "Yes, deliver",
@@ -159,7 +175,7 @@ function cdpWarehouseDeliver(orderNos) {
                     return $.ajax({
                         url: "./ajax/courier/warehouse_deliver_ajax.php",
                         method: "POST",
-                        data: { action: "deliver", order_nos: JSON.stringify(orderNos) },
+                        data: { action: "deliver", order_nos: JSON.stringify(deliverNos) },
                         dataType: "json"
                     }).then(
                         function (dr) {
@@ -178,7 +194,10 @@ function cdpWarehouseDeliver(orderNos) {
             }).then(function (result) {
                 if (!result.isConfirmed) return;
                 var n = (result.value && result.value.delivered) || 0;
-                Swal.fire({ icon: "success", text: n + " package(s) marked as delivered.", confirmButtonText: "Ok" }).then(function () {
+                var skipped = r.packages.length - deliverable.length;
+                var msg = n + " package(s) marked as delivered.";
+                if (skipped > 0) { msg += " " + skipped + " skipped (not cleared / already delivered)."; }
+                Swal.fire({ icon: "success", text: msg, confirmButtonText: "Ok" }).then(function () {
                     cdp_load(1);
                     if (typeof cdpSelClear === "function") cdpSelClear();
                 });

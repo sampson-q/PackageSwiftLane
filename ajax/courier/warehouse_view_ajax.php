@@ -38,6 +38,15 @@ if ($search != null) {
     $sWhere .= " and " . cdp_trackingSearchSql($search, 'a');
 }
 
+// Customer name / locker filter (matches the sender on the order).
+$search_customer = cdp_sanitize($_REQUEST['search_customer'] ?? '');
+if ($search_customer !== null && $search_customer !== '') {
+    $scLike = "%" . $search_customer . "%";
+    $sWhere .= " and a.sender_id IN (SELECT id FROM cdb_users
+                    WHERE CONCAT(COALESCE(fname,''),' ',COALESCE(lname,'')) LIKE '" . $scLike . "'
+                       OR locker LIKE '" . $scLike . "')";
+}
+
 if ($status_courier > 0) {
     $sWhere .= " and a.status_courier = '" . $status_courier . "'";
 }
@@ -265,7 +274,7 @@ if ($numrows > 0) { ?>
 							                   onclick="cdpWarehouseDeliver(<?php echo htmlspecialchars(json_encode([(string) $row->order_no]), ENT_QUOTES); ?>)"
 							                   title="<?php echo 'Deliver Package' ?>">
 							                    <i style="color:#343a40" class="fa fa-box"></i>&nbsp;<?php echo 'Deliver Package' ?>
-							                </a><?php } else { ?><span class="dropdown-item text-muted" title="Accounts has not cleared this package for delivery yet"><i class="fa fa-lock"></i>&nbsp;Awaiting clearance</span><?php } ?>
+							                </a><?php } else { ?><span class="dropdown-item text-muted" title="Accounts has not cleared this package for delivery yet"><i class="fa fa-lock"></i>&nbsp;Awaiting Clearance</span><?php } ?>
 							            <?php } ?>
 							        </div>
 							    </div>
