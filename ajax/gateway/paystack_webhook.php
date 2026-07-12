@@ -5,7 +5,7 @@
 // secret key) and, on charge.success, marks the matching cdb_fs_payments row
 // confirmed. This is a reconciliation backstop — the counter flow already
 // verifies synchronously on save. Inert until the Paystack secret key is set
-// in cdb_settings.
+// (cdb_met_payment id 4, via the Paystack payment-method settings screen).
 //   Configure this URL as your Paystack webhook: .../ajax/gateway/paystack_webhook.php
 // ============================================================================
 
