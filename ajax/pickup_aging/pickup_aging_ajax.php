@@ -16,7 +16,7 @@ require_login();
 header('Content-Type: application/json; charset=UTF-8');
 
 $user = new User;
-if (!$user->cdp_is_Admin()) {
+if (!$user->cdp_hasPermission('view_pickup_aging')) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'forbidden']);
     exit;

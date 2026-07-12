@@ -421,7 +421,7 @@
 					<?php } ?>
 
                     <li class="sidebar-item">----------------------------------------</li>
-					<?php if ($user->cdp_is_Admin()) { ?>
+					<?php if ($user->cdp_hasPermission('view_pickup_aging')) { ?>
 					<!-- pickup aging -->
 					<li class="sidebar-item">
 						<a class="sidebar-link waves-effect waves-dark" href="pickup_aging.php" aria-expanded="false">

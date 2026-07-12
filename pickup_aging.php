@@ -10,7 +10,7 @@ $core = new Core();
 
 if ($user->cdp_loginCheck() == true) {
 
-    if (!$user->cdp_is_Admin()) {
+    if (!$user->cdp_hasPermission('view_pickup_aging')) {
         header("location: error403.php");
         exit;
     }
