@@ -1016,7 +1016,24 @@ if ($row_order->status_invoice == 1) {
                     // (via inspector / display:none) to reveal them. Line total is
                     // included because for custom items it equals custom_price x qty.
                     $cv_is_customer = ((int)$userData->userlevel === 1);
-                    $cv_redact = '<span class="cv-redacted" title="Hidden">&bull;&bull;&bull;&bull;</span>';
+                    // Prices stay hidden from a customer UNTIL they have been billed
+                    // (a Financial Sheet bill exists for this package's consolidation).
+                    // Once billed, the real values are written so the customer can see
+                    // what they owe.
+                    $cv_billed = false;
+                    if ($cv_is_customer) {
+                        $cvdb = new Conexion;
+                        $cvdb->cdp_query("SELECT 1 FROM cdb_consolidate_detail cd
+                                          JOIN cdb_consolidate_customer_billing b
+                                            ON b.consolidate_id = cd.consolidate_id AND b.sender_id = :sid
+                                          WHERE cd.order_no = :ono LIMIT 1");
+                        $cvdb->bind(':sid', (int) $row_order->sender_id);
+                        $cvdb->bind(':ono', $row_order->order_no);
+                        $cvdb->cdp_execute();
+                        $cv_billed = (bool) $cvdb->cdp_registro();
+                    }
+                    $cv_hide = ($cv_is_customer && !$cv_billed);
+                    $cv_redact = '<span class="cv-redacted" title="Shown after you are billed">&bull;&bull;&bull;&bull;</span>';
                 ?>
                 <style>
                     .cv-redacted{display:inline-block;min-width:46px;text-align:center;filter:blur(5px);-webkit-filter:blur(3px);user-select:none;-webkit-user-select:none;pointer-events:none;color:#555;letter-spacing:2px;}
@@ -1119,9 +1136,9 @@ if ($row_order->status_invoice == 1) {
                                                                 <span class="badge badge-dark">Weight</span>
                                                             <?php } ?>
                                                         </td>
-                                                        <td><?php echo $cv_is_customer ? $cv_redact : ($use_custom_item ? '—' : $weight_item); ?></td>
-                                                        <td class="text-center"><?php echo $cv_is_customer ? $cv_redact : ($use_custom_item ? number_format($custom_price_item, 2) : '—'); ?></td>
-                                                        <td class="text-center"><?php echo $cv_is_customer ? $cv_redact : number_format($line_total_item, 2); ?></td>
+                                                        <td><?php echo $cv_hide ? $cv_redact : ($use_custom_item ? '—' : $weight_item); ?></td>
+                                                        <td class="text-center"><?php echo $cv_hide ? $cv_redact : ($use_custom_item ? number_format($custom_price_item, 2) : '—'); ?></td>
+                                                        <td class="text-center"><?php echo $cv_hide ? $cv_redact : number_format($line_total_item, 2); ?></td>
                                                         <td class="text-center"><?php echo $row_order_item->order_item_fixed_value; ?></td>
                                                         <td class="text-center"><?php echo $row_order_item->order_item_declared_value; ?></td>
                                                     </tr>
