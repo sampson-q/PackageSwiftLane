@@ -370,7 +370,14 @@ if ($action === 'packages') {
         <div class="card mb-1 wd-pkg-card wd-state-<?php echo $state; ?>" data-oid="<?php echo $oid; ?>" data-cid="<?php echo $cid; ?>" data-sid="<?php echo $sid; ?>">
             <div class="card-header wd-pkg-header p-2" onclick="wdToggle(this, event, 'pkg')">
                 <span class="wd-level-chip wd-chip-pkg">PACKAGE</span>
-                <b class="wd-mono ml-1"><?php echo $track; ?></b>
+                <b class="wd-mono ml-1" title="Swift (system) tracking"><?php echo $track; ?></b>
+                <?php
+                // Carrier / postal tracking alongside the Swift (system) number.
+                $__pt = cdp_getPackageTrackingLegacyAware($oid);
+                $__carrier = ($__pt && !empty($__pt->tracking_number)) ? (string) $__pt->tracking_number : '';
+                if ($__carrier !== ''): ?>
+                    <span class="wd-dim ml-2" title="Carrier / postal tracking"><i class="mdi mdi-barcode"></i> <?php echo htmlspecialchars($__carrier); ?></span>
+                <?php endif; ?>
                 <?php // Once delivered, the double-tick "Delivered" chip is enough — the
                       // raw status badge would just repeat it, so hide it. ?>
                 <?php if ($state !== 'delivered'): ?>

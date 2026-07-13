@@ -94,6 +94,7 @@ if ($numrows > 0) { ?>
 					</th>
 					<th><b><?php echo 'Sender Name' ?></b></th>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
+					<th><b>Carrier Tracking</b></th>
 					<th><b><?php echo 'Contents' ?></b></th>
 					<th><b><?php echo $lang['left215'] ?></b></th>
 					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
@@ -187,7 +188,9 @@ if ($numrows > 0) { ?>
 							<td><?php echo $sender->fname . ' ' . $sender->lname; ?></td>
 
 							<td><?php echo $row->order_prefix . $row->order_no; ?></td>
-							
+							<?php $__pt = cdp_getPackageTrackingLegacyAware((int) $row->order_id); ?>
+							<td><?php echo ($__pt && !empty($__pt->tracking_number)) ? htmlspecialchars((string) $__pt->tracking_number) : 'N/A'; ?></td>
+
                             <td><?php echo $description->order_item_description; ?></td>
 
 							<td><?php echo $weight; ?></td>

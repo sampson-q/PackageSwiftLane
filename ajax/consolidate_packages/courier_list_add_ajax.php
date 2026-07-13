@@ -82,6 +82,7 @@ if ($numrows > 0) { ?>
 				<tr>
 					<th><b><?php echo 'Sender Name' ?></b></th>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
+					<th><b>Carrier Tracking</b></th>
 					<th><b><?php echo 'Contents' ?></b></th>
 					<th><b><?php echo $lang['left215'] ?></b></th>
 					<th><b><?php echo $lang['lstatusshipment'] ?></b></th>
@@ -162,7 +163,12 @@ if ($numrows > 0) { ?>
 							<td><?php echo $sender->fname . ' ' . $sender->lname; ?></td>
 
 							<td><?php echo $row->order_prefix . $row->order_no; ?></td>
-							
+							<?php
+							$db->cdp_query("SELECT tracking_purchase FROM cdb_customers_packages WHERE order_id = '" . $row->order_id . "'");
+							$__pt = $db->cdp_registro();
+							?>
+							<td><?php echo ($__pt && !empty($__pt->tracking_purchase)) ? htmlspecialchars((string) $__pt->tracking_purchase) : 'N/A'; ?></td>
+
                             <td><?php echo $description->order_item_description; ?></td>
 
 							<td><?php echo $weight; ?></td>

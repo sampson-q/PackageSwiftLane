@@ -89,6 +89,7 @@ if ($numrows > 0) { ?>
 			<thead>
 				<tr>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
+					<th class="text-center"><b>Carrier Tracking</b></th>
 					<th class="text-center"><b><?php echo $lang['ddate'] ?></b></th>
 					<th class="text-center"><b><?php echo $lang['left498'] ?></b></th>
 					<th class="text-center"><b><?php echo $lang['left499'] ?></b></th>
@@ -141,11 +142,14 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row->order_prefix . $row->order_no . "'");
 						$address_order = $db->cdp_registro();
 
+						// Carrier / postal tracking, shown next to the Swift (system) number.
+						$postal_tracking = cdp_getPackageTrackingLegacyAware((int) $row->order_id);
 
 
 					?>
 						<tr class="card-hovera">
 							<td><b><a href="courier_view.php?id=<?php echo $row->order_id; ?>"><?php echo $row->order_prefix . $row->order_no; ?></a></b></td>
+							<td class="text-center"><?php echo ($postal_tracking && !empty($postal_tracking->tracking_number)) ? htmlspecialchars((string) $postal_tracking->tracking_number) : 'N/A'; ?></td>
 							<td class="text-center">
 								<?php echo $row->order_date; ?>
 							</td>

@@ -95,6 +95,7 @@ if ($numrows > 0) { ?>
 			<thead>
 				<tr>
 					<th><b><?php echo $lang['ltracking'] ?></b></th>
+					<th><b>Carrier Tracking</b></th>
 					<th><b><?php echo $lang['ddate'] ?></b></th>
 					<th><b><?php echo $lang['left499'] ?></b></th>
 					<th><b><?php echo $lang['ldestination'] ?></b></th>
@@ -179,6 +180,8 @@ if ($numrows > 0) { ?>
 						<tr class="card-hovera">
 
 							<td><b><a href="courier_view.php?id=<?php echo $row->order_id; ?>"><?php echo $row->order_prefix . $row->order_no; ?></a></b></td>
+							<?php $__pt = cdp_getPackageTrackingLegacyAware((int) $row->order_id); ?>
+							<td><?php echo ($__pt && !empty($__pt->tracking_number)) ? htmlspecialchars((string) $__pt->tracking_number) : 'N/A'; ?></td>
 							<td>
 								<?php echo $row->order_date; ?>
 							</td>
