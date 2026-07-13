@@ -155,17 +155,9 @@ if (($userData->userlevel ?? 0) != 6 && !$user->cdp_hasPermission('add_client'))
                                                 <div class="form-group">
                                                     <label for="phoneNumber1"><?php echo $lang['leftorder164'] ?></label>
                                                     <select class="custom-select form-control" id="document_type" name="document_type">
-                                                        <option value="DNI"><?php echo $lang['leftorder165'] ?></option>
-                                                        <option value="RIC"><?php echo $lang['leftorder166'] ?></option>
-                                                        <option value="CI"><?php echo $lang['leftorder167'] ?></option>
-                                                        <option value="CIE"><?php echo $lang['leftorder168'] ?></option>
-                                                        <option value="CIN"><?php echo $lang['leftorder169'] ?></option>
-                                                        <option value="CIE"><?php echo $lang['leftorder170'] ?></option>
-                                                        <option value="CC"><?php echo $lang['leftorder171'] ?></option>
-                                                        <option value="TI"><?php echo $lang['leftorder172'] ?></option>
-                                                        <option value="CE"><?php echo $lang['leftorder173'] ?></option>
                                                         <option value="PSP"><?php echo $lang['leftorder174'] ?></option>
-                                                        <option value="NIT"><?php echo $lang['leftorder1745'] ?></option>
+                                                        <option value="ECW"><?php echo $lang['leftorder1746'] ?></option>
+                                                        <option value="DNI"><?php echo $lang['leftorder165'] ?></option>
                                                     </select>
                                                 </div>
                                             </div>
