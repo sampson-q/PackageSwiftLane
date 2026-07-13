@@ -568,6 +568,24 @@ $categories   = $core->cdp_getCategoriesById(27);
 
                                             <input class="custom-file-input" id="filesCapture" name="filesCapture[]" multiple="multiple" type="file" accept="image/*" capture="environment" style="display:none;" />
                                         </div>
+
+                                        <!-- Video capture — sits alongside Attach Files / Camera Capture.
+                                             Kept small (~2–5 MB) via bitrate + duration cap. -->
+                                        <div class="col-md-2">
+                                            <div>
+                                                <label class="control-label" id="videoItem">Record Video</label>
+                                            </div>
+
+                                            <button type="button" id="recordVideoButton" class="btn btn-info pull-left mb-4">
+                                                <i class="fa fa-video" style="font-size:18px; cursor:pointer;"></i> Record Video
+                                            </button>
+
+                                            <div class="mt-2 d-flex align-items-start" style="gap:.5rem;">
+                                                <video id="videoPreview" playsinline style="width:220px; height:165px; background:#000; display:none; border-radius:6px; object-fit:cover;"></video>
+                                            </div>
+                                            <small id="videoRecStatus" class="d-block mt-1 text-muted"></small>
+                                            <input class="custom-file-input" id="filesVideo" name="filesVideo[]" multiple="multiple" type="file" accept="video/*" capture="environment" style="display:none;" />
+                                        </div>
                                     </div>
 
                                     <div class="col-md-12 row" id="image_preview"></div>
@@ -837,5 +855,6 @@ $categories   = $core->cdp_getCategoriesById(27);
 
     <!-- Tu automatización -->
     <script src="<?= cdp_asset('dataJs/customers_packages_add.js') ?>"></script>
+    <script src="<?= cdp_asset('dataJs/video_capture.js') ?>"></script>
 </body>
 </html>

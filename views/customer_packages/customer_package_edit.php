@@ -576,10 +576,18 @@ if (!empty($files_order)) {
                                             <button type="button" id="stopCamera" class="btn btn-default pull-left mb-4" style="display:none;">
                                                 <i class="fa fa-stop" style="font-size:18px;"></i> Stop
                                             </button>
+
+                                            <!-- Video capture — sits with the camera capture buttons. -->
+                                            <button type="button" id="recordVideoButton" class="btn btn-info pull-left mb-4">
+                                                <i class="fa fa-video" style="font-size:18px;"></i> Record Video
+                                            </button>
+                                            <small id="videoRecStatus" class="d-block clearfix text-muted"></small>
+                                            <input class="custom-file-input" id="filesVideo" name="filesVideo[]" multiple="multiple" type="file" accept="video/*" capture="environment" style="display:none;">
                                         </div>
 
                                         <div class="col-md-4">
                                             <video id="cameraPreview" playsinline autoplay style="display:none;width:100%;max-width:320px;border:1px solid #ddd;border-radius:8px;"></video>
+                                            <video id="videoPreview" playsinline style="display:none;width:100%;max-width:320px;background:#000;border:1px solid #ddd;border-radius:8px;margin-top:.5rem;"></video>
                                         </div>
                                     </div>
 
@@ -837,6 +845,7 @@ if (!empty($files_order)) {
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
 
     <script src="<?= cdp_asset('dataJs/customers_packages_edit.js') ?>"></script>
+    <script src="<?= cdp_asset('dataJs/video_capture.js') ?>"></script>
 
 </body>
 

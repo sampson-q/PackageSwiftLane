@@ -857,6 +857,9 @@ $("#invoice_form").on("submit", function (event) {
   // Camera Captures
   appendAllFilesToFormData(data);
 
+  // Recorded videos (kept ~2–5 MB by the shared capture module → filesVideo[])
+  if (typeof window.cdpAppendVideosToFormData === "function") { window.cdpAppendVideosToFormData(data); }
+
   $.ajax({
     type: "POST",
     url: "ajax/customers_packages/edit_customers_packages_ajax.php",

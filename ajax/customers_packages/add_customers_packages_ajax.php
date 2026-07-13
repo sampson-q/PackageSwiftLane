@@ -317,6 +317,11 @@ if (empty($errors)) {
             }
         }
 
+        // Video clips (captured/uploaded) — small client-side (~2–5 MB), 6 MB server cap.
+        if (isset($_FILES['filesVideo']) && is_array($_FILES['filesVideo']['name'])) {
+            cdp_saveShipmentVideos($_FILES['filesVideo'], (int) $shipment_id, $order_track, true);
+        }
+
         $dataTrack = array(
             'user_id' =>  $_SESSION['userid'],
             'order_id' =>  $shipment_id,

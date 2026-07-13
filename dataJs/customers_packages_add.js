@@ -1371,6 +1371,9 @@ $("#invoice_form").on("submit", function (event) {
 
   appendAllFilesToFormData(data);
 
+  // Recorded videos (kept ~2–5 MB by the shared capture module → filesVideo[])
+  if (typeof window.cdpAppendVideosToFormData === "function") { window.cdpAppendVideosToFormData(data); }
+
   data.append('_csrf_token', $('input[name="_csrf_token"]').val());
   data.append('recipient_type', window.recipient_type || 'recipient');
 

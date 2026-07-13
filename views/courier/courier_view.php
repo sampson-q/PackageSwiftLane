@@ -804,12 +804,19 @@ if ($row_order->status_invoice == 1) {
                                                 $src = $file->url;
                                             }
 
+                                            $video_exts = array('webm', 'mp4', 'm4v', 'mov', 'ogg', 'ogv', '3gp', '3gpp', 'mkv', 'avi');
+                                            $is_video   = in_array(strtolower((string) $file->file_type), $video_exts, true);
+
                                             $count++;
                                         ?>
 
                                             <div class=" col-sm-12 col-md-3 mb-2">
 
-                                                <img style="width: 180px; height: 180px;" class="img-thumbnail" src="<?php echo $src; ?>">
+                                                <?php if ($is_video) { ?>
+                                                    <video style="width: 180px; height: 180px; background:#000;" class="img-thumbnail" controls preload="metadata" src="<?php echo $file->url; ?>"></video>
+                                                <?php } else { ?>
+                                                    <img style="width: 180px; height: 180px;" class="img-thumbnail" src="<?php echo $src; ?>">
+                                                <?php } ?>
 
                                                 <div class="row ">
                                                     <div class=" col-md-12 mb-2 mt-2">
