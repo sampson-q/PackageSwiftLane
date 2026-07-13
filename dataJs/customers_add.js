@@ -419,12 +419,17 @@ $(document).ready(function() {
                     });
                 }
             },
-            error: function() {
+            error: function(jqXHR) {
                 Swal.close();
+                var msg = message_error_form19;
+                try {
+                    var r = jqXHR.responseJSON || JSON.parse(jqXHR.responseText || '{}');
+                    if (r && r.message) { msg = r.message; }
+                } catch (e) {}
                 Swal.fire({
                     type: 'error',
                     title: message_error_form18,
-                    text: message_error_form19,
+                    text: msg,
                     confirmButtonColor: '#336aea',
                     showConfirmButton: true,
                 });

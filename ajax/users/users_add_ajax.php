@@ -39,9 +39,20 @@ $user = new User;
 $core = new Core;
 $errors = array();
 
-if (empty($_POST['username']))
+if (empty($_POST['username'])) {
 
     $errors['username'] = $lang['validate_field_ajax117'];
+
+} elseif (strlen(trim($_POST['username'])) < 4 || !ctype_alnum(trim($_POST['username']))) {
+
+    // Same rule as sign-up / add-client: min 4 chars, alphanumeric only.
+    $errors['username'] = $lang['messagesform80'];
+
+} elseif ($user->cdp_usernameExists($_POST['username'])) {
+
+    // Was missing — allowed creating a user with a duplicate username.
+    $errors['username'] = $lang['validate_field_ajax118'];
+}
 
 
 if (empty($_POST['branch_office']))
@@ -91,6 +102,18 @@ if (!empty($_POST['role'])) {
 
 
 
+
+// Validation failed → return the exact reason(s) as JSON so the client shows
+// them (was emitting an HTML alert that the JS couldn't read → generic error).
+if (!empty($errors)) {
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode([
+        'status'  => 'error',
+        'message' => implode(' ', array_values($errors)),
+        'errors'  => array_values($errors),
+    ]);
+    exit;
+}
 
 if (empty($errors)) {
 
@@ -254,55 +277,3 @@ if (empty($errors)) {
 
         echo json_encode($response);
     }
-
-
-if (!empty($errors)) {
-?>
-    <div class="alert alert-danger" id="success-alert">
-        <p><span class="icon-minus-sign"></span><i class="close icon-remove-circle"></i>
-            <?php echo $lang['message_ajax_error2']; ?>
-        <ul class="error">
-            <?php
-            foreach ($errors as $error) { ?>
-                <li>
-                    <i class="icon-double-angle-right"></i>
-                    <?php
-                    echo $error;
-
-                    ?>
-
-                </li>
-            <?php
-
-            }
-            ?>
-
-
-        </ul>
-        </p>
-    </div>
-
-
-
-<?php
-}
-
-if (isset($messages)) {
-
-?>
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        <p><span class="icon-info-sign"></span>
-            <?php
-            foreach ($messages as $message) {
-                echo $message;
-            }
-            ?>
-        </p>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-
-<?php
-}
-?>
