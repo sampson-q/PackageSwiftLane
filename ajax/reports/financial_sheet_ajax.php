@@ -658,23 +658,34 @@ function fs_render_package($p, $stat = null, $cleared = false)
                 <i class="mdi mdi-weight"></i> <?php echo round($w, 2); ?> lb
             </span>
             <?php echo $itemsBadge; ?>
-            <?php if ($cleared): ?>
+            <?php
+            // Delivered = out of our custody (status 8): no more package actions.
+            $__st = new Conexion;
+            $__st->cdp_query("SELECT status_courier FROM cdb_add_order WHERE order_id = :oid LIMIT 1");
+            $__st->bind(':oid', $oid);
+            $__st->cdp_execute();
+            $__strow = $__st->cdp_registro();
+            $isDelivered = $__strow && (int) $__strow->status_courier === 8;
+            ?>
+            <?php if ($isDelivered): ?>
+                <span class="fs-pkg-paid fs-chip-settled ml-2" title="Delivered — no longer in our custody"><i class="mdi mdi-truck-check-outline"></i> Delivered</span>
+            <?php elseif ($cleared): ?>
                 <span class="fs-pkg-paid fs-chip-settled ml-2" title="Paid for &amp; cleared for delivery"><i class="mdi mdi-check-decagram"></i> Paid</span>
             <?php else: ?>
                 <span class="fs-pkg-unpaid fs-chip-balance ml-2" title="Not yet paid / cleared for delivery">Unpaid</span>
             <?php endif; ?>
             <span class="fs-spacer"></span>
             <span class="fs-money fs-pkg-total" data-usd="<?php echo (float) $p->total_order; ?>">$<?php echo number_format((float) $p->total_order, 2); ?></span>
-            <?php if (fs_user_can_clear()): ?>
+            <?php if (fs_user_can_clear() && !$isDelivered): ?>
             <div class="btn-group btn-group-sm fs-pkg-actions ml-2">
                 <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Package Actions</button>
                 <div class="dropdown-menu dropdown-menu-right">
                     <?php if (!$cleared): ?>
                     <a class="dropdown-item" href="javascript:void(0)" data-oid="<?php echo $oid; ?>" data-track="<?php echo $pkgNo; ?>" onclick="fsClearPackage(this);">
-                        <i class="mdi mdi-truck-check"></i> Clear Package for Delivery
+                        <i class="mdi mdi-truck-check"></i> Clear for Delivery
                     </a>
                     <?php else: ?>
-                    <span class="dropdown-item text-muted"><i class="mdi mdi-check-decagram"></i> Cleared for delivery</span>
+                    <span class="dropdown-item text-muted"><i class="mdi mdi-check-decagram"></i> Cleared for Delivery</span>
                     <?php endif; ?>
                 </div>
             </div>
@@ -1582,14 +1593,35 @@ if ($action === 'record_payment') {
           . ($balance > 0 ? "\nBalance Remaining: GH₵" . number_format($balance, 2) : "\nYour account is now fully settled.")
         : '';
 
-    $intro  = 'We have received your payment for your package(s) in consolidation ' . $consolNo . ' — thank you!';
+    // List the packages this payment covers — "system tracking - price" — rather
+    // than the internal consolidation number.
+    $trackByOid = [];
+    foreach ($groups[$sid]['rows'] as $rp) {
+        $trackByOid[(int) $rp->oid] = (string) (($rp->order_prefix ?? '') . ($rp->order_no ?? ''));
+    }
+    $pkgLinesTxt = [];
+    $pkgLinesHtml = [];
+    $idx = 1;
+    foreach ($checkedOids as $o) {
+        if (!isset($trackByOid[$o])) { continue; }
+        $priceStr = FS_BILL_MSG_INCLUDE_AMOUNT ? (' - GH₵' . number_format($ghsByOid[$o] ?? 0, 2)) : '';
+        $pkgLinesTxt[]  = $idx . '. ' . $trackByOid[$o] . $priceStr;
+        $pkgLinesHtml[] = htmlspecialchars($idx . '. ' . $trackByOid[$o] . $priceStr);
+        $idx++;
+    }
+    $pkgListTxt  = implode("\n", $pkgLinesTxt);
+    $pkgListHtml = implode('<br>', $pkgLinesHtml);
+
+    $intro  = 'We have received payment for your package(s) — thank you!';
     $outro  = 'We appreciate your business and look forward to serving you again.';
 
     $msgWa = $intro . "\n\n"
+        . ($pkgListTxt !== '' ? $pkgListTxt . "\n\n" : '')
         . ($amountBlock !== '' ? "*Payment Receipt*\n" . $amountBlock . "\n\n" : '')
         . $outro;
 
     $msgEmail = '<p>' . htmlspecialchars($intro) . '</p>'
+        . ($pkgListHtml !== '' ? '<p>' . $pkgListHtml . '</p>' : '')
         . ($amountBlock !== '' ? '<p><b>Payment Receipt</b><br>' . nl2br(htmlspecialchars($amountBlock)) . '</p>' : '')
         . '<p>' . htmlspecialchars($outro) . '</p>';
 

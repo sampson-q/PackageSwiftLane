@@ -696,7 +696,7 @@ function fsBillCustomer(btn) {
             '<li>notify the customer by WhatsApp and email' + (rebill ? ' <b>with the updated bill</b>' : '') + ',</li>' +
             (rebill
                 ? '<li>update the recorded bill,</li>'
-                : '<li>move the package(s) to <b>Ready for PickUp</b>,</li>') +
+                : '<li><b>clear the selected package(s) for delivery</b>,</li>') +
             '<li>log this action under your name.</li>' +
             '</ul>' +
             '</div>';
@@ -866,8 +866,16 @@ function fsOpenPaymentDialog(cid, sid, name, f) {
                 return g * netPerGross;
             }
             function isOnline() { return $("#fsp_mode").val() !== "cash"; }
+            // Straight sum of the ticked packages' own prices (what the user sees
+            // ticked), not a net/gross round-trip which drifted when a discount
+            // made netPerGross != 1.
+            function tickedGross() {
+                var g = 0;
+                $(".fsp-pkg:checked").each(function () { g += parseFloat($(this).data("ghs")) || 0; });
+                return g;
+            }
             function refresh() {
-                $("#fsp_val").text("₵" + (clearedAfterNet() / netPerGross).toFixed(2)); // gross value display
+                $("#fsp_val").text("₵" + tickedGross().toFixed(2)); // value of ticked packages
                 $("#fsp_charge").text("₵" + newlyTickedNet().toFixed(2));
                 if (isOnline()) { $("#fsp_warn").hide(); return; }
                 // Cash tally: does total-paid-after cover the net value of cleared pkgs?
