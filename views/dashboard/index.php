@@ -596,103 +596,62 @@ $monthName = obtenerNombreMes($currentMonth);
                                             </div>
                                         </div>
                                         <div><br></div>
+                                        <?php
+                                        // Counts by role CATEGORY (role-flag based, so every active role is
+                                        // counted, not just the 4 legacy userlevels), plus departments.
+                                        $uc = ['super' => 0, 'staff' => 0, 'driver' => 0, 'client' => 0];
+                                        $dash_depts = array();
+                                        try {
+                                            $db->cdp_query("SELECT r.is_superadmin s, r.is_driver d, r.is_client c, COUNT(u.id) n
+                                                            FROM cdb_user_roles r LEFT JOIN cdb_users u ON u.userlevel = r.role_id
+                                                            WHERE r.rol_active = 1 GROUP BY r.role_id");
+                                            $db->cdp_execute();
+                                            foreach ((array) $db->cdp_registros() as $rr) {
+                                                $n = (int) $rr->n;
+                                                if ((int) $rr->s)      { $uc['super']  += $n; }
+                                                elseif ((int) $rr->d)  { $uc['driver'] += $n; }
+                                                elseif ((int) $rr->c)  { $uc['client'] += $n; }
+                                                else                   { $uc['staff']  += $n; }
+                                            }
+                                            $db->cdp_query("SELECT d.name, COUNT(m.user_id) total FROM cdb_departments d
+                                                            LEFT JOIN cdb_department_members m ON m.department_id = d.id
+                                                            GROUP BY d.id, d.name ORDER BY d.name");
+                                            $db->cdp_execute();
+                                            $dash_depts = $db->cdp_registros() ?: array();
+                                        } catch (Throwable $e) { /* RBAC tables absent */ }
+                                        $ucRows = [
+                                            ['solar:shield-check-linear',            ($lang['dash-general-14'] ?? 'Super Admin'), $uc['super']],
+                                            ['solar:users-group-two-rounded-linear', ($lang['dash-general-15'] ?? 'Managers'),    $uc['staff']],
+                                            ['solar:user-id-linear',                 ($lang['dash-general-16'] ?? 'Drivers'),     $uc['driver']],
+                                            ['solar:user-plus-linear',               ($lang['dash-general-17'] ?? 'Customers'),   $uc['client']],
+                                        ];
+                                        ?>
                                         <div class="pb-0">
-                                            <ul class="p-0 m-0">
-                                                <li class="d-flex mb-2">
-                                                        <div class="avatar flex-shrink-0 me-3">
-                                                            <span class="avatar-initial rounded bg-label-warning d-inline-flex align-items-center justify-content-center"><iconify-icon icon="solar:shield-check-linear" style="font-size:1.1rem"></iconify-icon></span>
-                                                            </div>
-                                                        <div class="card-user d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                        <div class="me-2">
-                                                            <h6 class="mb-0"><?php echo $lang['dash-general-14'] ?></h6>
-                                                        </div>
-                                                        <div class="user-progress d-flex align-items-center gap-3">
-                                                          
-                                                          <div class="d-flex align-items-center gap-1">
-                                                            <small class="text-muted">
-                                                                <?php
-                                                                $db->cdp_query('SELECT COUNT(*) as total FROM cdb_users WHERE userlevel=9');
-                                                                $db->cdp_execute();
-                                                                $count = $db->cdp_registro();
-                                                                echo (int)($count->total ?? 0);
-                                                                ?>  
-                                                            </small>
-                                                          </div>
-                                                        </div>
-                                                    </div>
+                                            <h6 class="text-muted mb-1" style="font-size:.78rem;">User Registrations</h6>
+                                            <ul class="p-0 m-0" style="list-style:none;">
+                                                <?php foreach ($ucRows as $r): ?>
+                                                <li class="d-flex align-items-center justify-content-between mb-1">
+                                                    <span class="d-flex align-items-center">
+                                                        <span class="avatar-initial rounded bg-label-warning d-inline-flex align-items-center justify-content-center me-2" style="width:1.5rem;height:1.5rem;"><iconify-icon icon="<?php echo $r[0]; ?>" style="font-size:.9rem"></iconify-icon></span>
+                                                        <small><?php echo htmlspecialchars((string) $r[1]); ?></small>
+                                                    </span>
+                                                    <b><?php echo (int) $r[2]; ?></b>
                                                 </li>
-
-                                                <li class="d-flex mb-2">
-                                                        <div class="avatar flex-shrink-0 me-3">
-                                                            <span class="avatar-initial rounded bg-label-warning d-inline-flex align-items-center justify-content-center"><iconify-icon icon="solar:users-group-two-rounded-linear" style="font-size:1.1rem"></iconify-icon></span>
-                                                        </div>
-                                                        <div class="card-user d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                        <div class="me-2">
-                                                            <h6 class="mb-0"><?php echo $lang['dash-general-15'] ?></h6>
-                                                        </div>
-                                                        <div class="user-progress d-flex align-items-center gap-3">
-                                                          
-                                                          <div class="d-flex align-items-center gap-1">
-                                                            <small class="text-muted">
-                                                                <?php
-                                                                $db->cdp_query('SELECT COUNT(*) as total FROM cdb_users WHERE userlevel=2');
-                                                                $db->cdp_execute();
-                                                                $count = $db->cdp_registro();
-                                                                echo (int)($count->total ?? 0);
-                                                                ?>  
-                                                            </small>
-                                                          </div>
-                                                        </div>
-                                                    </div>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                            <hr class="my-2">
+                                            <h6 class="text-muted mb-1" style="font-size:.78rem;">Departments</h6>
+                                            <ul class="p-0 m-0" style="list-style:none;">
+                                                <?php foreach ($dash_depts as $d): ?>
+                                                <li class="d-flex align-items-center justify-content-between mb-1">
+                                                    <span class="d-flex align-items-center">
+                                                        <iconify-icon icon="solar:buildings-2-linear" class="text-muted me-2"></iconify-icon>
+                                                        <small><?php echo htmlspecialchars((string) $d->name); ?></small>
+                                                    </span>
+                                                    <span class="badge bg-label-success"><?php echo (int) $d->total; ?></span>
                                                 </li>
-
-                                                <li class="d-flex mb-2">
-                                                        <div class="avatar flex-shrink-0 me-3">
-                                                            <span class="avatar-initial rounded bg-label-warning d-inline-flex align-items-center justify-content-center"><iconify-icon icon="solar:user-id-linear" style="font-size:1.1rem"></iconify-icon></span>
-                                                        </div>
-                                                        <div class="card-user d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                        <div class="me-2">
-                                                            <h6 class="mb-0"><?php echo $lang['dash-general-16'] ?></h6>
-                                                        </div>
-                                                        <div class="user-progress d-flex align-items-center gap-3">
-                                                          
-                                                          <div class="d-flex align-items-center gap-1">
-                                                            <small class="text-muted">
-                                                                <?php
-                                                                $db->cdp_query('SELECT COUNT(*) as total FROM cdb_users WHERE userlevel=3');
-                                                                $db->cdp_execute();
-                                                                $count = $db->cdp_registro();
-                                                                echo (int)($count->total ?? 0);
-                                                                ?>  
-                                                            </small>
-                                                          </div>
-                                                        </div>
-                                                    </div>
-                                                </li>
-
-                                                <li class="d-flex mb-2">
-                                                        <div class="avatar flex-shrink-0 me-3">
-                                                            <span class="avatar-initial rounded bg-label-warning d-inline-flex align-items-center justify-content-center"><iconify-icon icon="solar:user-plus-linear" style="font-size:1.1rem"></iconify-icon></span>
-                                                        </div>
-                                                        <div class="card-user d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                        <div class="me-2">
-                                                            <h6 class="mb-0"><?php echo $lang['dash-general-17'] ?></h6>
-                                                        </div>
-                                                        <div class="user-progress d-flex align-items-center gap-3">
-                                                          
-                                                          <div class="d-flex align-items-center gap-1">
-                                                            <small class="text-muted">
-                                                                <?php
-                                                                $db->cdp_query('SELECT COUNT(*) as total FROM cdb_users WHERE userlevel=1');
-                                                                $db->cdp_execute();
-                                                                $count = $db->cdp_registro();
-                                                                echo (int)($count->total ?? 0);
-                                                                ?>  
-                                                            </small>
-                                                          </div>
-                                                        </div>
-                                                    </div>
-                                                </li>
+                                                <?php endforeach; ?>
+                                                <?php if (!$dash_depts): ?><li class="text-muted small">None yet.</li><?php endif; ?>
                                             </ul>
                                         </div>
                                     </div>
@@ -702,74 +661,6 @@ $monthName = obtenerNombreMes($currentMonth);
                     </div>
                 </div>
 
-                <!-- ROLES & DEPARTMENTS (RBAC) — real roles and departments, not
-                     the old hardcoded 4 user levels. -->
-                <?php
-                $dash_roles = array();
-                $dash_depts = array();
-                try {
-                    $db->cdp_query("SELECT r.role_name, COUNT(u.id) AS total
-                                    FROM cdb_user_roles r
-                                    LEFT JOIN cdb_users u ON u.userlevel = r.role_id
-                                    WHERE r.rol_active = 1
-                                    GROUP BY r.role_id, r.role_name
-                                    ORDER BY r.role_name");
-                    $db->cdp_execute();
-                    $dash_roles = $db->cdp_registros() ?: array();
-
-                    $db->cdp_query("SELECT d.name, COUNT(m.user_id) AS total
-                                    FROM cdb_departments d
-                                    LEFT JOIN cdb_department_members m ON m.department_id = d.id
-                                    GROUP BY d.id, d.name
-                                    ORDER BY d.name");
-                    $db->cdp_execute();
-                    $dash_depts = $db->cdp_registros() ?: array();
-                } catch (Throwable $e) {
-                    // RBAC tables not present — skip the section.
-                }
-                ?>
-                <?php if ($dash_roles || $dash_depts): ?>
-                <div class="row">
-                    <div class="col-12 col-lg-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h5 class="m-0"><iconify-icon icon="solar:users-group-rounded-linear" class="text-primary"></iconify-icon> Roles</h5>
-                                    <a href="users_list.php" class="btn btn-sm btn-outline-primary">Users</a>
-                                </div>
-                                <ul class="p-0 m-0" style="list-style:none;">
-                                    <?php foreach ($dash_roles as $r): ?>
-                                    <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                                        <span><iconify-icon icon="solar:shield-user-linear" class="text-muted"></iconify-icon> <?php echo htmlspecialchars((string) $r->role_name); ?></span>
-                                        <span class="badge bg-label-primary"><?php echo (int) $r->total; ?></span>
-                                    </li>
-                                    <?php endforeach; ?>
-                                    <?php if (!$dash_roles): ?><li class="text-muted small">No roles defined.</li><?php endif; ?>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h5 class="m-0"><iconify-icon icon="solar:buildings-linear" class="text-success"></iconify-icon> Departments</h5>
-                                    <a href="departments.php" class="btn btn-sm btn-outline-success">Manage</a>
-                                </div>
-                                <ul class="p-0 m-0" style="list-style:none;">
-                                    <?php foreach ($dash_depts as $d): ?>
-                                    <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                                        <span><iconify-icon icon="solar:buildings-2-linear" class="text-muted"></iconify-icon> <?php echo htmlspecialchars((string) $d->name); ?></span>
-                                        <span class="badge bg-label-success"><?php echo (int) $d->total; ?> <?php echo ((int) $d->total === 1 ? 'member' : 'members'); ?></span>
-                                    </li>
-                                    <?php endforeach; ?>
-                                    <?php if (!$dash_depts): ?><li class="text-muted small">No departments defined.</li><?php endif; ?>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <?php endif; ?>
 
             <?php } ?>
 
