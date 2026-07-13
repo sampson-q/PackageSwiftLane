@@ -55,6 +55,7 @@ $fsPermMap = [
     'payment_form'   => 'fs_record_payment',
     'gateway_init'   => 'fs_record_payment',
     'record_payment' => 'fs_record_payment',
+    'clear_debt'     => 'fs_record_payment',
     'apply_discount' => 'fs_apply_discount',
     'remove_discount' => 'fs_apply_discount',
     'clear_package'  => 'fs_clear_delivery',
@@ -500,6 +501,24 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
     // Accumulative debt across ALL of this customer's consolidations.
     $owedGhs = fs_customer_outstanding($sid);
 
+    // Per-package clearance / delivery state — drives which Customer Actions apply.
+    $pkgTotal = count($g['oids']);
+    $pkgClearedCt = 0;
+    $pkgDeliveredCt = 0;
+    if ($g['oids']) {
+        $inOids = implode(',', array_map('intval', $g['oids']));
+        $sdb = new Conexion;
+        $sdb->cdp_query("SELECT COALESCE(SUM(fs_cleared_for_delivery = 1), 0) c,
+                                COALESCE(SUM(status_courier = 8), 0) d
+                         FROM cdb_add_order WHERE order_id IN ($inOids)");
+        $sdb->cdp_execute();
+        $sr = $sdb->cdp_registro();
+        $pkgClearedCt   = (int) ($sr->c ?? 0);
+        $pkgDeliveredCt = (int) ($sr->d ?? 0);
+    }
+    $allCleared   = ($pkgTotal > 0 && $pkgClearedCt >= $pkgTotal);
+    $allDelivered = ($pkgTotal > 0 && $pkgDeliveredCt >= $pkgTotal);
+
     ob_start();
     ?>
     <div class="card mb-2 fs-cust-card" data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>">
@@ -553,15 +572,32 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
                         </h6>
                         <div class="dropdown-divider"></div>
                         <?php endif; ?>
-                        <a class="dropdown-item fs-pay-btn" href="javascript:void(0)"
-                           data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>"
-                           data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
-                           data-bill="<?php echo $netGhs; ?>"
-                           data-paid="<?php echo $paidGhs; ?>"
-                           data-balance="<?php echo $balGhs; ?>"
-                           onclick="fsRecordPayment(this);">
-                            <i class="mdi mdi-cash-multiple"></i> <?php echo $hasPaid ? 'Update Payment' : 'Record Payment'; ?>
-                        </a>
+
+                        <?php // Money action depends on state (delivered packages have none). ?>
+                        <?php if (!$allDelivered): ?>
+                            <?php if (!$allCleared): ?>
+                            <?php // Not all cleared yet → the per-package payment flow. ?>
+                            <a class="dropdown-item fs-pay-btn" href="javascript:void(0)"
+                               data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>"
+                               data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
+                               data-bill="<?php echo $netGhs; ?>"
+                               data-paid="<?php echo $paidGhs; ?>"
+                               data-balance="<?php echo $balGhs; ?>"
+                               onclick="fsRecordPayment(this);">
+                                <i class="mdi mdi-cash-multiple"></i> <?php echo $hasPaid ? 'Update Payment' : 'Record Payment'; ?>
+                            </a>
+                            <?php elseif ($balGhs > 0): ?>
+                            <?php // All packages cleared but the customer still owes → light debt clearing. ?>
+                            <a class="dropdown-item fs-debt-btn text-danger" href="javascript:void(0)"
+                               data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>"
+                               data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
+                               data-balance="<?php echo $balGhs; ?>"
+                               onclick="fsClearDebt(this);">
+                                <i class="mdi mdi-cash-refund"></i> Clear Debt (&#8373;<?php echo number_format($balGhs, 2); ?>)
+                            </a>
+                            <?php endif; ?>
+                        <?php endif; ?>
+
                         <a class="dropdown-item fs-disc-apply" href="javascript:void(0)"
                            data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>"
                            data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
@@ -584,6 +620,7 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
                             <i class="mdi mdi-history"></i> Payment History
                         </a>
                         <div class="dropdown-divider"></div>
+                        <?php if (!$allDelivered): ?>
                         <a class="dropdown-item fs-bill-btn" href="javascript:void(0)"
                            data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>"
                            data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
@@ -591,6 +628,7 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
                            onclick="fsBillCustomer(this);">
                             <i class="mdi mdi-refresh"></i> Re-bill
                         </a>
+                        <?php endif; ?>
                         <a class="dropdown-item" href="javascript:void(0)"
                            data-orders='<?php echo $ordersJson; ?>'
                            onclick="fsPrintShipments(this);">
@@ -1684,6 +1722,117 @@ if ($action === 'record_payment') {
         'sent_whatsapp'  => $sentWa,
         'sent_email'     => $sentEmail,
         'warnings'       => $warnings,
+    ]);
+    exit;
+}
+
+// ----------------------------------------------------------------------------
+// CLEAR DEBT (JSON) — light payment against an outstanding balance once every
+// package is already cleared for delivery. Unlike record_payment it does NOT
+// touch package clearance/status or send a "ready for pickup" receipt — it just
+// records the money against the ledger so the debt drops.
+// ----------------------------------------------------------------------------
+if ($action === 'clear_debt') {
+    header('Content-Type: application/json; charset=UTF-8');
+
+    $cid = (int) ($_REQUEST['consolidate_id'] ?? 0);
+    $sid = (int) ($_REQUEST['sender_id'] ?? 0);
+    if ($cid <= 0 || $sid <= 0) {
+        echo json_encode(['ok' => false, 'error' => 'bad_request']);
+        exit;
+    }
+
+    $billedRow = fs_customer_billed($cid, $sid);
+    if (!$billedRow) {
+        echo json_encode(['ok' => false, 'error' => 'not_billed', 'message' => 'This customer has no bill on this consolidation.']);
+        exit;
+    }
+
+    $billGhs = ($billedRow->amount_ghs !== null)
+        ? (float) $billedRow->amount_ghs
+        : (float) cdp_customerPayableGhs((float) $billedRow->amount_usd, true, (float) $core->exchange_rate)['total'];
+    $discGhs = (float) $billedRow->discount_ghs;
+    $paidGhs = ($billedRow->paid_ghs !== null) ? (float) $billedRow->paid_ghs : 0.0;
+    $balance = round(max(0, ($billGhs - $discGhs) - $paidGhs), 2);
+    if ($balance <= 0) {
+        echo json_encode(['ok' => false, 'error' => 'no_debt', 'message' => 'There is no outstanding balance to clear.']);
+        exit;
+    }
+
+    $mode = strtolower(trim((string) ($_REQUEST['mode'] ?? 'cash')));
+    if (!in_array($mode, ['cash', 'paystack', 'hubtel', 'paypal'], true)) {
+        $mode = 'cash';
+    }
+    $reference = trim((string) ($_REQUEST['reference'] ?? ''));
+
+    $verify = cdp_fsVerifyPayment($mode, $reference, null);
+    if (empty($verify['ok'])) {
+        echo json_encode(['ok' => false, 'error' => 'verify_failed',
+                          'message' => $verify['message'] ?: 'Payment could not be verified.']);
+        exit;
+    }
+
+    if ($mode === 'cash') {
+        $raw  = trim((string) ($_REQUEST['paid'] ?? ''));
+        $paid = round((float) str_replace(',', '', $raw), 2);
+        if ($raw === '' || !is_numeric(str_replace(',', '', $raw)) || $paid <= 0) {
+            echo json_encode(['ok' => false, 'error' => 'invalid_value', 'message' => 'Enter the amount received (greater than 0).']);
+            exit;
+        }
+    } else {
+        $paid = round((float) ($verify['amount'] ?? 0), 2);
+        if ($paid <= 0) {
+            echo json_encode(['ok' => false, 'error' => 'gateway_no_amount',
+                              'message' => 'The gateway did not report a paid amount for this reference.']);
+            exit;
+        }
+    }
+    if ($paid > $balance) { $paid = $balance; } // never over-clear the debt
+
+    $note = trim((string) ($_REQUEST['note'] ?? ''));
+    try {
+        $db->cdp_query("INSERT INTO cdb_fs_payments
+                            (consolidate_id, sender_id, amount_ghs, mode, reference,
+                             gateway_status, gateway_payload, cleared_for_delivery, cleared_orders, note,
+                             exchange_rate, recorded_by, recorded_at)
+                        VALUES
+                            (:cid, :sid, :amt, :mode, :ref,
+                             :gs, :gp, 1, '[]', :note, :rate, :by, NOW())");
+        $db->bind(':cid', $cid);
+        $db->bind(':sid', $sid);
+        $db->bind(':amt', $paid);
+        $db->bind(':mode', $mode);
+        $db->bind(':ref', $reference !== '' ? $reference : null);
+        $db->bind(':gs', $verify['status'] ?? null);
+        $db->bind(':gp', $verify['payload'] ?? null);
+        $db->bind(':note', $note !== '' ? ('Debt clearing — ' . $note) : 'Debt clearing');
+        $db->bind(':rate', (float) $core->exchange_rate);
+        $db->bind(':by', $uid);
+        $db->cdp_execute();
+    } catch (Throwable $e) {
+        echo json_encode(['ok' => false, 'error' => 'ledger_missing',
+                          'message' => 'Payment ledger not found — run sql/fs_transactions.sql, then try again.']);
+        exit;
+    }
+
+    $agg = fs_sync_billing_cache($cid, $sid, $uid);
+    $newBalance = round(max(0, ($billGhs - $discGhs) - (float) $agg['paid']), 2);
+
+    // Log the debt payment against each of the customer's packages.
+    $__grp = fs_customer_groups($cid);
+    if (isset($__grp[$sid])) {
+        foreach (array_unique(array_map('intval', $__grp[$sid]['oids'])) as $__o) {
+            fs_log_history($uid, $__o, 'recorded a ₵' . number_format($paid, 2) . ' debt payment (' . ucfirst($mode) . ')');
+        }
+    }
+
+    echo json_encode([
+        'ok'          => true,
+        'this_payment' => $paid,
+        'mode'        => $mode,
+        'paid_ghs'    => $agg['paid'],
+        'balance_ghs' => $newBalance,
+        'consol'      => fs_consol_summary($cid),
     ]);
     exit;
 }

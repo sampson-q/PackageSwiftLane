@@ -1142,6 +1142,65 @@ function fsRemoveDiscount(el) {
 /* ------------------------ Customer payment history ---------------------- */
 // Customer Actions -> Payment History. A statement of every payment and
 // discount recorded against this customer across all consolidations.
+// Customer Actions -> Clear Debt. Light payment against an outstanding balance
+// once all packages are already cleared for delivery (no package checklist, no
+// clearance/status changes — just records the money so the debt drops).
+function fsClearDebt(el) {
+    var $b = $(el);
+    var cid = $b.data("cid"), sid = $b.data("sid");
+    var name = $b.data("name") || "this customer";
+    var balance = parseFloat($b.data("balance")) || 0;
+    Swal.fire({
+        title: "Clear Debt — " + name,
+        html:
+            '<div class="text-left" style="font-size:14px;">' +
+            '<div class="d-flex justify-content-between mb-2"><span>Outstanding balance:</span><b>₵' + balance.toFixed(2) + '</b></div>' +
+            '<label class="mb-1">Payment Method</label>' +
+            '<select id="fsd_mode" class="form-control mb-2">' +
+            '<option value="cash">Cash</option><option value="paystack">Paystack</option><option value="hubtel">Hubtel</option></select>' +
+            '<div id="fsd_cash"><label class="mb-1">Amount Received</label>' +
+            '<div class="input-group"><div class="input-group-prepend"><span class="input-group-text">GH₵</span></div>' +
+            '<input id="fsd_paid" class="form-control" value="' + balance.toFixed(2) + '"></div></div>' +
+            '<div id="fsd_online" style="display:none;"><label class="mb-1 mt-1">Transaction Reference</label>' +
+            '<input id="fsd_ref" class="form-control" placeholder="Gateway reference — verified on save"></div>' +
+            '<label class="mb-1 mt-1">Note <span class="text-muted">(internal)</span></label>' +
+            '<input id="fsd_note" class="form-control" placeholder="Optional">' +
+            '</div>',
+        width: 520, showCancelButton: true, confirmButtonText: "Record Debt Payment",
+        showLoaderOnConfirm: true, allowOutsideClick: function () { return !Swal.isLoading(); },
+        didOpen: function () {
+            $("#fsd_mode").on("change", function () {
+                var online = $(this).val() !== "cash";
+                $("#fsd_cash").toggle(!online);
+                $("#fsd_online").toggle(online);
+            });
+        },
+        preConfirm: function () {
+            var mode = $("#fsd_mode").val();
+            var data = { action: "clear_debt", consolidate_id: cid, sender_id: sid, mode: mode, note: ($("#fsd_note").val() || "") };
+            if (mode === "cash") {
+                var v = String($("#fsd_paid").val() || "").replace(/,/g, "").trim();
+                if (v === "" || isNaN(parseFloat(v)) || parseFloat(v) <= 0) { Swal.showValidationMessage("Enter the amount received."); return false; }
+                data.paid = v;
+            } else {
+                var ref = String($("#fsd_ref").val() || "").trim();
+                if (ref === "") { Swal.showValidationMessage("Enter the transaction reference."); return false; }
+                data.reference = ref;
+            }
+            return $.ajax({ url: FS_AJAX, method: "POST", dataType: "json", data: data }).then(function (r) {
+                if (!r || !r.ok) { Swal.showValidationMessage((r && r.message) ? r.message : "Could not record the debt payment."); return false; }
+                return r;
+            }, function () { Swal.showValidationMessage("Server error."); return false; });
+        }
+    }).then(function (res) {
+        if (!res.isConfirmed || !res.value) return;
+        var r = res.value;
+        if (r.consol) fsApplyConsolSummary(cid, r.consol);
+        Swal.fire({ icon: "success", title: "Debt payment recorded", html: "Balance: <b>₵" + Number(r.balance_ghs).toFixed(2) + "</b>", confirmButtonText: "Ok" })
+            .then(function () { fsReloadCustomers(cid); });
+    });
+}
+
 function fsPaymentHistory(el) {
     var $b = $(el);
     var sid = $b.data("sid");
