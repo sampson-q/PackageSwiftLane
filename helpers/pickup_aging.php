@@ -108,12 +108,16 @@ if (!function_exists('cdp_propagateConsolidationStatusToPackages')) {
             cdp_pickupAgingSetStatus($p->oid, $track, $status, 'Consolidation status propagated to package', $user_id, $office);
 
             if ($status === CDP_PA_READY) {
+                // Only start the pickup clock for packages already cleared for
+                // delivery; the clock starts at clearance time. Uncleared
+                // packages join later (via discovery) once Accounts clears them.
                 $db->cdp_query("INSERT INTO cdb_package_pickup_aging (order_id, order_track, sender_id, ready_at)
-                                VALUES (:oid, :trk, :sid, NOW())
+                                SELECT a.order_id, :trk, a.sender_id, a.fs_cleared_at
+                                FROM cdb_add_order a
+                                WHERE a.order_id = :oid AND a.fs_cleared_for_delivery = 1
                                 ON DUPLICATE KEY UPDATE order_track = VALUES(order_track)");
                 $db->bind(':oid', (int) $p->oid);
                 $db->bind(':trk', $track);
-                $db->bind(':sid', (int) $p->sender_id);
                 $db->cdp_execute();
             }
             $n++;
@@ -137,6 +141,7 @@ if (!function_exists('cdp_pickupAgingPending')) {
             JOIN cdb_add_order a ON a.order_id = p.order_id
             WHERE p.notified_at IS NULL
               AND a.status_courier = " . CDP_PA_READY . "
+              AND a.fs_cleared_for_delivery = 1
               AND p.ready_at <= (NOW() - INTERVAL " . (int) CDP_PA_READY_DAYS . " DAY)
             ORDER BY p.ready_at ASC");
         $db->cdp_execute();
@@ -156,22 +161,24 @@ if (!function_exists('cdp_processPickupAging')) {
         $auctionId = cdp_pickupAgingAuctionId();
         $summary = ['discovered' => 0, 'not_picked' => 0, 'auction' => 0, 'dropped' => 0, 'pending' => 0];
 
-        // 1) Discover packages now at Ready-for-Pickup that aren't tracked yet.
+        // 1) Discover packages that are CLEARED FOR DELIVERY and at Ready-for-
+        //    Pickup but not tracked yet. Aging now follows CLEARANCE: only
+        //    Accounts-cleared packages age, and the pickup clock starts at the
+        //    moment of clearance (fs_cleared_at), NOT at billing time. Uncleared
+        //    packages (incl. old pre-clearance ones) never enter the pipeline.
         $db->cdp_query("
-            SELECT a.order_id, a.order_prefix, a.order_no, a.sender_id
+            SELECT a.order_id, a.order_prefix, a.order_no, a.sender_id, a.fs_cleared_at
             FROM cdb_add_order a
             LEFT JOIN cdb_package_pickup_aging p ON p.order_id = a.order_id
-            WHERE a.status_courier = " . CDP_PA_READY . " AND p.order_id IS NULL");
+            WHERE a.status_courier = " . CDP_PA_READY . "
+              AND a.fs_cleared_for_delivery = 1
+              AND p.order_id IS NULL");
         $db->cdp_execute();
         foreach ($db->cdp_registros() as $row) {
             $track = $row->order_prefix . $row->order_no;
-            $t = new Conexion;
-            $t->cdp_query("SELECT MIN(t_date) AS ra FROM cdb_courier_track WHERE order_track = :t AND status_courier = " . CDP_PA_READY);
-            $t->bind(':t', $track);
-            $t->cdp_execute();
-            $raRow = $t->cdp_registro();
-            $readyAt = ($raRow && $raRow->ra) ? $raRow->ra : date('Y-m-d H:i:s');
+            $readyAt = !empty($row->fs_cleared_at) ? $row->fs_cleared_at : date('Y-m-d H:i:s');
 
+            $t = new Conexion;
             $t->cdp_query("INSERT INTO cdb_package_pickup_aging (order_id, order_track, sender_id, ready_at)
                            VALUES (:oid, :trk, :sid, :ra)
                            ON DUPLICATE KEY UPDATE order_track = VALUES(order_track)");
@@ -183,11 +190,13 @@ if (!function_exists('cdp_processPickupAging')) {
             $summary['discovered']++;
         }
 
-        // 2) Drop packages that left the pickup chain (e.g. picked up / delivered).
+        // 2) Drop packages that left the pickup chain (picked up / delivered) OR
+        //    are no longer cleared for delivery (clearance revoked by Accounts).
         $db->cdp_query("
             DELETE p FROM cdb_package_pickup_aging p
             JOIN cdb_add_order a ON a.order_id = p.order_id
-            WHERE a.status_courier NOT IN (" . CDP_PA_READY . ", " . CDP_PA_PENDING . ", " . CDP_PA_NOTPICKED . ", " . (int) $auctionId . ")");
+            WHERE a.fs_cleared_for_delivery <> 1
+               OR a.status_courier NOT IN (" . CDP_PA_READY . ", " . CDP_PA_PENDING . ", " . CDP_PA_NOTPICKED . ", " . (int) $auctionId . ")");
         $db->cdp_execute();
         $summary['dropped'] = (int) $db->cdp_rowCount();
 
