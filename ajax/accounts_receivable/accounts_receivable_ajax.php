@@ -94,13 +94,13 @@ $data = $db->cdp_registros();
         <h6 class="text-muted mb-1">Billed Customers</h6><h4 class="mb-0"><?php echo (int) $numrows; ?></h4>
     </div></div></div>
     <div class="col-md-3 col-6"><div class="card"><div class="card-body py-3">
-        <h6 class="text-muted mb-1">Billed</h6><h4 class="mb-0">&#8373;<?php echo cdb_money_format($sum ? $sum->billed : 0); ?></h4>
+        <h6 class="text-muted mb-1">Billed</h6><h4 class="mb-0">&#8373;<?php echo number_format((float)($sum ? $sum->billed : 0), 2); ?></h4>
     </div></div></div>
     <div class="col-md-3 col-6"><div class="card"><div class="card-body py-3">
-        <h6 class="text-muted mb-1">Paid</h6><h4 class="mb-0 text-success">&#8373;<?php echo cdb_money_format($sum ? $sum->paid : 0); ?></h4>
+        <h6 class="text-muted mb-1">Paid</h6><h4 class="mb-0 text-success">&#8373;<?php echo number_format((float)($sum ? $sum->paid : 0), 2); ?></h4>
     </div></div></div>
     <div class="col-md-3 col-6"><div class="card"><div class="card-body py-3">
-        <h6 class="text-muted mb-1">Outstanding</h6><h4 class="mb-0 text-danger">&#8373;<?php echo cdb_money_format($sum ? $sum->outstanding : 0); ?></h4>
+        <h6 class="text-muted mb-1">Outstanding</h6><h4 class="mb-0 text-danger">&#8373;<?php echo number_format((float)($sum ? $sum->outstanding : 0), 2); ?></h4>
     </div></div></div>
 </div>
 
@@ -135,9 +135,9 @@ $data = $db->cdp_registros();
                 <td><b><?php echo htmlspecialchars($row->customer); ?></b><?php if ($row->locker) { ?><br><small class="text-muted"><?php echo htmlspecialchars($row->locker); ?></small><?php } ?></td>
                 <td class="text-center"><?php echo $row->cno !== '' ? htmlspecialchars($row->cno) : '<span class="text-muted">—</span>'; ?></td>
                 <td class="text-center"><small><?php echo $row->billed_at ? date('Y-m-d', strtotime((string) $row->billed_at)) : '—'; ?></small></td>
-                <td class="text-center">&#8373;<?php echo cdb_money_format($billed); ?><?php if ($disc > 0) { ?><br><small class="text-muted">− &#8373;<?php echo cdb_money_format($disc); ?> disc</small><?php } ?></td>
-                <td class="text-center text-success">&#8373;<?php echo cdb_money_format($paid); ?></td>
-                <td class="text-center text-danger"><b>&#8373;<?php echo cdb_money_format($out); ?></b></td>
+                <td class="text-center">&#8373;<?php echo number_format((float)($billed), 2); ?><?php if ($disc > 0) { ?><br><small class="text-muted">− &#8373;<?php echo number_format((float)($disc), 2); ?> disc</small><?php } ?></td>
+                <td class="text-center text-success">&#8373;<?php echo number_format((float)($paid), 2); ?></td>
+                <td class="text-center text-danger"><b>&#8373;<?php echo number_format((float)($out), 2); ?></b></td>
                 <td class="text-center"><span class="label label-large <?php echo $stClass; ?>"><?php echo htmlspecialchars($stLabel); ?></span></td>
                 <td class="text-center">
                     <a class="btn btn-outline-dark btn-sm" href="financial_sheet_consolidation.php?id=<?php echo (int) $row->consolidate_id; ?>" title="Open in Financial Sheet">
