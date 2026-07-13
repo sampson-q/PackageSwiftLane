@@ -636,7 +636,7 @@ if (isset($_POST['person_receives'])) {
                                             <label class="subtitle"><?php echo $lang['left1064'] ?></label>
                                             <div class="custom-file">
                                               <input type="file" class="custom-file-input" name="miarchivo" id="miarchivo" accept="image/*" capture="camera" onchange="previewImage(event)">
-                                              <label class="custom-file-label" for="miarchivo">Choose file</label>
+                                              <label class="custom-file-label" for="miarchivo">Choose File</label>
                                             </div>
                                             <div id="image-preview" style="margin-top: 15px;">
                                               <img id="image-preview-img" src="" alt="Image Preview" style="display: none; max-width: 100%; height: auto;">

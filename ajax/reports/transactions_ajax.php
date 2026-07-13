@@ -139,7 +139,7 @@ function cdp_txStatusLabel($mode, $status)
         <h4 class="mb-0"><?php echo (int) $numrows; ?></h4>
     </div></div></div>
     <div class="col-md-3 col-6"><div class="card"><div class="card-body py-3">
-        <h6 class="text-muted mb-1">Total received</h6>
+        <h6 class="text-muted mb-1">Total Received</h6>
         <h4 class="mb-0 tx-money" data-ghs="<?php echo (float) ($sum ? $sum->total : 0); ?>" data-usd="<?php echo (float) ($sum ? $sum->total_usd : 0); ?>"></h4>
     </div></div></div>
     <div class="col-md-3 col-6"><div class="card"><div class="card-body py-3">
@@ -158,7 +158,7 @@ function cdp_txStatusLabel($mode, $status)
             <tr>
                 <th><b>Date</b></th>
                 <th><b>Customer</b></th>
-                <th><b>Packages cleared</b></th>
+                <th><b>Packages Cleared</b></th>
                 <th class="text-center"><b>Method</b></th>
                 <th class="text-center"><b>Reference</b></th>
                 <th class="text-center"><b>Status</b></th>

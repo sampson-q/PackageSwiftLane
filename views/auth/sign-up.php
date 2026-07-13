@@ -78,7 +78,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
                             <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="100px" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
                         </a>
                         <div class="auth-visual-copy">
-                            <span class="auth-badge">Create account</span>
+                            <span class="auth-badge">Create Account</span>
                             <h1>Set up your profile once, move faster later.</h1>
                             <p>Enter the essentials, add your contact details, and finish registration in a clean guided flow.</p>
                             <div class="auth-mini-list">

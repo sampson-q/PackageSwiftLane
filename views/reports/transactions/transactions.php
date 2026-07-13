@@ -51,7 +51,7 @@ $userData = $user->cdp_getUserData();
                                     </div>
                                     <div class="col-md-3 col-sm-6 mb-1">
                                         <select class="form-control custom-select" id="f_mode" onchange="cdp_load(1);">
-                                            <option value="">All methods</option>
+                                            <option value="">All Methods</option>
                                             <option value="cash">Cash</option>
                                             <option value="paystack">Paystack</option>
                                             <option value="hubtel">Hubtel</option>
@@ -59,8 +59,8 @@ $userData = $user->cdp_getUserData();
                                     </div>
                                     <div class="col-md-3 col-sm-6 mb-1">
                                         <select class="form-control custom-select" id="f_status" onchange="cdp_load(1);">
-                                            <option value="">All statuses</option>
-                                            <option value="manual">Cash / manual</option>
+                                            <option value="">All Statuses</option>
+                                            <option value="manual">Cash / Manual</option>
                                             <option value="success">Confirmed</option>
                                             <option value="pending">Pending</option>
                                             <option value="failed">Failed</option>

@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
                         </a>
                         <div class="auth-visual-copy">
-                            <span class="auth-badge">Reset access</span>
+                            <span class="auth-badge">Reset Access</span>
                             <h1>Set a new password and get back in.</h1>
                             <p>Choose something strong and continue with the recovery flow.</p>
                             <div class="auth-mini-list">

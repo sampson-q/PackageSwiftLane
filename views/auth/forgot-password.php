@@ -56,7 +56,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
                             <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
                         </a>
                         <div class="auth-visual-copy">
-                            <span class="auth-badge">Account recovery</span>
+                            <span class="auth-badge">Account Recovery</span>
                             <h1>Reset access without starting over.</h1>
                             <p>Use the email tied to your account and continue the recovery flow.</p>
                             <div class="auth-mini-list">

@@ -297,7 +297,7 @@ if ($track != null) {
 												<div class="row">
 													<div class="col-md-12">
 														<div class="track-title">
-															<h5 class="form_sub" style="background-color: #2eca8b; color:white">Photo delivered</h5>
+															<h5 class="form_sub" style="background-color: #2eca8b; color:white">Photo Delivered</h5>
 														</div>
 													</div>
 
@@ -319,7 +319,7 @@ if ($track != null) {
 												<div class="row">
 													<div class="col-md-12">
 														<div class="track-title">
-															<h5 class="form_sub" style="background-color: #2eca8b; color:white">Attached files</h5>
+															<h5 class="form_sub" style="background-color: #2eca8b; color:white">Attached Files</h5>
 														</div>
 													</div>
 

@@ -15,7 +15,7 @@
                 <div id="force_profile_phone_otp_error" class="text-danger mt-2"></div>
 
                 <div class="mt-3">
-                    <button type="button" class="btn btn-link p-0" id="btn_force_resend_phone_otp">Resend code</button>
+                    <button type="button" class="btn btn-link p-0" id="btn_force_resend_phone_otp">Resend Code</button>
                 </div>
             </div>
 

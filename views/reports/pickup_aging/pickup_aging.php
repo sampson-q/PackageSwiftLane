@@ -82,8 +82,8 @@ $readyDays = (int) CDP_PA_READY_DAYS;
                                                 <th style="width:30px;"></th>
                                                 <th>Shipment</th>
                                                 <th>Sender</th>
-                                                <th>Current status</th>
-                                                <th>Ready since</th>
+                                                <th>Current Status</th>
+                                                <th>Ready Since</th>
                                                 <th>Stage</th>
                                             </tr>
                                         </thead>
@@ -95,7 +95,7 @@ $readyDays = (int) CDP_PA_READY_DAYS;
                                             if ($r->auction_at !== null)          { $stage = '<span class="pa-stage pa-stage-auction">Auction</span>'; }
                                             elseif ($r->not_picked_at !== null)   { $stage = '<span class="pa-stage pa-stage-notpicked">Not Picked Up</span>'; }
                                             elseif ($r->notified_at !== null)     { $stage = '<span class="pa-stage pa-stage-notified">Pending Collection</span>'; }
-                                            elseif ($pending)                     { $stage = '<span class="pa-stage pa-stage-pending">Awaiting notification</span>'; }
+                                            elseif ($pending)                     { $stage = '<span class="pa-stage pa-stage-pending">Awaiting Notification</span>'; }
                                             else                                  { $stage = '<span class="pa-stage pa-stage-waiting">Ready (' . (int) $r->days_ready . 'd)</span>'; }
                                             $sender = trim(($r->fname ?? '') . ' ' . ($r->lname ?? ''));
                                             if ($r->locker) $sender .= ' (' . $r->locker . ')';

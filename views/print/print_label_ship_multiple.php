@@ -200,7 +200,7 @@ if (isset($_GET['data'])) {
 			</div>
 			<div><br><br></div>
 			<div class="app_easypack_ticket_zebra" style="padding-top: 10px; padding-bottom: 3px; font-size: 22px; max-height: 18px; min-height: 25px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-			    <span style="margin-bottom: 5px;">Payment status</span>
+			    <span style="margin-bottom: 5px;">Payment Status</span>
 			    <strong>
 			        <span class="label label-large <?php echo $label_class; ?>"><?php echo $text_status; ?></span>
 			    </strong>

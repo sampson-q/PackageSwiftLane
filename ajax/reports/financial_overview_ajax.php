@@ -207,7 +207,7 @@ function fo_txStatus($mode, $st)
                 </table>
             </div>
             <div class="col-md-7">
-                <div class="small text-muted mb-1">Top debtors</div>
+                <div class="small text-muted mb-1">Top Debtors</div>
                 <table class="table table-sm mb-0">
                     <tbody>
                     <?php if (!$debtors) { echo '<tr><td class="text-muted">Nobody owes right now.</td></tr>'; }
@@ -229,7 +229,7 @@ function fo_txStatus($mode, $st)
     <div class="col-lg-6 mb-3"><div class="card h-100"><div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">Recent Transactions</h5>
-            <a href="transactions.php" class="btn btn-sm btn-outline-primary">View all</a>
+            <a href="transactions.php" class="btn btn-sm btn-outline-primary">View All</a>
         </div>
         <table class="table table-sm mt-2 mb-0">
             <tbody>

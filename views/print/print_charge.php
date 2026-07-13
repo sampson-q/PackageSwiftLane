@@ -163,7 +163,7 @@ $sender_data = $db->cdp_registro();
 
         </table>
     </div>
-    <button class='button -dark center no-print' onClick="window.print();" style="font-size:16px">Print receipt of payment &nbsp;&nbsp; <i class="fa fa-print"></i></button>
+    <button class='button -dark center no-print' onClick="window.print();" style="font-size:16px">Print Receipt of payment &nbsp;&nbsp; <i class="fa fa-print"></i></button>
     </div>
 
 </body>

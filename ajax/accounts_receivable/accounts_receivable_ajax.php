@@ -91,7 +91,7 @@ $data = $db->cdp_registros();
 ?>
 <div class="row">
     <div class="col-md-3 col-6"><div class="card"><div class="card-body py-3">
-        <h6 class="text-muted mb-1">Billed customers</h6><h4 class="mb-0"><?php echo (int) $numrows; ?></h4>
+        <h6 class="text-muted mb-1">Billed Customers</h6><h4 class="mb-0"><?php echo (int) $numrows; ?></h4>
     </div></div></div>
     <div class="col-md-3 col-6"><div class="card"><div class="card-body py-3">
         <h6 class="text-muted mb-1">Billed</h6><h4 class="mb-0">&#8373;<?php echo cdb_money_format($sum ? $sum->billed : 0); ?></h4>

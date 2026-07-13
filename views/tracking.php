@@ -54,7 +54,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
                             <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="100px" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
                         </a>
                         <div class="auth-visual-copy">
-                            <span class="auth-badge">Live tracking</span>
+                            <span class="auth-badge">Live Tracking</span>
                             <h1><?php echo $lang['left127'] ?></h1>
                             <p><?php echo $lang['left128'] ?></p>
                             <div class="auth-mini-list">

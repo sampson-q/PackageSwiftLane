@@ -14,7 +14,7 @@
 
 			  <div class="row">
 				<div class="form-group col-sm-12">
-					<label for="total_pay" class="control-label">Total amount</label>
+					<label for="total_pay" class="control-label">Total Amount</label>
 				
 				  <input type="text" onkeypress="return cdp_soloNumeros(event)"  class="form-control" id="total_pay" name="total_pay" placeholder="" readonly>
 				</div>
@@ -40,7 +40,7 @@
                     <div class="col-md-12">                             
 
                        <div>
-                            <label class="control-label" id="selectItem" > Attach files</label>
+                            <label class="control-label" id="selectItem" > Attach Files</label>
                         </div>
 
                         <input class="custom-file-input" id="filesMultiple" name="filesMultiple"  type="file"  style="display: none;" onchange="cdp_validateZiseFiles();"/>

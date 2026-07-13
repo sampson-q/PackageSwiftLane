@@ -114,7 +114,7 @@ $api = new License2l6aspi3ekdz14bfnxwtugjycm05hqcdpcoddingproV75(); // Initializ
                                                 </div>
                                                 <div class="col-lg-12">
                                                     <div class="single-input">
-                                                        <label><i class="bi bi-person"></i>Envato username</label>
+                                                        <label><i class="bi bi-person"></i>Envato Username</label>
                                                         <input type="text" name="client" class="form-control"  placeholder="Enter your name/envato username" required>
                                                     </div>
                                                 </div>
@@ -163,7 +163,7 @@ $api = new License2l6aspi3ekdz14bfnxwtugjycm05hqcdpcoddingproV75(); // Initializ
                                             </div>
                                             <div class="col-lg-12">
                                                 <div class="single-input">
-                                                    <label><i class="bi bi-person"></i>Envato username</label>
+                                                    <label><i class="bi bi-person"></i>Envato Username</label>
                                                     <input type="text" name="client" class="form-control"  placeholder="Enter your name/envato username" required>
                                                 </div>
                                             </div>
