@@ -19,10 +19,18 @@
 // *                                                                       *
 // *************************************************************************
 
+// Keep stray warnings/notices out of the response body so the JSON stays clean
+// (a warning printed before the JSON was making the client fall back to the
+// generic "Error making request / unexpected error" instead of the real cause).
+ini_set('display_errors', 0);
+
 require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 require_once("../../helpers/ajax_guard.php");
 require_login();
+require_permission('edit_client'); // was login-only; now honors the RBAC grant
+
+header('Content-Type: application/json; charset=UTF-8');
 
 $user = new User;
 $core = new Core;
@@ -36,38 +44,41 @@ if (empty($_POST['lname'])) {
 }
 if (empty($_POST['email'])) {
     $errors['email'] = $lang['validate_field_ajax125'];
-}
-if ($user->cdp_emailExists($_POST['email'], $_POST['id'])) {
-    $errors[] = $lang['validate_field_ajax126'];
-}
-if (!$user->cdp_isValidEmail($_POST['email'])) {
-    $errors[] = $lang['validate_field_ajax127'];
+} elseif (!$user->cdp_isValidEmail($_POST['email']) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+    $errors['email'] = $lang['validate_field_ajax127'];
+} elseif ($user->cdp_emailExists($_POST['email'], $_POST['id'])) {
+    $errors['email'] = $lang['validate_field_ajax126'];
 }
 if (empty($_POST['phone'])) {
     $errors['phone'] = $lang['validate_field_ajax128'];
 }
 
+$approve = 0;
 if (!empty($_POST['approve'])) {
     $approve = cdp_sanitize($_POST['approve']);
 }
 
+// Return every failure as JSON with the exact reason(s) — the old HTML alert
+// couldn't be read by the JS handler, which then showed a generic error.
+if (!empty($errors)) {
+    echo json_encode([
+        'status'  => 'error',
+        'message' => implode(' ', array_values($errors)),
+        'errors'  => array_values($errors),
+    ]);
+    exit;
+}
+
 if (CDP_APP_MODE_DEMO === true) {
-    ?>
-    <div class="alert alert-warning" id="success-alert">
-        <p><span class="icon-minus-sign"></span><i class="close icon-remove-circle"></i>
-            <span>Error! </span> There was an error processing the request
-        <ul class="error">
-            <li>
-                <i class="icon-double-angle-right"></i>
-                This is a demo version, this action is not allowed, <a class="btn waves-effect waves-light btn-xs btn-success" href="https://codecanyon.net/item/courier-deprixa-pro-integrated-web-system-v32/15216982" target="_blank">Buy DEPRIXA PRO</a> the full version and enjoy all the functions...
-            </li>
-        </ul>
-        </p>
-    </div>
-    <?php
-} else {
-    if (empty($errors)) {
-        header('Content-type: application/json; charset=UTF-8');
+    echo json_encode([
+        'status'  => 'error',
+        'message' => 'This is a demo version — this action is not allowed.',
+    ]);
+    exit;
+}
+
+{
+    {
         $response = array();
 
         $datos = array(
@@ -146,24 +157,5 @@ if (CDP_APP_MODE_DEMO === true) {
         }
 
         echo json_encode($response);
-    }
-
-    if (!empty($errors)) {
-        ?>
-        <div class="alert alert-danger" id="success-alert">
-            <p><span class="icon-minus-sign"></span><i class="close icon-remove-circle"></i>
-                <?php echo $lang['message_ajax_error2']; ?>
-            <ul class="error">
-                <?php
-                foreach ($errors as $error) { ?>
-                    <li>
-                        <i class="icon-double-angle-right"></i>
-                        <?php echo $error; ?>
-                    </li>
-                <?php } ?>
-            </ul>
-            </p>
-        </div>
-        <?php
     }
 }

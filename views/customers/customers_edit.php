@@ -22,11 +22,13 @@
 
 
 $userData = $user->cdp_getUserData();
-if (!$user->cdp_is_Admin()) {
+// Permission-based (not a hard admin gate): whoever is granted 'edit_client' can
+// manage clients here. Admins still qualify because the role carries the grant.
+if (!$user->cdp_hasPermission('edit_client')) {
     cdp_redirect_to("customers_profile_edit.php?user=" . $userData->id);
 }
 
-if (intval($userData->id) !== intval($_GET['user']) && !$user->cdp_is_Admin()) {
+if (intval($userData->id) !== intval($_GET['user']) && !$user->cdp_hasPermission('edit_client')) {
     cdp_redirect_to("login.php");
 }
 
@@ -155,6 +157,7 @@ $history = $db->cdp_registros();
                                         <div class="col-6 justify-content-end d-flex">
                                             <form method="POST" id="changeUserStatus">
                                                 <div class="btn-group">
+                                                    <?php if ($user->cdp_hasPermission('approve_client')) { ?>
                                                     <?php if ($row->approve) { ?>
                                                         <!-- If the user is approved -->
                                                         <?php if ($row->active) { ?>
@@ -172,9 +175,10 @@ $history = $db->cdp_registros();
                                                         <!-- If the user is unapproved -->
                                                         <a type="button" class="btn btn-primary approveUserBtn" data-id="<?php echo $row->id; ?>" title="Approve">
                                                             <img src="assets/uploads/user-check-solid.svg" alt="Approve Icon" width="20" height="20">
-    
+
                                                         </a>
                                                     <?php } ?>
+                                                    <?php } // approve_client ?>
                                                 </div>
                                             </form>
                                         </div>
@@ -202,9 +206,11 @@ $history = $db->cdp_registros();
                                                     <input class="form-control" id="avatarInput" name="avatar" type="file" accept="image/*" />
                                                 </div>
                                                 <div class="mb-3 mt-2">
+                                                    <?php if ($user->cdp_hasPermission('edit_client_avatar')) { ?>
                                                     <button type="submit" class="btn btn-outline-warning btn-confirmation" id="avatarSubmitBtn" title="First select an image" disabled style="cursor: not-allowed;">
                                                         <?php echo $lang['messageerrorform13'] ?>
                                                     </button>
+                                                    <?php } ?>
                                                 </div>
                                                 <input name="id" id="id" type="hidden" value="<?php echo $row->id; ?>" />
                                                 <input name="approve" id="approve" type="hidden" value="<?php echo $row->approve; ?>" />
@@ -227,9 +233,11 @@ $history = $db->cdp_registros();
                                                     <input class="form-control" id="documentInput" name="document" type="file" accept="image/*" />
                                                 </div>
                                                 <div class="mb-3 mt-2">
+                                                    <?php if ($user->cdp_hasPermission('edit_client_document')) { ?>
                                                     <button type="submit" class="btn btn-outline-warning btn-confirmation" id="documentSubmitBtn" title="First select a document" disabled style="cursor: not-allowed;">
                                                         <?php echo $lang['documentUpdate'] ?>
                                                     </button>
+                                                    <?php } ?>
                                                     <a href="assets/<?php echo ($row->document_photo) ? $row->document_photo : '/uploads/blankID.jpg'; ?>"
                                                     target="_blank"
                                                     id="documentViewBtn"
@@ -333,7 +341,7 @@ $history = $db->cdp_registros();
                                             <form enctype="multipart/form-data" class="form-horizontal form-material" id="edit_user" name="edit_user" method="post">
                                                 <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                                 <section>
-                                                    <?php if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
+                                                    <?php if ($user->cdp_hasPermission('edit_client')) { ?>
                                                         <div class="row">
                                                             <div class="col-md-6">
                                                                 <div class="form-group">

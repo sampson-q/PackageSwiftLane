@@ -25,6 +25,7 @@ require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 require_once("../../helpers/ajax_guard.php");
 require_login();
+require_permission('edit_client_avatar'); // was login-only
 
 
 $db = new Conexion;
