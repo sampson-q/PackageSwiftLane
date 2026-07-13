@@ -140,6 +140,39 @@ $db->cdp_query("SELECT b.consolidate_id,
 $db->cdp_execute();
 $consols = (array) $db->cdp_registros();
 
+// ---- Monthly trend (last 6 months): billed vs received (GHS). ---------------
+$months = [];
+for ($i = 5; $i >= 0; $i--) {
+    $ym = date('Y-m', strtotime("first day of -$i month"));
+    $months[$ym] = ['label' => date('M', strtotime($ym . '-01')), 'billed' => 0.0, 'received' => 0.0];
+}
+$mIni = date('Y-m-01 00:00:00', strtotime('first day of -5 month'));
+$db->cdp_query("SELECT DATE_FORMAT(billed_at,'%Y-%m') ym, COALESCE(SUM(amount_ghs),0) g
+                FROM cdb_consolidate_customer_billing WHERE billed_at >= :i GROUP BY ym");
+$db->bind(':i', $mIni); $db->cdp_execute();
+foreach ((array) $db->cdp_registros() as $r) { if (isset($months[$r->ym])) { $months[$r->ym]['billed'] = (float) $r->g; } }
+$db->cdp_query("SELECT DATE_FORMAT(recorded_at,'%Y-%m') ym, COALESCE(SUM(amount_ghs),0) g
+                FROM cdb_fs_payments WHERE recorded_at >= :i GROUP BY ym");
+$db->bind(':i', $mIni); $db->cdp_execute();
+foreach ((array) $db->cdp_registros() as $r) { if (isset($months[$r->ym])) { $months[$r->ym]['received'] = (float) $r->g; } }
+
+// Chart payload (all GHS; the page already shows GHS by default).
+$fo_charts = [
+    'trend' => [
+        'labels'   => array_values(array_map(function ($m) { return $m['label']; }, $months)),
+        'billed'   => array_values(array_map(function ($m) { return round($m['billed'], 2); }, $months)),
+        'received' => array_values(array_map(function ($m) { return round($m['received'], 2); }, $months)),
+    ],
+    'method' => [
+        'labels' => array_map(function ($m) { return ucfirst((string) $m->mode); }, $byMethod),
+        'values' => array_map(function ($m) { return round((float) $m->g, 2); }, $byMethod),
+    ],
+    'aging' => [
+        'labels' => ['0–7d', '8–14d', '15–30d', '30+d'],
+        'values' => [round($aging['0-7'][0], 2), round($aging['8-14'][0], 2), round($aging['15-30'][0], 2), round($aging['30+'][0], 2)],
+    ],
+];
+
 function fo_txStatus($mode, $st)
 {
     $s = strtolower((string) $st);
@@ -168,6 +201,19 @@ function fo_txStatus($mode, $st)
         </div></div></div>
     <?php } ?>
 </div>
+
+<!-- Charts -->
+<div class="row">
+    <div class="col-lg-7 mb-3"><div class="card h-100"><div class="card-body">
+        <h5 class="card-title">Billed vs Received <small class="text-muted">— last 6 months (GH&#8373;)</small></h5>
+        <div id="fo_chart_trend" style="min-height:280px;"></div>
+    </div></div></div>
+    <div class="col-lg-5 mb-3"><div class="card h-100"><div class="card-body">
+        <h5 class="card-title">Money In by Method <small class="text-muted">(period, GH&#8373;)</small></h5>
+        <div id="fo_chart_method" style="min-height:280px;"></div>
+    </div></div></div>
+</div>
+<script type="application/json" id="fo_chart_data"><?php echo json_encode($fo_charts); ?></script>
 
 <div class="row">
     <!-- Money in by method -->
@@ -198,6 +244,7 @@ function fo_txStatus($mode, $st)
         <div class="row">
             <div class="col-md-5">
                 <div class="small text-muted mb-1">Aging (outstanding)</div>
+                <div id="fo_chart_aging" style="min-height:170px;"></div>
                 <table class="table table-sm mb-0">
                     <tbody>
                         <?php foreach (['0-7' => '0–7 days', '8-14' => '8–14 days', '15-30' => '15–30 days', '30+' => '30+ days'] as $k => $lbl) { ?>
