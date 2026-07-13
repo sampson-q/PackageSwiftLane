@@ -119,6 +119,34 @@ $monthName = obtenerNombreMes($currentMonth);
                     $db->cdp_query("SELECT IFNULL(SUM(total_order), 0) as total FROM cdb_add_order WHERE status_courier != 21 AND status_invoice != 0 AND order_payment_method > 1 AND order_date >= MAKEDATE(:year,1) + INTERVAL (:month-1) MONTH AND order_date < MAKEDATE(:year,1) + INTERVAL :month MONTH");
                     $db->bind(':month', $month); $db->bind(':year', $year); $db->cdp_execute();
                     $acct_total = $db->cdp_registro()->total ?? 0;
+
+                    // ---- Financial Sheet money (single source of truth) — same
+                    // queries as dashboard_admin_account / Financial Overview so the
+                    // figures TALLY. Wrapped: if the FS migration hasn't run yet the
+                    // dashboard must still render. Billed uses the USD snapshot;
+                    // received/outstanding convert GHS via each row's stored rate.
+                    $fs_billed = $fs_received = $fs_outstanding = 0.0;
+                    $fs_cleared_ct = 0;
+                    try {
+                        $fs_ini = date('Y-m-01 00:00:00'); $fs_fin = date('Y-m-t 23:59:59');
+                        $db->cdp_query("SELECT COALESCE(SUM(amount_usd),0) t FROM cdb_consolidate_customer_billing WHERE billed_at BETWEEN :i AND :f");
+                        $db->bind(':i', $fs_ini); $db->bind(':f', $fs_fin); $db->cdp_execute();
+                        $fs_billed = (float) ($db->cdp_registro()->t ?? 0);
+
+                        $db->cdp_query("SELECT COALESCE(SUM(amount_ghs/NULLIF(exchange_rate,0)),0) t FROM cdb_fs_payments WHERE recorded_at BETWEEN :i AND :f");
+                        $db->bind(':i', $fs_ini); $db->bind(':f', $fs_fin); $db->cdp_execute();
+                        $fs_received = (float) ($db->cdp_registro()->t ?? 0);
+
+                        $db->cdp_query("SELECT COALESCE(SUM(GREATEST(0, COALESCE(amount_ghs,0)-COALESCE(discount_ghs,0)-COALESCE(paid_ghs,0))/NULLIF(exchange_rate,0)),0) t FROM cdb_consolidate_customer_billing");
+                        $db->cdp_execute();
+                        $fs_outstanding = (float) ($db->cdp_registro()->t ?? 0);
+
+                        $db->cdp_query("SELECT COUNT(*) c FROM cdb_add_order WHERE fs_cleared_for_delivery = 1 AND status_courier NOT IN (8,21)");
+                        $db->cdp_execute();
+                        $fs_cleared_ct = (int) ($db->cdp_registro()->c ?? 0);
+                    } catch (Throwable $e) {
+                        // FS tables/columns not present — leave zeros.
+                    }
                 ?>
                 <!-- ROW 1 - Panel actual: Summary of accounts receivable + Logistics Summary (con iconos) -->
                 <div class="row">
@@ -158,6 +186,62 @@ $monthName = obtenerNombreMes($currentMonth);
                                             <p class="mb-0"><?php echo cdb_money_format($sum3); ?> <?php echo $lang['messagesform85']; ?></p>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROW 1b - FINANCIAL SHEET (single source of truth). Figures match
+                     the Financial Sheet / Financial Overview / Accounts pages. -->
+                <div class="row">
+                    <div class="col-12 mb-2">
+                        <h5 class="m-0"><iconify-icon icon="solar:file-text-linear" class="text-primary"></iconify-icon> Financial Sheet &mdash; <?php echo $monthName; ?></h5>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3 mb-4">
+                        <div class="card border-left-primary" style="border-left:4px solid #536dfe;">
+                            <div class="card-body position-relative">
+                                <h6 class="text-muted mb-1">Billed (This Month)</h6>
+                                <p class="h4 mb-2"><?php echo cdb_money_format($fs_billed); ?></p>
+                                <a href="financial_sheet.php" class="btn btn-sm btn-outline-primary">Financial Sheet</a>
+                                <div class="position-absolute" style="right:1rem; top:1rem; opacity:.8;">
+                                    <iconify-icon icon="solar:file-text-linear" class="text-primary" style="font-size:2.6rem;"></iconify-icon>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3 mb-4">
+                        <div class="card" style="border-left:4px solid #1b8a5a;">
+                            <div class="card-body position-relative">
+                                <h6 class="text-muted mb-1">Received (This Month)</h6>
+                                <p class="h4 mb-2 text-success"><?php echo cdb_money_format($fs_received); ?></p>
+                                <a href="transactions.php" class="btn btn-sm btn-outline-success">Transactions</a>
+                                <div class="position-absolute" style="right:1rem; top:1rem; opacity:.8;">
+                                    <iconify-icon icon="solar:hand-money-linear" class="text-success" style="font-size:2.6rem;"></iconify-icon>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3 mb-4">
+                        <div class="card" style="border-left:4px solid #e67e22;">
+                            <div class="card-body position-relative">
+                                <h6 class="text-muted mb-1">Outstanding (All-Time)</h6>
+                                <p class="h4 mb-2 text-warning"><?php echo cdb_money_format($fs_outstanding); ?></p>
+                                <a href="accounts_receivable.php" class="btn btn-sm btn-outline-warning">Receivables</a>
+                                <div class="position-absolute" style="right:1rem; top:1rem; opacity:.8;">
+                                    <iconify-icon icon="solar:bill-list-linear" class="text-warning" style="font-size:2.6rem;"></iconify-icon>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3 mb-4">
+                        <div class="card" style="border-left:4px solid #6c757d;">
+                            <div class="card-body position-relative">
+                                <h6 class="text-muted mb-1">Cleared for Delivery</h6>
+                                <p class="h4 mb-2"><?php echo (int) $fs_cleared_ct; ?> <small class="text-muted">pkgs</small></p>
+                                <a href="warehouse_delivery.php" class="btn btn-sm btn-outline-secondary">Warehouse</a>
+                                <div class="position-absolute" style="right:1rem; top:1rem; opacity:.8;">
+                                    <iconify-icon icon="solar:box-linear" class="text-secondary" style="font-size:2.6rem;"></iconify-icon>
                                 </div>
                             </div>
                         </div>
@@ -617,6 +701,75 @@ $monthName = obtenerNombreMes($currentMonth);
                         </div>
                     </div>
                 </div>
+
+                <!-- ROLES & DEPARTMENTS (RBAC) — real roles and departments, not
+                     the old hardcoded 4 user levels. -->
+                <?php
+                $dash_roles = array();
+                $dash_depts = array();
+                try {
+                    $db->cdp_query("SELECT r.role_name, COUNT(u.id) AS total
+                                    FROM cdb_user_roles r
+                                    LEFT JOIN cdb_users u ON u.userlevel = r.role_id
+                                    WHERE r.rol_active = 1
+                                    GROUP BY r.role_id, r.role_name
+                                    ORDER BY r.role_name");
+                    $db->cdp_execute();
+                    $dash_roles = $db->cdp_registros() ?: array();
+
+                    $db->cdp_query("SELECT d.name, COUNT(m.user_id) AS total
+                                    FROM cdb_departments d
+                                    LEFT JOIN cdb_department_members m ON m.department_id = d.id
+                                    GROUP BY d.id, d.name
+                                    ORDER BY d.name");
+                    $db->cdp_execute();
+                    $dash_depts = $db->cdp_registros() ?: array();
+                } catch (Throwable $e) {
+                    // RBAC tables not present — skip the section.
+                }
+                ?>
+                <?php if ($dash_roles || $dash_depts): ?>
+                <div class="row">
+                    <div class="col-12 col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="m-0"><iconify-icon icon="solar:users-group-rounded-linear" class="text-primary"></iconify-icon> Roles</h5>
+                                    <a href="users_list.php" class="btn btn-sm btn-outline-primary">Users</a>
+                                </div>
+                                <ul class="p-0 m-0" style="list-style:none;">
+                                    <?php foreach ($dash_roles as $r): ?>
+                                    <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                        <span><iconify-icon icon="solar:shield-user-linear" class="text-muted"></iconify-icon> <?php echo htmlspecialchars((string) $r->role_name); ?></span>
+                                        <span class="badge bg-label-primary"><?php echo (int) $r->total; ?></span>
+                                    </li>
+                                    <?php endforeach; ?>
+                                    <?php if (!$dash_roles): ?><li class="text-muted small">No roles defined.</li><?php endif; ?>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="m-0"><iconify-icon icon="solar:buildings-linear" class="text-success"></iconify-icon> Departments</h5>
+                                    <a href="departments.php" class="btn btn-sm btn-outline-success">Manage</a>
+                                </div>
+                                <ul class="p-0 m-0" style="list-style:none;">
+                                    <?php foreach ($dash_depts as $d): ?>
+                                    <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                        <span><iconify-icon icon="solar:buildings-2-linear" class="text-muted"></iconify-icon> <?php echo htmlspecialchars((string) $d->name); ?></span>
+                                        <span class="badge bg-label-success"><?php echo (int) $d->total; ?> <?php echo ((int) $d->total === 1 ? 'member' : 'members'); ?></span>
+                                    </li>
+                                    <?php endforeach; ?>
+                                    <?php if (!$dash_depts): ?><li class="text-muted small">No departments defined.</li><?php endif; ?>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
 
             <?php } ?>
 
