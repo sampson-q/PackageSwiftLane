@@ -23,6 +23,10 @@
 $userData = $user->cdp_getUserData();
 $statusrow = $core->cdp_getStatusByType(1);
 
+// Air vs Sea: dedicated consolidation lists via ?mode=air|sea.
+$ship_mode = strtolower((string) ($_GET['mode'] ?? ''));
+$ship_mode = in_array($ship_mode, ['air', 'sea'], true) ? $ship_mode : '';
+$ship_mode_label = $ship_mode === 'air' ? 'Air Consolidations' : ($ship_mode === 'sea' ? 'Sea Consolidations' : $lang['count12']);
 
 ?>
 <!DOCTYPE html>
@@ -91,7 +95,11 @@ $statusrow = $core->cdp_getStatusByType(1);
             <div class="page-breadcrumb">
                 <div class="row">
                     <div class="col-5 align-self-center">
-                        <h4 class="page-title"> <?php echo $lang['count12'] ?></h4>
+                        <h4 class="page-title">
+                            <?php if ($ship_mode === 'air'): ?><iconify-icon icon="mdi:airplane-takeoff"></iconify-icon>
+                            <?php elseif ($ship_mode === 'sea'): ?><iconify-icon icon="mingcute:ship-fill"></iconify-icon><?php endif; ?>
+                            <?php echo htmlspecialchars($ship_mode_label); ?>
+                        </h4>
 
                     </div>
                 </div>
@@ -199,6 +207,7 @@ $statusrow = $core->cdp_getStatusByType(1);
 
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
+    <script>window.CDP_SHIP_MODE = <?php echo json_encode($ship_mode); ?>;</script>
     <script src="<?= cdp_asset('dataJs/consolidate_list.js') ?>"></script>
 
 

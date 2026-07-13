@@ -61,6 +61,9 @@ if ($status_courier > 0) {
 	$sWhere .= " and  a.status_courier = '" . $status_courier . "'";
 }
 
+// Air vs Sea segregation — dedicated Air/Sea consolidation lists.
+$sWhere .= cdp_shipModeWhere($_REQUEST['mode'] ?? '', 'a');
+
 
 // // pagination variables
 $page = (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) ? $_REQUEST['page'] : 1;

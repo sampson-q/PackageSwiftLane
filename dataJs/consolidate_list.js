@@ -15,7 +15,8 @@ $(function () {
 function cdp_load(page) {
 	var search = $("#search").val();
 	var status_courier = $("#status_courier").val();
-	var parametros = { "page": page, 'search': search, 'status_courier': status_courier };
+	var mode = (typeof window.CDP_SHIP_MODE !== "undefined") ? window.CDP_SHIP_MODE : "";
+	var parametros = { "page": page, 'search': search, 'status_courier': status_courier, 'mode': mode };
 	$("#loader").fadeIn('slow');
 	$.ajax({
 		url: './ajax/consolidate/consolidate_list_ajax.php',

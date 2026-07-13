@@ -41,6 +41,14 @@ $infoship = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_category where id= '" . $infoship->logistics_default1 . "'");
 $s_logistics = $db->cdp_registro();
 
+// Air vs Sea: category is STATIC per mode — Air Freight (26) / Ocean Freight (27).
+$ship_mode = strtolower((string) ($_GET['mode'] ?? 'air'));
+$ship_mode = ($ship_mode === 'sea') ? 'sea' : 'air';
+$ship_mode_category = ($ship_mode === 'sea') ? 27 : 26;
+$db->cdp_query("SELECT name_item FROM cdb_category WHERE id = " . (int) $ship_mode_category . " LIMIT 1");
+$ship_mode_catrow = $db->cdp_registro();
+$ship_mode_catname = $ship_mode_catrow->name_item ?? ($ship_mode === 'sea' ? 'Ocean Freight' : 'Air Freight');
+
 $db->cdp_query("SELECT * FROM cdb_packaging where id= '" . $infoship->packaging_default2 . "'");
 $packaging_box = $db->cdp_registro();
 
@@ -455,12 +463,9 @@ $order_prefix = $settings->prefix;
                                         <div class="form-group col-md-3">
                                             <label for="inputlname" class="control-label col-form-label"><?php echo $lang['itemcategory'] ?></label>
                                             <div class="input-group mb-3">
-                                                <select class="select2 form-control custom-select" id="order_item_category" name="order_item_category" disabled required style="width: 100%;">
-                                                    <option value="<?php echo $s_logistics->id; ?>"><?php echo $s_logistics->name_item; ?></option>
-                                                    <?php foreach ($categories as $row) : ?>
-                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_item; ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
+                                                <!-- Mode is fixed for this dedicated page (Air vs Sea) — display only. -->
+                                                <input type="hidden" id="order_item_category" name="order_item_category" value="<?php echo (int) $ship_mode_category; ?>">
+                                                <input type="text" class="form-control bg-light" value="<?php echo htmlspecialchars((string) $ship_mode_catname); ?>" readonly>
                                             </div>
                                         </div>
 

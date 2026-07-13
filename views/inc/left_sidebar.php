@@ -1022,7 +1022,7 @@
 							<?php } ?>
 							<?php if ($user->cdp_hasPermission('view_shipment_list')) { ?>
 							<li class="sidebar-item">
-								<a href="courier_list.php" class="sidebar-link"><iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+								<a href="courier_list.php?mode=air" class="sidebar-link"><iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
 									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-16'] ?> </span>
 								</a>
 							</li>
@@ -1322,7 +1322,7 @@
 						<ul aria-expanded="false" class="collapse  first-level">
 							<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
 							<li class="sidebar-item">
-								<a href="courier_add.php" class="sidebar-link">
+								<a href="courier_add.php?mode=air" class="sidebar-link">
 									<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5" style="color:#f62d51"></iconify-icon>
 									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-15'] ?> </span>
 								</a>
@@ -1331,9 +1331,71 @@
 
 							<?php if ($user->cdp_hasPermission('view_shipment_list')) { ?>
 							<li class="sidebar-item">
-								<a href="courier_list.php" class="sidebar-link">
+								<a href="courier_list.php?mode=air" class="sidebar-link">
 									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
 									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-16'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+							<?php if ($user->cdp_hasPermission('add_consolidate_shipment')) { ?>
+							<li class="sidebar-item">
+								<a href="consolidate_add.php?mode=air" class="sidebar-link">
+									<iconify-icon icon="solar:layers-minimalistic-linear" class="fs-5" style="color:#f62d51"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-25'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+							<?php if ($user->cdp_hasPermission('view_consolidate_list')) { ?>
+							<li class="sidebar-item">
+								<a href="consolidate_list.php?mode=air" class="sidebar-link">
+									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-24'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+						</ul>
+					</li>
+					<?php } ?>
+
+					<?php
+						// Sea Shipping — dedicated Ocean Freight flow (mirrors Air).
+						if ($user->cdp_hasPermission(['add_shipment', 'view_shipment_list'])) {
+					?>
+					<li class="sidebar-item">
+						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
+							<iconify-icon icon="mingcute:ship-fill" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> <?php echo 'Sea ' . $lang['left-menu-sidebar-13'] ?></span>
+						</a>
+						<ul aria-expanded="false" class="collapse  first-level">
+							<?php if ($user->cdp_hasPermission('add_shipment')) { ?>
+							<li class="sidebar-item">
+								<a href="courier_add.php?mode=sea" class="sidebar-link">
+									<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5" style="color:#0d6efd"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-15'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+							<?php if ($user->cdp_hasPermission('view_shipment_list')) { ?>
+							<li class="sidebar-item">
+								<a href="courier_list.php?mode=sea" class="sidebar-link">
+									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-16'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+							<?php if ($user->cdp_hasPermission('add_consolidate_shipment')) { ?>
+							<li class="sidebar-item">
+								<a href="consolidate_add.php?mode=sea" class="sidebar-link">
+									<iconify-icon icon="solar:layers-minimalistic-linear" class="fs-5" style="color:#0d6efd"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-25'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+							<?php if ($user->cdp_hasPermission('view_consolidate_list')) { ?>
+							<li class="sidebar-item">
+								<a href="consolidate_list.php?mode=sea" class="sidebar-link">
+									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-24'] ?> </span>
 								</a>
 							</li>
 							<?php } ?>

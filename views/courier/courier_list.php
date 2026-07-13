@@ -23,6 +23,10 @@
 $userData = $user->cdp_getUserData();
 $statusrow = $core->cdp_getStatusByType(1);
 
+// Air vs Sea: the same list, dedicated to one mode via ?mode=air|sea.
+$ship_mode = strtolower((string) ($_GET['mode'] ?? ''));
+$ship_mode = in_array($ship_mode, ['air', 'sea'], true) ? $ship_mode : '';
+$ship_mode_label = $ship_mode === 'air' ? 'Air Shipments' : ($ship_mode === 'sea' ? 'Sea Shipments' : $lang['shiplist']);
 
 ?>
 <!DOCTYPE html>
@@ -91,7 +95,11 @@ $statusrow = $core->cdp_getStatusByType(1);
             <div class="page-breadcrumb">
                 <div class="row">
                     <div class="col-5 align-self-center">
-                        <h4 class="page-title"> <?php echo $lang['shiplist']; ?></h4>
+                        <h4 class="page-title">
+                            <?php if ($ship_mode === 'air'): ?><iconify-icon icon="mdi:airplane-takeoff"></iconify-icon>
+                            <?php elseif ($ship_mode === 'sea'): ?><iconify-icon icon="mingcute:ship-fill"></iconify-icon><?php endif; ?>
+                            <?php echo htmlspecialchars($ship_mode_label); ?>
+                        </h4>
 
                     </div>
                 </div>
@@ -246,6 +254,7 @@ $statusrow = $core->cdp_getStatusByType(1);
     <!-- ============================================================== -->
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
+    <script>window.CDP_SHIP_MODE = <?php echo json_encode($ship_mode); ?>;</script>
     <script src="<?= cdp_asset('dataJs/courier.js') ?>"></script>
     <script src="<?= cdp_asset('dataJs/courier_ajax.js') ?>"></script>
 

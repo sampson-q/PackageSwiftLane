@@ -94,9 +94,16 @@ $meter = $settings->meter;
 $site_email = $settings->site_email;
 
 
-// NOTIFY SMS CLICKSEND API 
+// NOTIFY SMS CLICKSEND API
 $templatessender = 13;
 $templatesreceiver = 14;
+
+// Air vs Sea: dedicated consolidation. Category is STATIC per mode — Air Freight
+// (26) or Ocean Freight (27) — carried on the form and used at insert time.
+$ship_mode = strtolower((string) ($_POST['ship_mode'] ?? $_GET['mode'] ?? 'air'));
+$ship_mode = ($ship_mode === 'sea') ? 'sea' : 'air';
+$ship_mode_category = ($ship_mode === 'sea') ? 27 : 26;
+$ship_mode_label = ($ship_mode === 'sea') ? 'Sea (Ocean Freight)' : 'Air (Air Freight)';
 
 
 if (isset($_POST["create_invoice"])) {
@@ -264,7 +271,7 @@ if (isset($_POST["create_invoice"])) {
     $db->bind(':agency',  4);
     $db->bind(':origin_off',  86);
     $db->bind(':order_package',  29);
-    $db->bind(':order_item_category',  27);
+    $db->bind(':order_item_category',  $ship_mode_category);
     $db->bind(':order_courier',  cdp_sanitize($_POST["order_courier"]));
     $db->bind(':order_service_options',  8);
     $db->bind(':order_deli_time',  12);
@@ -938,6 +945,13 @@ if (isset($_POST["create_invoice"])) {
             </div>
 
             <form method="post" id="invoice_form" name="invoice_form" enctype="multipart/form-data">
+                <!-- Shipping mode is fixed for this dedicated consolidation page (Air vs Sea). -->
+                <input type="hidden" name="ship_mode" value="<?php echo htmlspecialchars($ship_mode); ?>">
+                <div class="mb-2">
+                    <span class="badge <?php echo $ship_mode === 'sea' ? 'badge-info' : 'badge-primary'; ?>">
+                        <?php echo $ship_mode === 'sea' ? '&#128674;' : '&#9992;'; ?> <?php echo htmlspecialchars($ship_mode_label); ?> Consolidation
+                    </span>
+                </div>
                 <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
                 <div class="container-fluid">

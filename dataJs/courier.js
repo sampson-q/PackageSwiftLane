@@ -14,7 +14,8 @@ function cdp_load(page) {
   var status_courier = $("#status_courier").val();
   var filterby = $("#filterby").val();
   var per_page = $("#per_page").val() || 25;
-  var parametros = { "page": page, 'search': search, 'status_courier': status_courier, 'filterby': filterby, 'per_page': per_page };
+  var mode = (typeof window.CDP_SHIP_MODE !== "undefined") ? window.CDP_SHIP_MODE : "";
+  var parametros = { "page": page, 'search': search, 'status_courier': status_courier, 'filterby': filterby, 'per_page': per_page, 'mode': mode };
   $("#loader").fadeIn('slow');
   $.ajax({
     url: './ajax/courier/courier_list_ajax.php',

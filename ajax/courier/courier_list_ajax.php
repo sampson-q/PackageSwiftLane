@@ -82,6 +82,10 @@ if ($filterby == 3) {
 	$sWhere .= " and  a.is_consolidate = '1'";
 }
 
+// Air vs Sea segregation — the dedicated Air Shipping / Sea Shipping menus each
+// show only their own shipments (order_item_category → Air/Ocean Freight).
+$sWhere .= cdp_shipModeWhere($_REQUEST['mode'] ?? '', 'a');
+
 
 // // pagination variables
 $page = (isset($_REQUEST['page']) && !empty($_REQUEST['page'])) ? $_REQUEST['page'] : 1;
