@@ -39,6 +39,13 @@ if (isset($_GET['prealert_id']) && intval($_GET['prealert_id']) > 0) {
 $db->cdp_query("SELECT * FROM cdb_category where id= '" . $infoship->logistics_default1 . "'");
 $s_logistics = $db->cdp_registro();
 
+// Air vs Sea: this add page is dedicated to one mode. Category is STATIC (not a
+// user choice) — Air Freight (26) by default, Ocean Freight (27) when ?mode=sea.
+$ship_mode = strtolower((string) ($_GET['mode'] ?? 'air'));
+$ship_mode = ($ship_mode === 'sea') ? 'sea' : 'air';
+$ship_mode_category = ($ship_mode === 'sea') ? 27 : 26;
+$ship_mode_label = ($ship_mode === 'sea') ? 'Sea (Ocean Freight)' : 'Air (Air Freight)';
+
 $db->cdp_query("SELECT * FROM cdb_delivery_time where id = 14");
 $delivery_times = $db->cdp_registro();
 
@@ -396,6 +403,13 @@ $categories   = $core->cdp_getCategoriesById(27);
 
                                     <!-- Bloque Modo de envío / millas / tiempo / pago -->
                                     <div class="rate-box mb-3">
+                                        <!-- Shipping mode is fixed for this dedicated page (Air vs Sea). -->
+                                        <input type="hidden" id="order_item_category" name="order_item_category" value="<?php echo (int) $ship_mode_category; ?>">
+                                        <div class="mb-2">
+                                            <span class="badge <?php echo $ship_mode === 'sea' ? 'badge-info' : 'badge-primary'; ?>">
+                                                <?php echo $ship_mode === 'sea' ? '&#128674;' : '&#9992;'; ?> <?php echo htmlspecialchars($ship_mode_label); ?>
+                                            </span>
+                                        </div>
                                         <div class="form-row">
                                             <!-- <div class="form-group col-md-3">
                                                 <label class="control-label col-form-label mb-1"><?php echo isset($lang['add-title22']) ? $lang['add-title22'] : 'Modo de envío'; ?></label>
@@ -570,7 +584,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                 <tr>
                                                     <th style="width:60px;"><?php echo $lang['courier_table_qty']; ?></th>
                                                     <th style="min-width:160px;"><?php echo $lang['left213']; ?></th>
-                                                    <th style="width:170px;">Pricing mode</th>
+                                                    <th style="width:170px;">Pricing Mode</th>
                                                     <th style="width:110px;">Weight</th>
                                                     <th style="width:130px;">Custom Price (USD)</th>
                                                     <th style="width:110px;">Line Total (USD)</th>
@@ -634,6 +648,25 @@ $categories   = $core->cdp_getCategoriesById(27);
 
                                             <input class="custom-file-input" id="filesCapture" name="filesCapture[]" multiple="multiple" type="file" accept="image/*" capture="environment" style="display:none;" />
                                         </div>
+
+                                        <!-- Video capture — sits alongside Attach Files / Camera Capture.
+                                             Kept small (~2–5 MB) via bitrate + duration cap. -->
+                                        <div class="col-md-2">
+                                            <div>
+                                                <label class="control-label" id="videoItem">Record Video</label>
+                                            </div>
+
+                                            <button type="button" id="recordVideoButton" class="btn btn-info pull-left mb-4">
+                                                <i class="fa fa-video" style="font-size:18px; cursor:pointer;"></i> Record Video
+                                            </button>
+
+                                            <div class="mt-2 d-flex align-items-start" style="gap:.5rem;">
+                                                <video id="videoPreview" playsinline style="width:220px; height:165px; background:#000; display:none; border-radius:6px; object-fit:cover;"></video>
+                                            </div>
+                                            <small id="videoRecStatus" class="d-block mt-1 text-muted"></small>
+
+                                            <input class="custom-file-input" id="filesVideo" name="filesVideo[]" multiple="multiple" type="file" accept="video/*" capture="environment" style="display:none;" />
+                                        </div>
                                     </div>
 
                                     <div class="col-md-12 row" id="image_preview"></div>
@@ -681,13 +714,15 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                         <div class="col-sm-6 col-md-2">
                                                             <div class="form-group mb-2">
                                                                 <label class="control-label col-form-label-sm">Default Weight (lbs)</label>
-                                                                <input type="text"
-                                                                       onchange="calculateFinalTotal(this);"
-                                                                       onkeypress="return isNumberKey(event, this)"
-                                                                       class="form-control form-control-sm"
-                                                                       value="<?php echo $core->value_weight; ?>"
-                                                                       name="price_lb" id="price_lb"
-                                                                       style="border: 1px solid red;">
+                                                                <!-- Rate is display-only: the system's defined per-weight rate cannot be
+                                                                     altered per-shipment here. Manage it in the Financial Sheet. -->
+                                                                <div class="form-control form-control-sm bg-light d-flex align-items-center"
+                                                                     id="price_lb_display" title="System rate — set in the Financial Sheet"
+                                                                     style="min-height:31px;font-weight:600;cursor:not-allowed;">
+                                                                    <?php echo htmlspecialchars((string) $core->value_weight); ?>
+                                                                </div>
+                                                                <input type="hidden" value="<?php echo htmlspecialchars((string) $core->value_weight); ?>"
+                                                                       name="price_lb" id="price_lb">
                                                             </div>
                                                         </div>
 
@@ -924,5 +959,6 @@ $categories   = $core->cdp_getCategoriesById(27);
         window.CDP_RATE = <?php echo (float) ($core->exchange_rate ?: 1); ?>;
     </script>
     <script src="<?= cdp_asset('dataJs/courier_add.js') ?>"></script>
+    <script src="<?= cdp_asset('dataJs/video_capture.js') ?>"></script>
 </body>
 </html>

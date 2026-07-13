@@ -17,6 +17,13 @@ var packagesItems = [
 // Última cotización obtenida (endpoint). Si no hay, se usa el price_lb del formulario.
 window.lastQuote = null;
 
+// The per-weight rate (#price_lb) is a hidden, non-editable value. Mirror it
+// into the read-only #price_lb_display box whenever it changes.
+function cdpRenderPriceLbDisplay() {
+  var v = $("#price_lb").val();
+  if ($("#price_lb_display").length) { $("#price_lb_display").text(v === undefined || v === null ? "" : v); }
+}
+
 const AUTO_FETCH_DEBOUNCE = 400;
 let autoFetchTimer = null;
 
@@ -33,17 +40,15 @@ let autoFetchTimer = null;
     $("#show_hide_user_inputs").toggleClass("d-none", !$(this).is(":checked"));
   });
 
-  // Modo de tarifa: manual vs automática
+  // Modo de tarifa: manual vs automática. El precio por peso es del sistema y
+  // solo se muestra (input oculto #price_lb reflejado en #price_lb_display).
   $("#tariff_mode").on("change click", function () {
     const manual = $(this).is(":checked");
-    $("#price_lb").prop("readonly", !manual);
     scheduleRecalc();
     if (!manual) scheduleAutoFetch(true);
   });
 
-  if (!$("#tariff_mode").is(":checked")) {
-    $("#price_lb").prop("readonly", true);
-  }
+  cdpRenderPriceLbDisplay();
 
   // País/Estado/Ciudad
   cdp_load_countries("_modal_user");             cdp_load_states("_modal_user");             cdp_load_cities("_modal_user");
@@ -198,6 +203,7 @@ function fetchTariff() {
       recipient_address: raddr_id,
       recipient_type: window.recipient_type || 'recipient',
       order_service_options: serviceOpt,
+      order_item_category: ($("#order_item_category").val() || ""),
       rate_provider: provider,
       distance_miles: miles
     },
@@ -212,6 +218,7 @@ function fetchTariff() {
           const unit = nf(res.data && res.data.price, 0);
           if (unit > 0) $("#price_lb").val(unit.toFixed(2));
         }
+        cdpRenderPriceLbDisplay();
         if ($("#chargeable_weight").length) $("#chargeable_weight").val(cw.toFixed(2));
       } else {
         window.lastQuote = null;
@@ -1011,6 +1018,11 @@ $("#invoice_form").on("submit", function (event) {
         window.__capturedFilesFallback.forEach(function(file){
             data.append("filesMultiple[]", file);
         });
+    }
+
+    // Recorded videos (kept ~2–5 MB by the shared capture module → filesVideo[])
+    if (typeof window.cdpAppendVideosToFormData === "function") {
+        window.cdpAppendVideosToFormData(data);
     }
 
   data.append('_csrf_token', $('input[name="_csrf_token"]').val());

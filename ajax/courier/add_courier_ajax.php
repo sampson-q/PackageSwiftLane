@@ -174,7 +174,8 @@ if (empty($errors)) {
                 $order_svc_pre,
                 $packages_pre,
                 $distance_miles_pre,
-                (float)$meter
+                (float)$meter,
+                (int)($_POST['order_item_category'] ?? 0)
             );
             if ($tariff_pre === null) {
                 $errors['tariff_not_found'] = isset($lang['tariff_no_configured']) ? $lang['tariff_no_configured'] : 'No hay tarifa configurada para la ruta/modo/peso indicados.';
@@ -400,7 +401,8 @@ if (empty($errors)) {
                     $order_svc,
                     $packages,
                     $distance_miles,
-                    (float)$meter
+                    (float)$meter,
+                    (int)$order_item_category_in
                 );
                 if ($tariffResult !== null) {
                     $sumador_total = $tariffResult['total_tarifa'];
@@ -524,6 +526,14 @@ if (empty($errors)) {
                     cdp_insertOrdersFiles($shipment_id, $target_file_db, $image_name, date("Y-m-d H:i:s"), '0', $imageFileType);
                 }
             }
+        }
+
+        // =======================
+        // VIDEO CLIPS (captured/uploaded) — kept small client-side (~2–5 MB);
+        // a hard 6 MB server cap guards against oversized uploads.
+        // =======================
+        if (isset($_FILES['filesVideo']) && is_array($_FILES['filesVideo']['name'])) {
+            cdp_saveShipmentVideos($_FILES['filesVideo'], (int) $shipment_id, $order_track);
         }
 
         // =======================
@@ -805,27 +815,30 @@ if (empty($errors)) {
                             if (is_array($pkgs_wa) && count($pkgs_wa) > 0) {
                                 $pieces_wa = 0;
                                 $weight_wa = 0.0;
-                                $dims_wa = array();
                                 foreach ($pkgs_wa as $p_wa) {
                                     $qty_wa = max(1, (int) ($p_wa->qty ?? 1));
                                     $pieces_wa += $qty_wa;
                                     $weight_wa += (float) ($p_wa->weight ?? 0) * $qty_wa;
-                                    $dims_wa[] = (0 + ($p_wa->length ?? 0)) . 'x' . (0 + ($p_wa->width ?? 0)) . 'x' . (0 + ($p_wa->height ?? 0));
                                 }
+                                // Package weight = the staff-entered Original Total Weight
+                                // (item weights only price items; a custom-priced item carries
+                                // 0 weight, so the summed item weight can be 0). Fall back to
+                                // the summed weight only if the total wasn't entered.
+                                // Dimensions are retired — no longer shown.
+                                $ptw_wa = (isset($_POST['package_total_weight']) && $_POST['package_total_weight'] !== '')
+                                    ? (float) $_POST['package_total_weight'] : $weight_wa;
                                 $weight_unit_wa = trim((string) ($settings->weight_p ?? 'lb'));
-                                $dim_unit_wa = trim((string) ($settings->units ?? ''));
                                 $extra_lines[] = '• Pieces: ' . $pieces_wa;
-                                $extra_lines[] = '• Total weight: ' . (0 + round($weight_wa, 2)) . ' ' . $weight_unit_wa;
-                                $extra_lines[] = '• Dimensions: ' . implode(' | ', $dims_wa) . ($dim_unit_wa !== '' ? ' ' . $dim_unit_wa : '');
+                                $extra_lines[] = '• Total Weight: ' . (0 + round($ptw_wa, 2)) . ' ' . $weight_unit_wa;
                             }
                         }
                         $postal_tracking_wa = trim((string) ($_POST['tracking_number'] ?? ''));
                         if ($postal_tracking_wa !== '' && $postal_tracking_wa !== '0') {
-                            $extra_lines[] = '• Carrier tracking #: ' . $postal_tracking_wa;
+                            $extra_lines[] = '• Carrier Tracking #: ' . $postal_tracking_wa;
                         }
                         $eta_wa = trim((string) ($_POST['estimated_eta'] ?? ''));
                         if ($eta_wa !== '') {
-                            $extra_lines[] = '• Estimated arrival: ' . $eta_wa;
+                            $extra_lines[] = '• Estimated Arrival: ' . $eta_wa;
                         }
 
                         // Status + full itemized list (qty x description, no prices)

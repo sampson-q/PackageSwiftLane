@@ -102,8 +102,17 @@ try {
     // ============================
     // 3. ¿MODO AÉREO? (PESO VOLUMÉTRICO)
     // ============================
+    // Air vs Sea is the ORDER's category (order_item_category → cdb_category:
+    // 26 Air / 27 Ocean), NOT order_service_options (the carrier). Using the
+    // carrier here made air detection fail so air was never charged volumetric.
+    $order_item_category = (isset($_POST['order_item_category']) && $_POST['order_item_category'] !== '')
+        ? (int)$_POST['order_item_category']
+        : 0;
     $is_air = false;
-    if (!is_null($order_service_options)) {
+    if ($order_item_category > 0) {
+        $is_air = in_array($order_item_category, cdp_shipCategoryIds('air'), true);
+    } elseif (!is_null($order_service_options)) {
+        // Backward-compatible fallback (some callers overload order_service_options).
         $dbm = new Conexion;
         // Tomamos el nombre desde cdb_category (Air Freight, etc.)
         $dbm->cdp_query("SELECT name_item FROM cdb_category WHERE id = :id LIMIT 1");

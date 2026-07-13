@@ -471,7 +471,7 @@ $numrows     = $db->cdp_rowCount();
                                                 <tr>
                                                     <th style="width:70px;"><?php echo $lang['courier_table_qty']; ?></th>
                                                     <th style="min-width:140px;"><?php echo $lang['left213']; ?></th>
-                                                    <th style="width:170px;">Pricing mode</th>
+                                                    <th style="width:170px;">Pricing Mode</th>
                                                     <th style="width:110px;">Weight</th>
                                                     <th style="width:130px;">Custom Price</th>
                                                     <th style="width:110px;">Line Total</th>
@@ -532,6 +532,23 @@ $numrows     = $db->cdp_rowCount();
                                                 </div>
                                             </div>
                                             <input class="custom-file-input" id="filesCapture" name="filesCapture[]" multiple="multiple" type="file" accept="image/*" capture="environment" style="display:none;" />
+                                        </div>
+
+                                        <!-- Video capture — sits alongside Attach Files / Camera Capture.
+                                             Kept small (~2–5 MB) via bitrate + duration cap. -->
+                                        <div class="col-md-2">
+                                            <div>
+                                                <label class="control-label" id="videoItem">Record Video</label>
+                                            </div>
+                                            <button type="button" id="recordVideoButton" class="btn btn-info pull-left mb-4">
+                                                <i class="fa fa-video" style="font-size:18px;cursor:pointer;"></i> Record Video
+                                            </button>
+
+                                            <div class="mt-2 d-flex align-items-start" style="gap:.5rem;">
+                                                <video id="videoPreview" playsinline style="width:220px;height:165px;background:#000;display:none;border-radius:6px;object-fit:cover;"></video>
+                                            </div>
+                                            <small id="videoRecStatus" class="d-block mt-1 text-muted"></small>
+                                            <input class="custom-file-input" id="filesVideo" name="filesVideo[]" multiple="multiple" type="file" accept="video/*" capture="environment" style="display:none;" />
                                         </div>
                                     </div>
 
@@ -616,10 +633,16 @@ $numrows     = $db->cdp_rowCount();
                                                     <div class="col-sm-6 col-md-2">
                                                         <div class="form-group mb-2">
                                                             <label class="control-label col-form-label-sm"><?php echo $lang['left905']; ?>&nbsp;<?php echo $core->weight_p; ?></label>
-                                                            <input type="text" onchange="calculateFinalTotal(this);" onkeypress="return isNumberKey(event,this)"
-                                                                   class="form-control form-control-sm"
-                                                                   value="<?php echo $row_order->value_weight; ?>"
-                                                                   name="price_lb" id="price_lb" style="border:1px solid red;">
+                                                            <!-- Rate is display-only: the system's defined per-weight rate cannot be
+                                                                 altered per-shipment here. Manage it in the Financial Sheet. -->
+                                                            <div class="form-control form-control-sm bg-light d-flex align-items-center"
+                                                                 id="price_lb_display" title="System rate — set in the Financial Sheet"
+                                                                 style="min-height:31px;font-weight:600;cursor:not-allowed;">
+                                                                <?php echo htmlspecialchars((string) $row_order->value_weight); ?>
+                                                            </div>
+                                                            <input type="hidden" name="price_lb" id="price_lb" value="<?php echo htmlspecialchars((string) $row_order->value_weight); ?>">
+                                                            <!-- Order's air/sea category (26 Air / 27 Ocean) — drives volumetric weight in the tariff. -->
+                                                            <input type="hidden" name="order_item_category" id="order_item_category" value="<?php echo (int) ($row_order->order_item_category ?? 0); ?>">
                                                         </div>
                                                     </div>
 
@@ -813,5 +836,6 @@ $numrows     = $db->cdp_rowCount();
         window.CDP_RATE = <?php echo (float) ($core->exchange_rate ?: 1); ?>;
     </script>
     <script src="<?= cdp_asset('dataJs/courier_edit.js') ?>"></script>
+    <script src="<?= cdp_asset('dataJs/video_capture.js') ?>"></script>
 </body>
 </html>

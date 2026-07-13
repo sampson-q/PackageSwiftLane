@@ -9,6 +9,13 @@ window.recipient_type = '<?php ?>'; // will be set from hidden field on load
 const AUTO_FETCH_DEBOUNCE = 400;
 let autoFetchTimer = null;
 
+// The per-weight rate (#price_lb) is a hidden, non-editable value. Mirror it
+// into the read-only #price_lb_display box whenever it changes.
+function cdpRenderPriceLbDisplay() {
+  var v = $("#price_lb").val();
+  if ($("#price_lb_display").length) { $("#price_lb_display").text(v === undefined || v === null ? "" : v); }
+}
+
 /* =========================================================
    INIT
    ========================================================= */
@@ -26,16 +33,15 @@ let autoFetchTimer = null;
     $("#show_hide_user_inputs").toggleClass("d-none", !$(this).is(":checked"));
   });
 
-  // Tariff mode
+  // Tariff mode. The per-weight rate is system-defined and display-only here
+  // (hidden #price_lb input mirrored into #price_lb_display); the toggle only
+  // controls whether the tariff engine auto-fetches it.
   $("#tariff_mode").on("change click", function () {
     var manual = $(this).is(":checked");
-    $("#price_lb").prop("readonly", !manual);
     if (!manual) scheduleAutoFetch(true);
     scheduleRecalc();
   });
-  if (!$("#tariff_mode").is(":checked")) {
-    $("#price_lb").prop("readonly", true);
-  }
+  cdpRenderPriceLbDisplay();
 
   // Country/State/City for modals
   cdp_load_countries("_modal_user");             cdp_load_states("_modal_user");             cdp_load_cities("_modal_user");
@@ -585,6 +591,9 @@ $("#invoice_form").on("submit", function (event) {
     window.__capturedFilesFallback.forEach(function (file) { data.append("filesMultiple[]", file); });
   }
 
+  // Recorded videos (kept ~2–5 MB by the shared capture module → filesVideo[])
+  if (typeof window.cdpAppendVideosToFormData === "function") { window.cdpAppendVideosToFormData(data); }
+
   data.append('_csrf_token', $('input[name="_csrf_token"]').val());
 
   $.ajax({
@@ -914,13 +923,14 @@ function fetchTariff() {
 
   $.ajax({
     url: "ajax/courier/get_price_range_weight_tariffs_ajax.php", type: "POST", dataType: "json",
-    data: { packages: JSON.stringify(pkgs), sender_id: sender_id, sender_address: saddr_id, recipient_id: recip_id, recipient_address: raddr_id, recipient_type: window.recipient_type || 'recipient', order_service_options: serviceOpt, rate_provider: provider, distance_miles: miles },
+    data: { packages: JSON.stringify(pkgs), sender_id: sender_id, sender_address: saddr_id, recipient_id: recip_id, recipient_address: raddr_id, recipient_type: window.recipient_type || 'recipient', order_service_options: serviceOpt, order_item_category: ($("#order_item_category").val() || ""), rate_provider: provider, distance_miles: miles },
     success: function (res) {
       if (res && res.success) {
         window.lastQuote = res;
         var cw = nf(res.chargeable_weight, 0), totalTarifa = nf(res.total_tarifa, 0);
         if (cw > 0 && totalTarifa > 0) { $("#price_lb").val((totalTarifa / cw).toFixed(2)); }
         else { var unit = nf(res.data && res.data.price, 0); if (unit > 0) $("#price_lb").val(unit.toFixed(2)); }
+        cdpRenderPriceLbDisplay();
         if ($("#chargeable_weight").length) $("#chargeable_weight").val(cw.toFixed(2));
       } else {
         window.lastQuote = null;

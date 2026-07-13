@@ -317,7 +317,8 @@ if (empty($errors)) {
                     $order_svc_edit,
                     $packages,
                     $distance_miles_edit,
-                    $meter_edit
+                    $meter_edit,
+                    (int)($_POST['order_item_category'] ?? 0)
                 );
                 if ($tariffEdit !== null) {
                     $sum_total_flete = $tariffEdit['total_tarifa'];
@@ -423,6 +424,14 @@ if (empty($errors)) {
                     cdp_insertOrdersFiles($shipment_id, "order_files/" . $image_name, $image_name, date("Y-m-d H:i:s"), '0', $imageFileType);
                 }
             }
+        }
+
+        // =======================
+        // VIDEO CLIPS (captured/uploaded) — kept small client-side (~2–5 MB);
+        // a hard 6 MB server cap guards against oversized uploads.
+        // =======================
+        if (isset($_FILES['filesVideo']) && is_array($_FILES['filesVideo']['name'])) {
+            cdp_saveShipmentVideos($_FILES['filesVideo'], (int) $shipment_id, $order_track);
         }
 
         // =======================

@@ -301,7 +301,8 @@ if ($action === 'preview') {
                 $order_service_options,
                 $packages,
                 $distance_miles,
-                $meter
+                $meter,
+                (int)($infoShip->logistics_default1 ?? 0)
             );
             if ($tariffResult === null) {
                 $tariff_error = $tariffNotFoundMsg;
@@ -569,7 +570,8 @@ if ($action === 'create') {
                 $order_service_options,
                 $packages,
                 $distance_miles,
-                $meter
+                $meter,
+                (int)($infoShip->logistics_default1 ?? 0)
             );
             if ($tariffResult === null) {
                 $failed++;

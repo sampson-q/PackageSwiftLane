@@ -3748,6 +3748,111 @@ function cdp_updateNotificatonsRea($user, $isAdmin = false)
 
 
 
+/**
+ * Store captured/uploaded shipment video clips into order_files/ and record
+ * them in cdb_order_files (shared by courier add + edit).
+ *
+ * Clips are kept small on the client (~2–5 MB via bitrate + duration caps); a
+ * hard 6 MB server ceiling and a video-only allow-list guard the endpoint.
+ *
+ * @param array  $filesVideo  the $_FILES['filesVideo'] structure (multi-file)
+ * @param int    $order_id    shipment / package id
+ * @param string $order_track order tracking prefix used in the stored filename
+ * @param bool   $isCustomerPackage  true → record in the customer-packages files
+ *                                    table; false (default) → shipment files
+ * @return int   number of clips saved
+ */
+/**
+ * Air/Sea shipment segregation. A shipment's mode lives in
+ * cdb_add_order.order_item_category, which points at cdb_category
+ * ("Air Freight" / "Ocean Freight"). Air = any category whose name mentions
+ * air/aéreo; Sea = everything else. Returns the matching category id list.
+ *
+ * @param string $mode 'air' or 'sea'
+ * @return int[] category ids (empty array = don't filter)
+ */
+function cdp_shipCategoryIds($mode)
+{
+    static $cache = null;
+    if ($cache === null) {
+        $cache = array('air' => array(), 'sea' => array());
+        $db = new Conexion;
+        $db->cdp_query("SELECT id, name_item FROM cdb_category");
+        $db->cdp_execute();
+        foreach ((array) $db->cdp_registros() as $r) {
+            $n = mb_strtolower((string) $r->name_item, 'UTF-8');
+            $isAir = (strpos($n, 'air') !== false || strpos($n, 'aereo') !== false || strpos($n, 'aéreo') !== false);
+            $cache[$isAir ? 'air' : 'sea'][] = (int) $r->id;
+        }
+    }
+    $mode = ($mode === 'air') ? 'air' : 'sea';
+    return $cache[$mode];
+}
+
+/**
+ * SQL fragment (incl. leading AND) restricting a query to air or sea shipments
+ * on cdb_add_order alias $alias. Empty string when $mode isn't air/sea.
+ */
+function cdp_shipModeWhere($mode, $alias = 'a')
+{
+    $mode = strtolower(trim((string) $mode));
+    if ($mode !== 'air' && $mode !== 'sea') {
+        return '';
+    }
+    $ids = cdp_shipCategoryIds($mode);
+    if (!$ids) {
+        return '';
+    }
+    return ' AND ' . $alias . '.order_item_category IN (' . implode(',', array_map('intval', $ids)) . ') ';
+}
+
+function cdp_saveShipmentVideos($filesVideo, $order_id, $order_track, $isCustomerPackage = false)
+{
+    if (!is_array($filesVideo) || empty($filesVideo['name']) || !is_array($filesVideo['name'])) {
+        return 0;
+    }
+
+    $maxBytes  = 6 * 1024 * 1024; // hard server cap (client targets 2–5 MB)
+    $allowed   = array('webm', 'mp4', 'm4v', 'mov', 'ogg', 'ogv', '3gp', '3gpp', 'mkv', 'avi');
+    $target_dir = __DIR__ . '/../order_files/';
+    $saved     = 0;
+
+    foreach ($filesVideo['name'] as $key => $origName) {
+        $tmp  = $filesVideo['tmp_name'][$key] ?? '';
+        $size = (int) ($filesVideo['size'][$key] ?? 0);
+        $err  = (int) ($filesVideo['error'][$key] ?? UPLOAD_ERR_NO_FILE);
+
+        if ($tmp === '' || $err !== UPLOAD_ERR_OK || $size <= 0 || $size > $maxBytes) {
+            continue;
+        }
+
+        $ext = strtolower(pathinfo((string) $origName, PATHINFO_EXTENSION));
+        if ($ext === '' || !in_array($ext, $allowed, true)) {
+            continue;
+        }
+        // Confirm it really is a video (not a renamed file).
+        $mime = function_exists('mime_content_type') ? @mime_content_type($tmp) : '';
+        if ($mime !== '' && strpos((string) $mime, 'video/') !== 0) {
+            continue;
+        }
+
+        $safeBase   = preg_replace('/[^A-Za-z0-9._-]/', '_', basename((string) $origName));
+        $video_name = $order_track . date('Y-m-d') . '_' . uniqid('vid_') . '_' . $safeBase;
+        $target_fs  = $target_dir . $video_name;
+
+        if (@move_uploaded_file($tmp, $target_fs)) {
+            if ($isCustomerPackage) {
+                cdp_insertCustomerPackagesFiles($order_id, 'order_files/' . $video_name, $video_name, date('Y-m-d H:i:s'), $ext);
+            } else {
+                cdp_insertOrdersFiles($order_id, 'order_files/' . $video_name, $video_name, date('Y-m-d H:i:s'), '0', $ext);
+            }
+            $saved++;
+        }
+    }
+
+    return $saved;
+}
+
 function cdp_insertOrdersFiles($order_id, $target_file, $image_name, $date, $is_consolidate, $imageFileType)
 {
 
@@ -5920,9 +6025,11 @@ function cdp_deleteTariffs($id)
  * @param array $packages Array de objetos o arrays con qty, weight, length, width, height
  * @param float $distance_miles
  * @param float $meter Factor volumétrico (ej. de cdp_getSettingsCourier)
+ * @param int $order_item_category  Air/Sea category of the ORDER (26=Air, 27=Ocean).
+ *        This — not $order_service_options (the carrier) — decides air vs sea.
  * @return array|null ['chargeable_weight'=>float,'price_base'=>float,'cargo_millas'=>float,'total_tarifa'=>float,'tariff_id'=>int,'price_lb_derived'=>float] o null si no hay tarifa/datos
  */
-function cdp_calculateTariffServerSide($sender_id, $sender_address_id, $recipient_id, $recipient_address_id, $order_service_options, $packages, $distance_miles, $meter)
+function cdp_calculateTariffServerSide($sender_id, $sender_address_id, $recipient_id, $recipient_address_id, $order_service_options, $packages, $distance_miles, $meter, $order_item_category = 0)
 {
     if (!$sender_id || !$sender_address_id || !$recipient_id || !$recipient_address_id || !$packages) {
         return null;
@@ -5947,8 +6054,18 @@ function cdp_calculateTariffServerSide($sender_id, $sender_address_id, $recipien
     $order_svc = ($order_service_options !== null && $order_service_options !== '') ? (int)$order_service_options : 0;
     $distance_miles = (float)$distance_miles;
 
+    // Air vs Sea decides chargeable weight (air = max of real & volumetric; sea =
+    // real only). The AUTHORITATIVE signal is the order's air/sea category
+    // (order_item_category → cdb_category). order_service_options is the CARRIER
+    // (e.g. id 8 "Swift Lane Logistics"), NOT the mode — using it here made air
+    // detection silently fail so air freight was never charged volumetric weight.
+    $order_item_cat = (int) $order_item_category;
     $is_air = false;
-    if ($order_svc > 0) {
+    if ($order_item_cat > 0) {
+        $is_air = in_array($order_item_cat, cdp_shipCategoryIds('air'), true);
+    } elseif ($order_svc > 0) {
+        // Backward-compatible fallback for old callers that didn't pass the
+        // category (some paths overload order_service_options with the category id).
         $dbm = new Conexion;
         $dbm->cdp_query("SELECT name_item FROM cdb_category WHERE id = :id LIMIT 1");
         $dbm->bind(':id', $order_svc);
