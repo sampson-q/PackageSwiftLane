@@ -1030,10 +1030,6 @@ if ($row_order->status_invoice == 1) {
                                                 <th><b><?php echo $lang['left213'] ?></b></th>
                                                 <th><b></b></th>
                                                 <th><b><?php echo $lang['left215'] ?></b></th>
-                                                <th><b><?php echo $lang['left216'] ?></b></th>
-                                                <th><b><?php echo $lang['left217'] ?></b></th>
-                                                <th><b><?php echo $lang['left218'] ?></b></th>
-                                                <th><b><?php echo $lang['left219'] ?></b></th>
                                                 <th><b><?php echo $lang['left231c9'] ?></b></th>
                                                 <th><b><?php echo $lang['left239'] ?></b></th>
                                             </tr>
@@ -1103,10 +1099,6 @@ if ($row_order->status_invoice == 1) {
                                                         <td><?php echo $description_item; ?></td>
                                                         <td></td>
                                                         <td><?php echo $weight_item; ?></td>
-                                                        <td><?php echo $row_order_item->order_item_length; ?></td>
-                                                        <td><?php echo $row_order_item->order_item_width; ?></td>
-                                                        <td><?php echo $row_order_item->order_item_height; ?></td>
-                                                        <td><?php echo $total_metric; ?></td>
                                                         <td class="text-center"><?php echo $row_order_item->order_item_fixed_value; ?></td>
                                                         <td class="text-center"><?php echo $row_order_item->order_item_declared_value; ?></td>
 

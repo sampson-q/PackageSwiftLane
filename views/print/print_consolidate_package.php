@@ -179,7 +179,6 @@ $sender_data = $db->cdp_registro();
             <tr>
                 <th colspan="3" style="color:white;"><b><?php echo $lang['ltracking'] ?></b></th>
                 <th colspan="3" style="color:white;" class="text-right"><b>Weights</b></th>
-                <th colspan="2" style="color:white;" class="text-right"><b>Weight Vol.</b></th>
             </tr>
 
             <?php
@@ -230,7 +229,6 @@ $sender_data = $db->cdp_registro();
                 <tr class="card-hover">
                     <td colspan="3"><b><?php echo $row_order_item->order_prefix . $row_order_item->order_no; ?> </b></td>
                     <td colspan="3" class="text-right"><?php echo $weight_item; ?></td>
-                    <td colspan="2" class="text-right"><?php echo $total_metric; ?></td>
 
 
                 </tr>

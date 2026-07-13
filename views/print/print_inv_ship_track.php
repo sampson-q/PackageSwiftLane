@@ -196,10 +196,6 @@ $address_order = $db->cdp_registro();
                 <th style="color:white;" width="5%"><b><?php echo $lang['left214'] ?></b></th>
                 <th style="color:white;" width="31%"><b><?php echo $lang['left213'] ?></b></th>
                 <th style="color:white;" width="12%"><b><?php echo $lang['left215'] ?></b></th>
-                <th style="color:white;" width="12%"><b><?php echo $lang['left216'] ?></b></th>
-                <th style="color:white;" width="12%"><b><?php echo $lang['left217'] ?></b></th>
-                <th style="color:white;" width="12%"><b><?php echo $lang['left218'] ?></b></th>
-                <th style="color:white;" width="12%"><b><?php echo $lang['left219'] ?></b></th>
                 <th style="color:white;" width="12%"><b><?php echo $lang['left231c9'] ?></b></th>
                 <th style="color:white;" width="12%"><b><?php echo $lang['left239'] ?></b></th>
             </tr>
@@ -254,10 +250,6 @@ $address_order = $db->cdp_registro();
                     <td><?php echo $row_item->order_item_quantity; ?></td>
                     <td><?php echo $description_item; ?></td>
                     <td><?php echo $weight_item; ?></td>
-                    <td><?php echo $row_item->order_item_length; ?></td>
-                    <td><?php echo $row_item->order_item_width; ?></td>
-                    <td><?php echo $row_item->order_item_height; ?></td>
-                    <td><?php echo $total_metric; ?></td>
                     <td><?php echo $row_item->order_item_fixed_value; ?></td>
                     <td><?php echo $row_item->order_item_declared_value; ?></td>
 
