@@ -999,6 +999,10 @@ function fsApplyDiscount(el) {
     var billGhs = parseFloat($b.data("bill")) || 0;   // customer's gross bill (GHS)
     var existing = parseFloat($b.data("disc")) || 0;
 
+    var unit = (typeof window.FS_WEIGHT_UNIT !== "undefined") ? window.FS_WEIGHT_UNIT : "lb";
+    var cur  = (typeof window.FS_CUR_SYMBOL !== "undefined") ? window.FS_CUR_SYMBOL : "$";
+    var genRate = parseFloat(window.FS_WEIGHT_RATE) || 0;
+
     Swal.fire({
         title: "Discount — " + name,
         html:
@@ -1009,10 +1013,14 @@ function fsApplyDiscount(el) {
             '<span class="input-group-prepend btn-group btn-group-sm" role="group">' +
             '<button type="button" id="fsd_amt" class="btn btn-dark py-0 px-2">₵</button>' +
             '<button type="button" id="fsd_pct" class="btn btn-outline-dark py-0 px-2">%</button>' +
+            '<button type="button" id="fsd_rate" class="btn btn-outline-dark py-0 px-2" title="Charge this customer a custom per-' + unit + ' rate">' + cur + '/' + unit + '</button>' +
             '</span>' +
             '<input id="fsd_val" class="form-control" placeholder="0.00" value="' + (existing > 0 ? existing.toFixed(2) : '') + '">' +
             '</div>' +
             '<div class="mt-1">Discount amount: <b id="fsd_preview">₵' + existing.toFixed(2) + '</b></div>' +
+            '<div id="fsd_rate_hint" class="text-muted mt-1" style="display:none;font-size:12px;">' +
+            'General rate is <b>' + cur + genRate.toFixed(2) + '/' + unit + '</b>. Enter a lower rate for this customer; the difference on their weight-priced items becomes the discount (computed on save).' +
+            '</div>' +
             '<label class="mb-1 mt-2">Reason <span class="text-muted">(optional, internal)</span></label>' +
             '<input id="fsd_reason" class="form-control" placeholder="e.g. loyalty, damage, goodwill">' +
             '</div>',
@@ -1024,23 +1032,32 @@ function fsApplyDiscount(el) {
         didOpen: function () {
             var type = "amount";
             function preview() {
+                if (type === "weight_rate") {
+                    $("#fsd_preview").text("computed on save");
+                    return;
+                }
                 var v = parseFloat(String($("#fsd_val").val() || "").replace(/,/g, "")) || 0;
                 var amt = (type === "percent") ? (billGhs * Math.min(v, 100) / 100) : v;
                 if (amt > billGhs) amt = billGhs;
                 $("#fsd_preview").text("₵" + amt.toFixed(2));
             }
+            function setActive(btn) {
+                $("#fsd_amt,#fsd_pct,#fsd_rate").addClass("btn-outline-dark").removeClass("btn-dark");
+                $(btn).addClass("btn-dark").removeClass("btn-outline-dark");
+            }
             $("#fsd_val").on("input", preview);
             $("#fsd_amt").on("click", function () {
-                type = "amount";
-                $(this).addClass("btn-dark").removeClass("btn-outline-dark");
-                $("#fsd_pct").addClass("btn-outline-dark").removeClass("btn-dark");
-                preview();
+                type = "amount"; setActive(this);
+                $("#fsd_val").attr("placeholder", "0.00"); $("#fsd_rate_hint").hide(); preview();
             });
             $("#fsd_pct").on("click", function () {
-                type = "percent";
-                $(this).addClass("btn-dark").removeClass("btn-outline-dark");
-                $("#fsd_amt").addClass("btn-outline-dark").removeClass("btn-dark");
-                preview();
+                type = "percent"; setActive(this);
+                $("#fsd_val").attr("placeholder", "0.00"); $("#fsd_rate_hint").hide(); preview();
+            });
+            $("#fsd_rate").on("click", function () {
+                type = "weight_rate"; setActive(this);
+                $("#fsd_val").attr("placeholder", "new " + cur + "/" + unit + " rate").val("");
+                $("#fsd_rate_hint").show(); preview();
             });
             $("#fsd_amt").data("get", function () { return type; });
         },
@@ -1048,7 +1065,7 @@ function fsApplyDiscount(el) {
             var raw = String($("#fsd_val").val() || "").replace(/,/g, "").trim();
             var v = parseFloat(raw);
             if (raw === "" || isNaN(v) || v <= 0) {
-                Swal.showValidationMessage("Enter a discount greater than 0.");
+                Swal.showValidationMessage("Enter a value greater than 0.");
                 return false;
             }
             var type = $("#fsd_amt").data("get") ? $("#fsd_amt").data("get")() : "amount";
@@ -1111,6 +1128,88 @@ function fsRemoveDiscount(el) {
         var r = res.value;
         if (r.consol) fsApplyConsolSummary(cid, r.consol);
         fsReloadCustomers(cid);
+    });
+}
+
+/* ------------------------ Customer payment history ---------------------- */
+// Customer Actions -> Payment History. A statement of every payment and
+// discount recorded against this customer across all consolidations.
+function fsPaymentHistory(el) {
+    var $b = $(el);
+    var sid = $b.data("sid");
+    var name = $b.data("name") || "";
+    Swal.fire({
+        title: "Loading payment history…",
+        didOpen: function () { Swal.showLoading(); },
+        allowOutsideClick: false
+    });
+    $.ajax({
+        url: FS_AJAX, method: "POST", dataType: "json",
+        data: { action: "payment_history", sender_id: sid }
+    }).then(function (r) {
+        if (!r || !r.ok) {
+            Swal.fire({ icon: "error", text: (r && r.message) ? r.message : "Could not load payment history." });
+            return;
+        }
+        Swal.fire({
+            title: "Payment History — " + (r.name || name),
+            html: r.html,
+            width: "48rem",
+            confirmButtonText: "Close",
+            customClass: { htmlContainer: "text-left" }
+        });
+        // Respect the current currency toggle on the freshly injected chips.
+        if (typeof fsApplyCurrency === "function") { fsApplyCurrency(); }
+    }, function () {
+        Swal.fire({ icon: "error", text: "Request failed while loading payment history." });
+    });
+}
+
+/* --------------------- Global per-weight rate (settings) ----------------- */
+// FS toolbar -> set the system's per-weight rate (value_weight). Display-only
+// at courier add/edit; changed here. Does not touch already-captured bills.
+function fsSetWeightRate() {
+    var current = (typeof window.FS_WEIGHT_RATE !== "undefined") ? window.FS_WEIGHT_RATE : "";
+    var unit = (typeof window.FS_WEIGHT_UNIT !== "undefined") ? window.FS_WEIGHT_UNIT : "";
+    Swal.fire({
+        title: "Set Weight Rate",
+        html:
+            '<p style="font-size:13px;margin-bottom:8px;">The price charged per ' +
+            $("<span>").text(unit).html() + ' of chargeable weight. This is the system default used ' +
+            'when pricing new shipments; existing bills keep their own captured rate.</p>' +
+            '<input id="fs_weight_rate_input" class="swal2-input" inputmode="decimal" ' +
+            'value="' + $("<span>").text(current).html() + '" placeholder="0.00" ' +
+            'style="text-align:center;font-size:20px;font-weight:700;">',
+        showCancelButton: true,
+        confirmButtonText: "Save Rate",
+        showLoaderOnConfirm: true,
+        allowOutsideClick: function () { return !Swal.isLoading(); },
+        preConfirm: function () {
+            var v = ($("#fs_weight_rate_input").val() || "").replace(/,/g, "").trim();
+            if (v === "" || isNaN(parseFloat(v)) || parseFloat(v) <= 0) {
+                Swal.showValidationMessage("Enter a rate greater than 0.");
+                return false;
+            }
+            return $.ajax({
+                url: FS_AJAX, method: "POST", dataType: "json",
+                data: { action: "set_weight_rate", value: v }
+            }).then(function (r) {
+                if (!r || !r.ok) {
+                    Swal.showValidationMessage((r && r.message) ? r.message : "Could not update the rate.");
+                    return false;
+                }
+                return r;
+            }, function () {
+                Swal.showValidationMessage("Could not update the rate — server error.");
+                return false;
+            });
+        }
+    }).then(function (res) {
+        if (!res.isConfirmed || !res.value) return;
+        window.FS_WEIGHT_RATE = res.value.value;
+        var $lbl = $("#fs_weight_rate_label");
+        if ($lbl.length) { $lbl.text(res.value.value); }
+        Swal.fire({ icon: "success", text: "Weight rate updated.", timer: 1400, showConfirmButton: false });
     });
 }
 

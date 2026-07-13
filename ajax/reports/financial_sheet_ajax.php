@@ -58,6 +58,8 @@ $fsPermMap = [
     'apply_discount' => 'fs_apply_discount',
     'remove_discount' => 'fs_apply_discount',
     'clear_package'  => 'fs_clear_delivery',
+    'set_weight_rate' => 'fs_price_items',
+    'payment_history' => 'financial_sheet',
 ];
 require_permission($fsPermMap[$action] ?? 'financial_sheet');
 
@@ -575,6 +577,13 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
                             <i class="mdi mdi-close-circle-outline"></i> Remove Discount
                         </a>
                         <?php endif; ?>
+                        <a class="dropdown-item fs-history-btn" href="javascript:void(0)"
+                           data-sid="<?php echo $sid; ?>"
+                           data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
+                           onclick="fsPaymentHistory(this);">
+                            <i class="mdi mdi-history"></i> Payment History
+                        </a>
+                        <div class="dropdown-divider"></div>
                         <a class="dropdown-item fs-bill-btn" href="javascript:void(0)"
                            data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>"
                            data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
@@ -636,7 +645,15 @@ function fs_render_package($p, $stat = null, $cleared = false)
         <div class="card-header fs-pkg-header p-2" onclick="fsTogglePackage(this, <?php echo $oid; ?>, event)">
             <span class="fs-level-chip fs-chip-pkg">PACKAGE</span>
             <i class="mdi mdi-package-variant-closed"></i>
-            <b><?php echo $pkgNo; ?></b>
+            <b title="Swift (system) tracking"><?php echo $pkgNo; ?></b>
+            <?php
+            // Carrier / postal tracking alongside the Swift (system) number.
+            $__pt = cdp_getPackageTrackingLegacyAware($oid);
+            $__carrier = ($__pt && !empty($__pt->tracking_number)) ? (string) $__pt->tracking_number : '';
+            ?>
+            <?php if ($__carrier !== ''): ?>
+                <span class="fs-dim ml-2" title="Carrier / postal tracking"><i class="mdi mdi-barcode"></i> <?php echo htmlspecialchars($__carrier); ?></span>
+            <?php endif; ?>
             <span class="fs-dim ml-2" title="Package weight">
                 <i class="mdi mdi-weight"></i> <?php echo round($w, 2); ?> lb
             </span>
@@ -1676,20 +1693,67 @@ if ($action === 'apply_discount' || $action === 'remove_discount') {
 
         $amountGhs = 0.0;
         if ($action === 'apply_discount') {
-            $type = (($_REQUEST['disc_type'] ?? 'amount') === 'percent') ? 'percent' : 'amount';
+            $reqType = (string) ($_REQUEST['disc_type'] ?? 'amount');
+            $type = in_array($reqType, ['percent', 'amount', 'weight_rate'], true) ? $reqType : 'amount';
             $rawV = trim((string) ($_REQUEST['value'] ?? ''));
             $val  = (float) str_replace(',', '', $rawV);
             if ($rawV === '' || !is_numeric(str_replace(',', '', $rawV)) || $val <= 0) {
-                echo json_encode(['ok' => false, 'error' => 'invalid_value', 'message' => 'Enter a discount greater than 0.']);
+                echo json_encode(['ok' => false, 'error' => 'invalid_value', 'message' => 'Enter a value greater than 0.']);
                 exit;
             }
+
+            // Extra descriptor appended to the auto-reason (e.g. the rate change).
+            $logExtra = '';
             if ($type === 'percent') {
                 if ($val > 100) { $val = 100; }
                 $amountGhs = round($billGhs * $val / 100, 2);
+                $logExtra = ' (' . rtrim(rtrim(number_format($val, 2), '0'), '.') . '%)';
+            } elseif ($type === 'weight_rate') {
+                // Charge THIS customer a custom per-weight rate. FS otherwise uses
+                // the general rate; the difference on their weight-priced items
+                // (custom_price items are untouched) becomes the discount.
+                $genRate = (float) ($core->value_weight ?? 0);
+                $newRate = $val;
+                if ($genRate <= 0) {
+                    echo json_encode(['ok' => false, 'error' => 'no_rate', 'message' => 'No general weight rate is configured.']);
+                    exit;
+                }
+                if ($newRate >= $genRate) {
+                    echo json_encode(['ok' => false, 'error' => 'rate_too_high',
+                        'message' => 'Enter a rate below the general ' . ($core->for_symbol ?: '$') . number_format($genRate, 2) . '/' . ($core->weight_p ?: 'lb') . ' to give a discount.']);
+                    exit;
+                }
+                // Total chargeable weight of the customer's WEIGHT-PRICED items.
+                $chargeableWeight = 0.0;
+                if ($oids) {
+                    $inOids = implode(',', array_map('intval', $oids));
+                    $db->cdp_query("SELECT COALESCE(SUM(order_item_weight * COALESCE(NULLIF(order_item_quantity,0),1)),0) w
+                                    FROM cdb_add_order_item
+                                    WHERE order_id IN ($inOids)
+                                      AND (custom_price IS NULL OR custom_price = 0)");
+                    $db->cdp_execute();
+                    $chargeableWeight = (float) ($db->cdp_registro()->w ?? 0);
+                }
+                if ($chargeableWeight <= 0) {
+                    echo json_encode(['ok' => false, 'error' => 'no_weight',
+                        'message' => 'This customer has no weight-priced items, so a rate change gives no discount.']);
+                    exit;
+                }
+                $discountUsd = $chargeableWeight * ($genRate - $newRate);
+                $amountGhs   = round($discountUsd * (float) $core->exchange_rate, 2);
+                $sym = $core->for_symbol ?: '$';
+                $unit = $core->weight_p ?: 'lb';
+                $logExtra = ' (rate ' . $sym . number_format($newRate, 2) . '/' . $unit
+                          . ', was ' . $sym . number_format($genRate, 2) . '/' . $unit
+                          . ' on ' . rtrim(rtrim(number_format($chargeableWeight, 2), '0'), '.') . ' ' . $unit . ')';
             } else {
                 $amountGhs = round($val, 2);
             }
             if ($amountGhs > $billGhs) { $amountGhs = $billGhs; } // never exceed the bill
+            if ($amountGhs <= 0) {
+                echo json_encode(['ok' => false, 'error' => 'no_discount', 'message' => 'That produces no discount.']);
+                exit;
+            }
             $reason = trim((string) ($_REQUEST['reason'] ?? ''));
 
             $db->cdp_query("INSERT INTO cdb_fs_discounts
@@ -1698,7 +1762,8 @@ if ($action === 'apply_discount' || $action === 'remove_discount') {
             $db->bind(':cid', $cid);
             $db->bind(':sid', $sid);
             $db->bind(':amt', $amountGhs);
-            $db->bind(':type', $type);
+            // 'weight_rate' exceeds the disc_type VARCHAR(10) — store the short 'rate'.
+            $db->bind(':type', $type === 'weight_rate' ? 'rate' : $type);
             $db->bind(':reason', $reason !== '' ? $reason : null);
             $db->bind(':rate', (float) $core->exchange_rate);
             $db->bind(':by', $uid);
@@ -1706,7 +1771,7 @@ if ($action === 'apply_discount' || $action === 'remove_discount') {
 
             foreach ($oids as $o) {
                 fs_log_history($uid, $o, 'applied a ₵' . number_format($amountGhs, 2) . ' customer discount'
-                    . ($type === 'percent' ? ' (' . rtrim(rtrim(number_format($val, 2), '0'), '.') . '%)' : '')
+                    . $logExtra
                     . ($reason !== '' ? ' — ' . $reason : ''));
             }
         } else {
@@ -1730,6 +1795,161 @@ if ($action === 'apply_discount' || $action === 'remove_discount') {
         'bill_ghs'     => round($billGhs, 2),
         'aggregates'   => fs_aggregates($cid, $sid),
         'consol'       => fs_consol_summary($cid),
+    ]);
+    exit;
+}
+
+// ----------------------------------------------------------------------------
+// SET THE GLOBAL PER-WEIGHT RATE (value_weight in cdb_settings).
+// The rate used for weight pricing is a system value: it is display-only at
+// courier add/edit, and managed here (gated by fs_price_items). Historical
+// bills are unaffected — each already stores its own captured rate.
+// ----------------------------------------------------------------------------
+if ($action === 'set_weight_rate') {
+    header('Content-Type: application/json; charset=UTF-8');
+
+    $raw = trim((string) ($_REQUEST['value'] ?? ''));
+    $clean = str_replace(',', '', $raw);
+    $val = round((float) $clean, 4);
+    if ($raw === '' || !is_numeric($clean) || $val <= 0) {
+        echo json_encode(['ok' => false, 'message' => 'Enter a rate greater than 0.']);
+        exit;
+    }
+
+    try {
+        $db->cdp_query("UPDATE cdb_settings SET value_weight = :v");
+        $db->bind(':v', $val);
+        $db->cdp_execute();
+    } catch (Throwable $e) {
+        echo json_encode(['ok' => false, 'message' => 'Could not update the rate.']);
+        exit;
+    }
+
+    echo json_encode(['ok' => true, 'value' => $val, 'unit' => (string) ($core->weight_p ?? 'lb')]);
+    exit;
+}
+
+// ----------------------------------------------------------------------------
+// PAYMENT HISTORY for a customer (all consolidations) — a statement of every
+// payment and discount recorded against them, shown from Customer Actions.
+// ----------------------------------------------------------------------------
+if ($action === 'payment_history') {
+    header('Content-Type: application/json; charset=UTF-8');
+
+    $sid = (int) ($_REQUEST['sender_id'] ?? 0);
+    if ($sid <= 0) {
+        echo json_encode(['ok' => false, 'error' => 'bad_request']);
+        exit;
+    }
+
+    $nameExpr = "COALESCE(NULLIF(TRIM(CONCAT(COALESCE(u.fname,''),' ',COALESCE(u.lname,''))),''), u.username, CONCAT('User ', %s))";
+
+    // Customer label + locker.
+    $db->cdp_query("SELECT COALESCE(NULLIF(TRIM(CONCAT(COALESCE(fname,''),' ',COALESCE(lname,''))),''), username, CONCAT('User ', id)) AS label, locker
+                    FROM cdb_users WHERE id = :sid LIMIT 1");
+    $db->bind(':sid', $sid);
+    $db->cdp_execute();
+    $cust = $db->cdp_registro();
+    $custLabel = $cust ? (string) $cust->label : ('User ' . $sid);
+
+    $payments = [];
+    $discounts = [];
+    try {
+        $db->cdp_query("SELECT p.consolidate_id, p.amount_ghs, p.mode, p.reference, p.gateway_status,
+                               p.exchange_rate, p.recorded_at,
+                               " . sprintf($nameExpr, 'p.recorded_by') . " AS by_name
+                        FROM cdb_fs_payments p LEFT JOIN cdb_users u ON u.id = p.recorded_by
+                        WHERE p.sender_id = :sid ORDER BY p.recorded_at DESC, p.id DESC");
+        $db->bind(':sid', $sid);
+        $db->cdp_execute();
+        $payments = (array) $db->cdp_registros();
+
+        $db->cdp_query("SELECT d.consolidate_id, d.amount_ghs, d.disc_type, d.reason,
+                               d.exchange_rate, d.applied_at,
+                               " . sprintf($nameExpr, 'd.applied_by') . " AS by_name
+                        FROM cdb_fs_discounts d LEFT JOIN cdb_users u ON u.id = d.applied_by
+                        WHERE d.sender_id = :sid ORDER BY d.applied_at DESC, d.id DESC");
+        $db->bind(':sid', $sid);
+        $db->cdp_execute();
+        $discounts = (array) $db->cdp_registros();
+    } catch (Throwable $e) {
+        echo json_encode(['ok' => false, 'message' => 'Payment ledger not found — run sql/fs_transactions.sql, then try again.']);
+        exit;
+    }
+
+    $totalPaid = 0.0;
+    foreach ($payments as $p) { $totalPaid += (float) $p->amount_ghs; }
+    $totalDisc = 0.0;
+    foreach ($discounts as $d) { $totalDisc += (float) $d->amount_ghs; }
+    $owed = fs_customer_outstanding($sid);
+
+    $fmtGhs = function ($v) { return '&#8373;' . number_format((float) $v, 2); };
+
+    ob_start();
+    ?>
+    <div class="fs-history">
+        <div class="d-flex flex-wrap mb-2" style="gap:.5rem;">
+            <span class="badge badge-success p-2">Total Paid: <?php echo $fmtGhs($totalPaid); ?></span>
+            <?php if ($totalDisc > 0): ?><span class="badge badge-info p-2">Total Discount: <?php echo $fmtGhs($totalDisc); ?></span><?php endif; ?>
+            <?php if ($owed > 0): ?><span class="badge badge-danger p-2">Outstanding: <?php echo $fmtGhs($owed); ?></span>
+            <?php else: ?><span class="badge badge-secondary p-2">No outstanding balance</span><?php endif; ?>
+        </div>
+
+        <h6 class="mt-2 mb-1 text-left"><i class="mdi mdi-cash-multiple"></i> Payments</h6>
+        <?php if (empty($payments)): ?>
+            <div class="text-muted small text-left mb-2">No payments recorded yet.</div>
+        <?php else: ?>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped mb-2" style="font-size:12px;">
+                <thead><tr class="text-left">
+                    <th>Date</th><th>Consol #</th><th>Mode</th><th>Reference</th>
+                    <th class="text-right">Amount</th><th>By</th>
+                </tr></thead>
+                <tbody>
+                <?php foreach ($payments as $p): ?>
+                    <tr class="text-left">
+                        <td><?php echo htmlspecialchars(date('Y-m-d H:i', strtotime((string) $p->recorded_at))); ?></td>
+                        <td><?php echo (int) $p->consolidate_id; ?></td>
+                        <td><?php echo htmlspecialchars(ucfirst((string) $p->mode)); ?></td>
+                        <td><?php echo htmlspecialchars((string) ($p->reference ?? '')); ?></td>
+                        <td class="text-right"><?php echo $fmtGhs($p->amount_ghs); ?></td>
+                        <td><?php echo htmlspecialchars((string) $p->by_name); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!empty($discounts)): ?>
+        <h6 class="mt-2 mb-1 text-left"><i class="mdi mdi-sale"></i> Discounts</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped mb-0" style="font-size:12px;">
+                <thead><tr class="text-left">
+                    <th>Date</th><th>Consol #</th><th>Type</th><th>Reason</th>
+                    <th class="text-right">Amount</th><th>By</th>
+                </tr></thead>
+                <tbody>
+                <?php foreach ($discounts as $d): ?>
+                    <tr class="text-left">
+                        <td><?php echo htmlspecialchars(date('Y-m-d H:i', strtotime((string) $d->applied_at))); ?></td>
+                        <td><?php echo (int) $d->consolidate_id; ?></td>
+                        <td><?php echo htmlspecialchars((string) $d->disc_type); ?></td>
+                        <td><?php echo htmlspecialchars((string) ($d->reason ?? '')); ?></td>
+                        <td class="text-right"><?php echo $fmtGhs($d->amount_ghs); ?></td>
+                        <td><?php echo htmlspecialchars((string) $d->by_name); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?php
+    echo json_encode([
+        'ok'    => true,
+        'name'  => $custLabel,
+        'html'  => ob_get_clean(),
     ]);
     exit;
 }
@@ -1782,7 +2002,7 @@ if ($action === 'items') {
         ?>
         <div class="fs-group-card mb-2" data-group="<?php echo htmlspecialchars($token); ?>">
             <div class="fs-group-head">
-                <i class="mdi mdi-link-variant"></i> <b>Priced together</b>
+                <i class="mdi mdi-link-variant"></i> <b>Priced Together</b>
                 <span class="badge badge-info ml-1"><?php echo count($members); ?> items</span>
                 <span class="fs-spacer"></span>
                 <?php if ($editable): ?>
