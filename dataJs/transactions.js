@@ -51,7 +51,7 @@ function cdp_load(page) {
 }
 
 // ---- Currency toggle (audit: GHS shows the rate each transaction used) ------
-var cdpTxCur = 'ghs';
+var cdpTxCur = 'usd';
 function cdpTxSetCurrency(c) {
     cdpTxCur = (c === 'usd') ? 'usd' : 'ghs';
     $("#tx_cur_ghs").toggleClass('btn-dark', cdpTxCur === 'ghs').toggleClass('btn-outline-dark', cdpTxCur !== 'ghs');

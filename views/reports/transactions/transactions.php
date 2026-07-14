@@ -39,17 +39,18 @@ $userData = $user->cdp_getUserData();
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body">
-                                <div class="row mb-3">
-                                    <div class="col-md-3 col-sm-12 mb-1">
+                                <!-- All filters on one row. -->
+                                <div class="form-row align-items-center mb-3">
+                                    <div class="col-md-3 mb-1">
                                         <div class="input-group">
                                             <div class="input-group-prepend"><span class="input-group-text"><span class="fa fa-calendar"></span></span></div>
                                             <input type="text" name="daterange" id="daterange" class="form-control" placeholder="Date range">
                                         </div>
                                     </div>
-                                    <div class="col-md-3 col-sm-12 mb-1">
+                                    <div class="col-md-3 mb-1">
                                         <input type="text" id="search" class="form-control" placeholder="Reference, customer, locker or tracking…" onkeyup="cdp_txDebounced();">
                                     </div>
-                                    <div class="col-md-3 col-sm-6 mb-1">
+                                    <div class="col-md-2 mb-1">
                                         <select class="form-control custom-select" id="f_mode" onchange="cdp_load(1);">
                                             <option value="">All Methods</option>
                                             <option value="cash">Cash</option>
@@ -57,7 +58,7 @@ $userData = $user->cdp_getUserData();
                                             <option value="hubtel">Hubtel</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-3 col-sm-6 mb-1">
+                                    <div class="col-md-2 mb-1">
                                         <select class="form-control custom-select" id="f_status" onchange="cdp_load(1);">
                                             <option value="">All Statuses</option>
                                             <option value="manual">Cash / Manual</option>
@@ -66,20 +67,19 @@ $userData = $user->cdp_getUserData();
                                             <option value="failed">Failed</option>
                                         </select>
                                     </div>
-                                </div>
-
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div class="btn-group btn-group-sm" role="group" aria-label="Display currency">
-                                        <button type="button" id="tx_cur_ghs" class="btn btn-dark" onclick="cdpTxSetCurrency('ghs');">GH&#8373;</button>
-                                        <button type="button" id="tx_cur_usd" class="btn btn-outline-dark" onclick="cdpTxSetCurrency('usd');">$ USD</button>
-                                    </div>
-                                    <div class="input-group" style="max-width:170px;">
+                                    <div class="col-md-1 mb-1">
                                         <select onchange="cdp_load(1);" class="form-control custom-select" id="per_page">
-                                            <option value="25">25 rows</option>
-                                            <option value="50">50 rows</option>
-                                            <option value="100">100 rows</option>
+                                            <option value="25">25</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
                                             <option value="all">All</option>
                                         </select>
+                                    </div>
+                                    <div class="col-md-1 mb-1 text-right">
+                                        <div class="btn-group btn-group-sm w-100" role="group" aria-label="Display currency">
+                                            <button type="button" id="tx_cur_usd" class="btn btn-dark" onclick="cdpTxSetCurrency('usd');">$</button>
+                                            <button type="button" id="tx_cur_ghs" class="btn btn-outline-dark" onclick="cdpTxSetCurrency('ghs');">&#8373;</button>
+                                        </div>
                                     </div>
                                 </div>
 

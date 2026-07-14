@@ -81,8 +81,8 @@ try {
                                     </div>
                                     <div class="col-md-3 mb-2 text-right">
                                         <div class="btn-group btn-group-sm mb-1" role="group" aria-label="Display currency">
-                                            <button type="button" id="fs_cur_ghs" class="btn btn-outline-dark" onclick="fsSetCurrency('ghs');">GH&#8373;</button>
-                                            <button type="button" id="fs_cur_usd" class="btn btn-outline-dark" onclick="fsSetCurrency('usd');">$ USD</button>
+                                            <button type="button" id="fs_cur_ghs" class="btn btn-outline-dark" onclick="fsSetCurrency('ghs');">&#8373;</button>
+                                            <button type="button" id="fs_cur_usd" class="btn btn-outline-dark" onclick="fsSetCurrency('usd');">$</button>
                                         </div>
                                         <?php if ($user->cdp_hasPermission('fs_price_items')): ?>
                                             <button type="button" class="btn btn-outline-secondary btn-sm mb-1 ml-1"
