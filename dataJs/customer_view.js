@@ -17,7 +17,7 @@ $(function () {
 
 //Cargar datos AJAX
 function cdp_load(page) {
-    localStorage.setItem('currentTablePage-Locker', page);
+  try { localStorage.setItem('currentTablePage-Locker', page); } catch (e) { /* private mode: ignore */ }
   var search = $("#search").val();
   var track = $("#track").val() || '';
   var per_page = $("#per_page").val() || 25;
@@ -26,10 +26,19 @@ function cdp_load(page) {
   $.ajax({
     url: './ajax/customers/customer_view_ajax.php',
     data: parametros,
+    // Identical GET params (the initial page-1 load) were being served from the
+    // browser cache, so the table stayed empty until the operator changed the
+    // rows filter and altered the query string. Never cache this list.
+    cache: false,
     beforeSend: function (objeto) {
     },
     success: function (data) {
       $(".outer_divx").html(data).fadeIn('slow');
+      $("#loader").fadeOut('slow');
+    },
+    error: function () {
+      $(".outer_divx").html('<div class="alert alert-danger m-3">Could not load packages. Please refresh and try again.</div>');
+      $("#loader").fadeOut('slow');
     }
   })
 }
