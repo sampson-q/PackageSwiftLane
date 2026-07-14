@@ -175,3 +175,73 @@ if (!function_exists('cdp_roleOptionsHtml')) {
         return $html;
     }
 }
+
+if (!function_exists('cdp_resolveRolePermissions')) {
+    /**
+     * Effective permissions for a ROLE, resolved through its parent-role chain
+     * with NEAREST-WINS (a closer role's explicit permitted=0 blocks a grant a
+     * further ancestor would give) — the same rule cdp_getUserPermissions uses,
+     * minus the per-user department/override layers (those are per user, not per
+     * role). Superadmin roles (is_superadmin) return ['*'] (everything).
+     *
+     * @param int $roleId
+     * @return array{allowed: string[], is_wildcard: bool}
+     */
+    function cdp_resolveRolePermissions($roleId)
+    {
+        $roleId = (int) $roleId;
+        $db = new Conexion;
+
+        // Superadmin => wildcard.
+        $db->cdp_query("SELECT is_superadmin FROM cdb_user_roles WHERE role_id = :r LIMIT 1");
+        $db->bind(':r', $roleId);
+        $db->cdp_execute();
+        $r = $db->cdp_registro();
+        if ($r && (int) $r->is_superadmin === 1) {
+            return ['allowed' => ['*'], 'is_wildcard' => true];
+        }
+
+        // Build the parent chain [self, parent, ...] (cycle-safe, depth-capped).
+        $chain = [];
+        $visited = [];
+        $current = $roleId;
+        $depth = 0;
+        while ($current && !isset($visited[$current]) && $depth < 20) {
+            $visited[$current] = true;
+            $chain[] = $current;
+            $db->cdp_query("SELECT parent_role_id FROM cdb_user_roles WHERE role_id = :r AND rol_active = 1");
+            $db->bind(':r', $current);
+            $db->cdp_execute();
+            $p = $db->cdp_registro();
+            $current = ($p && !empty($p->parent_role_id)) ? (int) $p->parent_role_id : 0;
+            $depth++;
+        }
+        if (!$chain) { $chain = [$roleId]; }
+
+        $in = implode(',', array_map('intval', $chain));
+        $db->cdp_query("SELECT rp.role_id, ma.action_name, rp.permitted
+                        FROM cdb_user_role_permissions rp
+                        JOIN cdb_user_roles r ON r.role_id = rp.role_id AND r.rol_active = 1
+                        JOIN cdb_user_module_actions ma ON ma.id = rp.module_action_id
+                        WHERE rp.role_id IN ($in)");
+        $db->cdp_execute();
+        $rows = $db->cdp_registros() ?: [];
+
+        $rank = array_flip($chain);          // role_id => distance (0 = self)
+        $decided = [];                       // action => [distance, permitted]
+        foreach ($rows as $row) {
+            if (empty($row->action_name)) { continue; }
+            $name = $row->action_name;
+            $dist = $rank[(int) $row->role_id] ?? PHP_INT_MAX;
+            if (!isset($decided[$name]) || $dist < $decided[$name][0]) {
+                $decided[$name] = [$dist, (int) $row->permitted];
+            }
+        }
+        $allowed = [];
+        foreach ($decided as $name => $info) {
+            if ($info[1] === 1) { $allowed[] = $name; }
+        }
+        sort($allowed);
+        return ['allowed' => $allowed, 'is_wildcard' => false];
+    }
+}

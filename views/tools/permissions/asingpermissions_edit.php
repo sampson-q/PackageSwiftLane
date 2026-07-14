@@ -188,6 +188,20 @@ if (isset($_GET['id'])) {
                                     </section>
                                     <br>
 
+                                    <!-- Effective permissions — what this role can actually do,
+                                         INCLUDING what it inherits from its parent role(s). The
+                                         module cards below only toggle this role's OWN grants. -->
+                                    <div class="card border mb-3">
+                                        <div class="card-body p-2">
+                                            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                                <h5 class="m-0"><i class="mdi mdi-shield-check-outline text-success"></i> What This Role Can Do
+                                                    <small class="text-muted">(effective — includes inherited permissions)</small></h5>
+                                                <button type="button" class="btn btn-sm btn-outline-success" id="fx_show_effective">Show</button>
+                                            </div>
+                                            <div id="fx_effective" class="mt-2" style="display:none;"></div>
+                                        </div>
+                                    </div>
+
                                     <!-- Configuración de módulos -->
 
                                     <?php
@@ -314,6 +328,32 @@ if (isset($_GET['id'])) {
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
     <script src="<?= cdp_asset('dataJs/asingpermissions.js') ?>"></script>
+    <script>
+        // Load the role's EFFECTIVE (allowed, incl. inherited) permissions on demand.
+        (function () {
+            var $btn = document.getElementById('fx_show_effective');
+            var $box = document.getElementById('fx_effective');
+            if (!$btn || !$box) { return; }
+            var loaded = false;
+            $btn.addEventListener('click', function () {
+                if ($box.style.display === 'none') {
+                    $box.style.display = 'block';
+                    $btn.textContent = 'Hide';
+                    if (!loaded) {
+                        var rid = (document.getElementById('role_id') || {}).value || 0;
+                        $box.innerHTML = '<div class="text-muted py-2"><i class="fa fa-spinner fa-spin"></i> Resolving…</div>';
+                        fetch('ajax/tools/permissions/role_effective_permissions_ajax.php?role_id=' + encodeURIComponent(rid))
+                            .then(function (r) { return r.text(); })
+                            .then(function (html) { $box.innerHTML = html; loaded = true; })
+                            .catch(function () { $box.innerHTML = '<div class="text-danger">Could not load effective permissions.</div>'; });
+                    }
+                } else {
+                    $box.style.display = 'none';
+                    $btn.textContent = 'Show';
+                }
+            });
+        })();
+    </script>
 
 </body>
 
