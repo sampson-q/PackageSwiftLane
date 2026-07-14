@@ -28,9 +28,15 @@ require_login();
 require_permission('view_client_list');
 
 
+require_once(__DIR__ . '/../../helpers/rbac.php');
+
 $db = new Conexion;
 $user = new User;
 $ctx = cdp_getAgencyContext();
+
+// Captured before the row loop below shadows $user — used to decide whether the
+// current operator may "View as" each listed customer (helpers/rbac.php).
+$cdpViewerLevel = (int) $user->userlevel;
 
 $search = isset($_REQUEST['search']) ? cdp_sanitize($_REQUEST['search']) : null;
 
@@ -163,6 +169,12 @@ if ($numrows > 0) { ?>
                             <a href="customer_view.php?user=<?php echo $user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo "View Customer Packages" ?>">
                                 <i style="color: #ff0037; font-size: 18px;" class="ti-eye"></i>
                             </a>
+                            <?php if (cdp_canViewAs($cdpViewerLevel, (int) $user->userlevel)) : ?>
+                                <span class="mx-1">|</span>
+                                <a href="view_as.php?id=<?php echo $user->id; ?>" data-toggle="tooltip" data-placement="top" title="View as this customer (support mode)">
+                                    <iconify-icon icon="solar:login-3-bold" style="color:#b45309;font-size:18px;vertical-align:-3px;"></iconify-icon>
+                                </a>
+                            <?php endif; ?>
                             <?php if ($user->id == 1) : ?>
                                 <a data-rel="<?php echo $user->username; ?>">
                                     <button type="button" data-toggle="tooltip" data-original-title="Master Admin">

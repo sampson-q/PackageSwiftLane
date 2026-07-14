@@ -1,3 +1,31 @@
+<?php if (!empty($_SESSION['imp_original_username'])): ?>
+	<?php
+		$imp_viewing = trim((string) ($_SESSION['name'] ?? '')) !== '' ? $_SESSION['name'] : ($_SESSION['username'] ?? 'user');
+		$imp_real    = trim((string) ($_SESSION['imp_original_name'] ?? '')) !== '' ? $_SESSION['imp_original_name'] : ($_SESSION['imp_original_username'] ?? '');
+	?>
+	<div id="view-as-banner" style="position:fixed;left:0;right:0;bottom:0;z-index:100000;background:#b45309;color:#fff;
+		box-shadow:0 -2px 12px rgba(0,0,0,.25);font-size:14px;line-height:1.3;">
+		<div style="max-width:1100px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;">
+			<span style="font-weight:600;letter-spacing:.02em;">
+				<iconify-icon icon="solar:eye-bold" style="vertical-align:-2px;"></iconify-icon>
+				View Mode
+			</span>
+			<span>
+				You are viewing the system as <b><?php echo htmlspecialchars($imp_viewing, ENT_QUOTES, 'UTF-8'); ?></b><?php if ($imp_real !== ''): ?>
+				&nbsp;&middot;&nbsp; signed in as <b><?php echo htmlspecialchars($imp_real, ENT_QUOTES, 'UTF-8'); ?></b><?php endif; ?>
+			</span>
+			<a href="view_as.php?stop=1" style="background:#fff;color:#b45309;font-weight:600;padding:4px 14px;border-radius:4px;text-decoration:none;">
+				Exit View
+			</a>
+		</div>
+	</div>
+	<?php endif; ?>
+	<?php if (!empty($_SESSION['view_as_error'])): ?>
+	<div style="position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:100001;background:#b91c1c;color:#fff;
+		padding:10px 18px;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.3);font-size:14px;" onclick="this.remove()">
+		<?php echo htmlspecialchars((string) $_SESSION['view_as_error'], ENT_QUOTES, 'UTF-8'); ?>
+	</div>
+	<?php unset($_SESSION['view_as_error']); endif; ?>
 	<header class="topbar <?php echo isset($show_dashboard_new_header) && $show_dashboard_new_header ? 'topbar-new-variant' : ''; ?>">
 		<nav class="navbar top-navbar navbar-expand-md <?php echo isset($show_dashboard_new_header) && $show_dashboard_new_header ? 'navbar-light' : 'navbar-dark'; ?>">
 				<!-- This is for the sidebar toggle which is visible on mobile only -->

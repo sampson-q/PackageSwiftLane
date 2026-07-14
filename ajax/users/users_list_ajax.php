@@ -143,6 +143,11 @@ if ($numrows > 0) { ?>
 							<i style="color:#F5590D" class="ti-email"></i></a>
 					<?php endif; ?>
 
+					<?php if (cdp_canViewAs((int)$user->userlevel, $row_level) && (int)$row_user->id !== $viewer_uid) : ?>
+						<a href="view_as.php?id=<?php echo $row_user->id; ?>" data-toggle="tooltip" data-placement="top" title="View as this user (support mode)">
+							<iconify-icon icon="solar:login-3-bold" style="color:#b45309;vertical-align:-3px;"></iconify-icon></a>
+					<?php endif; ?>
+
 					<?php if ((int)$row_user->id === 1 || cdp_roleHasFlag($row_level, 'is_superadmin')) : ?>
 						<a data-rel="<?php echo $row_user->username; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo cdp_roleHasFlag($row_level, 'is_superadmin') ? (isset($lang['role_9']) ? $lang['role_9'] : 'Super Admin') : 'Master Admin'; ?>"><i style="color:#343a40" class="ti-lock"></i></a>
 					<?php elseif ($row_managed && $viewer_can_delete && (int)$row_user->id !== $viewer_uid) : ?>

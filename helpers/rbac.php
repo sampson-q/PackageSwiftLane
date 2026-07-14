@@ -268,3 +268,31 @@ if (!function_exists('cdp_roleIsClient')) {
         return $isClient;
     }
 }
+
+if (!function_exists('cdp_canViewAs')) {
+    /**
+     * "View as" (impersonation) authority for IT support. Ranks come from
+     * cdp_roleRankById (superadmin 4 > admin 3 > staff 2 > driver/agency 1 >
+     * client 0). Rules:
+     *   - super admin (4): may view-as ANYONE;
+     *   - admin (3): everyone EXCEPT super admins;
+     *   - employee/staff (2): CLIENTS only;
+     *   - drivers/agencies/clients (<=1): may not view-as anyone.
+     * Takes plain userlevels (not a User object) so it also works while already
+     * impersonating, where the authority is the stashed original, not the
+     * currently-acting (lower-privilege) identity.
+     *
+     * @param int $viewerUserlevel role_id of the REAL (authority) user
+     * @param int $targetUserlevel role_id of the account being viewed
+     * @return bool
+     */
+    function cdp_canViewAs($viewerUserlevel, $targetUserlevel)
+    {
+        $vRank = cdp_roleRankById((int) $viewerUserlevel);
+        $tRank = cdp_roleRankById((int) $targetUserlevel);
+        if ($vRank < 2) { return false; }          // drivers/agencies/clients: never
+        if ($vRank === 4) { return true; }         // super admin: anyone
+        if ($vRank === 3) { return $tRank < 4; }   // admin: anyone but super admins
+        return cdp_roleIsClient((int) $targetUserlevel); // staff: clients only
+    }
+}
