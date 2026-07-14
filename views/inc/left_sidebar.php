@@ -168,8 +168,8 @@
 					<!-- Module shipment-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
-							<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
-							<span class="hide-menu">Packages</span>
+							<iconify-icon icon="mdi:airplane-takeoff" class="fs-5"></iconify-icon>
+							<span class="hide-menu"><?php echo 'Sea ' . $lang['left-menu-sidebar-13'] ?></span>
 						</a>
 
 						<ul aria-expanded="false" class="collapse first-level">
