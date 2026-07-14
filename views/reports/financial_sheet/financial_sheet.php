@@ -84,15 +84,7 @@ try {
                                             <button type="button" id="fs_cur_ghs" class="btn btn-outline-dark" onclick="fsSetCurrency('ghs');">&#8373;</button>
                                             <button type="button" id="fs_cur_usd" class="btn btn-outline-dark" onclick="fsSetCurrency('usd');">$</button>
                                         </div>
-                                        <?php if ($user->cdp_hasPermission('fs_price_items')): ?>
-                                            <button type="button" class="btn btn-outline-secondary btn-sm mb-1 ml-1"
-                                                    title="Set the system's per-weight pricing rate" onclick="fsSetWeightRate();">
-                                                <i class="mdi mdi-scale-balance"></i> Weight Rate:
-                                                <?php echo htmlspecialchars((string) ($core->for_symbol ?: '$')); ?><span id="fs_weight_rate_label"><?php echo htmlspecialchars((string) ($core->value_weight ?? '')); ?></span>/<?php echo htmlspecialchars((string) ($core->weight_p ?? 'lb')); ?>
-                                            </button>
-                                        <?php endif; ?>
                                         <div class="fs-hint">
-                                            Filters apply as you type &middot;
                                             Rate: $1 = &#8373;<span id="fs_rate_label"></span>
                                             <?php if ($fs_rate_log): ?>
                                                 <span title="Exchange-rate audit log">(updated by <?php echo htmlspecialchars($fs_rate_log->uname); ?>
