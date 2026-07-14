@@ -489,6 +489,12 @@
 										<span class="hide-menu">Transactions</span>
 									</a>
 								</li><?php } ?>
+								<?php if ($user->cdp_hasPermission('view_system_logs')) { ?><li class="sidebar-item">
+									<a class="sidebar-link waves-effect waves-dark" href="system_logs.php" aria-expanded="false">
+										<iconify-icon icon="mdi:history" class="fs-5"></iconify-icon>
+										<span class="hide-menu">System Logs</span>
+									</a>
+								</li><?php } ?>
 							<?php } ?>
 						</ul>
 					</li>
