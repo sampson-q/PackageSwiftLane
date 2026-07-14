@@ -33,6 +33,7 @@ if (intval($userData->id) !== intval($_GET['user']) && !$user->cdp_hasPermission
 }
 
 require_once('helpers/querys.php');
+require_once('helpers/rbac.php');
 
 if (isset($_GET['user'])) {
     $data = cdp_getUserEdit4bozo($_GET['user']);
@@ -43,6 +44,14 @@ if (!isset($_GET['user']) or $data['rowCount'] != 1) {
 }
 
 $row = $data['data'];
+
+// This is the CLIENT editor — it must only ever edit client accounts, never
+// staff (drivers / admins / agencies / employees). Staff are managed via
+// users_edit.php (edit_user). Without this, anyone with edit_client could edit
+// a staff user by passing their id in the URL.
+if (!cdp_roleIsClient((int) ($row->userlevel ?? 0))) {
+    cdp_redirect_to("customers_list.php");
+}
 
 $db->cdp_query("SELECT * FROM cdb_senders_addresses WHERE user_id='" . $_GET['user'] . "'");
 $user_addreses = $db->cdp_registros();

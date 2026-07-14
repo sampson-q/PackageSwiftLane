@@ -24,12 +24,24 @@
 require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
+require_once(__DIR__ . '/../../helpers/rbac.php');
 require_login();
-require_permission('view_client_list');
+require_permission('delete_client');
 
 $db = new Conexion;
 
 $id = $_REQUEST['id'];
+
+// Only ever delete CLIENT accounts here — never staff.
+$tdb = new Conexion;
+$tdb->cdp_query("SELECT userlevel FROM cdb_users WHERE id = :id LIMIT 1");
+$tdb->bind(':id', (int) $id);
+$tdb->cdp_execute();
+$trow = $tdb->cdp_registro();
+if (!$trow || !cdp_roleIsClient((int) $trow->userlevel)) {
+    echo json_encode(['status' => 'error', 'message' => 'This action can only delete client accounts.']);
+    exit;
+}
 
 $errors = array();
 

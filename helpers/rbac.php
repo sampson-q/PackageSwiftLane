@@ -245,3 +245,26 @@ if (!function_exists('cdp_resolveRolePermissions')) {
         return ['allowed' => $allowed, 'is_wildcard' => false];
     }
 }
+
+if (!function_exists('cdp_roleIsClient')) {
+    /**
+     * Is a given role a CLIENT (customer) role? Uses the is_client flag on
+     * cdb_user_roles, with a fallback to the legacy client userlevel (1) if the
+     * role row is missing. Used to keep the client-management screens
+     * (customers_edit / customers_delete) from ever touching a staff account.
+     */
+    function cdp_roleIsClient($roleId)
+    {
+        $roleId = (int) $roleId;
+        static $cache = [];
+        if (array_key_exists($roleId, $cache)) { return $cache[$roleId]; }
+        $db = new Conexion;
+        $db->cdp_query("SELECT is_client FROM cdb_user_roles WHERE role_id = :r LIMIT 1");
+        $db->bind(':r', $roleId);
+        $db->cdp_execute();
+        $r = $db->cdp_registro();
+        $isClient = $r ? ((int) $r->is_client === 1) : ($roleId === 1);
+        $cache[$roleId] = $isClient;
+        return $isClient;
+    }
+}

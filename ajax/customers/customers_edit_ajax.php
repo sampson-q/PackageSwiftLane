@@ -27,6 +27,7 @@ ini_set('display_errors', 0);
 require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 require_once("../../helpers/ajax_guard.php");
+require_once("../../helpers/rbac.php");
 require_login();
 require_permission('edit_client'); // was login-only; now honors the RBAC grant
 
@@ -35,6 +36,21 @@ header('Content-Type: application/json; charset=UTF-8');
 $user = new User;
 $core = new Core;
 $errors = array();
+
+// The client editor must never touch a STAFF account (driver/admin/agency/
+// employee). Verify the target is a client before doing anything.
+$targetId = (int) ($_POST['id'] ?? 0);
+if ($targetId > 0) {
+    $tdb = new Conexion;
+    $tdb->cdp_query("SELECT userlevel FROM cdb_users WHERE id = :id LIMIT 1");
+    $tdb->bind(':id', $targetId);
+    $tdb->cdp_execute();
+    $trow = $tdb->cdp_registro();
+    if (!$trow || !cdp_roleIsClient((int) $trow->userlevel)) {
+        echo json_encode(['status' => 'error', 'message' => 'This screen can only edit client accounts.']);
+        exit;
+    }
+}
 
 if (empty($_POST['fname'])) {
     $errors['fname'] = $lang['validate_field_ajax122'];
