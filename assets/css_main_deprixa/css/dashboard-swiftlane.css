@@ -47,6 +47,34 @@ body {
   background: transparent !important;
 }
 
+/* Sit the sidebar in the space under the topbar, and scroll the ITEMS, not the
+   whole aside.
+   The template ships `.left-sidebar { position:absolute; top:0; padding-top:64px }`
+   — absolute, so the aside rode the page scroll instead of staying put, and it
+   cleared the 64px fixed topbar with padding rather than an offset.
+   Fix: offset it to top:64px (where `.topbar .top-navbar`'s min-height ends, i.e.
+   exactly where the page area starts) and ZERO that padding-top — keeping both
+   is what pushed the menu down to 128px on the previous attempt. Height is the
+   rest of the viewport; .scroll-sidebar then owns the vertical scrolling, and
+   overflow-x is off since the menu never needs to scroll sideways.
+   `left`/`width` are untouched so the mini-sidebar (65px) still works, and this
+   is scoped to >=768px so the mobile slide-out keeps the template's behaviour. */
+@media (min-width: 768px) {
+  .left-sidebar {
+    position: fixed !important;
+    top: 64px;
+    height: calc(100vh - 64px) !important;
+    padding-top: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .scroll-sidebar {
+    height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+}
+
 /* Sidebar scrollbar */
 .scroll-sidebar::-webkit-scrollbar        { width: 4px; }
 .scroll-sidebar::-webkit-scrollbar-track  { background: transparent; }
