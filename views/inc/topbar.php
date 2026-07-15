@@ -3,6 +3,13 @@
 		$imp_viewing = trim((string) ($_SESSION['name'] ?? '')) !== '' ? $_SESSION['name'] : ($_SESSION['username'] ?? 'user');
 		$imp_real    = trim((string) ($_SESSION['imp_original_name'] ?? '')) !== '' ? $_SESSION['imp_original_name'] : ($_SESSION['imp_original_username'] ?? '');
 	?>
+	<style>
+		/* The View Mode bar is fixed to the bottom of the viewport, so it sat on
+		   top of the sidebar's last menu items (and the end of the page). Reserve
+		   its height at the foot of both while impersonating. */
+		.scroll-sidebar { padding-bottom: 60px !important; }
+		.page-wrapper   { padding-bottom: 60px; }
+	</style>
 	<div id="view-as-banner" style="position:fixed;left:0;right:0;bottom:0;z-index:100000;background:#b45309;color:#fff;
 		box-shadow:0 -2px 12px rgba(0,0,0,.25);font-size:14px;line-height:1.3;">
 		<div style="max-width:1100px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;">
