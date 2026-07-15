@@ -47,30 +47,6 @@ body {
   background: transparent !important;
 }
 
-/* Pin the sidebar and scroll it vertically only.
-   The template only sets position:fixed inside some breakpoints and leaves
-   .scroll-sidebar at height:auto, so the aside grew with the menu and rode the
-   page scroll, while long labels pushed a sideways scrollbar. `left` is left
-   alone on purpose — the mobile slide-out drives it (left:-250px / left:0). */
-.left-sidebar {
-  position: fixed !important;
-  top: 64px;
-  bottom: 0;
-  overflow: hidden !important;
-}
-
-.scroll-sidebar {
-  height: 100% !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-}
-
-/* Wrap long labels rather than overflowing horizontally. */
-#sidebarnav li a {
-  white-space: normal !important;
-  word-break: break-word;
-}
-
 /* Sidebar scrollbar */
 .scroll-sidebar::-webkit-scrollbar        { width: 4px; }
 .scroll-sidebar::-webkit-scrollbar-track  { background: transparent; }
