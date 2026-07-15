@@ -24,6 +24,16 @@ $db = new Conexion;
 
 $userData = $user->cdp_getUserData();
 
+// Monetary values are permission-gated: nobody sees money here unless granted
+// 'view_monetary_values' (global) or 'view_money_dashboard', by role, department
+// or individually. Money-only cards are dropped entirely; mixed rows keep their
+// layout and mask just the figure, so the arrangement never collapses.
+require_once('helpers/rbac.php');
+$canMoney = cdp_canViewMoney($user, 'dashboard');
+$money = function ($v) use ($canMoney) {
+    return $canMoney ? cdb_money_format($v) : '<span class="text-muted" title="You do not have permission to view monetary values">&mdash;</span>';
+};
+
 // Agencia (userlevel 6) solo debe ver dashboard por roles (dashboard_roles.php), no este panel de administración
 if (isset($userData->userlevel) && (int)$userData->userlevel === 6) {
     $base = (string) (isset($_SERVER['SCRIPT_NAME']) ? dirname(dirname($_SERVER['SCRIPT_NAME'])) : '');
@@ -148,7 +158,10 @@ $monthName = obtenerNombreMes($currentMonth);
                         // FS tables/columns not present — leave zeros.
                     }
                 ?>
-                <!-- ROW 1 - Panel actual: Summary of accounts receivable + Logistics Summary (con iconos) -->
+                <!-- ROW 1 - Panel actual: Summary of accounts receivable + Logistics Summary (con iconos)
+                     Both cards in this row exist only to show money, so the whole
+                     row is dropped for users without the monetary permission. -->
+                <?php if ($canMoney): ?>
                 <div class="row">
                     <div class="col-12 col-md-6 col-lg-4 mb-4">
                         <div class="card">
@@ -191,10 +204,15 @@ $monthName = obtenerNombreMes($currentMonth);
                         </div>
                     </div>
                 </div>
+                <?php endif; // $canMoney — ROW 1 ?>
 
                 <!-- ROW 1b - FINANCIAL SHEET (single source of truth). Figures match
-                     the Financial Sheet / Financial Overview / Accounts pages. -->
+                     the Financial Sheet / Financial Overview / Accounts pages.
+                     The three money cards are gated; "Cleared for Delivery" is a
+                     package count, not money, so it stays and widens to fill the
+                     row on its own rather than leaving a gap. -->
                 <div class="row">
+                    <?php if ($canMoney): ?>
                     <div class="col-12 mb-2">
                         <h5 class="m-0"><iconify-icon icon="solar:file-text-linear" class="text-primary"></iconify-icon> Financial Sheet &mdash; <?php echo $monthName; ?></h5>
                     </div>
@@ -234,7 +252,8 @@ $monthName = obtenerNombreMes($currentMonth);
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-6 col-lg-3 mb-4">
+                    <?php endif; // $canMoney — the three money cards ?>
+                    <div class="col-12 col-md-6 col-lg-<?php echo $canMoney ? '3' : '4'; ?> mb-4">
                         <div class="card" style="border-left:4px solid #6c757d;">
                             <div class="card-body position-relative">
                                 <h6 class="text-muted mb-1">Cleared for Delivery</h6>
@@ -281,7 +300,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                                         // Obtener el registro
                                                         $count = $db->cdp_registro();
                                                         $total_orders = isset($count->total) ? (float)$count->total : 0;
-                                                        echo cdb_money_format($total_orders);
+                                                        echo $money($total_orders);
                                                         ?>
                                                     </small>
                                                 </div>
@@ -326,7 +345,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                                         // Obtener el registro
                                                         $count = $db->cdp_registro();
                                                         $total_orders2 = isset($count->total) ? (float)$count->total : 0;
-                                                        echo cdb_money_format($total_orders2);
+                                                        echo $money($total_orders2);
                                                         ?>
                                                     </small>
                                                 </div>
@@ -368,7 +387,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                                         // Obtener el registro
                                                         $count = $db->cdp_registro();
                                                         $total_orders3 = isset($count->total) ? (float)$count->total : 0;
-                                                        echo cdb_money_format($total_orders3);
+                                                        echo $money($total_orders3);
                                                         ?>
                                                     </small>
                                                 </div>
@@ -413,7 +432,7 @@ $monthName = obtenerNombreMes($currentMonth);
                                                         // Obtener el registro
                                                         $count = $db->cdp_registro();
                                                         $total_orders4 = isset($count->total) ? (float)$count->total : 0;
-                                                        echo cdb_money_format($total_orders4);
+                                                        echo $money($total_orders4);
                                                         ?>
                                                     </small>
                                                 </div>

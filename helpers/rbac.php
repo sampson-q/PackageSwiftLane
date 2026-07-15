@@ -269,6 +269,39 @@ if (!function_exists('cdp_roleIsClient')) {
     }
 }
 
+if (!function_exists('cdp_canViewMoney')) {
+    /**
+     * May this user see MONETARY VALUES in a given area?
+     *
+     * Nobody sees money by default — an employee must be granted it, either by
+     * their role, a department, or individually. Because this resolves through
+     * cdp_hasPermission(), all three layers (and their precedence: individual >
+     * department > role) apply for free.
+     *
+     * Granularity: a global 'view_monetary_values' grant covers everywhere; a
+     * per-area 'view_money_<area>' grant covers just that area. Passing an array
+     * to cdp_hasPermission() is OR semantics, and superadmin short-circuits to
+     * true, so both shapes work without special-casing.
+     *
+     * Areas in use: dashboard | shipments | customers | reports
+     *
+     * @param User        $user
+     * @param string|null $area  null = ask only about the global grant
+     * @return bool
+     */
+    function cdp_canViewMoney($user, $area = null)
+    {
+        if (!($user instanceof User) || empty($user->logged_in)) {
+            return false;
+        }
+        $perms = ['view_monetary_values'];
+        if ($area !== null && $area !== '') {
+            $perms[] = 'view_money_' . $area;
+        }
+        return $user->cdp_hasPermission($perms);
+    }
+}
+
 if (!function_exists('cdp_canViewAs')) {
     /**
      * "View as" (impersonation) authority for IT support. Ranks come from
