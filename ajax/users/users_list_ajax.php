@@ -50,7 +50,7 @@ $per_page = (($_REQUEST['per_page'] ?? '') === 'all') ? 1000000000 : (in_array((
 $adjacents  = 4; //gap between pages after number of adjacents
 $offset = ($page - 1) * $per_page;
 
-$sql = "SELECT $fields FROM  $tables where $sWhere";
+$sql = "SELECT $fields FROM  $tables where $sWhere ORDER BY u.userlevel DESC";
 $db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
 if ($search !== '') { foreach (['s1','s2','s3','s4','s5','s6'] as $sp) { $db->bind(':' . $sp, '%' . $search . '%'); } }
 $cdp_cnt_row = $db->cdp_registro();
@@ -83,9 +83,9 @@ if ($numrows > 0) { ?>
                                 <th class="text-center"><b><?php echo $lang['user_manage40'] ?></b></th>
 				<th class="text-center"><b><?php echo $lang['user_manage41'] ?></b></th>
 				<th class="text-center"><b><?php echo $lang['user_manage42'] ?></b></th>
-				<th class="text-center"><b><?php echo $lang['edit-clien61'] ?></b></th>
-				<th class="text-center"><b><?php echo $lang['edit-clien60'] ?></b></th>
-				<th class="text-center"><b><?php echo $lang['user_manage43'] ?></b></th>
+				<!-- <th class="text-center"><b><?php echo $lang['edit-clien61'] ?></b></th>
+				<th class="text-center"><b><?php echo $lang['edit-clien60'] ?></b></th> -->
+				<th class=""><b><?php echo $lang['user_manage43'] ?></b></th>
 				
 			</tr>
 		</thead>
@@ -105,62 +105,62 @@ if ($numrows > 0) { ?>
 
 
 					<td><?php echo $row_user->username; ?></td>
-                                        <td><?php echo $row_user->name_off; ?></td>
-                                        <td><?php echo $row_user->name; ?></td>
-                                        <td class="text-center"><?php echo $row_user->role_name; ?></td>
-                                        <td class="text-center"><?php echo cdp_userStatus($row_user->active, $row_user->id, $lang); ?></td>
+                    <td><?php echo $row_user->name_off; ?></td>
+                    <td><?php echo $row_user->name; ?></td>
+                    <td class="text-center"><?php echo $row_user->role_name; ?></td>
+                    <td class="text-center"><?php echo cdp_userStatus($row_user->active, $row_user->id, $lang); ?></td>
 					<td class="text-center"><?php echo cdp_isAdmin($row_user->userlevel, $lang); ?></td>
 					<td class="text-center"><?php echo ($row_user->adate) ? $row_user->adate : "-/-"; ?></td>
 					<?php if (in_array((int)$row_user->userlevel, [2, 4, 6, 9])) : ?>
-					<td class="text-center"><?php echo $row_user->enrollment ?? '-'; ?></td>
-					<td class="text-center"><?php echo $row_user->vehiclecode ?? '-'; ?></td>
-					<?php elseif ($row_user->userlevel == 3) : ?>
-					<td class="text-center"><i class="icon-prepend icon-truck"></i> <?php echo $row_user->enrollment; ?></td>
-					<td class="text-center"><i class="icon-prepend icon-tag"></i> <?php echo $row_user->vehiclecode; ?></td>
+					<!-- <td class="text-center"><?php echo $row_user->enrollment ?? '-'; ?></td>
+					<td class="text-center"><?php echo $row_user->vehiclecode ?? '-'; ?></td> -->
+					<?php /*elseif ($row_user->userlevel == 3) :*/ ?>
+					<!-- <td class="text-center"><i class="icon-prepend icon-truck"></i> <?php echo $row_user->enrollment; ?></td>
+					<td class="text-center"><i class="icon-prepend icon-tag"></i> <?php echo $row_user->vehiclecode; ?></td> -->
 					<?php endif; ?>
 					<td align='center'>
 					<?php
-					$row_level     = (int)$row_user->userlevel;
-					$row_is_driver = cdp_roleHasFlag($row_level, 'is_driver');
-					$row_managed   = cdp_canManageUser($user, $row_level);
-					if ($row_managed && $row_is_driver && $viewer_can_edit_driver) : ?>
-					    <a href="drivers_edit.php?user=<?php echo $row_user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien46'] ?>">
-					        <i class="ti-pencil" aria-hidden="true"></i>
-					    </a>
-					<?php elseif ($row_managed && !$row_is_driver && $viewer_can_edit_user) : ?>
-					    <a href="users_edit.php?user=<?php echo $row_user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien46'] ?>">
-					        <i class="ti-pencil" aria-hidden="true"></i>
-					    </a>
-					<?php endif; ?>
-
-					<?php if ($row_managed && !$row_is_driver && $viewer_can_edit_user) : ?>
-						<a href="user_permissions.php?user=<?php echo $row_user->id; ?>" data-toggle="tooltip" data-placement="top" title="Permissions">
-							<i style="color:#336aea" class="ti-shield"></i></a>
-					<?php endif; ?>
-
-					<?php if ($viewer_can_newsletter) : ?>
-						<a href="newsletter.php?email=<?php echo $row_user->email; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien45'] ?>">
-							<i style="color:#F5590D" class="ti-email"></i></a>
-					<?php endif; ?>
-
-					<?php if (cdp_canViewAs((int)$user->userlevel, $row_level) && (int)$row_user->id !== $viewer_uid) : ?>
-						<a href="view_as.php?id=<?php echo $row_user->id; ?>" data-toggle="tooltip" data-placement="top" title="View as this user (support mode)">
-							<iconify-icon icon="solar:login-3-bold" style="color:#b45309;vertical-align:-3px;"></iconify-icon></a>
-					<?php endif; ?>
-
-					<?php if ((int)$row_user->id === 1 || cdp_roleHasFlag($row_level, 'is_superadmin')) : ?>
-						<a data-rel="<?php echo $row_user->username; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo cdp_roleHasFlag($row_level, 'is_superadmin') ? (isset($lang['role_9']) ? $lang['role_9'] : 'Super Admin') : 'Master Admin'; ?>"><i style="color:#343a40" class="ti-lock"></i></a>
-					<?php elseif ($row_managed && $viewer_can_delete && (int)$row_user->id !== $viewer_uid) : ?>
-						<?php if ($row_is_driver) : ?>
-							<a onclick="cdp_eliminar_driver('<?php echo $row_user->id; ?>')" id="itemdriver_<?php echo $row_user->id; ?>" class="delete" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien47'] ?>">
-								<div class="icon-holder"><i class="fi fi-rr-trash"></i></div>
-							</a>
-						<?php else : ?>
-							<a onclick="cdp_eliminar('<?php echo $row_user->id; ?>')" id="item_<?php echo $row_user->id; ?>" data-rel="<?php echo $row_user->username; ?>" class="delete" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien47'] ?>">
-								<div class="icon-holder"><i class="fi fi-rr-trash"></i></div>
-							</a>
+                        $row_level     = (int)$row_user->userlevel;
+                        $row_is_driver = cdp_roleHasFlag($row_level, 'is_driver');
+                        $row_managed   = cdp_canManageUser($user, $row_level);
+					?>
+					<div class="action-buttons d-inline-flex align-items-center justify-content-center" style="gap:12px;font-size:16px;line-height:1;">
+						<?php if ($row_managed && $row_is_driver && $viewer_can_edit_driver) : ?>
+							<a href="drivers_edit.php?user=<?php echo $row_user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien46'] ?>">
+								<i class="ti-pencil" style="color:#2f8be6;" aria-hidden="true"></i></a>
+						<?php elseif ($row_managed && !$row_is_driver && $viewer_can_edit_user) : ?>
+							<a href="users_edit.php?user=<?php echo $row_user->id; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien46'] ?>">
+								<i class="ti-pencil" style="color:#2f8be6;" aria-hidden="true"></i></a>
 						<?php endif; ?>
-					<?php endif; ?>
+
+						<?php if ($row_managed && !$row_is_driver && $viewer_can_edit_user) : ?>
+							<a href="user_permissions.php?user=<?php echo $row_user->id; ?>" data-toggle="tooltip" data-placement="top" title="Permissions">
+								<i style="color:#336aea;" class="ti-shield"></i></a>
+						<?php endif; ?>
+
+						<?php if (cdp_canViewAs((int)$user->userlevel, $row_level) && (int)$row_user->id !== $viewer_uid) : ?>
+							<a href="view_as.php?id=<?php echo $row_user->id; ?>" data-toggle="tooltip" data-placement="top" title="View as this user (support mode)">
+								<iconify-icon icon="solar:login-3-bold" style="color:#b45309;vertical-align:-2px;"></iconify-icon></a>
+						<?php endif; ?>
+
+						<?php if ($viewer_can_newsletter) : ?>
+							<a href="newsletter.php?email=<?php echo $row_user->email; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien45'] ?>">
+								<i style="color:#F5590D;" class="ti-email"></i></a>
+						<?php endif; ?>
+
+						<?php if ((int)$row_user->id === 1 || cdp_roleHasFlag($row_level, 'is_superadmin')) : ?>
+							<a data-rel="<?php echo $row_user->username; ?>" data-toggle="tooltip" data-placement="top" title="<?php echo cdp_roleHasFlag($row_level, 'is_superadmin') ? (isset($lang['role_9']) ? $lang['role_9'] : 'Super Admin') : 'Master Admin'; ?>">
+								<i style="color:#343a40;" class="ti-lock"></i></a>
+						<?php elseif ($row_managed && $viewer_can_delete && (int)$row_user->id !== $viewer_uid) : ?>
+							<?php if ($row_is_driver) : ?>
+								<a onclick="cdp_eliminar_driver('<?php echo $row_user->id; ?>')" id="itemdriver_<?php echo $row_user->id; ?>" class="delete" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien47'] ?>">
+									<i class="fi fi-rr-trash" style="color:#e4384d;"></i></a>
+							<?php else : ?>
+								<a onclick="cdp_eliminar('<?php echo $row_user->id; ?>')" id="item_<?php echo $row_user->id; ?>" data-rel="<?php echo $row_user->username; ?>" class="delete" data-toggle="tooltip" data-placement="top" title="<?php echo $lang['edit-clien47'] ?>">
+									<i class="fi fi-rr-trash" style="color:#e4384d;"></i></a>
+							<?php endif; ?>
+						<?php endif; ?>
+					</div>
 					</td>
 				</tr>
 			<?php } ?>
