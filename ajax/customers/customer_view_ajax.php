@@ -130,8 +130,6 @@ foreach ($consolidation_groups as $grp_total) {
 $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
 ?>
 
-<?php /* Amount Payable temporarily hidden at the customer-view level (per request).
-   The figures are still computed above; restore this block to show it again.
 <div class="d-flex justify-content-end mb-2">
     <div class="text-right rate-box" style="background:#f8f9fa;border-radius:.5rem;padding:.5rem 1rem;border:1px solid #e3e6ea;">
         <small class="text-muted d-block">Total Amount Payable</small>
@@ -141,7 +139,6 @@ $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
         <?php endif; ?>
     </div>
 </div>
-*/ ?>
 
 <div class="table-responsive">
     <table id="zero_config" class="table table-condensed table-hover table-striped custom-table-checkbox">
