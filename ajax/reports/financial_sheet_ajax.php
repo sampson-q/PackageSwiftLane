@@ -506,10 +506,10 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
     $owingGhs = round(max(0, $netGhs - $paidGhs), 2);
     $balGhs   = $owingGhs; // legacy alias — other blocks below still read $balGhs
 
-    // Accumulative debt across ALL of this customer's consolidations. Distinct
-    // from $owingGhs (this consolidation only) and used solely by the "Owes ₵X
-    // total" chip on the customer row, not by Customer Actions.
-    $owedGhs = fs_customer_outstanding($sid);
+    // NOTE: the accumulative debt (fs_customer_outstanding) is deliberately NOT
+    // fetched here any more. It only fed the "Owes ₵x total" chip on this row,
+    // which has moved into the payment / debt dialog (payment_form returns
+    // owed_ghs). Dropping it also removes one query per customer row on a sheet.
 
     // Per-package clearance / delivery state — drives which Customer Actions apply.
     $pkgTotal = count($g['oids']);
@@ -554,9 +554,10 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
                     <?php else: ?>
                         <span class="fs-chip-settled" title="Fully paid"><i class="mdi mdi-check"></i> Settled</span>
                     <?php endif; ?>
-                    <?php if ($owedGhs > 0): ?>
-                        <span class="fs-chip-owed" title="Total outstanding across ALL of this customer's consolidations"><i class="mdi mdi-alert-circle-outline"></i> Owes <span class="fs-cur-chip" data-ghs="<?php echo $owedGhs; ?>" data-usd="<?php echo round($ghsUsd($owedGhs), 2); ?>">&#8373;<?php echo number_format($owedGhs, 2); ?></span> total</span>
-                    <?php endif; ?>
+                    <?php // The accumulative "Owes ₵x total" chip used to sit here.
+                          // It belongs where an operator acts on it — it is now shown
+                          // inside the Record Payment / Clear Debt dialog (payment_form
+                          // returns owed_ghs), not on every consolidation row. ?>
                 <?php endif; ?>
             <?php endif; ?>
             <span class="fs-spacer"></span>
@@ -1378,14 +1379,20 @@ if ($action === 'payment_form') {
         exit;
     }
 
+    // Clearance AND delivery state. A package can be delivered yet unpaid (the
+    // customer was let go with it), so delivery is tracked separately: such a
+    // package still carries debt, but manual "clear for delivery" is meaningless
+    // for it — clearance only applies to packages that are not cleared yet.
     $oids = array_map('intval', $groups[$sid]['oids']);
     $clearedNow = [];
+    $deliveredNow = [];
     if ($oids) {
         $in = implode(',', $oids);
-        $db->cdp_query("SELECT order_id, fs_cleared_for_delivery FROM cdb_add_order WHERE order_id IN ($in)");
+        $db->cdp_query("SELECT order_id, fs_cleared_for_delivery, status_courier FROM cdb_add_order WHERE order_id IN ($in)");
         $db->cdp_execute();
         foreach ((array) $db->cdp_registros() as $r) {
-            $clearedNow[(int) $r->order_id] = (int) $r->fs_cleared_for_delivery;
+            $clearedNow[(int) $r->order_id]   = (int) $r->fs_cleared_for_delivery;
+            $deliveredNow[(int) $r->order_id] = ((int) $r->status_courier === 8);
         }
     }
 
@@ -1393,10 +1400,11 @@ if ($action === 'payment_form') {
     foreach ($groups[$sid]['rows'] as $p) {
         $oid = (int) $p->oid;
         $packages[] = [
-            'oid'     => $oid,
-            'no'      => (string) ($p->order_prefix . $p->order_no),
-            'ghs'     => round(cdp_usdToGhs((float) $p->total_order, $rate), 2),
-            'cleared' => !empty($clearedNow[$oid]),
+            'oid'       => $oid,
+            'no'        => (string) ($p->order_prefix . $p->order_no),
+            'ghs'       => round(cdp_usdToGhs((float) $p->total_order, $rate), 2),
+            'cleared'   => !empty($clearedNow[$oid]),
+            'delivered' => !empty($deliveredNow[$oid]),
         ];
     }
 
@@ -1418,6 +1426,10 @@ if ($action === 'payment_form') {
         'balance_ghs' => round(max(0, $net - $paid), 2),
         'fee_ghs'     => $feeGhs,
         'fee_paid'    => ((int) ($billedRow->fee_paid ?? 0) === 1),
+        // Accumulative debt across ALL of this customer's consolidations. Shown
+        // inside the payment / debt dialog (it used to sit as a chip on the
+        // Financial Sheet row, which is not where an operator needs it).
+        'owed_ghs'    => round((float) fs_customer_outstanding($sid), 2),
     ]);
     exit;
 }
@@ -1806,6 +1818,32 @@ if ($action === 'clear_debt') {
     }
     if ($paid > $balance) { $paid = $balance; } // never over-clear the debt
 
+    // Packages to release with this debt payment. A package can be withheld
+    // until the customer settles ("it stays there until they clear the
+    // outstanding debt"), so clearing the debt must be able to clear it for
+    // delivery — same checkbox list the payment dialog posts. Only packages that
+    // belong to this customer AND are not already cleared are touched; delivered
+    // packages carry no tick at all (clearance is meaningless once they're gone).
+    $rawOrders   = $_REQUEST['orders'] ?? '';
+    $decoded     = is_array($rawOrders) ? $rawOrders : json_decode((string) $rawOrders, true);
+    $checkedOids = is_array($decoded) ? array_values(array_unique(array_map('intval', $decoded))) : [];
+
+    $toClear = [];
+    if ($checkedOids) {
+        $groups = fs_customer_groups($cid);
+        $mine   = isset($groups[$sid]) ? array_map('intval', $groups[$sid]['oids']) : [];
+        $valid  = array_values(array_intersect($checkedOids, $mine));
+        if ($valid) {
+            $in = implode(',', array_map('intval', $valid));
+            $db->cdp_query("SELECT order_id FROM cdb_add_order
+                            WHERE order_id IN ($in) AND fs_cleared_for_delivery <> 1");
+            $db->cdp_execute();
+            foreach ((array) $db->cdp_registros() as $r) {
+                $toClear[] = (int) $r->order_id;
+            }
+        }
+    }
+
     $note = trim((string) ($_REQUEST['note'] ?? ''));
     try {
         $db->cdp_query("INSERT INTO cdb_fs_payments
@@ -1814,7 +1852,7 @@ if ($action === 'clear_debt') {
                              exchange_rate, recorded_by, recorded_at)
                         VALUES
                             (:cid, :sid, :amt, :mode, :ref,
-                             :gs, :gp, 1, '[]', :note, :rate, :by, NOW())");
+                             :gs, :gp, 1, :orders, :note, :rate, :by, NOW())");
         $db->bind(':cid', $cid);
         $db->bind(':sid', $sid);
         $db->bind(':amt', $paid);
@@ -1822,6 +1860,7 @@ if ($action === 'clear_debt') {
         $db->bind(':ref', $reference !== '' ? $reference : null);
         $db->bind(':gs', $verify['status'] ?? null);
         $db->bind(':gp', $verify['payload'] ?? null);
+        $db->bind(':orders', json_encode($toClear));
         $db->bind(':note', $note !== '' ? ('Debt clearing — ' . $note) : 'Debt clearing');
         $db->bind(':rate', (float) $core->exchange_rate);
         $db->bind(':by', $uid);
@@ -1830,6 +1869,20 @@ if ($action === 'clear_debt') {
         echo json_encode(['ok' => false, 'error' => 'ledger_missing',
                           'message' => 'Payment ledger not found — run sql/fs_transactions.sql, then try again.']);
         exit;
+    }
+
+    // Release the packages the operator ticked (same rule as record_payment:
+    // cleared for delivery + marked Paid so the invoice/package labels agree).
+    foreach ($toClear as $o) {
+        $db->cdp_query("UPDATE cdb_add_order
+                        SET fs_cleared_for_delivery = 1, fs_cleared_at = NOW(), fs_cleared_by = :by,
+                            status_invoice = 1
+                        WHERE order_id = :oid");
+        $db->bind(':by', $uid);
+        $db->bind(':oid', $o);
+        $db->cdp_execute();
+        fs_log_history($uid, $o, 'cleared for delivery via ' . ucfirst($mode) . ' debt payment'
+            . ($reference !== '' ? ' (ref ' . $reference . ')' : ''));
     }
 
     $agg = fs_sync_billing_cache($cid, $sid, $uid);
@@ -1849,6 +1902,8 @@ if ($action === 'clear_debt') {
         'mode'        => $mode,
         'paid_ghs'    => $agg['paid'],
         'balance_ghs' => $newBalance,
+        'net_ghs'     => round(max(0, $billGhs - $discGhs), 2),
+        'cleared_orders' => $toClear,
         'consol'      => fs_consol_summary($cid),
     ]);
     exit;

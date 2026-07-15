@@ -788,7 +788,17 @@ function fsRecordPayment(btn) {
     });
 }
 
-function fsOpenPaymentDialog(cid, sid, name, f) {
+/**
+ * The ONE payment dialog. Recording a payment and clearing a debt are the same
+ * transaction — a payment against a customer's bill — so they share this builder
+ * rather than two drifting implementations. opts.mode: 'payment' | 'debt'.
+ * Debt mode differs only in wording, the server action, and defaulting the cash
+ * amount to the full owing; it gets the same package list, the same gateway
+ * checkout (Paystack/Hubtel), and the same layout.
+ */
+function fsOpenPaymentDialog(cid, sid, name, f, opts) {
+    opts = opts || {};
+    var isDebt = opts.mode === "debt";
     var pkgs = f.packages || [];
     // Gross value of ALL packages, and net-per-gross so a cleared subset can be
     // valued against the customer's net bill (which folds in fee − discount).
@@ -796,25 +806,50 @@ function fsOpenPaymentDialog(cid, sid, name, f) {
     pkgs.forEach(function (p) { grossAll += Number(p.ghs) || 0; });
     var netPerGross = grossAll > 0 ? (Number(f.net_ghs) / grossAll) : 1;
 
+    var owing = Number(f.balance_ghs) || 0;
+    var owedAll = Number(f.owed_ghs) || 0;
+
     var rows = pkgs.map(function (p) {
         var cleared = !!p.cleared;
-        return '<label class="d-flex align-items-center justify-content-between mb-1" style="gap:8px; cursor:pointer;">' +
-            '<span><input type="checkbox" class="fsp-pkg" data-oid="' + p.oid + '" data-ghs="' + Number(p.ghs) + '" ' +
-            (cleared ? 'checked disabled' : 'checked') + '> ' +
+        var delivered = !!p.delivered;
+        // A delivered package can still be unpaid (the customer was let go with
+        // it). It still carries debt, but "clear for delivery" is meaningless
+        // once it is gone — so it gets no tick. Clearance is for UNCLEARED
+        // packages only.
+        var box = delivered
+            ? '<span class="fsp-nobox" style="display:inline-block;width:13px;"></span>'
+            : '<input type="checkbox" class="fsp-pkg" data-oid="' + p.oid + '" data-ghs="' + Number(p.ghs) + '" ' +
+              (cleared ? 'checked disabled' : 'checked') + '>';
+        var badge = delivered
+            ? ' <span class="badge badge-dark">delivered</span>'
+            : (cleared ? ' <span class="badge badge-success">cleared</span>' : '');
+        return '<label class="d-flex align-items-center justify-content-between mb-1" style="gap:8px; cursor:' + (delivered ? 'default' : 'pointer') + ';">' +
+            '<span>' + box + ' ' +
             '<span style="font-family:SFMono-Regular,Consolas,monospace;">' + p.no + '</span>' +
-            (cleared ? ' <span class="badge badge-success">cleared</span>' : '') + '</span>' +
+            badge + '</span>' +
             '<b>₵' + Number(p.ghs).toFixed(2) + '</b></label>';
     }).join('');
 
+    // Money summary — one tidy block instead of loose stacked rows.
+    var sum =
+        '<div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:8px;padding:10px 12px;margin-bottom:10px;">' +
+        '<div class="d-flex justify-content-between mb-1"><span class="text-muted">Bill (net)</span><b>₵' + Number(f.net_ghs).toFixed(2) + '</b></div>' +
+        (Number(f.paid_ghs) > 0 ? '<div class="d-flex justify-content-between mb-1"><span class="text-muted">Already paid</span><b>₵' + Number(f.paid_ghs).toFixed(2) + '</b></div>' : '') +
+        '<div class="d-flex justify-content-between"><span class="text-danger">Owing (this consolidation)</span><b class="text-danger">₵' + owing.toFixed(2) + '</b></div>' +
+        (owedAll > owing + 0.01
+            ? '<div class="d-flex justify-content-between mt-1 pt-1" style="border-top:1px dashed #dee2e6;">' +
+              '<span class="text-muted" title="Everything this customer owes across all their consolidations">Total owed (all consolidations)</span>' +
+              '<b class="text-danger">₵' + owedAll.toFixed(2) + '</b></div>'
+            : '') +
+        '</div>';
+
     Swal.fire({
-        title: "Record Payment — " + name,
+        title: (isDebt ? "Clear Debt — " : "Record Payment — ") + name,
         html:
             '<div class="text-left" style="font-size:14px;">' +
-            '<div class="d-flex justify-content-between mb-1"><span>Bill (net):</span><b>₵' + Number(f.net_ghs).toFixed(2) + '</b></div>' +
-            (Number(f.paid_ghs) > 0 ? '<div class="d-flex justify-content-between mb-1"><span>Already paid:</span><b>₵' + Number(f.paid_ghs).toFixed(2) + '</b></div>' : '') +
-            '<div class="d-flex justify-content-between mb-2"><span>Balance:</span><b>₵' + Number(f.balance_ghs).toFixed(2) + '</b></div>' +
+            sum +
             '<div class="mb-1"><b>Clear These Packages for Delivery</b> <span class="text-muted">(untick any the customer isn\'t paying for)</span></div>' +
-            '<div style="max-height:170px; overflow:auto; border:1px solid #eee; border-radius:6px; padding:6px;">' + (rows || '<div class="text-muted">No packages.</div>') + '</div>' +
+            '<div style="max-height:200px; overflow:auto; border:1px solid #eee; border-radius:6px; padding:6px;">' + (rows || '<div class="text-muted">No packages.</div>') + '</div>' +
             '<div class="d-flex justify-content-between mt-1"><span class="text-muted">Value of ticked packages:</span><b id="fsp_val">₵0.00</b></div>' +
             '<label class="mb-1 mt-2">Payment Method</label>' +
             '<select id="fsp_mode" class="form-control mb-2">' +
@@ -827,7 +862,7 @@ function fsOpenPaymentDialog(cid, sid, name, f) {
             '<label class="mb-1">Amount Received</label>' +
             '<div class="input-group">' +
             '<div class="input-group-prepend"><span class="input-group-text">GH₵</span></div>' +
-            '<input id="fsp_paid" class="form-control" placeholder="0.00">' +
+            '<input id="fsp_paid" class="form-control" placeholder="0.00" value="' + (isDebt ? owing.toFixed(2) : '') + '">' +
             '</div>' +
             '<div id="fsp_warn" class="mt-1" style="display:none; font-size:12.5px;"></div>' +
             '</div>' +
@@ -843,9 +878,9 @@ function fsOpenPaymentDialog(cid, sid, name, f) {
             '<textarea id="fsp_note" class="form-control" rows="2" placeholder="Optional note…"></textarea>' +
             '<p class="text-muted mt-2 mb-0" style="font-size:12px;">The customer will receive a payment receipt by WhatsApp and email.</p>' +
             '</div>',
-        width: 580,
+        width: 680,
         showCancelButton: true,
-        confirmButtonText: "Save Payment",
+        confirmButtonText: isDebt ? "Record Debt Payment" : "Save Payment",
         showLoaderOnConfirm: true,
         allowOutsideClick: function () { return !Swal.isLoading(); },
         didOpen: function () {
@@ -876,8 +911,12 @@ function fsOpenPaymentDialog(cid, sid, name, f) {
             }
             function refresh() {
                 $("#fsp_val").text("₵" + tickedGross().toFixed(2)); // value of ticked packages
-                $("#fsp_charge").text("₵" + newlyTickedNet().toFixed(2));
-                if (isOnline()) { $("#fsp_warn").hide(); return; }
+                $("#fsp_charge").text("₵" + (isDebt ? owing : newlyTickedNet()).toFixed(2));
+                // The tally below reconciles CASH RECEIVED against the packages
+                // being cleared. In debt mode the operator is settling an owed
+                // amount (possibly for already-delivered packages), so that
+                // comparison is meaningless — skip it.
+                if (isOnline() || isDebt) { $("#fsp_warn").hide(); return; }
                 // Cash tally: does total-paid-after cover the net value of cleared pkgs?
                 var clearedNet = clearedAfterNet();
                 var paidAfter = Number(f.paid_ghs) + (parseFloat(String($("#fsp_paid").val() || "").replace(/,/g, "")) || 0);
@@ -909,8 +948,14 @@ function fsOpenPaymentDialog(cid, sid, name, f) {
             });
             $("#fsp_init").on("click", function () {
                 var mode = $("#fsp_mode").val();
-                var amt = Math.round(newlyTickedNet() * 100) / 100;
-                if (amt <= 0) { $("#fsp_init_msg").html('<span class="text-danger">Tick at least one package to charge for.</span>'); return; }
+                // Debt mode charges the outstanding amount; payment mode charges
+                // the packages being newly cleared.
+                var amt = Math.round((isDebt ? owing : newlyTickedNet()) * 100) / 100;
+                if (amt <= 0) {
+                    $("#fsp_init_msg").html('<span class="text-danger">' +
+                        (isDebt ? "Nothing outstanding to charge." : "Tick at least one package to charge for.") + '</span>');
+                    return;
+                }
                 $("#fsp_init_msg").text("Starting " + mode + " checkout…");
                 $.ajax({
                     url: FS_AJAX, method: "POST", dataType: "json",
@@ -938,7 +983,7 @@ function fsOpenPaymentDialog(cid, sid, name, f) {
             });
             var mode = $("#fsp_mode").val();
             var data = {
-                action: "record_payment", consolidate_id: cid, sender_id: sid,
+                action: isDebt ? "clear_debt" : "record_payment", consolidate_id: cid, sender_id: sid,
                 orders: JSON.stringify(oids), mode: mode,
                 note: String($("#fsp_note").val() || "").trim()
             };
@@ -1145,59 +1190,29 @@ function fsRemoveDiscount(el) {
 // Customer Actions -> Clear Debt. Light payment against an outstanding balance
 // once all packages are already cleared for delivery (no package checklist, no
 // clearance/status changes — just records the money so the debt drops).
+/**
+ * Clear Debt — the SAME dialog as Record Payment (see fsOpenPaymentDialog).
+ * It used to be a separate hand-rolled Swal with no package list and, more
+ * importantly, no gateway checkout: it only offered a bare reference box, so
+ * Paystack/Hubtel could not actually be started from it. Loading payment_form
+ * and reusing the shared dialog fixes that and keeps the two in step.
+ */
 function fsClearDebt(el) {
     var $b = $(el);
     var cid = $b.data("cid"), sid = $b.data("sid");
     var name = $b.data("name") || "this customer";
-    var balance = parseFloat($b.data("balance")) || 0;
-    Swal.fire({
-        title: "Clear Debt — " + name,
-        html:
-            '<div class="text-left" style="font-size:14px;">' +
-            '<div class="d-flex justify-content-between mb-2"><span>Outstanding balance:</span><b>₵' + balance.toFixed(2) + '</b></div>' +
-            '<label class="mb-1">Payment Method</label>' +
-            '<select id="fsd_mode" class="form-control mb-2">' +
-            '<option value="cash">Cash</option><option value="paystack">Paystack</option><option value="hubtel">Hubtel</option></select>' +
-            '<div id="fsd_cash"><label class="mb-1">Amount Received</label>' +
-            '<div class="input-group"><div class="input-group-prepend"><span class="input-group-text">GH₵</span></div>' +
-            '<input id="fsd_paid" class="form-control" value="' + balance.toFixed(2) + '"></div></div>' +
-            '<div id="fsd_online" style="display:none;"><label class="mb-1 mt-1">Transaction Reference</label>' +
-            '<input id="fsd_ref" class="form-control" placeholder="Gateway reference — verified on save"></div>' +
-            '<label class="mb-1 mt-1">Note <span class="text-muted">(internal)</span></label>' +
-            '<input id="fsd_note" class="form-control" placeholder="Optional">' +
-            '</div>',
-        width: 520, showCancelButton: true, confirmButtonText: "Record Debt Payment",
-        showLoaderOnConfirm: true, allowOutsideClick: function () { return !Swal.isLoading(); },
-        didOpen: function () {
-            $("#fsd_mode").on("change", function () {
-                var online = $(this).val() !== "cash";
-                $("#fsd_cash").toggle(!online);
-                $("#fsd_online").toggle(online);
-            });
-        },
-        preConfirm: function () {
-            var mode = $("#fsd_mode").val();
-            var data = { action: "clear_debt", consolidate_id: cid, sender_id: sid, mode: mode, note: ($("#fsd_note").val() || "") };
-            if (mode === "cash") {
-                var v = String($("#fsd_paid").val() || "").replace(/,/g, "").trim();
-                if (v === "" || isNaN(parseFloat(v)) || parseFloat(v) <= 0) { Swal.showValidationMessage("Enter the amount received."); return false; }
-                data.paid = v;
-            } else {
-                var ref = String($("#fsd_ref").val() || "").trim();
-                if (ref === "") { Swal.showValidationMessage("Enter the transaction reference."); return false; }
-                data.reference = ref;
-            }
-            return $.ajax({ url: FS_AJAX, method: "POST", dataType: "json", data: data }).then(function (r) {
-                if (!r || !r.ok) { Swal.showValidationMessage((r && r.message) ? r.message : "Could not record the debt payment."); return false; }
-                return r;
-            }, function () { Swal.showValidationMessage("Server error."); return false; });
+
+    $.ajax({
+        url: FS_AJAX, method: "POST", dataType: "json",
+        data: { action: "payment_form", consolidate_id: cid, sender_id: sid }
+    }).then(function (f) {
+        if (!f || !f.ok) {
+            Swal.fire("Cannot clear debt", (f && f.message) ? f.message : "Could not load the packages.", "warning");
+            return;
         }
-    }).then(function (res) {
-        if (!res.isConfirmed || !res.value) return;
-        var r = res.value;
-        if (r.consol) fsApplyConsolSummary(cid, r.consol);
-        Swal.fire({ icon: "success", title: "Debt payment recorded", html: "Balance: <b>₵" + Number(r.balance_ghs).toFixed(2) + "</b>", confirmButtonText: "Ok" })
-            .then(function () { fsReloadCustomers(cid); });
+        fsOpenPaymentDialog(cid, sid, name, f, { mode: "debt" });
+    }, function () {
+        Swal.fire("Error", "Could not load the packages — server error.", "error");
     });
 }
 
