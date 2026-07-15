@@ -22,8 +22,9 @@
 
 
 
-if (!$user->cdp_is_Admin())
-    cdp_redirect_to("login.php");
+// Access is enforced by the entry point's cdp_hasPermission() gate. The old
+// hardcoded cdp_is_Admin() check here bypassed the permission system, so a
+// user granted access via a department or individual override was bounced.
 
 $userData = $user->cdp_getUserData();
 $statusrow = $core->cdp_getStatus();

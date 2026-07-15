@@ -5,10 +5,10 @@
 // * Body: customer -> packages -> items tree (same AJAX as the list page). *
 // *************************************************************************
 
-if ((!$user->cdp_is_Admin() && (int) ($user->userlevel ?? 0) !== 3)) {
-    cdp_redirect_to("login.php");
-}
-
+// Access is enforced by the entry point (financial_sheet_consolidation.php ->
+// cdp_hasPermission('financial_sheet')). The old hardcoded cdp_is_Admin() check
+// that used to sit here bypassed the permission system entirely, so a user
+// granted access via a department or an individual override got bounced to login.
 $userData = $user->cdp_getUserData();
 
 $fs_cid = (int) ($_GET['id'] ?? 0);

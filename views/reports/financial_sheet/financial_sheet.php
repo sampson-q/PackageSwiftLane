@@ -5,10 +5,10 @@
 // * Each consolidation opens in its own page (financial_sheet_consolidation)*
 // *************************************************************************
 
-if ((!$user->cdp_is_Admin() && (int) ($user->userlevel ?? 0) !== 3)) {
-    cdp_redirect_to("login.php");
-}
-
+// Access is enforced by the entry point (financial_sheet.php -> cdp_hasPermission
+// ('financial_sheet')). The old hardcoded cdp_is_Admin() check that used to sit
+// here bypassed the permission system entirely, so a user who was granted access
+// via a department or an individual override still got bounced to login.
 $userData = $user->cdp_getUserData();
 
 // Last exchange-rate change (audit) — shown next to the rate hint.
