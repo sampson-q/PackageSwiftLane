@@ -573,7 +573,7 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
                         <div class="dropdown-divider"></div>
                         <?php endif; ?>
 
-                        <?php // Money action depends on state (delivered packages have none). ?>
+                        <?php // Money actions (delivered packages have none). ?>
                         <?php if (!$allDelivered): ?>
                             <?php if (!$allCleared): ?>
                             <?php // Not all cleared yet → the per-package payment flow. ?>
@@ -586,8 +586,13 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
                                onclick="fsRecordPayment(this);">
                                 <i class="mdi mdi-cash-multiple"></i> <?php echo $hasPaid ? 'Update Payment' : 'Record Payment'; ?>
                             </a>
-                            <?php elseif ($balGhs > 0): ?>
-                            <?php // All packages cleared but the customer still owes → light debt clearing. ?>
+                            <?php endif; ?>
+
+                            <?php // Debt clearing is available whenever the customer still owes —
+                                  // not only once every package happens to be cleared. It used to
+                                  // hang off an elseif on !$allCleared, so on a part-cleared
+                                  // customer (the common case) the option was simply absent. ?>
+                            <?php if ($balGhs > 0): ?>
                             <a class="dropdown-item fs-debt-btn text-danger" href="javascript:void(0)"
                                data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>"
                                data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
