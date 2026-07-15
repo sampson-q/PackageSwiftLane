@@ -492,13 +492,23 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
     }
     $canBill = $pkgCount > 0 && $pkgPriced >= $pkgCount;
 
-    // Money state for a billed customer: gross bill, discount (from Package
-    // Actions), amount paid so far (split payments), and outstanding balance.
-    $discGhs = $billedRow ? (float) $billedRow->discount_ghs : 0.0;
-    $paidGhs = ($billedRow && $billedRow->paid_ghs !== null) ? (float) $billedRow->paid_ghs : 0.0;
-    $netGhs  = round(max(0, $billGhs - $discGhs), 2);
-    $balGhs  = round(max(0, $netGhs - $paidGhs), 2);
-    // Accumulative debt across ALL of this customer's consolidations.
+    // Money state for a billed customer.
+    //   $billGhs  gross bill — packages + handling fee (fs_bill_breakdown's
+    //             total_ghs = sub_ghs + fee_ghs, so the fee is already inside it)
+    //   $discGhs  discounts applied from Package Actions
+    //   $netGhs   what the customer actually has to pay, after discounts
+    //   $paidGhs  what they have paid so far (sum of split payments)
+    //   $owingGhs the difference when they have not paid the full net — i.e. the
+    //             debt. This is the single money figure Customer Actions shows.
+    $discGhs  = $billedRow ? (float) $billedRow->discount_ghs : 0.0;
+    $paidGhs  = ($billedRow && $billedRow->paid_ghs !== null) ? (float) $billedRow->paid_ghs : 0.0;
+    $netGhs   = round(max(0, $billGhs - $discGhs), 2);
+    $owingGhs = round(max(0, $netGhs - $paidGhs), 2);
+    $balGhs   = $owingGhs; // legacy alias — other blocks below still read $balGhs
+
+    // Accumulative debt across ALL of this customer's consolidations. Distinct
+    // from $owingGhs (this consolidation only) and used solely by the "Owes ₵X
+    // total" chip on the customer row, not by Customer Actions.
     $owedGhs = fs_customer_outstanding($sid);
 
     // Per-package clearance / delivery state — drives which Customer Actions apply.
@@ -565,42 +575,44 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
                 <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">Customer Actions</button>
                 <div class="dropdown-menu dropdown-menu-right">
-                        <?php if ($hasPaid): ?>
-                        <h6 class="dropdown-header">
-                            Balance (this consolidation): &#8373;<?php echo number_format($balGhs, 2); ?>
-                            <?php if ($owedGhs > 0): ?><br><span class="text-danger">Total owed: &#8373;<?php echo number_format($owedGhs, 2); ?></span><?php endif; ?>
+                        <?php // One money figure only: what the customer OWES.
+                              // owing = everything they must pay (packages + handling fee,
+                              // already both inside amount_ghs) minus discounts, minus what
+                              // they have actually paid. $balGhs is exactly that. The old
+                              // header showed two competing numbers ("Balance (this
+                              // consolidation)" and "Total owed") and only when they had
+                              // paid something, so a billed customer who had paid nothing
+                              // was shown no figure at all. ?>
+                        <?php if ($owingGhs > 0): ?>
+                        <h6 class="dropdown-header text-danger">
+                            Owing: &#8373;<?php echo number_format($owingGhs, 2); ?>
                         </h6>
                         <div class="dropdown-divider"></div>
                         <?php endif; ?>
 
-                        <?php // Money actions (delivered packages have none). ?>
-                        <?php if (!$allDelivered): ?>
-                            <?php if (!$allCleared): ?>
-                            <?php // Not all cleared yet → the per-package payment flow. ?>
+                        <?php // Per-package payment flow, while packages are still uncleared. ?>
+                        <?php if (!$allDelivered && !$allCleared): ?>
                             <a class="dropdown-item fs-pay-btn" href="javascript:void(0)"
                                data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>"
                                data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
                                data-bill="<?php echo $netGhs; ?>"
                                data-paid="<?php echo $paidGhs; ?>"
-                               data-balance="<?php echo $balGhs; ?>"
+                               data-balance="<?php echo $owingGhs; ?>"
                                onclick="fsRecordPayment(this);">
                                 <i class="mdi mdi-cash-multiple"></i> <?php echo $hasPaid ? 'Update Payment' : 'Record Payment'; ?>
                             </a>
-                            <?php endif; ?>
+                        <?php endif; ?>
 
-                            <?php // Debt clearing is available whenever the customer still owes —
-                                  // not only once every package happens to be cleared. It used to
-                                  // hang off an elseif on !$allCleared, so on a part-cleared
-                                  // customer (the common case) the option was simply absent. ?>
-                            <?php if ($balGhs > 0): ?>
+                        <?php // Clear Debt: the ONLY condition is that the customer is owing.
+                              // Not gated on clearance or delivery — if they owe, it shows. ?>
+                        <?php if ($owingGhs > 0): ?>
                             <a class="dropdown-item fs-debt-btn text-danger" href="javascript:void(0)"
                                data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo $sid; ?>"
                                data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
-                               data-balance="<?php echo $balGhs; ?>"
+                               data-balance="<?php echo $owingGhs; ?>"
                                onclick="fsClearDebt(this);">
-                                <i class="mdi mdi-cash-refund"></i> Clear Debt (&#8373;<?php echo number_format($balGhs, 2); ?>)
+                                <i class="mdi mdi-cash-refund"></i> Clear Debt (&#8373;<?php echo number_format($owingGhs, 2); ?>)
                             </a>
-                            <?php endif; ?>
                         <?php endif; ?>
 
                         <a class="dropdown-item fs-disc-apply" href="javascript:void(0)"
