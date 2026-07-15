@@ -25,8 +25,7 @@ if ($user->cdp_loginCheck() !== true) {
 }
 
 // Set every identity session key the app reads, from a cdb_users row.
-function cdp_viewAsApplyIdentity($row)
-{
+function cdp_viewAsApplyIdentity($row) {
     $_SESSION['userid']    = $row->id;
     $_SESSION['username']  = $row->username;
     $_SESSION['email']     = $row->email;
@@ -36,8 +35,25 @@ function cdp_viewAsApplyIdentity($row)
     $_SESSION['last']      = $row->lastlogin;
 }
 
+// Keep only a safe, same-app relative path (no host, no scheme) so the return
+// URL can't be turned into an open redirect.
+function cdp_viewAsSafeReturn($url) {
+    $url = (string) $url;
+    if ($url === '') { return ''; }
+    $path = parse_url($url, PHP_URL_PATH);
+    if (!$path) { return ''; }
+    // Reduce to the basename + query so it resolves against this app root.
+    $file = basename($path);
+    if ($file === '' || strtolower($file) === 'view_as.php' || strtolower($file) === 'login.php') {
+        return '';
+    }
+    $qs = parse_url($url, PHP_URL_QUERY);
+    return $file . ($qs ? ('?' . $qs) : '');
+}
+
 // --- STOP: restore the real account -------------------------------------
 if (isset($_GET['stop'])) {
+    $return = cdp_viewAsSafeReturn($_SESSION['imp_return_url'] ?? '');
     if (!empty($_SESSION['imp_original_username'])) {
         $db = new Conexion;
         $db->cdp_query("SELECT * FROM cdb_users WHERE username = :u LIMIT 1");
@@ -51,10 +67,13 @@ if (isset($_GET['stop'])) {
             $_SESSION['imp_original_username'],
             $_SESSION['imp_original_userlevel'],
             $_SESSION['imp_original_name'],
-            $_SESSION['imp_original_userid']
+            $_SESSION['imp_original_userid'],
+            $_SESSION['imp_return_url']
         );
     }
-    header("Location: index.php");
+    // Back to the screen the operator started from (e.g. the customers/users
+    // list), not the generic dashboard.
+    header("Location: " . ($return !== '' ? $return : 'index.php'));
     exit;
 }
 
@@ -106,12 +125,14 @@ if (!cdp_canViewAs($authUserlevel, (int) $target->userlevel)) {
     exit;
 }
 
-// Stash the real identity once (first entry into impersonation).
+// Stash the real identity once (first entry into impersonation), along with
+// the screen the operator launched from so "Exit View" returns there.
 if (empty($_SESSION['imp_original_username'])) {
     $_SESSION['imp_original_username']  = $authUsername;
     $_SESSION['imp_original_userlevel'] = $authUserlevel;
     $_SESSION['imp_original_name']      = $authName;
     $_SESSION['imp_original_userid']    = $authUserid;
+    $_SESSION['imp_return_url']         = cdp_viewAsSafeReturn($_SERVER['HTTP_REFERER'] ?? '');
 }
 
 // Swap into the target and land on the dashboard as them.
