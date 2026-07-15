@@ -43,13 +43,12 @@ $userData = $user->cdp_getUserData();
                                     <?php
                                     $tabs = [
                                         'all'           => 'All',
-                                        'package'       => 'Package History',
-                                        'payments'      => 'Payments',
-                                        'discounts'     => 'Discounts',
-                                        'notes'         => 'Billing Notes',
-                                        'aging'         => 'Pickup Aging',
+                                        'packages'      => 'Packages',
+                                        'finance'       => 'Finance',
+                                        'pickups'       => 'Pickups',
+                                        'accounts'      => 'Accounts &amp; Access',
+                                        'auth'          => 'Authentication',
                                         'notifications' => 'Notifications',
-                                        'charges'       => 'Legacy Charges',
                                     ];
                                     foreach ($tabs as $k => $label): ?>
                                         <button type="button" class="btn btn-outline-primary log-cat<?php echo $k === 'all' ? ' active' : ''; ?>"
