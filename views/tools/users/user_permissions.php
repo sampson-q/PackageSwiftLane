@@ -65,7 +65,6 @@ if ($target_name === '') { $target_name = $target->username; }
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>User Permissions | <?php echo $core->site_name ?></title>
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
-    <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <?php include 'views/inc/head_scripts.php'; ?>
     <style>
         .perm-search-bar { margin-bottom:14px; }
@@ -198,7 +197,9 @@ if ($target_name === '') { $target_name = $target->username; }
         </div>
     </div>
     <?php include('helpers/languages/translate_to_js.php'); ?>
-    <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+    <!-- SweetAlert2 v11 (+ compat shim) already loaded by footer.php above.
+         Re-loading the template's v7 build here clobbered it and broke the
+         instant-save toasts/confirms. Removed. -->
     <script src="<?= cdp_asset('dataJs/user_permissions.js') ?>"></script>
 </body>
 </html>

@@ -35,51 +35,37 @@ $(document).ready(function() {
 });
 
 function cdp_eliminar(role_id) {
-    swal({
+    // v11: the confirm dialog closes on OK, THEN the delete runs and a result
+    // is shown. (The old preConfirm returned a Promise that never resolve()d,
+    // so the dialog spun on "OK" forever and never closed.)
+    Swal.fire({
         title: message_delete_confirm,
         text: message_delete_confirm2,
-        type: 'warning',
+        icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#336aea',
         cancelButtonColor: '#eb644c',
-        confirmButtonText: message_delete_confirm1,
-        showLoaderOnConfirm: true,
-
-        preConfirm: function() {
-            return new Promise(function(resolve) {
-                $.ajax({
-                        url: './ajax/tools/permissions/asingpermissions_delete_ajax.php',
-                        type: 'POST',
-                        data: {
-                            'id': role_id,
-                        },
-                        dataType: 'json'
-                    })
-                    .done(function(response) {
-				    if (response.status === 'success') {
-				        // Eliminación exitosa
-				        swal(response.message, message_delete_error2, response.status);
-				        $('html, body').animate({
-				            scrollTop: 0
-				        }, 600);
-				        $('#resultados_ajax').html(response);
-				        cdp_load(1);
-				    } else if (response.status === 'error1') {
-				        // Restricciones de integridad referencial
-				        swal('Oops...', response.message, 'info');
-				    } else {
-				        // Otro tipo de error
-				        swal('Oops...', message_delete_error, 'error');
-				    }
-				})
-				.fail(function() {
-				    // Error de conexión u otro error
-				    swal('Oops...', message_delete_error, 'error');
-				});
-
-            });
-        },
-        allowOutsideClick: false
+        confirmButtonText: message_delete_confirm1
+    }).then(function (result) {
+        if (!result.isConfirmed) return;
+        $.ajax({
+            url: './ajax/tools/permissions/asingpermissions_delete_ajax.php',
+            type: 'POST',
+            data: { 'id': role_id },
+            dataType: 'json'
+        }).done(function (response) {
+            if (response.status === 'success') {
+                cdp_load(1);
+                $('html, body').animate({ scrollTop: 0 }, 600);
+                Swal.fire({ icon: 'success', title: response.message, timer: 1600, showConfirmButton: false });
+            } else if (response.status === 'error1') {
+                Swal.fire('Oops...', response.message, 'info');
+            } else {
+                Swal.fire('Oops...', message_delete_error, 'error');
+            }
+        }).fail(function () {
+            Swal.fire('Oops...', message_delete_error, 'error');
+        });
     });
 }
 

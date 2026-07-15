@@ -56,7 +56,6 @@ $modules = $db->cdp_registros();
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
     <title><?php echo $lang['rolesp30'] ?> | <?php echo $core->site_name ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <link rel="stylesheet" type="text/css" href="assets/template/assets/libs/select2/dist/css/select2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <?php include 'views/inc/head_scripts.php'; ?>
@@ -228,7 +227,9 @@ $modules = $db->cdp_registros();
 
      <?php include('helpers/languages/translate_to_js.php'); ?>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+    <!-- SweetAlert2 v11 (+ compat shim) already loaded by footer.php above.
+         Re-loading the template's v7 build here clobbered it and broke confirm
+         dialogs (result.isConfirmed was undefined, so OK did nothing). Removed. -->
 
     <script src="<?= cdp_asset('dataJs/asingpermissions.js') ?>"></script>
     <script>
