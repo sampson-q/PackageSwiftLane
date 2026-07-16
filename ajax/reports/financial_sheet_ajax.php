@@ -732,17 +732,18 @@ function fs_render_package($p, $stat = null, $cleared = false)
             <?php endif; ?>
             <span class="fs-spacer"></span>
             <span class="fs-money fs-pkg-total" data-usd="<?php echo (float) $p->total_order; ?>">$<?php echo number_format((float) $p->total_order, 2); ?></span>
-            <?php if (fs_user_can_clear() && !$isDelivered): ?>
+            <?php // Package Actions only exists to offer "Clear for Delivery", so it
+                  // is shown only when there is actually something to clear: not
+                  // already cleared, and not delivered. A cleared package used to
+                  // still render the dropdown with a dead, greyed-out item in it.
+                  // The "cleared" state is already conveyed by the package's badge. ?>
+            <?php if (fs_user_can_clear() && !$isDelivered && !$cleared): ?>
             <div class="btn-group btn-group-sm fs-pkg-actions ml-2">
                 <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Package Actions</button>
                 <div class="dropdown-menu dropdown-menu-right">
-                    <?php if (!$cleared): ?>
                     <a class="dropdown-item" href="javascript:void(0)" data-oid="<?php echo $oid; ?>" data-track="<?php echo $pkgNo; ?>" onclick="fsClearPackage(this);">
                         <i class="mdi mdi-truck-check"></i> Clear for Delivery
                     </a>
-                    <?php else: ?>
-                    <span class="dropdown-item text-muted"><i class="mdi mdi-check-decagram"></i> Cleared for Delivery</span>
-                    <?php endif; ?>
                 </div>
             </div>
             <?php endif; ?>

@@ -816,14 +816,20 @@ function fsOpenPaymentDialog(cid, sid, name, f, opts) {
         // it). It still carries debt, but "clear for delivery" is meaningless
         // once it is gone — so it gets no tick. Clearance is for UNCLEARED
         // packages only.
-        var box = delivered
-            ? '<span class="fsp-nobox" style="display:inline-block;width:13px;"></span>'
-            : '<input type="checkbox" class="fsp-pkg" data-oid="' + p.oid + '" data-ghs="' + Number(p.ghs) + '" ' +
-              (cleared ? 'checked disabled' : 'checked') + '>';
+        // No tick once a package is already cleared (there is nothing left to
+        // clear) or delivered (it is gone). Only genuinely uncleared packages
+        // get a checkbox. An already-cleared package still keeps its value on a
+        // .fsp-done marker so the cash tally can count what WILL be cleared
+        // after this save.
+        var actionable = !cleared && !delivered;
+        var box = actionable
+            ? '<input type="checkbox" class="fsp-pkg" data-oid="' + p.oid + '" data-ghs="' + Number(p.ghs) + '" checked>'
+            : '<span class="fsp-nobox" style="display:inline-block;width:13px;"></span>' +
+              (cleared ? '<span class="fsp-done" data-ghs="' + Number(p.ghs) + '" style="display:none;"></span>' : '');
         var badge = delivered
-            ? ' <span class="badge badge-dark">delivered</span>'
+            ? ' <span class="badge badge-dark">delivered</span>' + (cleared ? ' <span class="badge badge-success">cleared</span>' : '')
             : (cleared ? ' <span class="badge badge-success">cleared</span>' : '');
-        return '<label class="d-flex align-items-center justify-content-between mb-1" style="gap:8px; cursor:' + (delivered ? 'default' : 'pointer') + ';">' +
+        return '<label class="d-flex align-items-center justify-content-between mb-1" style="gap:8px; cursor:' + (actionable ? 'pointer' : 'default') + ';">' +
             '<span>' + box + ' ' +
             '<span style="font-family:SFMono-Regular,Consolas,monospace;">' + p.no + '</span>' +
             badge + '</span>' +
@@ -884,20 +890,21 @@ function fsOpenPaymentDialog(cid, sid, name, f, opts) {
         showLoaderOnConfirm: true,
         allowOutsideClick: function () { return !Swal.isLoading(); },
         didOpen: function () {
-            // Net value of the packages that WILL be cleared after this save.
+            // Net value of the packages that WILL be cleared after this save:
+            // the ones ticked now, PLUS the ones already cleared. Already-cleared
+            // packages no longer carry a checkbox, so their value comes off the
+            // .fsp-done marker instead.
             function clearedAfterNet() {
                 var g = 0;
-                $(".fsp-pkg").each(function () {
-                    if ($(this).is(":checked")) { g += parseFloat($(this).data("ghs")) || 0; }
-                });
+                $(".fsp-pkg:checked").each(function () { g += parseFloat($(this).data("ghs")) || 0; });
+                $(".fsp-done").each(function () { g += parseFloat($(this).data("ghs")) || 0; });
                 return g * netPerGross;
             }
             // Net value of the newly-ticked packages only (the online charge).
+            // Every remaining .fsp-pkg is by definition not yet cleared.
             function newlyTickedNet() {
                 var g = 0;
-                $(".fsp-pkg").each(function () {
-                    if ($(this).is(":checked") && !$(this).is(":disabled")) { g += parseFloat($(this).data("ghs")) || 0; }
-                });
+                $(".fsp-pkg:checked").each(function () { g += parseFloat($(this).data("ghs")) || 0; });
                 return g * netPerGross;
             }
             function isOnline() { return $("#fsp_mode").val() !== "cash"; }
@@ -975,11 +982,11 @@ function fsOpenPaymentDialog(cid, sid, name, f, opts) {
             refresh();
         },
         preConfirm: function () {
+            // Only uncleared, undelivered packages render a .fsp-pkg checkbox, so
+            // everything ticked here is genuinely clearable.
             var oids = [];
-            $(".fsp-pkg").each(function () {
-                if ($(this).is(":checked") && !$(this).is(":disabled")) {
-                    oids.push(parseInt($(this).data("oid"), 10));
-                }
+            $(".fsp-pkg:checked").each(function () {
+                oids.push(parseInt($(this).data("oid"), 10));
             });
             var mode = $("#fsp_mode").val();
             var data = {
