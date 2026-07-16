@@ -39,23 +39,55 @@ if ($sig === '' || !hash_equals(hash_hmac('sha512', $raw, $secret), $sig)) {
     exit;
 }
 
-$evt = json_decode($raw);
-if (isset($evt->event) && $evt->event === 'charge.success' && isset($evt->data->reference)) {
-    $reference = (string) $evt->data->reference;
+$evt   = json_decode($raw);
+$event = isset($evt->event) ? (string) $evt->event : '';
+
+// The reference lives in different places depending on the event: a charge
+// carries its own, a refund/dispute points at the transaction it concerns.
+$reference = (string) ($evt->data->reference
+    ?? $evt->data->transaction->reference
+    ?? $evt->data->transaction_reference
+    ?? '');
+
+if ($event !== '' && $reference !== '') {
     try {
-        if (cdp_fsIntentByRef($reference)) {
-            // Customer self-service: book the money and release the packages.
-            // Idempotent — if the browser already completed it, this is a no-op.
-            cdp_fsCompleteIntent($reference);
-        } else {
-            // Staff-recorded payment: the row already exists and was verified
-            // when it was saved; this only reconciles its status.
-            $db = new Conexion;
-            $db->cdp_query("UPDATE cdb_fs_payments SET gateway_status = 'success', gateway_payload = :p
-                            WHERE reference = :r");
-            $db->bind(':p', mb_substr($raw, 0, 4000));
-            $db->bind(':r', $reference);
-            $db->cdp_execute();
+        // Record that Paystack told us something, whatever it was. Even an
+        // event we take no action on belongs in the trail — "Paystack never
+        // told us" and "we ignored it" must be distinguishable during an audit.
+        $pid = null;
+        $db = new Conexion;
+        $db->cdp_query("SELECT id FROM cdb_fs_payments WHERE reference = :r LIMIT 1");
+        $db->bind(':r', $reference);
+        $pRow = $db->cdp_registro();
+        $pid = $pRow ? (int) $pRow->id : null;
+
+        cdp_fsLogPaymentEvent([
+            'payment_id' => $pid,
+            'reference'  => $reference,
+            'source'     => 'paystack_webhook',
+            'event'      => $event,
+            'message'    => 'Webhook received.',
+            'payload'    => $raw,
+        ]);
+
+        if ($event === 'charge.success') {
+            if (cdp_fsIntentByRef($reference)) {
+                // Customer self-service: book the money and release the packages.
+                // Idempotent — if the browser already completed it, this is a no-op.
+                cdp_fsCompleteIntent($reference, ['source' => 'paystack_webhook']);
+            } elseif ($pid) {
+                // Staff-recorded payment: re-verify rather than trusting this
+                // body, then store the gateway's full account of it.
+                cdp_fsRecheckPayment($pid, null, 'paystack_webhook');
+            }
+        } elseif ($pid && in_array($event, [
+            // Money going back out, or being contested. Each of these can turn
+            // a confirmed payment into one we no longer hold — re-verify and
+            // let cdp_fsApplyPaymentStatus() deal with the consequences.
+            'refund.processed', 'refund.pending', 'refund.failed',
+            'charge.dispute.create', 'charge.dispute.remind', 'charge.dispute.resolve',
+        ], true)) {
+            cdp_fsRecheckPayment($pid, null, 'paystack_webhook');
         }
     } catch (Throwable $e) {
         // swallow — always 200 so Paystack doesn't retry-storm
