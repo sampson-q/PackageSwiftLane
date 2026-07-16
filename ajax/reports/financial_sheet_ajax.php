@@ -20,6 +20,7 @@ require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/autoload_lang.php');
 require_once(__DIR__ . '/../../helpers/pickup_aging.php');
 require_once(__DIR__ . '/../../helpers/fs_gateways.php');
+require_once(__DIR__ . '/../../helpers/fs_payments.php');
 require_once(__DIR__ . '/../notify_whatsapp/api_whatsapp_service_v2.php');
 require_login();
 
@@ -61,6 +62,9 @@ $fsPermMap = [
     'clear_package'  => 'fs_clear_delivery',
     'set_weight_rate' => 'fs_price_items',
     'payment_history' => 'financial_sheet',
+    'check_payment'  => 'fs_check_payment',
+    'check_intent'   => 'fs_check_payment',
+    'payment_events' => 'financial_sheet',
 ];
 require_permission($fsPermMap[$action] ?? 'financial_sheet');
 
@@ -319,8 +323,11 @@ function fs_paid_total($cid, $sid)
 {
     try {
         $db = new Conexion;
+        // Only statuses that mean we actually hold the money may be summed —
+        // a reversed or pending row must never inflate what a customer has paid.
         $db->cdp_query("SELECT COALESCE(SUM(amount_ghs),0) AS t FROM cdb_fs_payments
-                        WHERE consolidate_id = :cid AND sender_id = :sid");
+                        WHERE consolidate_id = :cid AND sender_id = :sid
+                          AND " . cdp_fsMoneySqlFilter());
         $db->bind(':cid', (int) $cid);
         $db->bind(':sid', (int) $sid);
         $db->cdp_execute();
@@ -1575,25 +1582,55 @@ if ($action === 'record_payment') {
     // ---- Insert the payment row (records which packages it cleared). ----------
     $note = trim((string) ($_REQUEST['note'] ?? ''));
     try {
+        // Keep everything the gateway told us, so this payment can be audited
+        // from the billing log without opening the Paystack dashboard.
+        $gd = $verify['detail'] ?? [];
         $db->cdp_query("INSERT INTO cdb_fs_payments
                             (consolidate_id, sender_id, amount_ghs, mode, reference,
-                             gateway_status, gateway_payload, cleared_for_delivery, cleared_orders, note,
+                             gateway_status, gateway_raw_status, gateway_response, gateway_channel,
+                             gateway_currency, gateway_fees_ghs, gateway_customer, gateway_paid_at,
+                             gateway_checked_at, gateway_payload,
+                             cleared_for_delivery, cleared_orders, note,
                              exchange_rate, recorded_by, recorded_at)
                         VALUES
                             (:cid, :sid, :amt, :mode, :ref,
-                             :gs, :gp, 1, :co, :note, :rate, :by, NOW())");
+                             :gs, :graw, :gresp, :gchan,
+                             :gcur, :gfees, :gcust, :gpaid,
+                             :gchk, :gp,
+                             1, :co, :note, :rate, :by, NOW())");
         $db->bind(':cid', $cid);
         $db->bind(':sid', $sid);
         $db->bind(':amt', $paid);
         $db->bind(':mode', $mode);
         $db->bind(':ref', $reference !== '' ? $reference : null);
         $db->bind(':gs', $verify['status'] ?? null);
+        $db->bind(':graw', !empty($gd['raw_status']) ? $gd['raw_status'] : ($verify['status'] ?? null));
+        $db->bind(':gresp', !empty($gd['response']) ? $gd['response'] : null);
+        $db->bind(':gchan', !empty($gd['channel']) ? $gd['channel'] : null);
+        $db->bind(':gcur', !empty($gd['currency']) ? $gd['currency'] : null);
+        $db->bind(':gfees', isset($gd['fees']) && $gd['fees'] !== null ? (float) $gd['fees'] : null);
+        $db->bind(':gcust', !empty($gd['customer']) ? $gd['customer'] : null);
+        $db->bind(':gpaid', !empty($gd['paid_at']) ? date('Y-m-d H:i:s', strtotime($gd['paid_at'])) : null);
+        $db->bind(':gchk', $mode === 'cash' ? null : date('Y-m-d H:i:s'));
         $db->bind(':gp', $verify['payload'] ?? null);
         $db->bind(':co', json_encode($toClear));
         $db->bind(':note', $note !== '' ? $note : null);
         $db->bind(':rate', (float) $core->exchange_rate);
         $db->bind(':by', $uid);
         $db->cdp_execute();
+
+        cdp_fsLogPaymentEvent([
+            'payment_id' => (int) $db->dbh->lastInsertId(),
+            'reference'  => $reference !== '' ? $reference : null,
+            'source'     => 'record_payment',
+            'event'      => 'recorded',
+            'old_status' => null,
+            'new_status' => $verify['status'] ?? null,
+            'amount_ghs' => $paid,
+            'message'    => 'Recorded by staff (' . ucfirst($mode) . ').',
+            'payload'    => $verify['payload'] ?? null,
+            'actor_id'   => $uid,
+        ]);
     } catch (Throwable $e) {
         echo json_encode(['ok' => false, 'error' => 'ledger_missing',
                           'message' => 'Payment ledger not found — run sql/fs_transactions.sql, then try again.']);
@@ -2087,6 +2124,128 @@ if ($action === 'set_weight_rate') {
 // PAYMENT HISTORY for a customer (all consolidations) — a statement of every
 // payment and discount recorded against them, shown from Customer Actions.
 // ----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// CHECK PAYMENT — ask the gateway what this payment's status is right now and
+// record the answer. This is how a reversal/refund gets noticed if the webhook
+// was never configured or its delivery failed.
+// ---------------------------------------------------------------------------
+if ($action === 'check_payment') {
+    $pid = (int) ($_REQUEST['payment_id'] ?? 0);
+    if ($pid <= 0) {
+        echo json_encode(['ok' => false, 'message' => 'Which payment?']);
+        exit;
+    }
+    $res = cdp_fsRecheckPayment($pid, $uid, 'manual_check');
+
+    if (!empty($res['ok']) && !empty($res['changed'])) {
+        $extra = '';
+        if ((int) $res['revoked'] > 0) {
+            $extra .= ' Clearance was revoked on ' . (int) $res['revoked'] . ' package(s).';
+        }
+        if ((int) $res['delivered'] > 0) {
+            $extra .= ' ' . (int) $res['delivered'] . ' package(s) were already delivered and stay cleared — the customer owes again.';
+        }
+        $res['message'] .= $extra;
+    }
+    echo json_encode($res);
+    exit;
+}
+
+// ---------------------------------------------------------------------------
+// CHECK INTENT — a customer's checkout that never came back. Ask the gateway
+// whether it actually went through; if it did, this books the money and clears
+// the packages (the same idempotent path the webhook uses).
+//
+// This is the answer to "the customer swears they paid": staff resolve it here
+// instead of in the Paystack dashboard, which they cannot open.
+// ---------------------------------------------------------------------------
+if ($action === 'check_intent') {
+    $ref = trim((string) ($_REQUEST['reference'] ?? ''));
+    if ($ref === '') {
+        echo json_encode(['ok' => false, 'message' => 'Which attempt?']);
+        exit;
+    }
+    $res = cdp_fsCompleteIntent($ref, ['source' => 'manual_check']);
+
+    $msg = $res['message'];
+    if (($res['status'] ?? '') === 'success' || ($res['status'] ?? '') === 'already') {
+        $msg = 'This payment DID go through. It is now recorded and the packages are cleared.';
+    }
+    echo json_encode([
+        'ok'      => !empty($res['ok']),
+        'status'  => $res['status'] ?? '',
+        'changed' => in_array(($res['status'] ?? ''), ['success', 'already'], true),
+        'message' => $msg,
+    ]);
+    exit;
+}
+
+// ---------------------------------------------------------------------------
+// PAYMENT EVENTS — the audit trail for one payment: every status change, who or
+// what caused it, and what the gateway said at the time.
+// ---------------------------------------------------------------------------
+if ($action === 'payment_events') {
+    $pid = (int) ($_REQUEST['payment_id'] ?? 0);
+    try {
+        $db->cdp_query("SELECT e.*,
+                               COALESCE(NULLIF(TRIM(CONCAT(COALESCE(u.fname,''),' ',COALESCE(u.lname,''))),''),
+                                        u.username, '') AS actor
+                        FROM cdb_fs_payment_events e
+                        LEFT JOIN cdb_users u ON u.id = e.actor_id
+                        WHERE e.payment_id = :pid
+                        ORDER BY e.id DESC");
+        $db->bind(':pid', $pid);
+        $db->cdp_execute();
+        $evs = (array) $db->cdp_registros();
+    } catch (Throwable $e) {
+        echo json_encode(['ok' => false, 'message' => 'Event trail not found — run sql/fs_payment_status.sql.']);
+        exit;
+    }
+
+    $sourceLbl = ['paystack_webhook' => 'Paystack (webhook)', 'manual_check' => 'Staff check',
+                  'customer_return'  => 'Customer returned from checkout', 'record_payment' => 'Recorded by staff',
+                  'customer_checkout' => 'Customer checkout'];
+
+    if (!$evs) {
+        echo json_encode(['ok' => true, 'html' =>
+            '<p class="text-muted">Nothing has happened to this payment since it was recorded.</p>']);
+        exit;
+    }
+
+    $h = '<table class="table table-sm" style="font-size:.85rem">'
+       . '<thead><tr><th>When</th><th>What Happened</th><th>Reported By</th></tr></thead><tbody>';
+    foreach ($evs as $e) {
+        $move = '';
+        if ($e->old_status && $e->new_status && $e->old_status !== $e->new_status) {
+            $move = ' <span class="label label-default">'
+                  . htmlspecialchars(cdp_fsStatusMeta((string) $e->old_status)['label']) . '</span> &rarr; <span class="label '
+                  . cdp_fsStatusMeta((string) $e->new_status)['class'] . '">'
+                  . htmlspecialchars(cdp_fsStatusMeta((string) $e->new_status)['label']) . '</span>';
+        } elseif ($e->new_status) {
+            $move = ' <span class="label ' . cdp_fsStatusMeta((string) $e->new_status)['class'] . '">'
+                  . htmlspecialchars(cdp_fsStatusMeta((string) $e->new_status)['label']) . '</span>';
+        }
+        $who = (string) $e->actor !== '' ? (string) $e->actor
+             : ($e->source === 'paystack_webhook' ? 'Paystack' : 'System');
+
+        $h .= '<tr>'
+            . '<td class="text-nowrap">' . htmlspecialchars(date('Y-m-d H:i', strtotime((string) $e->created_at))) . '</td>'
+            . '<td><b>' . htmlspecialchars((string) $e->event) . '</b>' . $move
+            . ((string) $e->message !== ''
+                ? '<br><span class="text-muted">' . htmlspecialchars((string) $e->message) . '</span>' : '')
+            . '</td>'
+            . '<td>' . htmlspecialchars($sourceLbl[(string) $e->source]
+                        ?? ucfirst(str_replace('_', ' ', (string) $e->source)))
+            . '<br><span class="text-muted">' . htmlspecialchars($who) . '</span></td>'
+            . '</tr>';
+    }
+    $h .= '</tbody></table>'
+        . '<p class="text-muted" style="font-size:.8rem">This is the complete record of what the gateway told us about this payment.</p>';
+
+    echo json_encode(['ok' => true, 'html' => $h]);
+    exit;
+}
+
 if ($action === 'payment_history') {
     header('Content-Type: application/json; charset=UTF-8');
 
@@ -2407,7 +2566,10 @@ if ($action === 'packages') {
 
         // Each recorded payment is its own timeline line (split payments).
         try {
-            $db->cdp_query("SELECT p.amount_ghs, p.mode, p.reference, p.gateway_status,
+            $db->cdp_query("SELECT p.id, p.amount_ghs, p.mode, p.reference, p.gateway_status,
+                                   p.gateway_raw_status, p.gateway_response, p.gateway_channel,
+                                   p.gateway_fees_ghs, p.gateway_paid_at, p.gateway_checked_at,
+                                   p.reversed_at, p.reversal_reason,
                                    p.cleared_for_delivery, p.recorded_at, p.exchange_rate,
                                    COALESCE(NULLIF(TRIM(CONCAT(COALESCE(u.fname,''),' ',COALESCE(u.lname,''))),''),
                                             u.username, CONCAT('User ', p.recorded_by)) AS payer
@@ -2424,14 +2586,134 @@ if ($action === 'packages') {
         }
         if ($pays) {
             foreach ($pays as $pp) {
+                $isCash = strtolower((string) $pp->mode) === 'cash';
+                $meta   = cdp_fsStatusMeta((string) $pp->gateway_status, (string) $pp->mode);
+
+                // The gateway's own words — so a payment can be audited here
+                // instead of by logging into Paystack.
+                $facts = [];
+                if (!$isCash) {
+                    if ((string) $pp->gateway_channel !== '') {
+                        $facts[] = 'via ' . htmlspecialchars(str_replace('_', ' ', (string) $pp->gateway_channel));
+                    }
+                    if ((string) $pp->gateway_response !== '') {
+                        $facts[] = htmlspecialchars((string) $pp->gateway_response);
+                    }
+                    if ($pp->gateway_fees_ghs !== null) {
+                        $facts[] = 'fees ₵' . number_format((float) $pp->gateway_fees_ghs, 2);
+                    }
+                    if ((string) $pp->gateway_paid_at !== '' && $pp->gateway_paid_at !== null) {
+                        $facts[] = 'paid ' . htmlspecialchars(date('Y-m-d H:i', strtotime((string) $pp->gateway_paid_at)));
+                    }
+                    if ($pp->gateway_raw_status !== null
+                        && strcasecmp((string) $pp->gateway_raw_status, (string) $pp->gateway_status) !== 0) {
+                        $facts[] = 'gateway says "' . htmlspecialchars((string) $pp->gateway_raw_status) . '"';
+                    }
+                }
+
+                $statusBadge = ' <span class="label ' . $meta['class'] . '" title="'
+                    . htmlspecialchars($meta['hint'], ENT_QUOTES) . '">' . htmlspecialchars($meta['label']) . '</span>';
+
+                // Cleared / reversed clearance state.
+                $clearBadge = '';
+                if ((int) $pp->cleared_for_delivery === 1 && $meta['money']) {
+                    $clearBadge = ' <span class="badge badge-success">cleared for delivery</span>';
+                } elseif ((int) $pp->cleared_for_delivery === 1 && !$meta['money']) {
+                    $clearBadge = ' <span class="badge badge-danger">clearance revoked</span>';
+                }
+
+                $reversal = '';
+                if ($pp->reversed_at !== null) {
+                    $reversal = '<br><span class="text-danger" style="font-size:.8rem"><i class="mdi mdi-alert"></i> Reversed '
+                        . htmlspecialchars(date('Y-m-d H:i', strtotime((string) $pp->reversed_at)))
+                        . ((string) $pp->reversal_reason !== '' ? ' — ' . htmlspecialchars((string) $pp->reversal_reason) : '')
+                        . '</span>';
+                }
+
+                $checkBtn = '';
+                if (!$isCash && (string) $pp->reference !== '' && $user->cdp_hasPermission('fs_check_payment')) {
+                    $checkBtn = ' <a href="javascript:void(0)" class="fs-check-pay" data-id="' . (int) $pp->id
+                        . '" data-cid="' . $cid . '" data-sid="' . $sid . '" title="Ask the gateway for this payment\'s current status">'
+                        . '<i class="mdi mdi-refresh"></i> Check Status</a>';
+                }
+
+                // The full record of what the gateway has told us about this
+                // payment — so nobody needs the Paystack dashboard to explain it.
+                $histBtn = ' <a href="javascript:void(0)" class="fs-pay-events" data-id="' . (int) $pp->id
+                    . '" title="Everything the gateway has told us about this payment">'
+                    . '<i class="mdi mdi-history"></i> History</a>';
+
+                $checked = ($pp->gateway_checked_at !== null)
+                    ? ' <span class="text-muted" style="font-size:.75rem">(checked '
+                      . htmlspecialchars(date('Y-m-d H:i', strtotime((string) $pp->gateway_checked_at))) . ')</span>'
+                    : '';
+
                 $entries[] = [
                     'ts'   => strtotime((string) $pp->recorded_at),
                     'html' => '<i class="mdi mdi-cash"></i> <b>' . htmlspecialchars($pp->payer) . '</b> recorded a '
                         . htmlspecialchars(ucfirst((string) $pp->mode)) . ' payment of ₵' . number_format((float) $pp->amount_ghs, 2)
+                        . $statusBadge
                         . ((string) $pp->reference !== '' ? ' <span class="text-muted">ref ' . htmlspecialchars((string) $pp->reference) . '</span>' : '')
-                        . ((int) $pp->cleared_for_delivery === 1 ? ' <span class="badge badge-success">cleared for delivery</span>' : '')
+                        . $clearBadge
                         . $fsRateChip($pp->exchange_rate ?? 0)
-                        . ' <span class="text-muted">— ' . htmlspecialchars(date('Y-m-d H:i', strtotime((string) $pp->recorded_at))) . '</span>',
+                        . ' <span class="text-muted">— ' . htmlspecialchars(date('Y-m-d H:i', strtotime((string) $pp->recorded_at))) . '</span>'
+                        . $checkBtn . $histBtn . $checked
+                        . ($facts ? '<br><span class="text-muted" style="font-size:.8rem">' . implode(' &middot; ', $facts) . '</span>' : '')
+                        . $reversal,
+                ];
+            }
+        }
+
+        // Payment ATTEMPTS that never became money — the customer started a
+        // checkout and it failed, was abandoned, or is still hanging.
+        //
+        // Paystack sends NO webhook for a failed or abandoned checkout: only
+        // charge.success ever arrives. So an attempt that went nowhere is
+        // invisible unless we show it from our own intent ledger. Without this,
+        // a customer saying "I paid!" leaves staff with nothing to look at —
+        // and they are not allowed into the Paystack dashboard.
+        try {
+            $db->cdp_query("SELECT i.reference, i.amount_ghs, i.mode, i.status, i.fail_reason,
+                                   i.created_at, i.completed_at
+                            FROM cdb_fs_payment_intents i
+                            WHERE i.consolidate_id = :cid AND i.sender_id = :sid
+                              AND i.status <> 'success'
+                            ORDER BY i.id DESC");
+            $db->bind(':cid', $cid);
+            $db->bind(':sid', $sid);
+            $db->cdp_execute();
+            $tries = $db->cdp_registros();
+        } catch (Throwable $e) {
+            $tries = null; // intents table not migrated yet
+        }
+        if ($tries) {
+            foreach ($tries as $t) {
+                $tm = cdp_fsStatusMeta((string) $t->status, (string) $t->mode);
+                // An intent's own lifecycle words differ slightly from a
+                // gateway status; make them read plainly either way.
+                $lbl = ['pending' => ['Not Completed', 'label-warning'],
+                        'processing' => ['Being Confirmed', 'label-warning'],
+                        'failed' => ['Failed', 'label-danger']][(string) $t->status]
+                        ?? [$tm['label'], $tm['class']];
+
+                $entries[] = [
+                    'ts'   => strtotime((string) $t->created_at),
+                    'html' => '<i class="mdi mdi-cellphone-link-off text-muted"></i> <span class="text-muted">Customer tried to pay '
+                        . htmlspecialchars(ucfirst((string) $t->mode)) . ' ₵' . number_format((float) $t->amount_ghs, 2)
+                        . '</span> <span class="label ' . $lbl[1] . '">' . htmlspecialchars($lbl[0]) . '</span>'
+                        . ' <span class="text-muted">ref ' . htmlspecialchars((string) $t->reference) . '</span>'
+                        . ' <span class="text-muted">— ' . htmlspecialchars(date('Y-m-d H:i', strtotime((string) $t->created_at))) . '</span>'
+                        . ' <a href="javascript:void(0)" class="fs-check-intent" data-ref="'
+                        . htmlspecialchars((string) $t->reference, ENT_QUOTES) . '" title="Ask the gateway whether this attempt actually went through">'
+                        . '<i class="mdi mdi-refresh"></i> Check</a>'
+                        // ALWAYS say that no money moved, reason or not. Staff
+                        // cannot look this up in Paystack, and "Abandoned" on
+                        // its own does not tell them whether the customer was
+                        // charged — which is the first thing they are asked.
+                        . '<br><span class="text-muted" style="font-size:.8rem">No money was taken for this attempt.'
+                        . ((string) $t->fail_reason !== ''
+                            ? ' ' . htmlspecialchars((string) $t->fail_reason) : '')
+                        . '</span>',
                 ];
             }
         }

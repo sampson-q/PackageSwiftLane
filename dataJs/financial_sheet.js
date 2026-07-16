@@ -1371,3 +1371,103 @@ function fsClearPackage(btn) {
         Swal.fire({ icon: "success", text: "Package cleared for delivery.", timer: 1400, showConfirmButton: false });
     });
 }
+
+// ---------------------------------------------------------------------------
+// Ask the gateway what a payment's status is RIGHT NOW.
+//
+// The webhook normally tells us first, but it can be unconfigured or its
+// delivery can fail — this is the manual way to find out, e.g. when a customer
+// swears they paid, or to catch a refund/chargeback that landed days later.
+// ---------------------------------------------------------------------------
+$(document).on("click", ".fs-check-pay", function () {
+    var pid = $(this).data("id");
+
+    Swal.fire({
+        title: "Checking with the gateway…",
+        didOpen: function () { Swal.showLoading(); },
+        allowOutsideClick: false
+    });
+
+    $.ajax({
+        url: FS_AJAX, method: "POST", dataType: "json",
+        data: { action: "check_payment", payment_id: pid }
+    }).then(function (r) {
+        if (!r || !r.ok) {
+            Swal.fire({ icon: "error", title: "Could Not Check",
+                        text: (r && r.message) ? r.message : "The gateway could not be reached." });
+            return;
+        }
+        Swal.fire({
+            icon: r.changed ? "warning" : "success",
+            title: r.label,
+            html: "<p>" + (r.message || "") + "</p>" +
+                  "<p class='text-muted' style='font-size:.85rem'>" + (r.hint || "") + "</p>",
+            confirmButtonText: "Close"
+        }).then(function () {
+            // A status that moved off "money" changes the balance AND may have
+            // revoked clearance on packages across the sheet. Reload rather
+            // than patch: anything less leaves stale figures on screen.
+            if (r.changed) { location.reload(); }
+        });
+    });
+});
+
+// ---------------------------------------------------------------------------
+// A customer's checkout that never came back. Ask the gateway whether it
+// actually went through — this is the answer to "but I paid!", resolved here
+// rather than in the Paystack dashboard (which staff cannot open).
+//
+// Paystack sends no webhook for a failed or abandoned checkout, so an attempt
+// can sit unresolved forever until someone asks.
+// ---------------------------------------------------------------------------
+$(document).on("click", ".fs-check-intent", function () {
+    var ref = $(this).data("ref");
+    Swal.fire({
+        title: "Asking the gateway…",
+        didOpen: function () { Swal.showLoading(); },
+        allowOutsideClick: false
+    });
+    $.ajax({
+        url: FS_AJAX, method: "POST", dataType: "json",
+        data: { action: "check_intent", reference: ref }
+    }).then(function (r) {
+        if (!r) { return; }
+        Swal.fire({
+            icon: r.changed ? "success" : "info",
+            title: r.changed ? "Payment Found" : "Still Not Paid",
+            text: r.message || "",
+            confirmButtonText: "Close"
+        }).then(function () {
+            // Money was booked and packages cleared — the sheet is now stale.
+            if (r.changed) { location.reload(); }
+        });
+    });
+});
+
+// ---------------------------------------------------------------------------
+// The complete record of what the gateway has told us about a payment.
+// ---------------------------------------------------------------------------
+$(document).on("click", ".fs-pay-events", function () {
+    var pid = $(this).data("id");
+    Swal.fire({
+        title: "Loading history…",
+        didOpen: function () { Swal.showLoading(); },
+        allowOutsideClick: false
+    });
+    $.ajax({
+        url: FS_AJAX, method: "POST", dataType: "json",
+        data: { action: "payment_events", payment_id: pid }
+    }).then(function (r) {
+        if (!r || !r.ok) {
+            Swal.fire({ icon: "error", text: (r && r.message) ? r.message : "Could not load the history." });
+            return;
+        }
+        Swal.fire({
+            title: "Payment History",
+            html: r.html,
+            width: "46rem",
+            confirmButtonText: "Close",
+            customClass: { htmlContainer: "text-left" }
+        });
+    });
+});
