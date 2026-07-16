@@ -12,6 +12,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
 
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
+require_once(__DIR__ . '/../../helpers/fs_status.php');
 require_once(__DIR__ . '/../../helpers/querys.php');
 require_login();
 require_permission('view_financial_overview');
@@ -42,21 +43,47 @@ function fo_money($ghs, $usd)
 
 // ---- Period receipts (cash + gateway), with USD via each row's own rate. ----
 $db->cdp_query("SELECT COALESCE(SUM(amount_ghs),0) g, COALESCE(SUM(amount_ghs/NULLIF(exchange_rate,0)),0) u
-                FROM cdb_fs_payments WHERE recorded_at BETWEEN :i AND :f");
+                FROM cdb_fs_payments WHERE recorded_at BETWEEN :i AND :f
+                  AND " . cdp_fsMoneySqlFilter());
 $db->bind(':i', $ini); $db->bind(':f', $fin); $db->cdp_execute();
 $recv = $db->cdp_registro();
 
 // By method (period).
 $db->cdp_query("SELECT mode, COUNT(*) n, COALESCE(SUM(amount_ghs),0) g, COALESCE(SUM(amount_ghs/NULLIF(exchange_rate,0)),0) u
-                FROM cdb_fs_payments WHERE recorded_at BETWEEN :i AND :f GROUP BY mode");
+                FROM cdb_fs_payments WHERE recorded_at BETWEEN :i AND :f
+                  AND " . cdp_fsMoneySqlFilter() . " GROUP BY mode");
 $db->bind(':i', $ini); $db->bind(':f', $fin); $db->cdp_execute();
 $byMethod = (array) $db->cdp_registros();
 
-// Gateway health (period, online only).
+// Gateway health (period, online only). Deliberately UNfiltered by the money
+// rule — this panel exists to surface failures, so hiding them would defeat it.
 $db->cdp_query("SELECT gateway_status st, COUNT(*) n FROM cdb_fs_payments
                 WHERE mode<>'cash' AND recorded_at BETWEEN :i AND :f GROUP BY gateway_status");
 $db->bind(':i', $ini); $db->bind(':f', $fin); $db->cdp_execute();
 $gw = (array) $db->cdp_registros();
+
+// Is Paystack actually talking to us? If the webhook URL is not configured in
+// the Paystack dashboard, everything still "works" until a customer closes
+// their browser mid-payment or a refund lands — and then it silently doesn't.
+// Nothing else in the app would ever say so, so surface it here.
+$whLast = null; $whCount = 0;
+try {
+    $db->cdp_query("SELECT MAX(created_at) last_at, COUNT(*) n FROM cdb_fs_payment_events
+                    WHERE source = 'paystack_webhook'");
+    $db->cdp_execute();
+    $whRow = $db->cdp_registro();
+    $whLast = $whRow && $whRow->last_at ? (string) $whRow->last_at : null;
+    $whCount = $whRow ? (int) $whRow->n : 0;
+} catch (Throwable $e) {
+    // Event trail not migrated yet.
+}
+$whOnlinePayments = 0;
+try {
+    $db->cdp_query("SELECT COUNT(*) n FROM cdb_fs_payments WHERE mode <> 'cash'");
+    $db->cdp_execute();
+    $whOnlinePayments = (int) $db->cdp_registro()->n;
+} catch (Throwable $e) {
+}
 
 // ---- Period billing (billed, handling fees). --------------------------------
 $db->cdp_query("SELECT COALESCE(SUM(amount_ghs),0) g, COALESCE(SUM(amount_usd),0) u, COALESCE(SUM(handling_ghs),0) fee,
@@ -152,7 +179,8 @@ $db->cdp_query("SELECT DATE_FORMAT(billed_at,'%Y-%m') ym, COALESCE(SUM(amount_gh
 $db->bind(':i', $mIni); $db->cdp_execute();
 foreach ((array) $db->cdp_registros() as $r) { if (isset($months[$r->ym])) { $months[$r->ym]['billed'] = (float) $r->g; } }
 $db->cdp_query("SELECT DATE_FORMAT(recorded_at,'%Y-%m') ym, COALESCE(SUM(amount_ghs),0) g
-                FROM cdb_fs_payments WHERE recorded_at >= :i GROUP BY ym");
+                FROM cdb_fs_payments WHERE recorded_at >= :i
+                  AND " . cdp_fsMoneySqlFilter() . " GROUP BY ym");
 $db->bind(':i', $mIni); $db->cdp_execute();
 foreach ((array) $db->cdp_registros() as $r) { if (isset($months[$r->ym])) { $months[$r->ym]['received'] = (float) $r->g; } }
 
@@ -175,12 +203,8 @@ $fo_charts = [
 
 function fo_txStatus($mode, $st)
 {
-    $s = strtolower((string) $st);
-    if ($mode === 'cash' || $s === 'manual') return ['Cash', 'label-info'];
-    if ($s === 'success') return ['Confirmed', 'label-success'];
-    if ($s === 'pending') return ['Pending', 'label-warning'];
-    if ($s === 'failed')  return ['Failed', 'label-danger'];
-    return [$st ?: '—', 'label-default'];
+    // Shared vocabulary — see helpers/fs_status.php.
+    return cdp_fsStatusLabel($st, $mode);
 }
 ?>
 <!-- KPI tiles -->
@@ -236,6 +260,27 @@ function fo_txStatus($mode, $st)
         <?php foreach ($gw as $g2) { list($lbl, $cls) = fo_txStatus('paystack', $g2->st); ?>
             <span class="label <?php echo $cls; ?>"><?php echo htmlspecialchars($lbl); ?>: <?php echo (int) $g2->n; ?></span>
         <?php } } ?>
+
+        <hr class="my-2">
+        <div class="small text-muted mb-1">Gateway Notifications</div>
+        <?php if ($whLast) { ?>
+            <span class="label label-success">Paystack Is Reporting In</span>
+            <div class="small text-muted mt-1">
+                Last notification <?php echo htmlspecialchars(date('Y-m-d H:i', strtotime($whLast))); ?>
+                (<?php echo (int) $whCount; ?> received).
+            </div>
+        <?php } elseif ($whOnlinePayments > 0) { ?>
+            <span class="label label-danger">No Notifications Received</span>
+            <div class="small text-muted mt-1">
+                Online payments exist but Paystack has never notified this system. Payments where the
+                customer closes their browser, and any refund or chargeback, will NOT appear on their own —
+                someone must press "Check Status" on the Financial Sheet. Ask the developers to set the
+                webhook URL in Paystack.
+            </div>
+        <?php } else { ?>
+            <span class="label label-default">Nothing Yet</span>
+            <div class="small text-muted mt-1">No online payments have been taken yet.</div>
+        <?php } ?>
     </div></div></div>
 
     <!-- Receivables: aging + top debtors -->
