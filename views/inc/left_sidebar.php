@@ -58,6 +58,7 @@
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-2'] ?></span>
 						</a>
 					</li>
+					<?php if ($user->cdp_hasPermission('view_shipment_list')) { ?>
 					<li class="sidebar-item nav-divider"></li>
                     <li class="sidebar-item">
 						<a class="sidebar-link waves-effect waves-dark" href="locker_search.php" aria-expanded="false">
@@ -65,6 +66,8 @@
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-00'] . ' Search' ?></span>
 						</a>
 					</li>
+					<?php } ?>
+                    <?php if ($user->cdp_hasPermission('view_shipment_list')) { ?>
                     <li class="sidebar-item nav-divider"></li>
                     <li class="sidebar-item">
 						<a class="sidebar-link waves-effect waves-dark" href="pickup_client.php" aria-expanded="false">
@@ -72,16 +75,17 @@
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-65']?></span>
 						</a>
 					</li>
+					<?php } ?>
 
 					<?php 
 
 						$perModule = [
-						'view_dashboard_pack',
-						'add_package',
-						'add_multiple_packages',
+						'view_dashboard_ship',
 						'prealert_list',
-						'view_package_list',
-						'view_payment_list',
+						'add_shipment',
+						'add_multiple_shipments',
+						'view_shipment_list',
+						'view_payment_shipment_list',
 						];
 						if ($user->cdp_hasPermission($perModule)) {
 
@@ -121,12 +125,14 @@
 							</li>
 							<?php } ?>
 
+							<?php if ($user->cdp_hasPermission('add_multiple_shipments')) { ?>
 							<li class="sidebar-item">
 								<a href="import_excel_add_courier.php" class="sidebar-link">
 									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
 									<span class="hide-menu"> <?php echo $lang['asingmoduleexcell1'] ?> </span>
 								</a>
 							</li>
+							<?php } ?>
 
 							<?php if ($user->cdp_hasPermission('view_shipment_list')) { ?>
 							<li class="sidebar-item">
@@ -155,11 +161,11 @@
 					<?php 
 
 						$perModule = [
-						'view_dashboard_ship',
-						'add_shipment',
-						'add_multiple_shipments',
-						'view_shipment_list',
-						'view_payment_shipment_list',
+						'view_dashboard_pack',
+						'add_package',
+						'add_multiple_packages',
+						'view_package_list',
+						'view_payment_list',
 						];
 						if ($user->cdp_hasPermission($perModule)) {
 
@@ -272,7 +278,7 @@
 						'add_consolidate_shipment',
 						'payments_gateways_consolidate_shipment',
 						'view_dashboard_packages',
-						'view_consolidate_package',
+						'view_consolidate_package_list',
 						'add_consolidate_package',
 						'payments_gateways_package_consolidate',
 						];
@@ -290,7 +296,7 @@
 						<ul aria-expanded="false" class="collapse  first-level">
 
 							<!-- Module consolidate shipment-->
-							<?php if ($user->cdp_hasPermission('view_dashboard_shipments')) { ?>
+							<?php if ($user->cdp_hasPermission(['view_dashboard_shipments', 'add_consolidate_shipment', 'view_consolidate_list', 'payments_gateways_consolidate_shipment'])) { ?>
 							<li class="sidebar-item">
 								<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
 									<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
@@ -338,7 +344,7 @@
 
 
 							<!-- Module consolidate package-->
-							<?php if ($user->cdp_hasPermission('view_dashboard_packages')) { ?>
+							<?php if ($user->cdp_hasPermission(['view_dashboard_packages', 'view_consolidate_package_list', 'add_consolidate_package', 'payments_gateways_package_consolidate'])) { ?>
 							<li class="sidebar-item">
 								<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
 									<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
@@ -354,7 +360,7 @@
 									</li>
 									<?php } ?>
 
-									<?php if ($user->cdp_hasPermission('view_consolidate_package')) { ?>
+									<?php if ($user->cdp_hasPermission('view_consolidate_package_list')) { ?>
 									<li class="sidebar-item">
 										<a href="consolidate_package_list.php" class="sidebar-link">
 											<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
@@ -438,8 +444,10 @@
 
 						$perModule = [
 						'view_dashboard',
+						'view_financial_overview',
 						'view_receivable_accounts',
 						'view_global_payments',
+						'view_transactions',
 						];
 						if ($user->cdp_hasPermission($perModule)) {
 
@@ -461,14 +469,17 @@
 							</li>
 							<?php } ?>
 
+							<?php if ($user->cdp_hasPermission('view_financial_overview')) { ?>
+							<li class="sidebar-item">
+								<a class="sidebar-link waves-effect waves-dark" href="financial_overview.php" aria-expanded="false">
+									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu">Financial Overview</span>
+								</a>
+							</li>
+							<?php } ?>
+
 							<?php if ($user->cdp_hasPermission('view_receivable_accounts')) { ?>
-							<?php if ($user->cdp_hasPermission('view_financial_overview')) { ?><li class="sidebar-item">
-									<a class="sidebar-link waves-effect waves-dark" href="financial_overview.php" aria-expanded="false">
-										<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-										<span class="hide-menu">Financial Overview</span>
-									</a>
-								</li><?php } ?>
-								<li class="sidebar-item">
+							<li class="sidebar-item">
 								<a href="accounts_receivable.php" class="sidebar-link">
 									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
 									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-29'] ?> </span>
@@ -483,21 +494,22 @@
 									<span class="hide-menu"><?php echo $lang['left-menu-sidebar-12'] ?> </span>
 								</a>
 							</li>
-								<?php if ($user->cdp_hasPermission('view_transactions')) { ?><li class="sidebar-item">
-									<a class="sidebar-link waves-effect waves-dark" href="transactions.php" aria-expanded="false">
-										<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-										<span class="hide-menu">Transactions</span>
-									</a>
-								</li><?php } ?>
+							<?php } ?>
+
+							<?php if ($user->cdp_hasPermission('view_transactions')) { ?>
+							<li class="sidebar-item">
+								<a class="sidebar-link waves-effect waves-dark" href="transactions.php" aria-expanded="false">
+									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu">Transactions</span>
+								</a>
+							</li>
 							<?php } ?>
 						</ul>
 					</li>
 					<?php } ?>
 
 					<?php 
-						// Agencia (userlevel 6) SIEMPRE ve Lista de clientes y Destinatarios; otros roles por permiso
-						$showCustomerRecipients = ($userData->userlevel == 6) || $user->cdp_hasPermission(['view_client_list', 'view_recipients']);
-						if ($showCustomerRecipients) {
+						if ($user->cdp_hasPermission(['view_client_list', 'view_recipients'])) {
 
 					?>
                     <li class="sidebar-item nav-divider"></li>
@@ -508,7 +520,7 @@
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-30'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
-							<?php if (($userData->userlevel == 6) || $user->cdp_hasPermission('view_client_list')) { ?>
+							<?php if ($user->cdp_hasPermission('view_client_list')) { ?>
 							<li class="sidebar-item">
 								<a class="sidebar-link waves-effect waves-dark" href="customers_list.php" aria-expanded="false">
 									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
@@ -517,7 +529,7 @@
 							</li>
 							<?php } ?>
 
-							<?php if (($userData->userlevel == 6) || $user->cdp_hasPermission('view_recipients')) { ?>
+							<?php if ($user->cdp_hasPermission('view_recipients')) { ?>
 							<li class="sidebar-item">
 								<a class="sidebar-link waves-effect waves-dark" href="recipients_admin_list.php" aria-expanded="false"><iconify-icon icon="solar:users-group-two-rounded-linear" class="fs-5"></iconify-icon>
 									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-62'] ?> </span>
@@ -650,10 +662,31 @@
 					</li>
 					<?php } ?>
 
-					<?php 
+					<?php
 
+						// Parent must open for any descendant the user can reach, not just the
+						// module-wide grant: configurations_all is not enforced by any page.
 						$perModule = [
 						'configurations_all',
+						'view_tools',
+						'view_system_logs',
+						'view_offices',
+						'view_branches',
+						'view_courier_companies',
+						'view_packaging',
+						'view_shipping_modes',
+						'view_delivery_times',
+						'view_statuses',
+						'view_categories',
+						'manage_taxes_and_fees',
+						'view_shipping_tariffs',
+						'track_invoices',
+						'manage_default_shipping_info',
+						'manage_payment_modes',
+						'manage_payment_methods',
+						'manage_countries',
+						'manage_states',
+						'manage_cities',
 						];
 						if ($user->cdp_hasPermission($perModule)) {
 
@@ -1008,10 +1041,10 @@
 						$perModule = [
 						'prealert_add',
 						'prealert_list',
-						'view_payment_list',
 						'view_package_list',
                         'courier_add_client',
 						'view_shipment_list',
+						'view_payment_shipment_list',
 						];
 						if ($user->cdp_hasPermission($perModule)) {
 
@@ -1069,21 +1102,40 @@
 					</li>
 					<?php } ?>
 
-					<?php 
+					<?php
 
+						// Sea Shipping — mirrors the customer Air block above.
+						// courier_add_client.php and courier_list.php both accept
+						// ?mode=sea, so sea needs no dedicated pages and no new
+						// permission: it is the same right as air, on a different
+						// freight category (26 = Air, 27 = Ocean).
 						$perModule = [
-						'view_payment_shipment_list_',
+						'courier_add_client',
+						'view_shipment_list',
 						];
 						if ($user->cdp_hasPermission($perModule)) {
 
 					?>
-					<!-- Module pre-alerts-->
+					<!-- Module sea shipping-->
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false"><iconify-icon icon="mingcute:ship-fill" class="fs-5"></iconify-icon>
 							<span class="hide-menu"> <?php echo 'Sea ' . $lang['left-menu-sidebar-13'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
-							
+							<?php if ($user->cdp_hasPermission('courier_add_client')) { ?>
+							<li class="sidebar-item">
+								<a href="courier_add_client.php?mode=sea" class="sidebar-link"><iconify-icon icon="solar:box-minimalistic-linear" class="fs-5" style="color:#f62d51"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-15'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
+							<?php if ($user->cdp_hasPermission('view_shipment_list')) { ?>
+							<li class="sidebar-item">
+								<a href="courier_list.php?mode=sea" class="sidebar-link"><iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-16'] ?> </span>
+								</a>
+							</li>
+							<?php } ?>
 							<?php if ($user->cdp_hasPermission('view_payment_list')) { ?>
 							<li class="sidebar-item">
 								<a class="sidebar-link waves-effect waves-dark" href="payments_gateways_list.php" aria-expanded="false">
@@ -1093,6 +1145,15 @@
 							</li>
 							<?php } ?>
 						</ul>
+					</li>
+					<?php } ?>
+
+					<?php if ($user->cdp_hasPermission('view_my_bills')) { ?>
+					<!-- Module my bills — customer self-service payments-->
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="my_bills.php" aria-expanded="false"><iconify-icon icon="solar:wallet-money-linear" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> My Bills </span>
+						</a>
 					</li>
 					<?php } ?>
 
@@ -1133,6 +1194,7 @@
 
 						$perModule = [
 						'view_consolidate_list',
+						'payments_gateways_consolidate_shipment',
 						];
 						if ($user->cdp_hasPermission($perModule)) {
 
@@ -1144,9 +1206,10 @@
 							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-22'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
-							<?php 
+							<?php
 
 								$perModule = [
+								'view_consolidate_list',
 								'payments_gateways_consolidate_shipment',
 								];
 								if ($user->cdp_hasPermission($perModule)) {
@@ -1181,6 +1244,8 @@
 
 							<?php 
 
+								// Intentionally disabled: the trailing underscore is a kill switch — no such
+								// permission exists, so this group never renders. Drop it to re-enable.
 								$perModule = [
 								'view_consolidate_package_list_',
 								'payments_gateways_package_consolidate_',
@@ -1302,14 +1367,14 @@
 							<span class="hide-menu"><?php echo $lang['left-menu-sidebar-5'] ?></span>
 						</a>
 						<ul aria-expanded="false" class="collapse  first-level">
-
+							<?php if ($user->cdp_hasPermission('view_package_list')) { ?>
 							<li class="sidebar-item">
 								<a class="sidebar-link waves-effect waves-dark" href="customer_packages_list.php" aria-expanded="false">
 									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
 									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-11'] ?> </span>
 								</a>
 							</li>
-
+							<?php } ?>
 						</ul>
 					</li>
 					<?php } ?>
@@ -1319,6 +1384,8 @@
 						$perModule = [
 						'add_shipment',
 						'view_shipment_list',
+						'add_consolidate_shipment',
+						'view_consolidate_list',
 						];
 						if ($user->cdp_hasPermission($perModule)) {
 
@@ -1368,7 +1435,7 @@
 
 					<?php
 						// Sea Shipping — dedicated Ocean Freight flow (mirrors Air).
-						if ($user->cdp_hasPermission(['add_shipment', 'view_shipment_list'])) {
+						if ($user->cdp_hasPermission(['add_shipment', 'view_shipment_list', 'add_consolidate_shipment', 'view_consolidate_list'])) {
 					?>
 					<li class="sidebar-item">
 						<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
@@ -1458,7 +1525,7 @@
 						'add_consolidate_shipment',
 						'payments_gateways_consolidate_shipment',
 						'view_dashboard_packages',
-						'view_consolidate_package',
+						'view_consolidate_package_list',
 						'add_consolidate_package',
 						'payments_gateways_package_consolidate',
 						];
@@ -1474,7 +1541,7 @@
 						<ul aria-expanded="false" class="collapse  first-level">
 
 							<!-- Module consolidate shipment-->
-							<?php if ($user->cdp_hasPermission('view_dashboard_shipments')) { ?>
+							<?php if ($user->cdp_hasPermission(['view_dashboard_shipments', 'add_consolidate_shipment', 'view_consolidate_list', 'payments_gateways_consolidate_shipment'])) { ?>
 							<li class="sidebar-item">
 								<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
 									<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
@@ -1522,7 +1589,7 @@
 
 
 							<!-- Module consolidate package-->
-							<?php if ($user->cdp_hasPermission('view_dashboard_packages')) { ?>
+							<?php if ($user->cdp_hasPermission(['view_dashboard_packages', 'view_consolidate_package_list', 'add_consolidate_package', 'payments_gateways_package_consolidate'])) { ?>
 							<li class="sidebar-item">
 								<a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)" aria-expanded="false">
 									<iconify-icon icon="solar:box-minimalistic-linear" class="fs-5"></iconify-icon>
@@ -1538,7 +1605,7 @@
 									</li>
 									<?php } ?>
 
-									<?php if ($user->cdp_hasPermission('view_consolidate_package')) { ?>
+									<?php if ($user->cdp_hasPermission('view_consolidate_package_list')) { ?>
 									<li class="sidebar-item">
 										<a href="consolidate_package_list.php" class="sidebar-link">
 											<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
