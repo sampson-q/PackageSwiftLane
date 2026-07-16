@@ -17,6 +17,8 @@
 // Cash needs neither (it is an in-person receipt: status 'manual').
 // ============================================================================
 
+require_once(__DIR__ . '/fs_status.php');
+
 if (!function_exists('cdp_fsGatewayRow')) {
     /** cdb_met_payment row for a gateway id (Paystack=4, Hubtel=6). Cached. */
     function cdp_fsGatewayRow($metId)
@@ -203,41 +205,81 @@ if (!function_exists('cdp_fsVerifyPaystack')) {
         $r = cdp_fsGatewayRow(4);
         $secret = $r ? trim((string) $r->secret_key) : '';
         if (!cdp_fsKeyOk($secret)) {
+            // 'unreachable' matters: not knowing is NOT the same as "not paid".
+            // Without this flag a re-check would read a missing key as "no
+            // longer successful" and revoke a perfectly good payment.
             return ['ok' => false, 'status' => 'unconfigured', 'payload' => null, 'amount' => null,
+                    'unreachable' => true, 'detail' => [],
                     'message' => 'Paystack is not configured yet. Add its keys in Settings, or record as Cash.'];
         }
         $res = cdp_fsHttpJson('GET', 'https://api.paystack.co/transaction/verify/' . rawurlencode($reference),
             ['Authorization: Bearer ' . $secret, 'Cache-Control: no-cache'], null);
         if (!$res['ok']) {
-            return ['ok' => false, 'status' => 'failed', 'payload' => $res['error'], 'amount' => null,
+            return ['ok' => false, 'status' => 'unknown', 'payload' => $res['error'], 'amount' => null,
+                    'unreachable' => true, 'detail' => [],
                     'message' => 'Could not reach Paystack: ' . $res['error']];
         }
         $j = json_decode($res['body']);
-        $status = isset($j->data->status) ? (string) $j->data->status : 'failed';
-        $amount = isset($j->data->amount) ? ((float) $j->data->amount / 100.0) : null; // pesewas -> GHS
-        $currency = isset($j->data->currency) ? (string) $j->data->currency : '';
+        $d = $j->data ?? null;
+
+        // A well-formed answer always carries data.status. Anything else is an
+        // API-level problem (bad key, rate limit, unknown reference, outage) —
+        // report it as "could not determine", never as a failed payment.
+        if (!isset($d->status)) {
+            $apiMsg = isset($j->message) ? (string) $j->message : ('HTTP ' . $res['code']);
+            return ['ok' => false, 'status' => 'unknown', 'payload' => mb_substr((string) $res['body'], 0, 4000),
+                    'amount' => null, 'unreachable' => true, 'detail' => [],
+                    'message' => 'Paystack could not answer for this reference: ' . $apiMsg];
+        }
+        $status = (string) $d->status;
+        $amount = isset($d->amount) ? ((float) $d->amount / 100.0) : null; // pesewas -> GHS
+        $currency = isset($d->currency) ? (string) $d->currency : '';
         $payload = mb_substr((string) $res['body'], 0, 4000);
+
+        // Everything Paystack knows about this transaction, captured so the
+        // whole story is answerable from our own screens — staff must never
+        // need to open the Paystack dashboard to audit a payment.
+        $detail = [
+            'raw_status' => $status,
+            'response'   => isset($d->gateway_response) ? (string) $d->gateway_response : '',
+            'channel'    => isset($d->channel) ? (string) $d->channel : '',
+            'currency'   => $currency,
+            'fees'       => isset($d->fees) ? ((float) $d->fees / 100.0) : null,
+            'paid_at'    => isset($d->paid_at) && $d->paid_at ? (string) $d->paid_at : '',
+            'customer'   => isset($d->customer->email) ? (string) $d->customer->email : '',
+        ];
+
+        $fail = function ($st, $msg) use ($payload, $amount, $detail) {
+            return ['ok' => false, 'status' => $st, 'payload' => $payload, 'amount' => $amount,
+                    'detail' => $detail, 'message' => $msg];
+        };
+
         if ($status === 'success') {
             // A 'success' status alone is not enough to credit an account: the
             // reference could belong to a different, smaller transaction. Only
             // trust it when the gateway also confirms the currency and the
             // amount we asked for.
             if ($currency !== '' && strcasecmp($currency, 'GHS') !== 0) {
-                return ['ok' => false, 'status' => 'wrong_currency', 'payload' => $payload, 'amount' => $amount,
-                        'message' => 'This transaction was paid in ' . $currency . ', not GHS.'];
+                return $fail('wrong_currency', 'This transaction was paid in ' . $currency . ', not GHS.');
             }
             if ($expectedGhs !== null) {
                 // Tolerate half-pesewa float drift only.
                 if ($amount === null || abs($amount - (float) $expectedGhs) > 0.005) {
-                    return ['ok' => false, 'status' => 'amount_mismatch', 'payload' => $payload, 'amount' => $amount,
-                            'message' => 'Paystack confirmed ' . number_format((float) $amount, 2)
-                                       . ' but this payment expected ' . number_format((float) $expectedGhs, 2) . '.'];
+                    return $fail('amount_mismatch', 'Paystack confirmed ' . number_format((float) $amount, 2)
+                        . ' but this payment expected ' . number_format((float) $expectedGhs, 2) . '.');
                 }
             }
-            return ['ok' => true, 'status' => 'success', 'payload' => $payload, 'amount' => $amount, 'message' => ''];
+            return ['ok' => true, 'status' => 'success', 'payload' => $payload, 'amount' => $amount,
+                    'detail' => $detail, 'message' => ''];
         }
-        return ['ok' => false, 'status' => ($status ?: 'failed'), 'payload' => $payload, 'amount' => $amount,
-                'message' => 'Paystack did not confirm this reference as paid (status: ' . $status . ').'];
+
+        // Not paid. Report Paystack's own word for it (reversed / abandoned /
+        // ongoing / queued ...) rather than flattening everything to "failed",
+        // and let cdp_fsStatusMeta() decide what that word means.
+        $meta = function_exists('cdp_fsStatusMeta') ? cdp_fsStatusMeta($status, 'paystack') : null;
+        $human = $meta ? $meta['label'] : ($status ?: 'failed');
+        $why = $detail['response'] !== '' ? ' — ' . $detail['response'] : '';
+        return $fail($status ?: 'failed', 'Paystack reports this payment as ' . $human . $why . '.');
     }
 }
 
@@ -253,7 +295,9 @@ if (!function_exists('cdp_fsVerifyHubtel')) {
         $secret   = $r ? trim((string) $r->secret_key) : '';
         $merchant = $r ? trim((string) $r->paypal_client_id) : '';
         if (!cdp_fsKeyOk($clientId) || !cdp_fsKeyOk($secret) || !cdp_fsKeyOk($merchant)) {
+            // See the Paystack note: "cannot ask" must never read as "not paid".
             return ['ok' => false, 'status' => 'unconfigured', 'payload' => null, 'amount' => null,
+                    'unreachable' => true, 'detail' => [],
                     'message' => 'Hubtel is not configured yet. Add its credentials in Settings, or record as Cash.'];
         }
         // Hubtel Transaction Status Check API (by clientReference).
@@ -262,26 +306,54 @@ if (!function_exists('cdp_fsVerifyHubtel')) {
         $res = cdp_fsHttpJson('GET', $url,
             ['Authorization: Basic ' . base64_encode($clientId . ':' . $secret), 'Cache-Control: no-cache'], null);
         if (!$res['ok']) {
-            return ['ok' => false, 'status' => 'failed', 'payload' => $res['error'], 'amount' => null,
+            return ['ok' => false, 'status' => 'unknown', 'payload' => $res['error'], 'amount' => null,
+                    'unreachable' => true, 'detail' => [],
                     'message' => 'Could not reach Hubtel: ' . $res['error']];
         }
         $j = json_decode($res['body']);
-        $txn    = isset($j->data) ? $j->data : null;
-        $status = $txn && isset($txn->status) ? (string) $txn->status : 'Unknown';
-        $amount = $txn && isset($txn->amount) ? (float) $txn->amount : null;
+        $txn = isset($j->data) ? $j->data : null;
         $payload = mb_substr((string) $res['body'], 0, 4000);
+        if (!$txn || !isset($txn->status)) {
+            $apiMsg = isset($j->message) ? (string) $j->message : ('HTTP ' . $res['code']);
+            return ['ok' => false, 'status' => 'unknown', 'payload' => $payload, 'amount' => null,
+                    'unreachable' => true, 'detail' => [],
+                    'message' => 'Hubtel could not answer for this reference: ' . $apiMsg];
+        }
+
+        $status = (string) $txn->status;
+        $amount = isset($txn->amount) ? (float) $txn->amount : null;
+        $detail = [
+            'raw_status' => $status,
+            'response'   => isset($txn->message) ? (string) $txn->message : '',
+            'channel'    => isset($txn->paymentMethod) ? (string) $txn->paymentMethod : '',
+            'currency'   => 'GHS',
+            'fees'       => isset($txn->charges) ? (float) $txn->charges : null,
+            'paid_at'    => isset($txn->date) ? (string) $txn->date : '',
+            'customer'   => isset($txn->customerMsisdn) ? (string) $txn->customerMsisdn : '',
+        ];
+
         if (strcasecmp($status, 'Paid') === 0 || strcasecmp($status, 'Success') === 0) {
             // Same rule as Paystack: a confirmed status must also match the
             // amount we asked for before it can credit an account.
             if ($expectedGhs !== null && ($amount === null || abs($amount - (float) $expectedGhs) > 0.005)) {
                 return ['ok' => false, 'status' => 'amount_mismatch', 'payload' => $payload, 'amount' => $amount,
+                        'detail' => $detail,
                         'message' => 'Hubtel confirmed ' . number_format((float) $amount, 2)
                                    . ' but this payment expected ' . number_format((float) $expectedGhs, 2) . '.'];
             }
-            return ['ok' => true, 'status' => 'success', 'payload' => $payload, 'amount' => $amount, 'message' => ''];
+            return ['ok' => true, 'status' => 'success', 'payload' => $payload, 'amount' => $amount,
+                    'detail' => $detail, 'message' => ''];
         }
-        return ['ok' => false, 'status' => ($status ?: 'failed'), 'payload' => $payload, 'amount' => $amount,
-                'message' => 'Hubtel did not confirm this reference as paid (status: ' . $status . ').'];
+
+        // Map Hubtel's words onto the shared vocabulary so both gateways read
+        // identically everywhere in the UI.
+        $hubtelMap = ['unpaid' => 'failed', 'failed' => 'failed', 'pending' => 'pending',
+                      'ongoing' => 'ongoing', 'refunded' => 'reversed', 'reversed' => 'reversed'];
+        $norm = $hubtelMap[strtolower($status)] ?? 'unknown';
+        return ['ok' => false, 'status' => $norm, 'payload' => $payload, 'amount' => $amount,
+                'detail' => $detail,
+                'message' => 'Hubtel reports this payment as ' . cdp_fsStatusMeta($norm, 'hubtel')['label']
+                           . ' (' . $status . ').'];
     }
 }
 
