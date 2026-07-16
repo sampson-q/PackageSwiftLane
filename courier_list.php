@@ -30,12 +30,9 @@
     {
 
         $permissions = $user->cdp_getUserPermissions();
-        $isAgency = isset($user->userlevel) && (int)$user->userlevel === 6;
-
-        // Agencia (userlevel 6) siempre puede ver el listado de envíos.
         // Customers (userlevel 1) see their OWN shipments only — courier_list_ajax.php
         // filters by sender_id — so allow them past the staff permission gate.
-        if (!$isAgency && (int)$user->userlevel !== 1 && !$user->cdp_hasPermission('view_shipment_list')) {
+        if ((int)$user->userlevel !== 1 && !$user->cdp_hasPermission('view_shipment_list')) {
             header("location: error403.php");
             exit;
         }

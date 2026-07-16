@@ -30,10 +30,7 @@
     {
 
         $permissions = $user->cdp_getUserPermissions();
-        $isAgency = isset($user->userlevel) && (int)$user->userlevel === 6;
-
-        // Agencia (userlevel 6) siempre puede crear envíos
-        if (!$isAgency && !$user->cdp_hasPermission('add_shipment')) {
+        if (!$user->cdp_hasPermission('add_shipment')) {
             header("location: error403.php");
             exit;
         }

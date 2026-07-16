@@ -32,7 +32,7 @@
         $permissions = $user->cdp_getUserPermissions();
 
         $userData = $user->cdp_getUserData();
-        if (($userData->userlevel ?? 0) != 6 && !$user->cdp_hasPermission('view_client_list')) {
+        if (!$user->cdp_hasPermission('view_client_list')) {
             header("location: error403.php");
             exit;
         }

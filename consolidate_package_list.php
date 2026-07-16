@@ -29,10 +29,7 @@ $core = new Core();
 if ($user->cdp_loginCheck() == true) {
 
     $permissions = $user->cdp_getUserPermissions();
-    $isAgency = isset($user->userlevel) && (int)$user->userlevel === 6;
-
-    // Agencia (userlevel 6) siempre puede ver la lista de paquetes consolidados
-    if (!$isAgency && !$user->cdp_hasPermission('view_consolidate_package_list')) {
+    if (!$user->cdp_hasPermission('view_consolidate_package_list')) {
         header("location: error403.php");
         exit;
     }

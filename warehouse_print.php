@@ -8,9 +8,7 @@
     if ($user->cdp_loginCheck() == true) {
 
         $permissions = $user->cdp_getUserPermissions();
-        $isAgency = isset($user->userlevel) && (int)$user->userlevel === 6;
-
-        if (!$isAgency && !$user->cdp_hasPermission('warehouse_view')) {
+        if (!$user->cdp_hasPermission('warehouse_view')) {
             header("location: error403.php");
             exit;
         }

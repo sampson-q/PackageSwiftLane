@@ -30,10 +30,7 @@
     {
 
         $permissions = $user->cdp_getUserPermissions();
-        $isAgency = isset($user->userlevel) && (int)$user->userlevel === 6;
-
-        // Agencia (userlevel 6) siempre puede abrir el formulario para crear clientes
-        if (!$isAgency && !$user->cdp_hasPermission('add_client')) {
+        if (!$user->cdp_hasPermission('add_client')) {
             header("location: error403.php");
             exit;
         }

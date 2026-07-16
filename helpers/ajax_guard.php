@@ -44,11 +44,6 @@ function require_permission($permission) {
         _ajax_guard_send(401, ['success' => false, 'error' => 'Unauthorized', 'message' => 'Session Required']);
     }
     $perms = is_array($permission) ? $permission : [$permission];
-    // Agencia (userlevel 6) siempre tiene acceso a view_client_list y view_recipients
-    $agencyPerms = ['view_client_list', 'view_recipients'];
-    if ((int)$user->userlevel === 6 && count(array_intersect($perms, $agencyPerms)) > 0) {
-        return;
-    }
     // Always reload permissions fresh from DB — loader.php may have created $user
     // before session was fully initialised, leaving $this->permissions empty or stale.
     // The page controllers do the same: they call cdp_getUserPermissions() explicitly
