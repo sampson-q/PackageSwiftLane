@@ -11,8 +11,8 @@
 // only ever says WHICH packages; it never says how much.
 // ============================================================================
 
-require_once("../../loader.php");
-require_once("../../helpers/querys.php");
+require_once(__DIR__ . '/../../loader.php');
+require_once(__DIR__ . '/../../helpers/querys.php');
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/autoload_lang.php');
 require_once(__DIR__ . '/../../helpers/fs_payments.php');
@@ -51,7 +51,8 @@ function mb_bills($sid)
     $db->cdp_query("SELECT b.consolidate_id, b.amount_ghs, b.amount_usd, b.exchange_rate, b.billed_at,
                            c.c_prefix, c.c_no,
                            COALESCE((SELECT SUM(p.amount_ghs) FROM cdb_fs_payments p
-                                     WHERE p.consolidate_id = b.consolidate_id AND p.sender_id = b.sender_id), 0) AS paid_ghs,
+                                     WHERE p.consolidate_id = b.consolidate_id AND p.sender_id = b.sender_id
+                                       AND " . cdp_fsMoneySqlFilter('p') . "), 0) AS paid_ghs,
                            COALESCE((SELECT SUM(d.amount_ghs) FROM cdb_fs_discounts d
                                      WHERE d.consolidate_id = b.consolidate_id AND d.sender_id = b.sender_id), 0) AS discount_ghs
                     FROM cdb_consolidate_customer_billing b
@@ -263,7 +264,15 @@ switch ($action) {
             $email = 'customer' . $sid . '@swiftlanehq.com';
         }
 
-        $base = rtrim((string) (defined('CDP_APP_URL') ? CDP_APP_URL : ''), '/');
+        // The app's PUBLIC address. cdb_settings.site_url is what the rest of
+        // the codebase already sends to customers (tracking links in WhatsApp /
+        // email), so it is the one that is known-correct on live. CDP_APP_URL
+        // lives in a gitignored per-environment config.php and is 'localhost'
+        // in dev — trusting it would redirect paying customers to localhost.
+        $base = rtrim((string) ($core->site_url ?? ''), '/');
+        if ($base === '' || strpos($base, 'http') !== 0) {
+            $base = rtrim((string) (defined('CDP_APP_URL') ? CDP_APP_URL : ''), '/');
+        }
         $res = cdp_fsCreateIntent($cid, $sid, 'paystack', $amount, $payable, [
             'email'          => $email,
             'callback_url'   => $base . '/payment_return.php',
