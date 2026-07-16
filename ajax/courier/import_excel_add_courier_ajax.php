@@ -10,7 +10,7 @@ require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once("../../helpers/querys.php");
 require_once("../../helpers/vendor/autoload.php");
 require_login();
-require_permission('view_shipment_list');
+require_permission('add_multiple_shipments');
 
 $user  = new User;
 $core  = new Core;

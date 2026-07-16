@@ -30,11 +30,15 @@
     $permissions = $user->cdp_getUserPermissions();
 
     // ... ask if we are logged in here:
-    if ($user->cdp_loginCheck() == true) 
+    if ($user->cdp_loginCheck() == true)
     {
 
-       
-      include('views/tools/all_tools.php');     
+      if (!$user->cdp_hasPermission('view_tools')) {
+          header("location: error403.php");
+          exit;
+      }
+
+      include('views/tools/all_tools.php');
            
  
     } else{

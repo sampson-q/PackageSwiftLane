@@ -26,11 +26,15 @@
     $user = new User();
     $core = new Core();
     // ... ask if we are logged in here:
-    if ($user->cdp_loginCheck() == true) 
+    if ($user->cdp_loginCheck() == true)
     {
 
-       
-      include('views/tools/permissions/asingrole_list.php');     
+      if (!$user->cdp_hasPermission('view_module_permissions')) {
+          header("location: error403.php");
+          exit;
+      }
+
+      include('views/tools/permissions/asingrole_list.php');
            
 
     } else{
