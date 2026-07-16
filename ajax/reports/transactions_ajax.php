@@ -11,6 +11,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
 
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
+require_once(__DIR__ . '/../../helpers/fs_status.php');
 require_once(__DIR__ . '/../../helpers/querys.php');
 require_once(__DIR__ . '/../../helpers/autoload_lang.php');
 require_login();
@@ -125,12 +126,10 @@ if ($allOids) {
 
 function cdp_txStatusLabel($mode, $status)
 {
-    $s = strtolower((string) $status);
-    if ($mode === 'cash' || $s === 'manual') return ['Cash / manual', 'label-info'];
-    if ($s === 'success')  return ['Confirmed', 'label-success'];
-    if ($s === 'pending')  return ['Pending', 'label-warning'];
-    if ($s === 'failed')   return ['Failed', 'label-danger'];
-    return [$status ?: '—', 'label-default'];
+    // Delegates to the shared vocabulary (helpers/fs_status.php) so this screen,
+    // the Financial Sheet, the Overview and Global Payments can never disagree
+    // about what a Paystack status means.
+    return cdp_fsStatusLabel($status, $mode);
 }
 ?>
 <div class="row">

@@ -10,6 +10,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
 
 require_once("../loader.php");
 require_once(__DIR__ . '/../helpers/ajax_guard.php');
+require_once(__DIR__ . '/../helpers/fs_status.php');
 require_once(__DIR__ . '/../helpers/querys.php');
 require_login();
 require_permission('view_global_payments');
@@ -73,12 +74,8 @@ $data = $db->cdp_registros();
 
 function cdp_gwStatusLabel($status)
 {
-    $s = strtolower((string) $status);
-    if ($s === 'success') return ['Confirmed', 'label-success'];
-    if ($s === 'pending') return ['Pending', 'label-warning'];
-    if ($s === 'failed') return ['Failed', 'label-danger'];
-    if ($s === 'unconfigured') return ['Unconfigured', 'label-default'];
-    return [$status ?: '—', 'label-default'];
+    // Shared vocabulary — see helpers/fs_status.php.
+    return cdp_fsStatusLabel($status);
 }
 ?>
 <div class="table-responsive">
