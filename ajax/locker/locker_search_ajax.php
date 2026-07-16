@@ -2,6 +2,10 @@
 if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
 // ajax/locker_search_ajax.php
 require_once("../../loader.php");
+require_once(__DIR__ . '/../../helpers/ajax_guard.php');
+require_login();
+require_permission('view_shipment_list');
+
 $db    = new Conexion;
 $core  = new Core;
 
