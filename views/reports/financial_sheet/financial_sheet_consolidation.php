@@ -115,7 +115,7 @@ $fs_dg_color = ($fs_dg_style && !empty($fs_dg_style->color)) ? $fs_dg_style->col
                             <h4 class="card-title ml-4 mt-3">
                                 <i class="fas fa-file-invoice-dollar"></i> Financial Sheet
                                 <a href="financial_sheet.php" class="btn btn-sm btn-outline-secondary ml-3">
-                                    <i class="mdi mdi-arrow-left"></i> All consolidations
+                                    <i class="mdi mdi-arrow-left"></i> All Consolidations
                                 </a>
                             </h4>
 
