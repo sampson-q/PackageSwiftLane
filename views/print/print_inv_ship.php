@@ -1,5 +1,6 @@
 <?php
 require_once('helpers/querys.php');
+require_once('helpers/fs_payments.php');
 
 $data = ['rowCount' => 0, 'data' => null];
 $total_qty = 0;
@@ -15,6 +16,18 @@ if (!isset($_GET['id']) || !isset($data['rowCount']) || (int)$data['rowCount'] !
 }
 
 $row = $data['data'];
+
+// PAID stamp — the confirmed payment (if any) that cleared THIS package.
+// Sourced from the Financial Sheet ledger rather than the order's own
+// status_invoice flag, so the stamp can carry the method + reference + date
+// that make it auditable against the gateway.
+$fs_payment = cdp_fsPaymentForOrder((int) $_GET['id']);
+$fs_paid_mode = '';
+if ($fs_payment) {
+    $modes = ['cash' => 'Cash', 'paystack' => 'Mobile Money (Paystack)',
+              'hubtel' => 'Mobile Money (Hubtel)', 'paypal' => 'PayPal'];
+    $fs_paid_mode = $modes[strtolower((string) $fs_payment->mode)] ?? ucfirst((string) $fs_payment->mode);
+}
 
 // Get order items
 $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . (int)$_GET['id'] . "'");
@@ -307,6 +320,30 @@ if ($order_items) {
             line-height: 1;
         }
 
+        /* PAID stamp. Black-only by design: this prints on a monochrome
+           thermal printer, so the mark has to read from the border and the
+           weight rather than from colour. */
+        .paid-stamp {
+            border: 0.6mm solid #000;
+            padding: 1.5mm;
+            text-align: center;
+            margin-bottom: 2mm;
+        }
+
+        .paid-mark {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 2mm;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+
+        .paid-detail {
+            font-size: 12px;
+            line-height: 1.35;
+            margin-top: 1mm;
+        }
+
         .signatures {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -353,11 +390,12 @@ if ($order_items) {
         /* Stronger contrast for thermal printing */
         body, .label-page, .panel, .items-panel, .total-box, .signature, .credits,
         .topbar, .brand-text, .brand-lines, .brand-name, .panel-title, .items-header h3,
-        .meta-chip, .kv, .kv .k, .kv .v, table, thead th, th, td, tfoot td {
+        .meta-chip, .kv, .kv .k, .kv .v, table, thead th, th, td, tfoot td,
+        .paid-stamp, .paid-mark, .paid-detail {
             color: #000 !important;
         }
 
-        .panel, .items-panel, .total-box {
+        .panel, .items-panel, .total-box, .paid-stamp {
             border-color: #000 !important;
         }
 
@@ -704,6 +742,19 @@ if ($order_items) {
                 <label><?php echo 'Total Number of Items'; ?></label>
                 <div class="value"><?php echo (int) $total_qty; ?></div>
             </div> -->
+
+            <?php if ($fs_payment) { ?>
+                <div class="paid-stamp">
+                    <div class="paid-mark">PAID</div>
+                    <div class="paid-detail">
+                        <?php echo htmlspecialchars($fs_paid_mode, ENT_QUOTES, 'UTF-8'); ?><br>
+                        <?php if (!empty($fs_payment->reference)) { ?>
+                            Ref: <b><?php echo htmlspecialchars((string) $fs_payment->reference, ENT_QUOTES, 'UTF-8'); ?></b><br>
+                        <?php } ?>
+                        <?php echo htmlspecialchars(date('d M Y', strtotime((string) $fs_payment->recorded_at)), ENT_QUOTES, 'UTF-8'); ?>
+                    </div>
+                </div>
+            <?php } ?>
 
             <!-- <div class="signatures col-12"> -->
                 <div class="signature">
