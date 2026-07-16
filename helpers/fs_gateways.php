@@ -104,6 +104,12 @@ if (!function_exists('cdp_fsInitPaystack')) {
             'amount'    => (int) round($amountGhs * 100), // GHS -> pesewas
             'currency'  => 'GHS',
             'reference' => $reference,
+            // Business rule: NO CARDS. Card-not-present fraud (stolen card
+            // credentials) is chargeback-able months later, by which time the
+            // packages are long delivered. Mobile money is push-based and
+            // effectively irreversible, so it is the only channel offered.
+            // Override with $ctx['channels'] only for a deliberate exception.
+            'channels'  => $ctx['channels'] ?? ['mobile_money'],
         ];
         if (!empty($ctx['callback_url'])) {
             $body['callback_url'] = $ctx['callback_url'];
@@ -209,8 +215,25 @@ if (!function_exists('cdp_fsVerifyPaystack')) {
         $j = json_decode($res['body']);
         $status = isset($j->data->status) ? (string) $j->data->status : 'failed';
         $amount = isset($j->data->amount) ? ((float) $j->data->amount / 100.0) : null; // pesewas -> GHS
+        $currency = isset($j->data->currency) ? (string) $j->data->currency : '';
         $payload = mb_substr((string) $res['body'], 0, 4000);
         if ($status === 'success') {
+            // A 'success' status alone is not enough to credit an account: the
+            // reference could belong to a different, smaller transaction. Only
+            // trust it when the gateway also confirms the currency and the
+            // amount we asked for.
+            if ($currency !== '' && strcasecmp($currency, 'GHS') !== 0) {
+                return ['ok' => false, 'status' => 'wrong_currency', 'payload' => $payload, 'amount' => $amount,
+                        'message' => 'This transaction was paid in ' . $currency . ', not GHS.'];
+            }
+            if ($expectedGhs !== null) {
+                // Tolerate half-pesewa float drift only.
+                if ($amount === null || abs($amount - (float) $expectedGhs) > 0.005) {
+                    return ['ok' => false, 'status' => 'amount_mismatch', 'payload' => $payload, 'amount' => $amount,
+                            'message' => 'Paystack confirmed ' . number_format((float) $amount, 2)
+                                       . ' but this payment expected ' . number_format((float) $expectedGhs, 2) . '.'];
+                }
+            }
             return ['ok' => true, 'status' => 'success', 'payload' => $payload, 'amount' => $amount, 'message' => ''];
         }
         return ['ok' => false, 'status' => ($status ?: 'failed'), 'payload' => $payload, 'amount' => $amount,
@@ -248,6 +271,13 @@ if (!function_exists('cdp_fsVerifyHubtel')) {
         $amount = $txn && isset($txn->amount) ? (float) $txn->amount : null;
         $payload = mb_substr((string) $res['body'], 0, 4000);
         if (strcasecmp($status, 'Paid') === 0 || strcasecmp($status, 'Success') === 0) {
+            // Same rule as Paystack: a confirmed status must also match the
+            // amount we asked for before it can credit an account.
+            if ($expectedGhs !== null && ($amount === null || abs($amount - (float) $expectedGhs) > 0.005)) {
+                return ['ok' => false, 'status' => 'amount_mismatch', 'payload' => $payload, 'amount' => $amount,
+                        'message' => 'Hubtel confirmed ' . number_format((float) $amount, 2)
+                                   . ' but this payment expected ' . number_format((float) $expectedGhs, 2) . '.'];
+            }
             return ['ok' => true, 'status' => 'success', 'payload' => $payload, 'amount' => $amount, 'message' => ''];
         }
         return ['ok' => false, 'status' => ($status ?: 'failed'), 'payload' => $payload, 'amount' => $amount,
