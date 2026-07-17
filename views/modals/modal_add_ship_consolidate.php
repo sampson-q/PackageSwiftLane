@@ -18,7 +18,11 @@
 								<div class="input-group">
 									<input type="text" name="search" id="search" class="form-control input-sm float-right" placeholder="<?php echo $lang['left21551'] ?>" onkeyup="cdp_load(1);">
 									<div class="input-group-append input-sm">
-										<button type="submit" class="btn btn-info"><i class="fa fa-search"></i></button>
+										<!-- type="button": the search already runs on keyup. As a submit
+										     this fired the enclosing form, navigating the user off the
+										     consolidation to a raw "Invalid CSRF token" JSON page — and
+										     pressing Enter in the box did the same. -->
+										<button type="button" class="btn btn-info" onclick="cdp_load(1);"><i class="fa fa-search"></i></button>
 									</div>
 
 								</div>

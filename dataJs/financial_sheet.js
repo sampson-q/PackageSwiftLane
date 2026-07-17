@@ -404,7 +404,7 @@ function fsCollect($ctl) {
     var value = parseFloat(raw);
 
     if (raw === "" || isNaN(value) || value < 0) {
-        Swal.fire({ icon: "error", text: "Enter a " + (mode === "custom" ? "custom price" : "weight") + " of 0 or more.", confirmButtonText: "Ok" });
+        Swal.fire({ icon: "error", text: "Enter a " + (mode === "custom" ? "custom price" : "weight") + " of 0 or more.", confirmButtonText: "OK" });
         return null;
     }
     return { mode: mode, value: value, currency: $i.attr("data-cur") || "usd" };
@@ -525,16 +525,16 @@ function fsSaveItem(btn, oid, iid) {
         },
         error: function () {
             $(btn).prop("disabled", false);
-            Swal.fire({ icon: "error", text: "Save failed.", confirmButtonText: "Ok" });
+            Swal.fire({ icon: "error", text: "Save failed.", confirmButtonText: "OK" });
         }
     });
 }
 
 function fsSaveError(r) {
     if (r && r.error === "locked") {
-        Swal.fire({ icon: "warning", text: "This package is now being edited by " + (r.by || "another user") + ".", confirmButtonText: "Ok" });
+        Swal.fire({ icon: "warning", text: "This package is now being edited by " + (r.by || "another user") + ".", confirmButtonText: "OK" });
     } else {
-        Swal.fire({ icon: "error", text: (r && r.message) ? r.message : "Could not save.", confirmButtonText: "Ok" });
+        Swal.fire({ icon: "error", text: (r && r.message) ? r.message : "Could not save.", confirmButtonText: "OK" });
     }
 }
 
@@ -544,7 +544,7 @@ function fsGroupSelected(btn, oid) {
     var $items = $(btn).closest(".fs-items");
     var ids = $items.find(".fs-item-check:checked").map(function () { return this.value; }).get();
     if (ids.length < 2) {
-        Swal.fire({ icon: "info", text: "Select at least two items to group.", confirmButtonText: "Ok" });
+        Swal.fire({ icon: "info", text: "Select at least two items to group.", confirmButtonText: "OK" });
         return;
     }
     var ctx = fsCtx(btn);
@@ -636,7 +636,7 @@ function fsPostGroup(oid, data) {
             }
         },
         error: function () {
-            Swal.fire({ icon: "error", text: "Save failed.", confirmButtonText: "Ok" });
+            Swal.fire({ icon: "error", text: "Save failed.", confirmButtonText: "OK" });
         }
     });
 }
@@ -677,7 +677,7 @@ function fsBillCustomer(btn) {
         if ($b.is("button")) $b.prop("disabled", false);
     }).then(function (p) {
         if (!p || !p.ok) {
-            Swal.fire({ icon: "error", text: (p && p.message) ? p.message : "Could not load the bill preview.", confirmButtonText: "Ok" });
+            Swal.fire({ icon: "error", text: (p && p.message) ? p.message : "Could not load the bill preview.", confirmButtonText: "OK" });
             return;
         }
         var rebill = !!p.rebill;
@@ -695,8 +695,13 @@ function fsBillCustomer(btn) {
             '<ul class="pl-3 mb-0">' +
             '<li>notify the customer by WhatsApp and email' + (rebill ? ' <b>with the updated bill</b>' : '') + ',</li>' +
             (rebill
+                // Billing releases the package(s) from the consolidation; it does NOT
+                // set fs_cleared_for_delivery — only a recorded payment does that.
+                // The old wording said "clear ... for delivery", which names the exact
+                // flag that gates warehouse release and is not touched here.
                 ? '<li>update the recorded bill,</li>'
-                : '<li><b>clear the selected package(s) for delivery</b>,</li>') +
+                : '<li><b>release the selected package(s) from this consolidation</b> '
+                  + '<span class="text-muted">(they are cleared for delivery only once payment is recorded)</span>,</li>') +
             '<li>log this action under your name.</li>' +
             '</ul>' +
             '</div>';
@@ -754,7 +759,7 @@ function fsBillCustomer(btn) {
                 title: r.rebill ? "Customer re-billed" : "Customer billed",
                 html: lines,
                 width: 620,
-                confirmButtonText: "Ok"
+                confirmButtonText: "OK"
             }).then(function () {
                 fsApplyConsolSummary(cid, r.consol);
                 fsReloadCustomers(cid);
@@ -1043,7 +1048,7 @@ function fsOpenPaymentDialog(cid, sid, name, f, opts) {
             icon: "success",
             title: "Payment Recorded",
             html: lines,
-            confirmButtonText: "Ok"
+            confirmButtonText: "OK"
         }).then(function () {
             fsApplyConsolSummary(cid, r.consol);
             fsReloadCustomers(cid);
@@ -1149,7 +1154,7 @@ function fsApplyDiscount(el) {
     }).then(function (res) {
         if (!res.isConfirmed || !res.value) return;
         var r = res.value;
-        Swal.fire({ icon: "success", title: "Discount applied", html: "Discount: <b>₵" + Number(r.discount_ghs).toFixed(2) + "</b>", confirmButtonText: "Ok" })
+        Swal.fire({ icon: "success", title: "Discount applied", html: "Discount: <b>₵" + Number(r.discount_ghs).toFixed(2) + "</b>", confirmButtonText: "OK" })
             .then(function () {
                 if (r.consol) fsApplyConsolSummary(cid, r.consol);
                 fsReloadCustomers(cid);
