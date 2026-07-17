@@ -868,13 +868,13 @@ $("#invoice_form").on("submit", function (event) {
     // Validación de filas de paquetes
     for (var i = 0; i < packagesItems.length; i++) {
         if ($.trim($("#description_" + i).val()).length === 0) {
-            Swal.fire({ text: validation_description, icon: "error", confirmButtonText: "Ok" });
+            Swal.fire({ text: validation_description, icon: "error", confirmButtonText: "OK" });
             $("#description_" + i).focus();
             return false;
         }
         var qty_val = $.trim($("#qty_" + i).val());
         if (!qty_val || qty_val === "0") {
-            Swal.fire({ text: "Enter quantity for row " + (i+1), icon: "error", confirmButtonText: "Ok" });
+            Swal.fire({ text: "Enter quantity for row " + (i+1), icon: "error", confirmButtonText: "OK" });
             $("#qty_" + i).focus();
             return false;
         }
@@ -884,7 +884,7 @@ $("#invoice_form").on("submit", function (event) {
         var wt = nf($("#weight_" + i).val(), 0);
         var cp = nf($("#customPrice_" + i).val(), 0);
         if (wt > 0 && cp > 0) {
-            Swal.fire({ text: "Row " + (i+1) + ": use either weight OR custom price, not both.", icon: "error", confirmButtonText: "Ok" });
+            Swal.fire({ text: "Row " + (i+1) + ": use either weight OR custom price, not both.", icon: "error", confirmButtonText: "OK" });
             return false;
         }
     }
@@ -1139,7 +1139,7 @@ function cdp_showError(errors) {
     html: html,
     icon: "error",
     allowOutsideClick: false,
-    confirmButtonText: "Ok"
+    confirmButtonText: "OK"
   });
 }
 

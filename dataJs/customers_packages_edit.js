@@ -1211,7 +1211,7 @@ function cdp_showError(errors) {
     html: html_code,
     icon: "error",
     allowOutsideClick: false,
-    confirmButtonText: "Ok",
+    confirmButtonText: "OK",
   });
 }
 
@@ -1220,7 +1220,7 @@ function cdp_showSuccess(messages, shipment_id) {
     title: messages,
     icon: "success",
     allowOutsideClick: false,
-    confirmButtonText: "Ok",
+    confirmButtonText: "OK",
   }).then((result) => {
     if (result.isConfirmed) {
       setTimeout(function () {

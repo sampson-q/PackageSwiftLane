@@ -110,7 +110,7 @@ function cdp_showError(errors) {
     text: errors,
     icon: "error",
     allowOutsideClick: false,
-    confirmButtonText: "Ok",
+    confirmButtonText: "OK",
     confirmButtonColor: '#f27474',
   });
 }
@@ -120,7 +120,7 @@ function cdp_showSuccess(messages) {
     title: messages,
     icon: "success",
     allowOutsideClick: false,
-    confirmButtonText: "Ok",
+    confirmButtonText: "OK",
     confirmButtonColor: '#336aea',
     type: "success",
   }).then((okay) => {
@@ -263,7 +263,7 @@ $("#new_register").on("submit", function (event) {
       icon: 'error',
       allowOutsideClick: false,
       confirmButtonColor: "#f27474",
-      confirmButtonText: "Ok",
+      confirmButtonText: "OK",
     });
     return;
   }

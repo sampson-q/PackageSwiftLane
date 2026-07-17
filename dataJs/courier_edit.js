@@ -476,19 +476,19 @@ $("#invoice_form").on("submit", function (event) {
 
   for (var i = 0; i < packagesItems.length; i++) {
     if ($.trim($("#description_" + i).val()).length === 0) {
-      Swal.fire({ icon: "error", text: validation_description, confirmButtonText: "Ok" });
+      Swal.fire({ icon: "error", text: validation_description, confirmButtonText: "OK" });
       $("#description_" + i).focus(); return false;
     }
     var qty_val = $.trim($("#qty_" + i).val());
     if (!qty_val || qty_val === "0") {
-      Swal.fire({ icon: "error", text: (typeof validation_quantity !== "undefined" ? validation_quantity : "Enter quantity for row " + (i + 1)), confirmButtonText: "Ok" });
+      Swal.fire({ icon: "error", text: (typeof validation_quantity !== "undefined" ? validation_quantity : "Enter quantity for row " + (i + 1)), confirmButtonText: "OK" });
       $("#qty_" + i).focus(); return false;
     }
 
     // Pricing (weight OR custom) is optional — set incrementally by staff.
     // Only guard against an item carrying BOTH at once.
     if (nf($("#weight_" + i).val(), 0) > 0 && nf($("#customPrice_" + i).val(), 0) > 0) {
-      Swal.fire({ icon: "error", text: "Row " + (i + 1) + ": use either weight OR custom price, not both.", confirmButtonText: "Ok" });
+      Swal.fire({ icon: "error", text: "Row " + (i + 1) + ": use either weight OR custom price, not both.", confirmButtonText: "OK" });
       return false;
     }
   }
@@ -615,7 +615,7 @@ $("#invoice_form").on("submit", function (event) {
       var ok = resp && (resp.success === true || resp.success === "true");
       if (ok) {
         var msg = resp.messages || resp.message || "Shipment updated successfully";
-        Swal.fire({ title: Array.isArray(msg) ? msg.join("<br>") : msg, icon: "success", allowOutsideClick: false, confirmButtonText: "Ok" })
+        Swal.fire({ title: Array.isArray(msg) ? msg.join("<br>") : msg, icon: "success", allowOutsideClick: false, confirmButtonText: "OK" })
           .then(function (result) {
             if (result.isConfirmed) {
               setTimeout(function () { window.location = "courier_view.php?id=" + resp.shipment_id; }, 300);
@@ -954,7 +954,7 @@ function cdp_showError(errors) {
   var html = "<ul class='error'>";
   for (var i = 0; i < list.length; i++) html += '<li class="text-left"><i class="icon-double-angle-right"></i> ' + list[i] + "</li>";
   html += "</ul>";
-  Swal.fire({ title: typeof message_error !== "undefined" ? message_error : "Error", html: html, icon: "error", allowOutsideClick: false, confirmButtonText: "Ok" });
+  Swal.fire({ title: typeof message_error !== "undefined" ? message_error : "Error", html: html, icon: "error", allowOutsideClick: false, confirmButtonText: "OK" });
 }
 
 /* =========================================================

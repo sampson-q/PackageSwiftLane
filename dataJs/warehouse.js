@@ -124,7 +124,7 @@ function cdp_exportPrint() {
 // Preview the package(s) for an explicit confirm, then flip their status.
 function cdpWarehouseDeliver(orderNos) {
     if (!orderNos || !orderNos.length) {
-        Swal.fire({ icon: "warning", text: "Please select at least one package.", confirmButtonText: "Ok" });
+        Swal.fire({ icon: "warning", text: "Please select at least one package.", confirmButtonText: "OK" });
         return;
     }
 
@@ -135,7 +135,7 @@ function cdpWarehouseDeliver(orderNos) {
         dataType: "json",
         success: function (r) {
             if (!r || !r.ok || !r.packages || !r.packages.length) {
-                Swal.fire({ icon: "error", text: (r && r.message) ? r.message : "Could not load package details.", confirmButtonText: "Ok" });
+                Swal.fire({ icon: "error", text: (r && r.message) ? r.message : "Could not load package details.", confirmButtonText: "OK" });
                 return;
             }
 
@@ -157,7 +157,7 @@ function cdpWarehouseDeliver(orderNos) {
 
             if (!deliverable.length) {
                 Swal.fire({ icon: "warning", html: '<div style="max-height:260px;overflow-y:auto;">' + rows + "</div>" +
-                    "<p class='mt-2 mb-0'>None of the selected packages are cleared for delivery.</p>", confirmButtonText: "Ok" });
+                    "<p class='mt-2 mb-0'>None of the selected packages are cleared for delivery.</p>", confirmButtonText: "OK" });
                 return;
             }
             var deliverNos = deliverable.map(function (p) { return String(p.order_no); });
@@ -197,7 +197,7 @@ function cdpWarehouseDeliver(orderNos) {
                 var skipped = r.packages.length - deliverable.length;
                 var msg = n + " package(s) marked as delivered.";
                 if (skipped > 0) { msg += " " + skipped + " skipped (not cleared / already delivered)."; }
-                Swal.fire({ icon: "success", text: msg, confirmButtonText: "Ok" }).then(function () {
+                Swal.fire({ icon: "success", text: msg, confirmButtonText: "OK" }).then(function () {
                     cdp_load(1);
                     if (typeof cdpSelClear === "function") cdpSelClear();
                     if (typeof window.wdRefreshNavBadge === "function") window.wdRefreshNavBadge();
@@ -205,7 +205,7 @@ function cdpWarehouseDeliver(orderNos) {
             });
         },
         error: function () {
-            Swal.fire({ icon: "error", text: "Request failed.", confirmButtonText: "Ok" });
+            Swal.fire({ icon: "error", text: "Request failed.", confirmButtonText: "OK" });
         }
     });
 }

@@ -521,7 +521,7 @@ $("#invoice_form").on("submit", function (event) {
         type: "Error!",
         text: validation_description,
         icon: "error",
-        confirmButtonText: "Ok",
+        confirmButtonText: "OK",
       });
       $("#description_" + i).focus();
       return false;
@@ -531,7 +531,7 @@ $("#invoice_form").on("submit", function (event) {
         type: "Error!",
         text: validation_quantity,
         icon: "error",
-        confirmButtonText: "Ok",
+        confirmButtonText: "OK",
       });
       $("#qty_" + i).focus();
       return false;
@@ -541,7 +541,7 @@ $("#invoice_form").on("submit", function (event) {
         type: "Error!",
         text: validation_weight,
         icon: "error",
-        confirmButtonText: "Ok",
+        confirmButtonText: "OK",
       });
       $("#weight_" + i).focus();
       return false;
@@ -551,7 +551,7 @@ $("#invoice_form").on("submit", function (event) {
         type: "Error!",
         text: validation_length,
         icon: "error",
-        confirmButtonText: "Ok",
+        confirmButtonText: "OK",
       });
       $("#length_" + i).focus();
       return false;
@@ -561,7 +561,7 @@ $("#invoice_form").on("submit", function (event) {
         type: "Error!",
         text: validation_width,
         icon: "error",
-        confirmButtonText: "Ok",
+        confirmButtonText: "OK",
       });
       $("#width_" + i).focus();
       return false;
@@ -571,7 +571,7 @@ $("#invoice_form").on("submit", function (event) {
         type: "Error!",
         text: validation_height,
         icon: "error",
-        confirmButtonText: "Ok",
+        confirmButtonText: "OK",
       });
       $("#height_" + i).focus();
       return false;
@@ -581,7 +581,7 @@ $("#invoice_form").on("submit", function (event) {
         type: "Error!",
         text: validation_charge,
         icon: "error",
-        confirmButtonText: "Ok",
+        confirmButtonText: "OK",
       });
       $("#fixedValue_" + i).focus();
       return false;
@@ -591,7 +591,7 @@ $("#invoice_form").on("submit", function (event) {
         type: "Error!",
         text: validation_declared,
         icon: "error",
-        confirmButtonText: "Ok",
+        confirmButtonText: "OK",
       });
       $("#declaredValue_" + i).focus();
       return false;
@@ -1304,7 +1304,7 @@ function cdp_showError(errors) {
     html: html_code,
     icon: "error",
     allowOutsideClick: false,
-    confirmButtonText: "Ok",
+    confirmButtonText: "OK",
   });
 }
 
@@ -1313,7 +1313,7 @@ function cdp_showSuccess(messages) {
     title: messages,
     icon: "success",
     allowOutsideClick: false,
-    confirmButtonText: "Ok",
+    confirmButtonText: "OK",
   }).then((result) => {
     if (result.isConfirmed) {
       setTimeout(function () {
@@ -1379,7 +1379,7 @@ $("#calculate_invoice").on("click", function (event) {
           title: "Error!",
           text: data.error,
           icon: "error",
-          confirmButtonText: "Ok",
+          confirmButtonText: "OK",
         });
       }
     },

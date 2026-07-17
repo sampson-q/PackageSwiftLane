@@ -1225,42 +1225,42 @@ $("#invoice_form").on("submit", function (event) {
   // Validación de filas de paquetes
   for (var i = 0; i < packagesItems.length; i++) {
     if ($.trim($("#description_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_description, icon: "error", confirmButtonText: "Ok" });
+      Swal.fire({ text: validation_description, icon: "error", confirmButtonText: "OK" });
       $("#description_" + i).focus();
       return false;
     }
     if ($.trim($("#qty_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_quantity, icon: "error", confirmButtonText: "Ok" });
+      Swal.fire({ text: validation_quantity, icon: "error", confirmButtonText: "OK" });
       $("#qty_" + i).focus();
       return false;
     }
     if ($.trim($("#weight_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_weight, icon: "error", confirmButtonText: "Ok" });
+      Swal.fire({ text: validation_weight, icon: "error", confirmButtonText: "OK" });
       $("#weight_" + i).focus();
       return false;
     }
     if ($.trim($("#length_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_length, icon: "error", confirmButtonText: "Ok" });
+      Swal.fire({ text: validation_length, icon: "error", confirmButtonText: "OK" });
       $("#length_" + i).focus();
       return false;
     }
     if ($.trim($("#width_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_width, icon: "error", confirmButtonText: "Ok" });
+      Swal.fire({ text: validation_width, icon: "error", confirmButtonText: "OK" });
       $("#width_" + i).focus();
       return false;
     }
     if ($.trim($("#height_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_height, icon: "error", confirmButtonText: "Ok" });
+      Swal.fire({ text: validation_height, icon: "error", confirmButtonText: "OK" });
       $("#height_" + i).focus();
       return false;
     }
     if ($.trim($("#fixedValue_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_charge, icon: "error", confirmButtonText: "Ok" });
+      Swal.fire({ text: validation_charge, icon: "error", confirmButtonText: "OK" });
       $("#fixedValue_" + i).focus();
       return false;
     }
     if ($.trim($("#declaredValue_" + i).val()).length == 0) {
-      Swal.fire({ text: validation_declared, icon: "error", confirmButtonText: "Ok" });
+      Swal.fire({ text: validation_declared, icon: "error", confirmButtonText: "OK" });
       $("#declaredValue_" + i).focus();
       return false;
     }
@@ -1481,7 +1481,7 @@ function cdp_showError(errors) {
     html: html,
     icon: "error",
     allowOutsideClick: false,
-    confirmButtonText: "Ok"
+    confirmButtonText: "OK"
   });
 }
 function cdp_showSuccess(message, shipment_id) {
@@ -1489,7 +1489,7 @@ function cdp_showSuccess(message, shipment_id) {
     title: message || "OK",
     icon: "success",
     allowOutsideClick: false,
-    confirmButtonText: "Ok"
+    confirmButtonText: "OK"
   }).then(function (result) {
     if (result.isConfirmed) {
       setTimeout(function () {

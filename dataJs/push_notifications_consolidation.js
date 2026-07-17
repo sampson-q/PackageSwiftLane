@@ -78,15 +78,15 @@ $("#push_notification_form").on("submit", function (event) {
 
     // basic validation
     if (!consolidation_id) {
-        Swal.fire({ title: message_error, html: 'Consolidation not found. Reload the page.', icon: "error", confirmButtonText: "Ok" });
+        Swal.fire({ title: message_error, html: 'Consolidation not found. Reload the page.', icon: "error", confirmButtonText: "OK" });
         return;
     }
     if (!subject) {
-        Swal.fire({ title: message_error, html: 'Subject is required.', icon: "error", confirmButtonText: "Ok" });
+        Swal.fire({ title: message_error, html: 'Subject is required.', icon: "error", confirmButtonText: "OK" });
         return;
     }
     if (!message) {
-        Swal.fire({ title: message_error, html: 'Message is required.', icon: "error", confirmButtonText: "Ok" });
+        Swal.fire({ title: message_error, html: 'Message is required.', icon: "error", confirmButtonText: "OK" });
         return;
     }
 
@@ -99,7 +99,7 @@ $("#push_notification_form").on("submit", function (event) {
     if (notifType === 'selected_users') {
         var selectedUsers = $('#user_id').val(); // array of selected user ids (these are sender ids)
         if (!selectedUsers || selectedUsers.length === 0) {
-            Swal.fire({ title: message_error, html: 'Please choose one or more users from the consolidation.', icon: "error", confirmButtonText: "Ok" });
+            Swal.fire({ title: message_error, html: 'Please choose one or more users from the consolidation.', icon: "error", confirmButtonText: "OK" });
             return;
         }
         // append each sender id using the name server expects: sender_ids[]
@@ -109,7 +109,7 @@ $("#push_notification_form").on("submit", function (event) {
     } else if (notifType === 'broadcast') {
         // consolidation_id already appended, server will handle recipient discovery
     } else {
-        Swal.fire({ title: message_error, html: 'Unknown notification type.', icon: "error", confirmButtonText: "Ok" });
+        Swal.fire({ title: message_error, html: 'Unknown notification type.', icon: "error", confirmButtonText: "OK" });
         return;
     }
 
@@ -133,7 +133,7 @@ $("#push_notification_form").on("submit", function (event) {
             $("#send_notification").attr("disabled", false);
 
             if (response.success === true) {
-                Swal.fire({ title: 'Notifications sent', html: 'Push notifications were sent successfully.', icon: "success", confirmButtonText: "Ok" });
+                Swal.fire({ title: 'Notifications sent', html: 'Push notifications were sent successfully.', icon: "success", confirmButtonText: "OK" });
             } else {
                 if (response.errors) {
                     var html = '<ul class="error">';
@@ -143,9 +143,9 @@ $("#push_notification_form").on("submit", function (event) {
                         for (var k in response.errors) { if (!response.errors.hasOwnProperty(k)) continue; html += '<li>' + response.errors[k] + '</li>'; }
                     }
                     html += '</ul>';
-                    Swal.fire({ title: message_error, html: html, icon: "error", confirmButtonText: "Ok" });
+                    Swal.fire({ title: message_error, html: html, icon: "error", confirmButtonText: "OK" });
                 } else {
-                    Swal.fire({ title: message_error, html: 'Unknown error', icon: "error", confirmButtonText: "Ok" });
+                    Swal.fire({ title: message_error, html: 'Unknown error', icon: "error", confirmButtonText: "OK" });
                 }
             }
 
@@ -160,7 +160,7 @@ $("#push_notification_form").on("submit", function (event) {
                 title: message_error,
                 html: 'AJAX error: ' + status,
                 icon: "error",
-                confirmButtonText: "Ok",
+                confirmButtonText: "OK",
             });
         }
     });

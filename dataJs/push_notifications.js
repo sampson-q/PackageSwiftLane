@@ -121,15 +121,15 @@ $("#push_notification_form").on("submit", function (event) {
     var message = $.trim($("#message").val());
 
     if (!notifType) {
-        Swal.fire({ title: message_error || 'Error', html: 'Please select a notification type.', icon: "error", confirmButtonText: "Ok" });
+        Swal.fire({ title: message_error || 'Error', html: 'Please select a notification type.', icon: "error", confirmButtonText: "OK" });
         return;
     }
     if (!subject) {
-        Swal.fire({ title: message_error || 'Error', html: 'Subject is required.', icon: "error", confirmButtonText: "Ok" });
+        Swal.fire({ title: message_error || 'Error', html: 'Subject is required.', icon: "error", confirmButtonText: "OK" });
         return;
     }
     if (!message) {
-        Swal.fire({ title: message_error || 'Error', html: 'Message is required.', icon: "error", confirmButtonText: "Ok" });
+        Swal.fire({ title: message_error || 'Error', html: 'Message is required.', icon: "error", confirmButtonText: "OK" });
         return;
     }
 
@@ -141,14 +141,14 @@ $("#push_notification_form").on("submit", function (event) {
     if (notifType === 'single_user') {
         var selectedUser = $('#user_id').val() || $('#uid').val();
         if (!selectedUser) {
-            Swal.fire({ title: message_error || 'Error', html: 'Please choose a user for "Single user" notifications.', icon: "error", confirmButtonText: "Ok" });
+            Swal.fire({ title: message_error || 'Error', html: 'Please choose a user for "Single user" notifications.', icon: "error", confirmButtonText: "OK" });
             return;
         }
         data.append('user_id', selectedUser);
     } else if (notifType === 'consolidation') {
         var selectedCon = $('#consolidation_id').val() || $('#cid').val();
         if (!selectedCon) {
-            Swal.fire({ title: message_error || 'Error', html: 'Please choose a consolidation for "Consolidation" notifications.', icon: "error", confirmButtonText: "Ok" });
+            Swal.fire({ title: message_error || 'Error', html: 'Please choose a consolidation for "Consolidation" notifications.', icon: "error", confirmButtonText: "OK" });
             return;
         }
         data.append('consolidation_id', selectedCon);
@@ -186,13 +186,13 @@ $("#push_notification_form").on("submit", function (event) {
         },
         error: function (xhr, status, err) {
             $("#send_notification").attr("disabled", false);
-            Swal.fire({ title: message_error || 'Error', html: 'AJAX error: ' + status, icon: "error", confirmButtonText: "Ok" });
+            Swal.fire({ title: message_error || 'Error', html: 'AJAX error: ' + status, icon: "error", confirmButtonText: "OK" });
         }
     });
 });
 
 function cdp_showSuccess() {
-  Swal.fire({ title: 'Push Notifications Sent', icon: "success", allowOutsideClick: false, confirmButtonText: "Ok" })
+  Swal.fire({ title: 'Push Notifications Sent', icon: "success", allowOutsideClick: false, confirmButtonText: "OK" })
 }
 
 function cdp_showError(errors) {
@@ -206,7 +206,7 @@ function cdp_showError(errors) {
       }
   }
   html_code += '</ul>';
-  Swal.fire({ title: message_error || 'Error', html: html_code, icon: "error", allowOutsideClick: false, confirmButtonText: "Ok" });
+  Swal.fire({ title: message_error || 'Error', html: html_code, icon: "error", allowOutsideClick: false, confirmButtonText: "OK" });
 }
 
 /* ---------------------------
@@ -561,7 +561,7 @@ $(document).on('click', '#send_invoice_notifications', function () {
     var pickup_date = $('#shipment_pickup_date').val();
 
     if (!shipment_from || !shipment_end || !pickup_date) {
-        Swal.fire({ title: message_error || 'Error', html: 'Please set shipment start/end dates and pickup date.', icon: "error", confirmButtonText: "Ok" });
+        Swal.fire({ title: message_error || 'Error', html: 'Please set shipment start/end dates and pickup date.', icon: "error", confirmButtonText: "OK" });
         return;
     }
 
@@ -601,12 +601,12 @@ $(document).on('click', '#send_invoice_notifications', function () {
     });
 
     if (validationErrors.length) {
-        Swal.fire({ title: message_error || 'Error', html: validationErrors.join('<br>'), icon: "error", confirmButtonText: "Ok" });
+        Swal.fire({ title: message_error || 'Error', html: validationErrors.join('<br>'), icon: "error", confirmButtonText: "OK" });
         return;
     }
 
     if (invalid || !items.length) {
-        Swal.fire({ title: message_error || 'Error', html: 'Please select at least one package and enter a valid amount for each row.', icon: "error", confirmButtonText: "Ok" });
+        Swal.fire({ title: message_error || 'Error', html: 'Please select at least one package and enter a valid amount for each row.', icon: "error", confirmButtonText: "OK" });
         return;
     }
 
@@ -649,7 +649,7 @@ $(document).on('click', '#send_invoice_notifications', function () {
         },
         error: function (xhr, status, err) {
             $('#send_invoice_notifications').attr('disabled', false);
-            Swal.fire({ title: message_error || 'Error', html: 'AJAX error: ' + status, icon: "error", confirmButtonText: "Ok" });
+            Swal.fire({ title: message_error || 'Error', html: 'AJAX error: ' + status, icon: "error", confirmButtonText: "OK" });
         }
     });
 });
