@@ -325,7 +325,7 @@ function fs_paid_total($cid, $sid)
         $db = new Conexion;
         // Only statuses that mean we actually hold the money may be summed —
         // a reversed or pending row must never inflate what a customer has paid.
-        $db->cdp_query("SELECT COALESCE(SUM(amount_ghs),0) AS t FROM cdb_fs_payments
+        $db->cdp_query("SELECT COALESCE(SUM(" . cdp_fsMoneyExpr() . "),0) AS t FROM cdb_fs_payments
                         WHERE consolidate_id = :cid AND sender_id = :sid
                           AND " . cdp_fsMoneySqlFilter());
         $db->bind(':cid', (int) $cid);
@@ -1884,25 +1884,58 @@ if ($action === 'clear_debt') {
 
     $note = trim((string) ($_REQUEST['note'] ?? ''));
     try {
+        // Clearing a debt is a payment like any other: it must carry the SAME
+        // gateway record and audit trail as Record Payment, or a debt settled
+        // by Paystack would show a status badge with no channel/response/fees
+        // and an empty History — and staff cannot go to Paystack to fill in
+        // the blanks.
+        $gd = $verify['detail'] ?? [];
         $db->cdp_query("INSERT INTO cdb_fs_payments
                             (consolidate_id, sender_id, amount_ghs, mode, reference,
-                             gateway_status, gateway_payload, cleared_for_delivery, cleared_orders, note,
+                             gateway_status, gateway_raw_status, gateway_response, gateway_channel,
+                             gateway_currency, gateway_fees_ghs, gateway_customer, gateway_paid_at,
+                             gateway_checked_at, gateway_payload,
+                             cleared_for_delivery, cleared_orders, note,
                              exchange_rate, recorded_by, recorded_at)
                         VALUES
                             (:cid, :sid, :amt, :mode, :ref,
-                             :gs, :gp, 1, :orders, :note, :rate, :by, NOW())");
+                             :gs, :graw, :gresp, :gchan,
+                             :gcur, :gfees, :gcust, :gpaid,
+                             :gchk, :gp,
+                             1, :orders, :note, :rate, :by, NOW())");
         $db->bind(':cid', $cid);
         $db->bind(':sid', $sid);
         $db->bind(':amt', $paid);
         $db->bind(':mode', $mode);
         $db->bind(':ref', $reference !== '' ? $reference : null);
         $db->bind(':gs', $verify['status'] ?? null);
+        $db->bind(':graw', !empty($gd['raw_status']) ? $gd['raw_status'] : ($verify['status'] ?? null));
+        $db->bind(':gresp', !empty($gd['response']) ? $gd['response'] : null);
+        $db->bind(':gchan', !empty($gd['channel']) ? $gd['channel'] : null);
+        $db->bind(':gcur', !empty($gd['currency']) ? $gd['currency'] : null);
+        $db->bind(':gfees', isset($gd['fees']) && $gd['fees'] !== null ? (float) $gd['fees'] : null);
+        $db->bind(':gcust', !empty($gd['customer']) ? $gd['customer'] : null);
+        $db->bind(':gpaid', !empty($gd['paid_at']) ? date('Y-m-d H:i:s', strtotime($gd['paid_at'])) : null);
+        $db->bind(':gchk', $mode === 'cash' ? null : date('Y-m-d H:i:s'));
         $db->bind(':gp', $verify['payload'] ?? null);
         $db->bind(':orders', json_encode($toClear));
         $db->bind(':note', $note !== '' ? ('Debt clearing — ' . $note) : 'Debt clearing');
         $db->bind(':rate', (float) $core->exchange_rate);
         $db->bind(':by', $uid);
         $db->cdp_execute();
+
+        cdp_fsLogPaymentEvent([
+            'payment_id' => (int) $db->dbh->lastInsertId(),
+            'reference'  => $reference !== '' ? $reference : null,
+            'source'     => 'record_payment',
+            'event'      => 'debt_cleared',
+            'old_status' => null,
+            'new_status' => $verify['status'] ?? null,
+            'amount_ghs' => $paid,
+            'message'    => 'Debt cleared by staff (' . ucfirst($mode) . ').',
+            'payload'    => $verify['payload'] ?? null,
+            'actor_id'   => $uid,
+        ]);
     } catch (Throwable $e) {
         echo json_encode(['ok' => false, 'error' => 'ledger_missing',
                           'message' => 'Payment ledger not found — run sql/fs_transactions.sql, then try again.']);
@@ -2566,7 +2599,8 @@ if ($action === 'packages') {
 
         // Each recorded payment is its own timeline line (split payments).
         try {
-            $db->cdp_query("SELECT p.id, p.amount_ghs, p.mode, p.reference, p.gateway_status,
+            $db->cdp_query("SELECT p.id, p.amount_ghs, p.refunded_ghs, p.refunded_at,
+                                   p.mode, p.reference, p.gateway_status,
                                    p.gateway_raw_status, p.gateway_response, p.gateway_channel,
                                    p.gateway_fees_ghs, p.gateway_paid_at, p.gateway_checked_at,
                                    p.reversed_at, p.reversal_reason,
@@ -2622,6 +2656,18 @@ if ($action === 'packages') {
                     $clearBadge = ' <span class="badge badge-danger">clearance revoked</span>';
                 }
 
+                // A partial refund leaves the status reading Confirmed, so it
+                // has to be stated explicitly or the row looks fully paid.
+                $refund = '';
+                if ((float) $pp->refunded_ghs > 0) {
+                    $net = (float) $pp->amount_ghs - (float) $pp->refunded_ghs;
+                    $refund = '<br><span class="text-danger" style="font-size:.8rem"><i class="mdi mdi-cash-refund"></i> '
+                        . '₵' . number_format((float) $pp->refunded_ghs, 2) . ' refunded'
+                        . ($pp->refunded_at !== null
+                            ? ' on ' . htmlspecialchars(date('Y-m-d', strtotime((string) $pp->refunded_at))) : '')
+                        . ' — we hold ₵' . number_format(max(0, $net), 2) . ' of this payment.</span>';
+                }
+
                 $reversal = '';
                 if ($pp->reversed_at !== null) {
                     $reversal = '<br><span class="text-danger" style="font-size:.8rem"><i class="mdi mdi-alert"></i> Reversed '
@@ -2659,7 +2705,7 @@ if ($action === 'packages') {
                         . ' <span class="text-muted">— ' . htmlspecialchars(date('Y-m-d H:i', strtotime((string) $pp->recorded_at))) . '</span>'
                         . $checkBtn . $histBtn . $checked
                         . ($facts ? '<br><span class="text-muted" style="font-size:.8rem">' . implode(' &middot; ', $facts) . '</span>' : '')
-                        . $reversal,
+                        . $refund . $reversal,
                 ];
             }
         }

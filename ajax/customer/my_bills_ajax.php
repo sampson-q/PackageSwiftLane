@@ -50,7 +50,7 @@ function mb_bills($sid)
     $db = new Conexion;
     $db->cdp_query("SELECT b.consolidate_id, b.amount_ghs, b.amount_usd, b.exchange_rate, b.billed_at,
                            c.c_prefix, c.c_no,
-                           COALESCE((SELECT SUM(p.amount_ghs) FROM cdb_fs_payments p
+                           COALESCE((SELECT SUM(" . cdp_fsMoneyExpr('p') . ") FROM cdb_fs_payments p
                                      WHERE p.consolidate_id = b.consolidate_id AND p.sender_id = b.sender_id
                                        AND " . cdp_fsMoneySqlFilter('p') . "), 0) AS paid_ghs,
                            COALESCE((SELECT SUM(d.amount_ghs) FROM cdb_fs_discounts d

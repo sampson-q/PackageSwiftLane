@@ -21,6 +21,7 @@
 
 
 require_once(__DIR__ . '/../../helpers/querys.php');
+require_once(__DIR__ . '/../../helpers/fs_status.php');
 $db = new Conexion;
 
 $userData = $user->cdp_getUserData();
@@ -61,8 +62,10 @@ $db->cdp_query("SELECT COALESCE(SUM(amount_usd),0) t FROM cdb_consolidate_custom
 $db->bind(':i', $fs_ini); $db->bind(':f', $fs_fin); $db->cdp_execute();
 $sumador_total = (float) ($db->cdp_registro()->t ?? 0);   // billed this month
 
-$db->cdp_query("SELECT COALESCE(SUM(amount_ghs/NULLIF(exchange_rate,0)),0) t FROM cdb_fs_payments
-                WHERE recorded_at BETWEEN :i AND :f" . $fs_own);
+// "Received" must count only money we actually hold — a reversed payment
+// would otherwise still be reported as revenue on the dashboard.
+$db->cdp_query("SELECT COALESCE(SUM(" . cdp_fsMoneyExpr() . "/NULLIF(exchange_rate,0)),0) t FROM cdb_fs_payments
+                WHERE recorded_at BETWEEN :i AND :f AND " . cdp_fsMoneySqlFilter() . $fs_own);
 $db->bind(':i', $fs_ini); $db->bind(':f', $fs_fin); $db->cdp_execute();
 $sumador_pagado = (float) ($db->cdp_registro()->t ?? 0);  // received this month
 

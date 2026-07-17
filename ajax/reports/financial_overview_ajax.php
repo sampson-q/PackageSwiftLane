@@ -42,14 +42,16 @@ function fo_money($ghs, $usd)
 }
 
 // ---- Period receipts (cash + gateway), with USD via each row's own rate. ----
-$db->cdp_query("SELECT COALESCE(SUM(amount_ghs),0) g, COALESCE(SUM(amount_ghs/NULLIF(exchange_rate,0)),0) u
+$db->cdp_query("SELECT COALESCE(SUM(" . cdp_fsMoneyExpr() . "),0) g,
+                       COALESCE(SUM(" . cdp_fsMoneyExpr() . "/NULLIF(exchange_rate,0)),0) u
                 FROM cdb_fs_payments WHERE recorded_at BETWEEN :i AND :f
                   AND " . cdp_fsMoneySqlFilter());
 $db->bind(':i', $ini); $db->bind(':f', $fin); $db->cdp_execute();
 $recv = $db->cdp_registro();
 
 // By method (period).
-$db->cdp_query("SELECT mode, COUNT(*) n, COALESCE(SUM(amount_ghs),0) g, COALESCE(SUM(amount_ghs/NULLIF(exchange_rate,0)),0) u
+$db->cdp_query("SELECT mode, COUNT(*) n, COALESCE(SUM(" . cdp_fsMoneyExpr() . "),0) g,
+                       COALESCE(SUM(" . cdp_fsMoneyExpr() . "/NULLIF(exchange_rate,0)),0) u
                 FROM cdb_fs_payments WHERE recorded_at BETWEEN :i AND :f
                   AND " . cdp_fsMoneySqlFilter() . " GROUP BY mode");
 $db->bind(':i', $ini); $db->bind(':f', $fin); $db->cdp_execute();
@@ -178,7 +180,7 @@ $db->cdp_query("SELECT DATE_FORMAT(billed_at,'%Y-%m') ym, COALESCE(SUM(amount_gh
                 FROM cdb_consolidate_customer_billing WHERE billed_at >= :i GROUP BY ym");
 $db->bind(':i', $mIni); $db->cdp_execute();
 foreach ((array) $db->cdp_registros() as $r) { if (isset($months[$r->ym])) { $months[$r->ym]['billed'] = (float) $r->g; } }
-$db->cdp_query("SELECT DATE_FORMAT(recorded_at,'%Y-%m') ym, COALESCE(SUM(amount_ghs),0) g
+$db->cdp_query("SELECT DATE_FORMAT(recorded_at,'%Y-%m') ym, COALESCE(SUM(" . cdp_fsMoneyExpr() . "),0) g
                 FROM cdb_fs_payments WHERE recorded_at >= :i
                   AND " . cdp_fsMoneySqlFilter() . " GROUP BY ym");
 $db->bind(':i', $mIni); $db->cdp_execute();

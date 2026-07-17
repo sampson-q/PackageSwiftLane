@@ -1,4 +1,5 @@
 <?php
+require_once(dirname(__DIR__, 2) . '/helpers/fs_status.php');
 // *************************************************************************
 // *                                                                       *
 // * DEPRIXA PRO -  Integrated Web Shipping System                         *
@@ -143,7 +144,9 @@ $monthName = obtenerNombreMes($currentMonth);
                         $db->bind(':i', $fs_ini); $db->bind(':f', $fs_fin); $db->cdp_execute();
                         $fs_billed = (float) ($db->cdp_registro()->t ?? 0);
 
-                        $db->cdp_query("SELECT COALESCE(SUM(amount_ghs/NULLIF(exchange_rate,0)),0) t FROM cdb_fs_payments WHERE recorded_at BETWEEN :i AND :f");
+                        $db->cdp_query("SELECT COALESCE(SUM(" . cdp_fsMoneyExpr() . "/NULLIF(exchange_rate,0)),0) t
+                                        FROM cdb_fs_payments WHERE recorded_at BETWEEN :i AND :f
+                                          AND " . cdp_fsMoneySqlFilter());
                         $db->bind(':i', $fs_ini); $db->bind(':f', $fs_fin); $db->cdp_execute();
                         $fs_received = (float) ($db->cdp_registro()->t ?? 0);
 

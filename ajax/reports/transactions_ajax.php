@@ -44,7 +44,9 @@ if (in_array($mode, ['cash', 'paystack', 'hubtel', 'paypal'], true)) {
     $where .= " AND p.mode = :mode ";
     $bind[':mode'] = $mode;
 }
-if ($status === 'success' || $status === 'manual' || $status === 'pending' || $status === 'failed') {
+// Accept any status in the shared vocabulary — previously only four were
+// filterable, so you could not search for reversed or refunded payments.
+if ($status !== '' && in_array($status, cdp_fsKnownStatuses(), true)) {
     $where .= " AND p.gateway_status = :st ";
     $bind[':st'] = $status;
 }
@@ -72,14 +74,19 @@ if ($range !== '') {
 $from = " FROM cdb_fs_payments p LEFT JOIN cdb_users u ON u.id = p.sender_id ";
 
 // ---- Summary over the whole filtered set. ----------------------------------
+// The tiles say "Received", so they must count ONLY money we actually hold —
+// a reversed or pending row would otherwise be reported as revenue. The LIST
+// below stays unfiltered on purpose: it is a transaction log, and it has its
+// own status filter for looking at failures.
+$moneyOnly = ' AND ' . cdp_fsMoneySqlFilter('p') . ' ';
 $sumSql = "SELECT COUNT(*) AS n,
-                  COALESCE(SUM(p.amount_ghs),0) AS total,
-                  COALESCE(SUM(CASE WHEN p.mode='cash' THEN p.amount_ghs ELSE 0 END),0) AS cash,
-                  COALESCE(SUM(CASE WHEN p.mode<>'cash' THEN p.amount_ghs ELSE 0 END),0) AS electronic,
-                  COALESCE(SUM(p.amount_ghs / NULLIF(p.exchange_rate,0)),0) AS total_usd,
-                  COALESCE(SUM(CASE WHEN p.mode='cash' THEN p.amount_ghs / NULLIF(p.exchange_rate,0) ELSE 0 END),0) AS cash_usd,
-                  COALESCE(SUM(CASE WHEN p.mode<>'cash' THEN p.amount_ghs / NULLIF(p.exchange_rate,0) ELSE 0 END),0) AS electronic_usd
-           $from $where";
+                  COALESCE(SUM(" . cdp_fsMoneyExpr('p') . "),0) AS total,
+                  COALESCE(SUM(CASE WHEN p.mode='cash' THEN " . cdp_fsMoneyExpr('p') . " ELSE 0 END),0) AS cash,
+                  COALESCE(SUM(CASE WHEN p.mode<>'cash' THEN " . cdp_fsMoneyExpr('p') . " ELSE 0 END),0) AS electronic,
+                  COALESCE(SUM(" . cdp_fsMoneyExpr('p') . " / NULLIF(p.exchange_rate,0)),0) AS total_usd,
+                  COALESCE(SUM(CASE WHEN p.mode='cash' THEN " . cdp_fsMoneyExpr('p') . " / NULLIF(p.exchange_rate,0) ELSE 0 END),0) AS cash_usd,
+                  COALESCE(SUM(CASE WHEN p.mode<>'cash' THEN " . cdp_fsMoneyExpr('p') . " / NULLIF(p.exchange_rate,0) ELSE 0 END),0) AS electronic_usd
+           $from $where $moneyOnly";
 $db->cdp_query($sumSql);
 foreach ($bind as $k => $v) { $db->bind($k, $v); }
 $db->cdp_execute();
