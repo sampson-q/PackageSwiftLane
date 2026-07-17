@@ -240,6 +240,7 @@ if (!function_exists('cdp_fsVerifyPaystack')) {
         // whole story is answerable from our own screens — staff must never
         // need to open the Paystack dashboard to audit a payment.
         $detail = [
+            'txn_id'     => isset($d->id) ? (int) $d->id : 0,
             'raw_status' => $status,
             'response'   => isset($d->gateway_response) ? (string) $d->gateway_response : '',
             'channel'    => isset($d->channel) ? (string) $d->channel : '',
@@ -354,6 +355,76 @@ if (!function_exists('cdp_fsVerifyHubtel')) {
                 'detail' => $detail,
                 'message' => 'Hubtel reports this payment as ' . cdp_fsStatusMeta($norm, 'hubtel')['label']
                            . ' (' . $status . ').'];
+    }
+}
+
+if (!function_exists('cdp_fsPaystackRefunds')) {
+    /**
+     * How much of a Paystack transaction has been refunded.
+     *
+     * Established against the live API (2026-07-16): a refund does NOT simply
+     * flip transaction.status — it goes to 'reversal-pending' for a full
+     * refund, and for a PARTIAL refund the transaction keeps reading 'success'.
+     * So the transaction alone can never tell us a partial refund happened;
+     * /refund?reference=X is the authoritative source and reports immediately.
+     *
+     * Takes the Paystack TRANSACTION ID (data.id from verify), not the
+     * reference.
+     *
+     * Returns ['ok','refunded' => GHS float, 'pending' => bool, 'n' => int,
+     *          'unreachable' => bool, 'message'].
+     * Refunds that FAILED are excluded — the customer got nothing back.
+     */
+    function cdp_fsPaystackRefunds($txnId)
+    {
+        $txnId = (int) $txnId;
+        if ($txnId <= 0) {
+            return ['ok' => false, 'refunded' => 0.0, 'pending' => false, 'n' => 0,
+                    'unreachable' => true, 'message' => 'No transaction id.'];
+        }
+        $r = cdp_fsGatewayRow(4);
+        $secret = $r ? trim((string) $r->secret_key) : '';
+        if (!cdp_fsKeyOk($secret)) {
+            return ['ok' => false, 'refunded' => 0.0, 'pending' => false, 'n' => 0,
+                    'unreachable' => true, 'message' => 'Paystack is not configured.'];
+        }
+        // MUST filter by transaction id. Verified against the live API: the
+        // documented-looking ?reference= filter is SILENTLY IGNORED and returns
+        // every refund on the account, which would attribute other customers'
+        // refunds to this payment (seen: ₵5,030 reported against a ₵100 charge).
+        $res = cdp_fsHttpJson('GET', 'https://api.paystack.co/refund?transaction=' . $txnId,
+            ['Authorization: Bearer ' . $secret, 'Cache-Control: no-cache'], null);
+        if (!$res['ok']) {
+            return ['ok' => false, 'refunded' => 0.0, 'pending' => false, 'n' => 0,
+                    'unreachable' => true, 'message' => 'Could not reach Paystack: ' . $res['error']];
+        }
+        $j = json_decode($res['body']);
+        if (!isset($j->data) || !is_array($j->data)) {
+            return ['ok' => false, 'refunded' => 0.0, 'pending' => false, 'n' => 0,
+                    'unreachable' => true,
+                    'message' => 'Paystack could not list refunds: '
+                               . (isset($j->message) ? (string) $j->message : ('HTTP ' . $res['code']))];
+        }
+
+        $refunded = 0.0;
+        $pending = false;
+        foreach ($j->data as $rf) {
+            $st = strtolower((string) ($rf->status ?? ''));
+            if ($st === 'failed') {
+                continue; // nothing left the account
+            }
+            if (in_array($st, ['pending', 'processing'], true)) {
+                $pending = true;
+            }
+            // deducted_amount is what Paystack actually took back from us; fall
+            // back to the requested amount when it is not populated yet.
+            $amt = isset($rf->deducted_amount) && $rf->deducted_amount
+                ? (float) $rf->deducted_amount
+                : (float) ($rf->amount ?? 0);
+            $refunded += $amt / 100.0; // pesewas -> GHS
+        }
+        return ['ok' => true, 'refunded' => round($refunded, 2), 'pending' => $pending,
+                'n' => count($j->data), 'unreachable' => false, 'message' => ''];
     }
 }
 

@@ -28,7 +28,7 @@ if (!function_exists('cdp_fsKnownStatuses')) {
             'manual',                                     // cash, no gateway
             'success', 'failed', 'abandoned', 'pending',  // Paystack
             'ongoing', 'processing', 'queued',
-            'reversal-pending', 'reversed',
+            'partially-refunded', 'reversal-pending', 'reversed',
             'unconfigured', 'wrong_currency', 'amount_mismatch', 'unknown',
         ];
     }
@@ -76,6 +76,14 @@ if (!function_exists('cdp_fsStatusMeta')) {
             // money is already on its way out, so it stops counting immediately
             // rather than waiting for the settle — we must not release packages
             // against money that is being clawed back.
+            // OBSERVED live: Paystack moves a transaction to 'reversal-pending'
+            // for a PARTIAL refund too, so its status cannot tell partial from
+            // full. We decide by comparing the refunded amount to what was paid
+            // (see cdp_fsRecheckPayment). A partly-refunded payment is STILL
+            // money — we keep the unrefunded slice — so money stays true here
+            // and cdp_fsMoneyExpr() subtracts what went back.
+            'partially-refunded' => ['Partly Refunded', 'label-warning', true, false,
+                             'Part of this payment was refunded. We still hold the rest, and it still counts toward the bill.'],
             'reversal-pending' => ['Reversal Pending', 'label-danger', false, false,
                              'A refund or chargeback is being processed. The money is on its way back to the customer, so it no longer counts as paid.'],
             'reversed'   => ['Reversed', 'label-danger', false, true,
@@ -121,6 +129,25 @@ if (!function_exists('cdp_fsStatusIsMoney')) {
     {
         $meta = cdp_fsStatusMeta($status, $mode);
         return (bool) $meta['money'];
+    }
+}
+
+if (!function_exists('cdp_fsMoneyExpr')) {
+    /**
+     * The SQL expression for how much of a payment we actually still hold.
+     *
+     * A FULL refund flips the transaction's status, so cdp_fsMoneySqlFilter()
+     * drops the whole row. A PARTIAL refund does not — Paystack leaves the
+     * transaction reading 'success' and books the refund separately — so the
+     * only way to be correct is to subtract the refunded amount. Refund ₵30 of
+     * a ₵100 payment and we hold ₵70.
+     *
+     * Use this ANYWHERE you would otherwise SUM(amount_ghs) as money.
+     */
+    function cdp_fsMoneyExpr($alias = '')
+    {
+        $p = $alias !== '' ? $alias . '.' : '';
+        return '(' . $p . 'amount_ghs - COALESCE(' . $p . 'refunded_ghs, 0))';
     }
 }
 
