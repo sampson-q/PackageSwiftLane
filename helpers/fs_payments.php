@@ -226,6 +226,58 @@ if (!function_exists('cdp_fsRecheckPayment')) {
             return ['ok' => false, 'message' => $verify['message'] ?: 'Could not reach the gateway.'];
         }
 
+        // Refunds. Paystack moves a transaction to 'reversal-pending' for a
+        // PARTIAL refund exactly as it does for a full one, so the status can
+        // never tell us which happened — only the refunded AMOUNT can. Verified
+        // live: refunding ₵30 of ₵100 gave status 'reversal-pending', which on
+        // status alone would have written off the whole ₵100 and pulled the
+        // customer's packages back.
+        $refundNote = '';
+        if (strtolower((string) $row->mode) === 'paystack') {
+            $rf = cdp_fsPaystackRefunds((int) ($verify['detail']['txn_id'] ?? 0));
+            if (!empty($rf['ok'])) {
+                $refunded = round((float) $rf['refunded'], 2);
+                $prev = round((float) ($row->refunded_ghs ?? 0), 2);
+                if (abs($refunded - $prev) > 0.005) {
+                    $db->cdp_query("UPDATE cdb_fs_payments
+                                    SET refunded_ghs = :amt,
+                                        refunded_at = CASE WHEN :amt2 > 0 AND refunded_at IS NULL
+                                                           THEN NOW() ELSE refunded_at END
+                                    WHERE id = :id");
+                    $db->bind(':amt', $refunded);
+                    $db->bind(':amt2', $refunded);
+                    $db->bind(':id', (int) $row->id);
+                    $db->cdp_execute();
+
+                    $refundNote = ' ₵' . number_format($refunded, 2) . ' has been refunded'
+                                . ($rf['pending'] ? ' (still processing)' : '') . '.';
+
+                    cdp_fsLogPaymentEvent([
+                        'payment_id' => (int) $row->id,
+                        'reference'  => (string) $row->reference,
+                        'source'     => $source,
+                        'event'      => 'refund_recorded',
+                        'amount_ghs' => $refunded,
+                        'message'    => 'Refunded total is now ₵' . number_format($refunded, 2)
+                                      . ' of ₵' . number_format((float) $row->amount_ghs, 2)
+                                      . ($rf['pending'] ? ' (a refund is still processing)' : '') . '.',
+                        'actor_id'   => $actorId,
+                    ]);
+                    $row->refunded_ghs = $refunded;
+                }
+
+                // Decide partial vs full by AMOUNT, since the status cannot.
+                // Only a refund of (effectively) the whole payment writes it
+                // off and pulls clearance; anything less leaves the payment
+                // standing, minus what went back.
+                $refunded = round((float) $rf['refunded'], 2);
+                $gross = round((float) $row->amount_ghs, 2);
+                if ($refunded > 0.005 && $refunded < ($gross - 0.005)) {
+                    $status = 'partially-refunded';
+                }
+            }
+        }
+
         $res = cdp_fsApplyPaymentStatus((int) $row->id, $status, [
             'detail'   => $verify['detail'] ?? [],
             'payload'  => $verify['payload'] ?? null,
@@ -236,13 +288,17 @@ if (!function_exists('cdp_fsRecheckPayment')) {
         ]);
 
         $meta = cdp_fsStatusMeta($status, (string) $row->mode);
+        $msg = $res['changed']
+            ? ('Status changed from ' . cdp_fsStatusMeta($res['old'], (string) $row->mode)['label']
+               . ' to ' . $meta['label'] . '.')
+            : ('Still ' . $meta['label'] . '.');
+
         return ['ok' => true, 'status' => $status, 'label' => $meta['label'], 'hint' => $meta['hint'],
-                'changed' => $res['changed'], 'old' => $res['old'],
+                'changed' => ($res['changed'] || $refundNote !== ''),
+                'old' => $res['old'],
                 'revoked' => $res['revoked'], 'delivered' => $res['delivered'],
-                'message' => $res['changed']
-                    ? ('Status changed from ' . cdp_fsStatusMeta($res['old'], (string) $row->mode)['label']
-                       . ' to ' . $meta['label'] . '.')
-                    : ('Still ' . $meta['label'] . '.')];
+                'refunded' => round((float) ($row->refunded_ghs ?? 0), 2),
+                'message' => $msg . $refundNote];
     }
 }
 
@@ -566,7 +622,7 @@ if (!function_exists('cdp_fsSyncBillingCache')) {
             $db = new Conexion;
             $db->cdp_query("UPDATE cdb_consolidate_customer_billing b
                             SET b.paid_ghs = (
-                                    SELECT COALESCE(SUM(p.amount_ghs), 0) FROM cdb_fs_payments p
+                                    SELECT COALESCE(SUM(" . cdp_fsMoneyExpr('p') . "), 0) FROM cdb_fs_payments p
                                     WHERE p.consolidate_id = b.consolidate_id AND p.sender_id = b.sender_id
                                       AND " . cdp_fsMoneySqlFilter('p') . "
                                 ),
