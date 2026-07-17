@@ -143,11 +143,9 @@ $data = $db->cdp_registros();
                     <a class="btn btn-outline-dark btn-sm" href="financial_sheet_consolidation.php?id=<?php echo (int) $row->consolidate_id; ?>" title="Open in Financial Sheet">
                         <i class="fa fa-search"></i>
                     </a>
-                    <a class="btn btn-outline-dark btn-sm" target="_blank"
-                       href="print_inv_receivable.php?consolidate_id=<?php echo (int) $row->consolidate_id; ?>&amp;sender_id=<?php echo (int) $row->sender_id; ?>"
-                       title="Print Invoice">
-                        <i class="fa fa-print"></i>
-                    </a>
+                    <?php // Print Invoice (print_inv_receivable) temporarily removed at the
+                          // user's request, together with its endpoint and view. Restore from
+                          // git history if it comes back. ?>
                 </td>
             </tr>
         <?php } } ?>
