@@ -24,6 +24,7 @@
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/querys.php');
+require_once(__DIR__ . '/../../helpers/fs_reports.php');
 require_login();
 require_permission('view_general_reports');
 
@@ -77,25 +78,19 @@ if (!empty($range)) {
 }
 
 // Throttled (was a full-scan UPDATE on every page load):
-if (!function_exists('cdp_markOverdueInvoices')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/overdue_invoices.php')) { $d = dirname($d); } if (is_file($d . '/helpers/overdue_invoices.php')) require_once $d . '/helpers/overdue_invoices.php'; }
-cdp_markOverdueInvoices($db);
+// (was: cdp_markOverdueInvoices — this report no longer reads status_invoice,
+//  so it has no reason to scan-and-write cdb_add_order on every load.)
 
 
-$sql = "SELECT * FROM cdb_add_order where order_payment_method >1  
-			
-			$sWhere
-			
-			 order by order_id desc 
-			 ";
-
-
-$db->cdp_query($sql);
-$db->cdp_execute();
-$numrows = $db->cdp_rowCount();
-
-
-$db->cdp_query($sql);
-$data = $db->cdp_registros();
+// Financial Sheet ledger — one row per BILL (a consolidation billed to a
+// customer). Previously listed cdb_add_order rows whose billing TERMS were
+// postpaid, priced against cdb_charges_order — a ledger retired in 2022, so the
+// paid/pending columns were meaningless.
+$data = cdp_fsBillingSummary([
+	'customer_id' => $customer_id,
+	'range'       => $range,
+]);
+$numrows = count($data);
 
 
 
@@ -107,10 +102,10 @@ if ($numrows > 0) { ?>
 			<thead>
 				<tr>
 
-					<th><b><?php echo $lang['ltracking'] ?></b></th>
+					<th><b>Consolidation</b></th>
 					<th class="text-center"><b><?php echo $lang['report-text37'] ?></b></th>
 					<th class="text-center"><b><?php echo $lang['ddate'] ?></b></th>
-					<th class="text-center"><b><?php echo $lang['payment_text2'] ?></b></th>
+					<th class="text-center"><b>Discount</b></th>
 					<th class="text-center"><b><?php echo $lang['lstatusinvoice'] ?></b></th>
 					<th class="text-center"><b><?php echo $lang['modal-text20'] ?></b></th>
 					<th class="text-center"><b><?php echo $lang['leftorder110'] ?></b></th>
@@ -143,75 +138,46 @@ if ($numrows > 0) { ?>
 
 					foreach ($data as $row) {
 
-						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
-						$sender_data = $db->cdp_registro();
+						list($text_status, $label_class) = cdp_fsPayStatusLabel($row->pay_status);
 
-						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->receiver_id . "'");
-						$receiver_data = $db->cdp_registro();
-
-						$db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->driver_id . "'");
-						$driver_data = $db->cdp_registro();
-
-
-						$db->cdp_query('SELECT  IFNULL(sum(total), 0)  as total  FROM cdb_charges_order WHERE order_id=:order_id');
-
-						$db->bind(':order_id', $row->order_id);
-
-						$db->cdp_execute();
-
-						$sum_payment = $db->cdp_registro();
-
-						$pendiente = $row->total_order - $sum_payment->total;
-
-						if ($row->status_invoice == 1) {
-							$text_status = $lang['invoice_paid'];
-							$label_class = "label-success";
-						} else if ($row->status_invoice == 2) {
-							$text_status = $lang['invoice_pending'];
-							$label_class = "label-warning";
-						} else if ($row->status_invoice == 3) {
-							$text_status = $lang['invoice_due'];
-							$label_class = "label-danger";
-						}
-
-						$sumador_pendiente += $pendiente;
-						$sumador_total += $row->total_order;
-						$sumador_pagado += $sum_payment->total;
-
+						$sumador_pendiente += $row->balance_ghs;
+						$sumador_total     += $row->amount_ghs;
+						$sumador_pagado    += $row->paid_ghs;
 
 					?>
 						<tr class="card-hovera">
 
-							<td><b><a data-toggle="modal" data-target="#charges_list" data-id="<?php echo $row->order_id; ?>"><?php echo $row->order_prefix . $row->order_no; ?></a></b></td>
+							<td><b><a href="financial_sheet_consolidation.php?id=<?php echo (int) $row->consolidate_id; ?>"><?php echo htmlspecialchars($row->consol_no); ?></a></b></td>
 
 							<td class="text-center">
-								<?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?>
+								<?php echo htmlspecialchars($row->customer);
+									echo $row->locker ? ' <span class="text-muted">(' . htmlspecialchars($row->locker) . ')</span>' : ''; ?>
 							</td>
 
 							<td class="text-center">
-								<?php echo $row->order_date; ?>
+								<?php echo htmlspecialchars(date('Y-m-d', strtotime($row->billed_at))); ?>
 							</td>
 
 
 							<td class="text-center">
-								<?php echo $row->due_date; ?>
+								<?php echo $row->discount_ghs > 0 ? '₵' . number_format($row->discount_ghs, 2) : '—'; ?>
 							</td>
 
 							<td class="text-center">
-								<span class="label label-large <?php echo $label_class; ?>"><?php echo $text_status; ?></span>
+								<span class="label label-large <?php echo $label_class; ?>"><?php echo htmlspecialchars($text_status); ?></span>
 
 							</td>
 
 							<td class="text-center">
-								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($row->total_order); ?>
+								<?php echo '₵' . number_format($row->amount_ghs, 2); ?>
 							</td>
 
 							<td class="text-center">
-								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($sum_payment->total); ?>
+								<?php echo '₵' . number_format($row->paid_ghs, 2); ?>
 							</td>
 
 							<td class="text-center">
-								<b><?php echo $core->currency; ?></b> <?php echo cdb_money_format($pendiente); ?>
+								<b><?php echo '₵' . number_format($row->balance_ghs, 2); ?></b>
 							</td>
 						</tr>
 					<?php $count++;
@@ -225,15 +191,15 @@ if ($numrows > 0) { ?>
 
 					<td colspan="4"></td>
 					<td class="text-center  ">
-						<b><?php echo cdb_money_format($sumador_total); ?> </b>
+						<b><?php echo '₵' . number_format($sumador_total, 2); ?> </b>
 					</td>
 
 					<td class="text-center  ">
-						<b><?php echo cdb_money_format($sumador_pagado); ?> </b>
+						<b><?php echo '₵' . number_format($sumador_pagado, 2); ?> </b>
 					</td>
 
 					<td class="text-center  ">
-						<b><?php echo cdb_money_format($sumador_pendiente); ?> </b>
+						<b><?php echo '₵' . number_format($sumador_pendiente, 2); ?> </b>
 					</td>
 
 				</tr>

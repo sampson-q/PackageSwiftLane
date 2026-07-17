@@ -22,6 +22,7 @@
 
 
 require_once('helpers/querys.php');
+require_once('helpers/fs_reports.php');
 
 $db = new Conexion;
 
@@ -30,48 +31,14 @@ $pay_mode = intval($_REQUEST['pay_mode']);
 $range = $_REQUEST['range'];
 
 
-$sWhere = "";
-
-
-if ($customer_id > 0) {
-
-    $sWhere .= " and b.sender_id = '" . $customer_id . "'";
-}
-
-
-if ($pay_mode > 0) {
-
-    $sWhere .= " and a.payment_type = '" . $pay_mode . "'";
-}
-
-
-if (!empty($range)) {
-
-    $fecha =  explode(" - ", $range);
-    $fecha = str_replace('/', '-', $fecha);
-
-    $fecha_inicio = date('Y-m-d', strtotime($fecha[0]));
-    $fecha_fin = date('Y-m-d', strtotime($fecha[1]));
-
-
-    $sWhere .= " and  a.charge_date between '" . $fecha_inicio . "'  and '" . $fecha_fin . "'";
-}
-
-$sql = "SELECT c.lname, c.fname, a.id_charge, b.order_prefix, b.order_no, a.payment_type, a.charge_date, a.total FROM cdb_charges_order as a 
-        INNER JOIN cdb_add_order as b ON a.order_id = b.order_id
-        INNER JOIN cdb_users as c ON c.id = b.sender_id
-        $sWhere
-        order by a.id_charge
-     ";
-
-
-$db->cdp_query($sql);
-$db->cdp_execute();
-$numrows = $db->cdp_rowCount();
-
-
-$db->cdp_query($sql);
-$data = $db->cdp_registros();
+// Financial Sheet ledger — same source as the on-screen report, so print and
+// screen can never disagree. (Was cdb_charges_order, retired since 2022.)
+$data = cdp_fsPaymentsReceived([
+    'customer_id' => $customer_id,
+    'mode'        => cdp_fsModeFromMetPayment($pay_mode),
+    'range'       => $range,
+]);
+$numrows = count($data);
 
 $fecha = str_replace('-', '/', $fecha);
 
@@ -143,17 +110,7 @@ $fecha = str_replace('-', '/', $fecha);
                 $sumador_total = 0;
 
                 foreach ($data as $row) {
-
-                    $db->cdp_query('SELECT  * FROM cdb_met_payment WHERE id=:id');
-
-                    $db->bind(':id', $row->payment_type);
-
-                    $db->cdp_execute();
-
-                    $met_payment = $db->cdp_registro();
-
-
-                    $sumador_total += $row->total;
+                    $sumador_total += $row->amount_ghs;
 
             ?>
                     <tr>
@@ -161,27 +118,27 @@ $fecha = str_replace('-', '/', $fecha);
                             <?php echo $count; ?>
                         </td>
                         <td class="text-center">
-                            <?php echo $row->id_charge; ?>
+                            <?php echo $row->id; ?>
                         </td>
 
                         <td class="text-center">
-                            <?php echo $row->charge_date; ?>
+                            <?php echo date('Y-m-d H:i', strtotime($row->paid_at)); ?>
                         </td>
 
 
                         <td class="text-center">
-                            <?php echo $row->fname . ' ' . $row->lname; ?>
+                            <?php echo $row->customer; ?>
                         </td>
                         <td class="text-center">
-                            <?php echo $met_payment->name_pay; ?>
-                        </td>
-
-                        <td class="text-center">
-                            <?php echo $row->order_prefix . $row->order_no; ?>
+                            <?php echo cdp_fsModeLabel($row->mode); ?>
                         </td>
 
                         <td class="text-center">
-                            <?php echo cdb_money_format($row->total); ?>
+                            <?php echo ($row->tracking !== "" ? $row->tracking : "—"); ?>
+                        </td>
+
+                        <td class="text-center">
+                            <?php echo '₵' . number_format($row->amount_ghs, 2); ?>
                         </td>
                     </tr>
                 <?php
@@ -196,7 +153,7 @@ $fecha = str_replace('-', '/', $fecha);
 
                     <td colspan="5"></td>
                     <td class="text-left">
-                        <b><?php echo cdb_money_format($sumador_total); ?> </b>
+                        <b><?php echo '₵' . number_format($sumador_total, 2); ?> </b>
                     </td>
 
                 </tr>

@@ -1,4 +1,6 @@
 <?php
+require_once(dirname(__DIR__, 4) . '/helpers/fs_reports.php');
+
 // *************************************************************************
 // *                                                                       *
 // * DEPRIXA PRO -  Integrated Web Shipping System                         *
@@ -36,48 +38,14 @@ $pay_mode = intval($_REQUEST['pay_mode']);
 $range = $_REQUEST['range'];
 
 
-$sWhere = "";
-
-
-if ($customer_id > 0) {
-
-	$sWhere .= " and b.sender_id = '" . $customer_id . "'";
-}
-
-
-if ($pay_mode > 0) {
-
-	$sWhere .= " and a.payment_type = '" . $pay_mode . "'";
-}
-
-
-if (!empty($range)) {
-
-	$fecha =  explode(" - ", $range);
-	$fecha = str_replace('/', '-', $fecha);
-
-	$fecha_inicio = date('Y-m-d', strtotime($fecha[0]));
-	$fecha_fin = date('Y-m-d', strtotime($fecha[1]));
-
-
-	$sWhere .= " and  a.charge_date between '" . $fecha_inicio . "'  and '" . $fecha_fin . "'";
-}
-
-$sql = "SELECT c.lname, c.fname, a.id_charge, b.order_prefix, b.order_no, a.payment_type, a.charge_date, a.total FROM cdb_charges_order as a 
-		INNER JOIN cdb_add_order as b ON a.order_id = b.order_id
-		INNER JOIN cdb_users as c ON c.id = b.sender_id
-		$sWhere
-		order by a.id_charge
-	 ";
-
-
-$db->cdp_query($sql);
-$db->cdp_execute();
-$numrows = $db->cdp_rowCount();
-
-
-$db->cdp_query($sql);
-$data = $db->cdp_registros();
+// Financial Sheet ledger — same source as the on-screen report, so print and
+// screen can never disagree. (Was cdb_charges_order, retired since 2022.)
+$data = cdp_fsPaymentsReceived([
+    'customer_id' => $customer_id,
+    'mode'        => cdp_fsModeFromMetPayment($pay_mode),
+    'range'       => $range,
+]);
+$numrows = count($data);
 
 $fecha = str_replace('-', '/', $fecha);
 
@@ -111,17 +79,7 @@ if ($numrows > 0) {
 	$sumador_total = 0;
 
 	foreach ($data as $row) {
-
-		$db->cdp_query('SELECT  * FROM cdb_met_payment WHERE id=:id');
-
-		$db->bind(':id', $row->payment_type);
-
-		$db->cdp_execute();
-
-		$met_payment = $db->cdp_registro();
-
-
-		$sumador_total += $row->total;
+		$sumador_total += $row->amount_ghs;
 
 		$count++;
 
@@ -129,19 +87,19 @@ if ($numrows > 0) {
 
 		$html .= '<tr>';
 		$html .= '<td >' . $count . '</td>';
-		$html .= '<td >' . $row->id_charge . '</td>';
-		$html .= '<td >' . $row->charge_date . '</td>';
-		$html .= '<td>' . $row->fname . ' ' . $row->lname . '</td>';
-		$html .= '<td >' . $met_payment->name_pay . '</td>';
-		$html .= '<td >' . $row->order_prefix . $row->order_no . '</td>';
-		$html .= '<td>' . cdb_money_format_bar($row->total) . '</td>';
+		$html .= '<td >' . $row->id . '</td>';
+		$html .= '<td >' . date('Y-m-d H:i', strtotime($row->paid_at)) . '</td>';
+		$html .= '<td>' . $row->customer . '</td>';
+		$html .= '<td >' . cdp_fsModeLabel($row->mode) . '</td>';
+		$html .= '<td >' . ($row->tracking !== "" ? $row->tracking : "—") . '</td>';
+		$html .= '<td>' . 'GHS ' . number_format($row->amount_ghs, 2) . '</td>';
 		$html .= '</tr>';
 	}
 
 	$html .= '<tr>';
 	$html .= '<td><b>' . $lang['report-text53'] . '</td> </b>';
 	$html .= '<td colspan="5"></td>';
-	$html .= '<td><b>' . cdb_money_format_bar($sumador_total) . ' </b></td>';
+	$html .= '<td><b>' . 'GHS ' . number_format($sumador_total, 2) . ' </b></td>';
 	$html .= '</tr>';
 }
 

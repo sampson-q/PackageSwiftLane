@@ -1,4 +1,6 @@
 <?php
+require_once(dirname(__DIR__, 4) . '/helpers/fs_reports.php');
+
 // *************************************************************************
 // *                                                                       *
 // * DEPRIXA PRO -  Integrated Web Shipping System                         *
@@ -68,24 +70,14 @@ if (!empty($range)) {
 
 
 // Throttled (was a full-scan UPDATE on every page load):
-if (!function_exists('cdp_markOverdueInvoices')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/overdue_invoices.php')) { $d = dirname($d); } if (is_file($d . '/helpers/overdue_invoices.php')) require_once $d . '/helpers/overdue_invoices.php'; }
-cdp_markOverdueInvoices($db);
 
 
-$sql = "SELECT * FROM cdb_add_order where order_payment_method !=1  
-            $sWhere
-            
-             order by order_id desc 
-             ";
-
-
-$db->cdp_query($sql);
-$db->cdp_execute();
-$numrows = $db->cdp_rowCount();
-
-
-$db->cdp_query($sql);
-$data = $db->cdp_registros();
+// Financial Sheet ledger — same source as the on-screen report.
+$data = cdp_fsBillingSummary([
+    'customer_id' => $customer_id,
+    'range'       => $range,
+]);
+$numrows = count($data);
 
 $fecha = str_replace('-', '/', $fecha);
 
@@ -125,40 +117,10 @@ if ($numrows > 0) {
 
     foreach ($data as $row) {
 
-        $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->sender_id . "'");
-        $sender_data = $db->cdp_registro();
-
-        $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->receiver_id . "'");
-        $receiver_data = $db->cdp_registro();
-
-        $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row->driver_id . "'");
-        $driver_data = $db->cdp_registro();
-
-
-        $db->cdp_query('SELECT  IFNULL(sum(total), 0)  as total  FROM cdb_charges_order WHERE order_id=:order_id');
-
-        $db->bind(':order_id', $row->order_id);
-
-        $db->cdp_execute();
-
-        $sum_payment = $db->cdp_registro();
-
-        $pendiente = $row->total_order - $sum_payment->total;
-
-        if ($row->status_invoice == 1) {
-            $text_status = $lang['invoice_paid'];
-            $label_class = "label-success";
-        } else if ($row->status_invoice == 2) {
-            $text_status = $lang['invoice_pending'];
-            $label_class = "label-warning";
-        } else if ($row->status_invoice == 3) {
-            $text_status = $lang['invoice_due'];
-            $label_class = "label-danger";
-        }
-
-        $sumador_pendiente += $pendiente;
-        $sumador_total += $row->total_order;
-        $sumador_pagado += $sum_payment->total;
+                                                list($text_status, $label_class) = cdp_fsPayStatusLabel($row->pay_status);
+        $sumador_pendiente += $row->balance_ghs;
+        $sumador_total += $row->amount_ghs;
+        $sumador_pagado += $row->paid_ghs;
 
         $count++;
 
@@ -166,23 +128,23 @@ if ($numrows > 0) {
 
         $html .= '<tr>';
         $html .= '<td >' . $count . '</td>';
-        $html .= '<td >' . $row->order_prefix . $row->order_no . '</td>';
-        $html .= '<td>' . $sender_data->fname . ' ' . $sender_data->lname . '</td>';
-        $html .= '<td >' . $row->order_date . '</td>';
-        $html .= '<td >' . $row->due_date . '</td>';
+        $html .= '<td >' . $row->consol_no . '</td>';
+        $html .= '<td>' . $row->customer . '</td>';
+        $html .= '<td >' . date('Y-m-d', strtotime($row->billed_at)) . '</td>';
+        $html .= '<td >' . ($row->discount_ghs > 0 ? "GHS " . number_format($row->discount_ghs, 2) : "-") . '</td>';
         $html .= '<td >' . $text_status . '</td>';
-        $html .= '<td>' . cdb_money_format_bar($row->total_order) . '</td>';
-        $html .= '<td>' . cdb_money_format_bar($sum_payment->total) . '</td>';
-        $html .= '<td>' . cdb_money_format_bar($pendiente) . '</td>';
+        $html .= '<td>' . 'GHS ' . number_format($row->amount_ghs, 2) . '</td>';
+        $html .= '<td>' . 'GHS ' . number_format($row->paid_ghs, 2) . '</td>';
+        $html .= '<td>' . 'GHS ' . number_format($row->balance_ghs, 2) . '</td>';
         $html .= '</tr>';
     }
 
     $html .= '<tr>';
     $html .= '<td><b>' . $lang['report-text53'] . '</td> </b>';
     $html .= '<td colspan="5"></td>';
-    $html .= '<td><b>' . cdb_money_format_bar($sumador_total) . ' </b></td>';
-    $html .= '<td><b>' . cdb_money_format_bar($sumador_pagado) . ' </b></td>';
-    $html .= '<td><b>' . cdb_money_format_bar($sumador_pendiente) . ' </b></td>';
+    $html .= '<td><b>' . 'GHS ' . number_format($sumador_total, 2) . ' </b></td>';
+    $html .= '<td><b>' . 'GHS ' . number_format($sumador_pagado, 2) . ' </b></td>';
+    $html .= '<td><b>' . 'GHS ' . number_format($sumador_pendiente, 2) . ' </b></td>';
     $html .= '</tr>';
 }
 
