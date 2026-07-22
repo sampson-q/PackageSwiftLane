@@ -1,81 +1,43 @@
 <?php
-// *************************************************************************
-// *                                                                       *
-// * DEPRIXA PRO -  Integrated Web Shipping System                         *
-// * Copyright (c) JAOMWEB. All Rights Reserved                            *
-// *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * Email: support@jaom.info                                              *
-// * Website: http://www.jaom.info                                         *
-// *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * This software is furnished under a license and may be used and copied *
-// * only  in  accordance  with  the  terms  of such  license and with the *
-// * inclusion of the above copyright notice.                              *
-// * If you Purchased from Codecanyon, Please read the full License from   *
-// * here- http://codecanyon.net/licenses/standard                         *
-// *                                                                       *
-// *************************************************************************
-
+// ============================================================================
+// Transactions Control Panel — receivables at a glance, driven ENTIRELY by the
+// Financial Sheet ledger (single source of truth). All figures are USD to
+// match $core->currency: billed uses the USD snapshot; received/outstanding
+// convert GHS via each row's OWN stored exchange rate, net of refunds.
+// (Agency-restricted admins see company-wide finance — the FS billing ledger
+// has no agency column.)
+// ============================================================================
 
 require_once(__DIR__ . '/../../helpers/querys.php');
 require_once(__DIR__ . '/../../helpers/fs_status.php');
+require_once(__DIR__ . '/../../helpers/dashboard_data.php');
 $db = new Conexion;
-
 $userData = $user->cdp_getUserData();
 
-$ctx = cdp_getAgencyContext();
-$agency_where = '';
-if ($ctx['is_restricted'] && $ctx['agency_id'] !== null) {
-    $agency_where = ' AND agency = ' . (int)$ctx['agency_id'];
-} elseif ($ctx['is_restricted']) {
-    $agency_where = ' AND 1=0';
-} elseif ((int)$userData->userlevel === 3) {
-    $agency_where = ' AND driver_id = ' . (int)$_SESSION['userid'];
-} elseif ((int)$userData->userlevel === 1) {
-    $agency_where = ' AND sender_id = ' . (int)$_SESSION['userid'];
-}
+// Clients reaching this panel only ever see their own ledger.
+$fs_sender = ((int) $userData->userlevel === 1) ? (int) $_SESSION['userid'] : null;
 
-// Obtener el mes y el año actual
-$month = date('m');
-$year = date('Y');
+$monthName = obtenerNombreMes((int) date('n'));
 
-// Obtener el número del mes actual
-$currentMonth = date('n');
+$fs = cdp_dashFsTotals($fs_sender);
+$ct_payments_month = cdp_dashCount(
+    'cdb_fs_payments',
+    "AND recorded_at >= '" . date('Y-m-01') . "' AND " . cdp_fsMoneySqlFilter()
+    . ($fs_sender !== null ? " AND sender_id = $fs_sender" : '')
+);
 
-// Obtener el nombre del mes actual
-$monthName = obtenerNombreMes($currentMonth);
-
-// ---- Now driven by the Financial Sheet ledger (single source of truth). All
-// figures are USD to match $core->currency: billed uses the USD snapshot;
-// received/outstanding convert GHS via each row's OWN stored exchange rate.
-// (Agency-restricted admins currently see company-wide finance — the FS billing
-// ledger has no agency column.)
-$fs_ini = date('Y-m-01 00:00:00');
-$fs_fin = date('Y-m-t 23:59:59');
-$fs_own = ((int) $userData->userlevel === 1) ? (' AND sender_id = ' . (int) $_SESSION['userid']) : '';
-
-$db->cdp_query("SELECT COALESCE(SUM(amount_usd),0) t FROM cdb_consolidate_customer_billing
-                WHERE billed_at BETWEEN :i AND :f" . $fs_own);
-$db->bind(':i', $fs_ini); $db->bind(':f', $fs_fin); $db->cdp_execute();
-$sumador_total = (float) ($db->cdp_registro()->t ?? 0);   // billed this month
-
-// "Received" must count only money we actually hold — a reversed payment
-// would otherwise still be reported as revenue on the dashboard.
-$db->cdp_query("SELECT COALESCE(SUM(" . cdp_fsMoneyExpr() . "/NULLIF(exchange_rate,0)),0) t FROM cdb_fs_payments
-                WHERE recorded_at BETWEEN :i AND :f AND " . cdp_fsMoneySqlFilter() . $fs_own);
-$db->bind(':i', $fs_ini); $db->bind(':f', $fs_fin); $db->cdp_execute();
-$sumador_pagado = (float) ($db->cdp_registro()->t ?? 0);  // received this month
-
-$db->cdp_query("SELECT COALESCE(SUM(GREATEST(0, COALESCE(amount_ghs,0)-COALESCE(discount_ghs,0)-COALESCE(paid_ghs,0))/NULLIF(exchange_rate,0)),0) t
-                FROM cdb_consolidate_customer_billing WHERE 1=1" . $fs_own);
-$db->cdp_execute();
-$sumador_pendiente = (float) ($db->cdp_registro()->t ?? 0); // outstanding (all-time)
-
-$count = 0;
-
+$fsMonthly = cdp_dashFsMonthly($fs_sender);
+$charts = [
+    [
+        'el' => '#chart_fs_money', 'type' => 'area',
+        'series' => [
+            ['name' => 'Billed (USD)',   'data' => $fsMonthly['billed']],
+            ['name' => 'Received (USD)', 'data' => $fsMonthly['received']],
+        ],
+        'labels' => cdp_dashMonthLabels(), 'colors' => ['#f2b21b', '#36bea6'],
+        'money' => true, 'height' => 330,
+    ],
+];
 ?>
 <!DOCTYPE html>
 <html dir="<?php echo $direction_layout; ?>" lang="en">
@@ -83,249 +45,70 @@ $count = 0;
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <!-- Tell the browser to be responsive to screen width -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Meta Description (for search results) -->
     <meta name="description" content="<?php echo htmlspecialchars($core->meta_description, ENT_QUOTES, 'UTF-8'); ?>">
-    <!-- Author (content owner) -->
     <meta name="author" content="CODDINGPRO">
-    <!-- Keywords (related keywords) -->
     <meta name="keywords" content="<?php echo htmlspecialchars($core->meta_keywords, ENT_QUOTES, 'UTF-8'); ?>">
-    <!-- Open Graph Meta (for social media sharing, like Facebook) -->
-    <meta property="og:title" content="<?php echo htmlspecialchars($core->og_title, ENT_QUOTES, 'UTF-8'); ?>">
-    <meta property="og:description" content="<?php echo htmlspecialchars($core->og_description, ENT_QUOTES, 'UTF-8'); ?>">
-    <meta property="og:type" content="<?php echo htmlspecialchars($core->og_type, ENT_QUOTES, 'UTF-8'); ?>">
-    <meta property="og:url" content="<?php echo htmlspecialchars($core->og_url, ENT_QUOTES, 'UTF-8'); ?>">
-    <meta property="og:image" content="<?php echo htmlspecialchars($core->og_image, ENT_QUOTES, 'UTF-8'); ?>">
-    <title><?php echo $lang['left-menu-sidebar-28'] ?>| <?php echo $core->site_name ?></title>
-
-    <!-- Favicon icon -->
+    <title><?php echo $lang['left-menu-sidebar-28'] ?> | <?php echo $core->site_name ?></title>
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
-    <link href="assets/template/assets/libs/morris.js/morris.css" rel="stylesheet">
     <?php include 'views/inc/head_scripts.php'; ?>
-
 </head>
 
 <body>
-
     <div id="main-wrapper">
-        <!-- ============================================================== -->
-        <!-- Preloader - style you can find in spinners.css -->
-        <!-- ============================================================== -->
-
         <?php include 'views/inc/preloader.php'; ?>
-
-        <!-- ============================================================== -->
-        <!-- Preloader - style you can find in spinners.css -->
-        <!-- ============================================================== -->
-
         <?php include 'views/inc/topbar.php'; ?>
-
-        <!-- End Topbar header -->
-
-
-        <!-- Left Sidebar - style you can find in sidebar.scss  -->
-
         <?php include 'views/inc/left_sidebar.php'; ?>
 
-
-        <!-- End Left Sidebar - style you can find in sidebar.scss  -->
-
-        <!-- Page wrapper  -->
-
         <div class="page-wrapper">
-
             <div class="page-breadcrumb">
-                <div class="row">
-                    <div class="col-5 align-self-center">
-                        <h4 class="page-title"><?php echo $lang['left-menu-sidebar-28'] ?></h4>
+                <div class="sw-dash-hello">
+                    <div>
+                        <h4 class="page-title mb-0"><?php echo $lang['left-menu-sidebar-28'] ?></h4>
+                        <div class="sw-hello-sub">Financial Sheet Ledger &mdash; <?php echo $monthName . ' ' . date('Y'); ?></div>
+                    </div>
+                    <div class="sw-quick-actions">
+                        <?php if ($user->cdp_hasPermission('view_financial_overview')) { ?>
+                        <a href="financial_overview.php" class="btn btn-sm btn-dark">Financial Overview</a>
+                        <?php } ?>
+                        <a href="transactions.php" class="btn btn-sm btn-outline-dark">Transactions</a>
+                        <a href="accounts_receivable.php" class="btn btn-sm btn-outline-dark"><?php echo $lang['messagesform83'] ?></a>
                     </div>
                 </div>
             </div>
-            <!-- ============================================================== -->
-            <!-- End Bread crumb and right sidebar toggle -->
-            <!-- ============================================================== -->
-            <!-- ============================================================== -->
-            <!-- Container fluid  -->
-            <!-- ============================================================== -->
+
             <div class="container-fluid">
-
-
-                <!-- ============================================================== -->
-                <!-- Earnings -->
-                <!-- ============================================================== -->
                 <div class="row">
-                    <div class="col-lg-8">
-                        <div class="card">
-                            <div class="card-body">
-                                <h4 class="card-title"><?php echo $lang['dash-general-31'] ?></h4>
-                                <div class="table-responsive">
-                                    <div id="sales-packages-chart-container" class="morris-chart-container">
-                                        <div id="basic-bar" style="height:400px;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Earning Reports -->
-                    <div class="col-xl-4 col-md-4 mb-2">
-                      <div class="card">
-                        <div class="card-body pb-4">
-                            <div class="card-header-title d-flex justify-content-between">
-                                <div class="card-title mb-0">
-                                    <h5 class="m-0 me-2"><?php echo $lang['messagesform107'] ?></h5>
-                                    <small class="text-muted"><?php echo $lang['messagesform108'] ?> <?php echo $monthName; ?></small>
-                                </div>
-                            </div>
-                            <div><br><br><br><br><br></div>
-                            <ul class="list-style-none">
-                                <li class="mb-2">
-                                    <div class="row">
-                                        <div class="col-xl-6 col-md-6 mb-2">
-                                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                <div class="me-2">
-                                                    <h6 class="mb-0"><?php echo $lang['dash-general-3102'] ?></h6>
-                                                    <small class="text-muted">
-                                                        <?php echo $core->currency; ?>
-                                                        <?php
-                                                        // Ejecutar la consulta SQL para obtener el total de órdenes de compra
-                                                        echo cdb_money_format($sumador_total);
-                                                        ?>
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-6 col-md-6 mb-0">
-                                            <div class="user-progress align-items-center gap-3">
-                                                <div class="align-items-center gap-1">
-                                                    <div class="progress m-t-10">
-                                                        <?php
-                                                        // Calcular el progreso actual del mes
-                                                        $currentDay = date('j');
-                                                        $totalDays = date('t');
-                                                        $progressPercentage = ($sumador_total / $totalDays) * 100; // Utiliza el total de órdenes en lugar del día actual para calcular el progreso
-                                                        ?>
-                                                        <div class="progress-bar bg-info" role="progressbar" style="width: <?php echo $progressPercentage; ?>%" aria-valuenow="<?php echo $sumador_total; ?>" aria-valuemin="0" aria-valuemax="<?php echo $totalDays; ?>"></div>
-
-
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-
-                                <li class="mb-2">
-                                    <div class="row">
-                                        <div class="col-xl-6 col-md-6 mb-2">
-                                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                <div class="me-2">
-                                                    <h6 class="mb-0"><?php echo $lang['dash-general-32'] ?></h6>
-                                                    <small class="text-muted">
-                                                        <?php echo $core->currency; ?>
-                                                        <?php
-                                                        // Ejecutar la consulta SQL para obtener el total de órdenes de compra
-                                                        echo cdb_money_format($sumador_pagado);
-                                                        ?>
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-6 col-md-6 mb-0">
-                                            <div class="user-progress align-items-center gap-3">
-                                                <div class="align-items-center gap-1">
-                                                    <div class="progress m-t-10">
-                                                       <?php
-                                                        // Calcular el progreso actual del mes
-                                                        $currentDay = date('j');
-                                                        $totalDays = date('t');
-                                                        $progressPercentage = ($sumador_pagado / $totalDays) * 100; // Utiliza el total de órdenes en lugar del día actual para calcular el progreso
-                                                        ?>
-                                                        <div class="progress-bar bg-label-blue" role="progressbar" style="width: <?php echo $progressPercentage; ?>%" aria-valuenow="<?php echo $sumador_pagado; ?>" aria-valuemin="0" aria-valuemax="<?php echo $totalDays; ?>"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-
-                                <li class="mb-2">
-                                    <div class="row">
-                                        <div class="col-xl-6 col-md-6 mb-2">
-                                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                                <div class="me-2">
-                                                    <h6 class="mb-0"><?php echo $lang['dash-general-33'] ?></h6>
-                                                    <small class="text-muted">
-                                                        <?php echo $core->currency; ?>
-                                                        <?php
-                                                            // Ejecutar la consulta SQL para obtener el total de órdenes de compra
-                                                        echo cdb_money_format($sumador_pendiente);
-                                                        ?>
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-6 col-md-6 mb-6">
-                                            <div class="user-progress align-items-center gap-3">
-                                                <div class="align-items-center gap-1">
-                                                    <div class="progress m-t-10">
-                                                        <?php
-                                                        // Calcular el progreso actual del mes
-                                                        $currentDay = date('j');
-                                                        $totalDays = date('t');
-                                                        $progressPercentage = ($sumador_pendiente / $totalDays) * 100; // Utiliza el total de órdenes en lugar del día actual para calcular el progreso
-                                                        ?>
-                                                        <div class="progress-bar bg-danger" role="progressbar" style="width: <?php echo $progressPercentage; ?>%" aria-valuenow="<?php echo $sumador_pendiente; ?>" aria-valuemin="0" aria-valuemax="<?php echo $totalDays; ?>"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                      </div>
-                    </div>
-                    <!--/ Earning Reports -->
+                    <?php cdp_dashKpi(['icon' => 'solar:file-text-linear', 'label' => 'Billed (This Month)', 'value' => cdb_money_format($fs['billed_month']), 'href' => 'financial_sheet.php', 'accent' => '#536dfe']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:hand-money-linear', 'label' => 'Received (This Month)', 'value' => cdb_money_format($fs['received_month']), 'href' => 'transactions.php', 'accent' => '#1b8a5a', 'sub' => 'Net Of Refunds']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:bill-list-linear', 'label' => 'Outstanding (All-Time)', 'value' => cdb_money_format($fs['outstanding']), 'href' => 'accounts_receivable.php', 'accent' => '#e67e22']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:card-recive-linear', 'label' => 'Payments (This Month)', 'value' => number_format($ct_payments_month), 'href' => 'transactions.php', 'accent' => '#00adf2', 'sub' => 'Recorded Receipts']); ?>
                 </div>
-                <!-- ============================================================== -->
-                <!-- Projects of the month -->
-                <!-- ============================================================== -->
-                <!-- ============================================================== -->
-                <!-- Table -->
-                <!-- ============================================================== -->
+
+                <div class="row">
+                    <?php cdp_dashChartCard('open', 'chart_fs_money', 'Billed vs Received', 'Financial Sheet Ledger (USD) — ' . date('Y'), 'col-12'); cdp_dashChartCard('close'); ?>
+                </div>
 
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-body">
-                                <div class="card-header-title d-flex justify-content-between">
-                                    <div class="card-title mb-0">
-                                        <h5 class="m-0 me-2"><?php echo $lang['dash-general-30'] ?></h5>
-                                    </div>
-                                </div>
+                                <h5 class="card-title mb-0"><?php echo $lang['dash-general-30'] ?></h5>
                                 <div class="d-flex justify-content-end mb-2"><div class="input-group" style="max-width:170px;"><select onchange="cdp_load(1);" class="form-control custom-select" id="per_page" name="per_page"><option value="25">25 rows</option><option value="50">50 rows</option><option value="100">100 rows</option><option value="all"><?php echo $lang['rows-all'] ?? 'All'; ?></option></select></div></div>
-                                <div class="outer_div">
-
-                                </div>
+                                <div class="outer_div"></div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- ============================================================== -->
-                <!-- Table -->
-                <!-- ============================================================== -->
-
             </div>
             <?php include 'views/inc/footer.php'; ?>
-
         </div>
     </div>
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <!-- This Page JS -->
-    <script src="assets/template/assets/libs/echarts/dist/echarts-en.min.js"></script>
+    <script>window.cdpDashTable = { url: './ajax/dashboard/account_receivable/load_account_receivable_ajax.php', target: '.outer_div' };</script>
+    <script src="<?= cdp_asset('dataJs/dashboard_table.js') ?>"></script>
+    <?php cdp_dashChartsRender($charts, $core->currency); ?>
+</body>
 
-    <script src="<?= cdp_asset('dataJs/dashboard_account.js') ?>"> </script>
-    <script src="assets/template/assets/extra-libs/chart.js-2.8/Chart.min.js"></script>
+</html>
