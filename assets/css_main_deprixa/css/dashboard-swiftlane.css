@@ -882,3 +882,62 @@ table.dataTable tbody td {
   }
   .dataTables_wrapper .dataTables_filter input { width: 100% !important; }
 }
+
+/* ── Control-panel components (KPI tiles, chart cards, dash header) ─────────
+   Rendered by helpers/dashboard_data.php (cdp_dashKpi / cdp_dashChartCard).
+   Each tile carries --kpi (accent) and --kpi-soft (precomputed 13% tint). */
+.sw-kpi {
+  display: block;
+  text-decoration: none !important;
+  color: var(--sw-text) !important;
+  position: relative;
+  overflow: hidden;
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+.sw-kpi::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--kpi, var(--sw-amber));
+}
+a.sw-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.13) !important;
+}
+.sw-kpi .card-body { padding: 1rem 1.1rem !important; }
+.sw-kpi-icon {
+  flex: none;
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  margin-right: .85rem;
+  color: var(--kpi, var(--sw-amber));
+  background: var(--kpi-soft, rgba(242, 178, 27, 0.13));
+}
+.sw-kpi-meta { display: flex; flex-direction: column; min-width: 0; }
+.sw-kpi-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.15;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sw-kpi-label { font-size: .78rem; color: var(--sw-muted); }
+.sw-kpi-sub   { font-size: .7rem;  color: var(--sw-muted); opacity: .8; }
+
+.sw-dash-sec h5 { display: flex; align-items: center; gap: .4rem; font-weight: 600; }
+.sw-dash-sec iconify-icon { color: var(--sw-amber); font-size: 1.25rem; }
+
+.sw-chart-card .sw-chart { min-height: 260px; }
+
+/* Dash greeting header */
+.sw-dash-hello { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; }
+.sw-dash-hello .sw-hello-sub { color: var(--sw-muted); font-size: .85rem; }
+.sw-quick-actions .btn { border-radius: var(--sw-btn-radius); }
+
+/* Virtual mailbox address cards (client panel) */
+.sw-mailbox-strip { display: flex; flex-wrap: nowrap; gap: 1rem; overflow-x: auto; padding-bottom: .4rem; }
+.sw-mailbox-card { flex: 0 0 300px; border: 1px dashed var(--sw-border); border-radius: 12px; padding: 1rem 1.1rem; background: var(--sw-input-bg); }
+.sw-mailbox-card h6 { font-weight: 700; margin-bottom: .35rem; }
+.sw-mailbox-card .sw-locker { color: var(--sw-red); font-weight: 700; }
