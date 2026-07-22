@@ -641,6 +641,12 @@
 								<?php if ($user->cdp_hasPermission('view_warehouse_delivery')) { ?><span class="wd-nav-badge badge badge-danger ml-1" style="display:none;" title="Packages cleared and awaiting delivery"></span><?php } ?>
 						</a>
 						<ul aria-expanded="false" class="collapse first-level">
+							<li class="sidebar-item">
+								<a class="sidebar-link waves-effect waves-dark" href="dashboard_warehouse.php" aria-expanded="false">
+									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
+									<span class="hide-menu"> Warehouse Panel </span>
+								</a>
+							</li>
 							<?php if ($user->cdp_hasPermission('warehouse_view')) { ?>
 							<li class="sidebar-item">
 								<a class="sidebar-link waves-effect waves-dark" href="warehouse.php" aria-expanded="false">
