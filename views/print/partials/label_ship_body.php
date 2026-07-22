@@ -48,33 +48,35 @@ $courier_barcode_url = $courier_track !== ''
 <?php if ($label_size === 'small') : ?>
     <?php
     // The one scannable code: carrier/postal tracking when we have it, else
-    // the system tracking. The other identifier drops to the footer so the
-    // sticker always carries barcode + system tracking + locker id.
-    $small_is_courier = ($courier_track !== '');
-    $small_barcode    = $small_is_courier ? $courier_barcode_url : $sys_barcode_url;
-    $small_num        = $small_is_courier ? $courier_track : $sys_tracking;
-    $small_num_label  = $small_is_courier ? 'Courier' : 'System';
+    // the postal/courier tracking when present, otherwise the system tracking.
+    // When there is no postal tracking, the system tracking IS the barcode, so
+    // the separate system-number line is hidden (no duplicate). When postal
+    // tracking exists, it becomes the barcode and the system number sits below.
+    $has_postal    = ($courier_track !== '');
+    $small_barcode = $has_postal ? $courier_barcode_url : $sys_barcode_url;
+    $small_num     = $has_postal ? $courier_track : $sys_tracking;
     ?>
     <div class="label">
         <div class="panel">
-            <div class="s-head">
-                <div class="locker"><span class="lk">LKR</span> <?php echo h($sender_locker !== '' ? $sender_locker : 'N/A'); ?></div>
-                <div class="brand"><?php echo h($core->site_name); ?></div>
+            <div class="s-top">
+                <div class="s-locker">
+                    <span class="s-cap">Locker</span>
+                    <span class="s-val"><?php echo h($sender_locker !== '' ? $sender_locker : 'N/A'); ?></span>
+                </div>
+                <div class="s-brand"><?php echo h($core->site_name); ?></div>
             </div>
-            <div class="s-bar">
-                <img src="<?php echo h($small_barcode); ?>" alt="Tracking barcode">
-                <div class="num"><span class="bk"><?php echo h($small_num_label); ?></span> <?php echo h($small_num); ?></div>
+
+            <div class="s-barwrap">
+                <img class="s-barcode" src="<?php echo h($small_barcode); ?>" alt="Tracking barcode">
+                <div class="s-code"><?php echo h($small_num); ?></div>
             </div>
-            <div class="s-foot">
-                <?php if ($small_is_courier) : ?>
-                    <div><span class="lbl">Sys</span> <?php echo h($sys_tracking); ?></div>
-                <?php else : ?>
-                    <div><span class="lbl">Items</span> <?php echo h($item_count); ?></div>
-                <?php endif; ?>
-                <?php if ($weight !== '') : ?>
-                    <div><span class="lbl">Wt</span> <?php echo h($weight); ?></div>
-                <?php endif; ?>
-            </div>
+
+            <?php if ($has_postal) : ?>
+                <div class="s-sys">
+                    <span class="s-cap">System</span>
+                    <span class="s-sval"><?php echo h($sys_tracking); ?></span>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 <?php else : ?>
