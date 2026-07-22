@@ -3806,6 +3806,111 @@ function cdp_shipModeWhere($mode, $alias = 'a')
     return ' AND ' . $alias . '.order_item_category IN (' . implode(',', array_map('intval', $ids)) . ') ';
 }
 
+/**
+ * Effective tracking status for a shipment.
+ *
+ * When a package is inside a consolidation, the CONSOLIDATION's status is shown
+ * over the package's own status (a consolidation houses many packages and they
+ * all inherit its status — the same rule courier_list_ajax.php applies to the
+ * list). Otherwise the package keeps its own status.
+ *
+ * @param string $order_no        cdb_add_order.order_no / cdb_customers_packages.order_no
+ * @param int    $status_courier  the shipment's own cdb_styles id
+ * @param int    $is_consolidate  1 if the shipment sits in a consolidation
+ * @param bool   $isPackage       true for cdb_customers_packages, false for cdb_add_order
+ * @return object {status_id,mod_style,color,in_consolidation,consolidate_code}
+ */
+function cdp_getEffectiveTrackStatus($order_no, $status_courier, $is_consolidate, $isPackage = false)
+{
+    $db = new Conexion;
+    $out = (object) [
+        'status_id'        => (int) $status_courier,
+        'mod_style'        => '',
+        'color'            => '#f2b21b',
+        'in_consolidation' => false,
+        'consolidate_code' => '',
+    ];
+
+    if ((int) $is_consolidate === 1 && $order_no !== '' && $order_no !== null) {
+        $detailTable = $isPackage ? 'cdb_consolidate_packages_detail' : 'cdb_consolidate_detail';
+        $parentTable = $isPackage ? 'cdb_consolidate_packages' : 'cdb_consolidate';
+
+        $db->cdp_query("SELECT consolidate_id FROM $detailTable WHERE order_no=:order_no ORDER BY detail_id DESC LIMIT 1");
+        $db->bind(':order_no', (string) $order_no);
+        $db->cdp_execute();
+        $det = $db->cdp_registro();
+
+        if ($det && !empty($det->consolidate_id)) {
+            $db->cdp_query("SELECT c.status_courier, c.c_prefix, c.c_no, s.mod_style, s.color
+                            FROM $parentTable c LEFT JOIN cdb_styles s ON s.id = c.status_courier
+                            WHERE c.consolidate_id=:cid LIMIT 1");
+            $db->bind(':cid', (int) $det->consolidate_id);
+            $db->cdp_execute();
+            $con = $db->cdp_registro();
+
+            if ($con && $con->mod_style !== null && $con->mod_style !== '') {
+                $out->status_id        = (int) $con->status_courier;
+                $out->mod_style        = (string) $con->mod_style;
+                $out->color            = !empty($con->color) ? (string) $con->color : '#f2b21b';
+                $out->in_consolidation = true;
+                $out->consolidate_code = trim((string) $con->c_prefix . (string) $con->c_no);
+                return $out;
+            }
+        }
+    }
+
+    // Not consolidated (or the consolidation had no usable status) → own status.
+    $db->cdp_query("SELECT mod_style, color FROM cdb_styles WHERE id=:id LIMIT 1");
+    $db->bind(':id', (int) $status_courier);
+    $db->cdp_execute();
+    $own = $db->cdp_registro();
+    if ($own) {
+        $out->mod_style = (string) $own->mod_style;
+        $out->color     = !empty($own->color) ? (string) $own->color : '#f2b21b';
+    }
+    return $out;
+}
+
+/**
+ * The company's US origin office (packages are received in the US before being
+ * consolidated and shipped to Ghana). Used to anchor the tracking map's origin.
+ * Falls back to a plain "United States" locator when the branch data is thin.
+ *
+ * @return object {label,geo,city,country}
+ */
+function cdp_getUsOriginOffice()
+{
+    $db = new Conexion;
+    $db->cdp_query("SELECT name_branch, branch_address, branch_city FROM cdb_branchoffices ORDER BY id ASC LIMIT 1");
+    $db->cdp_execute();
+    $b = $db->cdp_registro();
+
+    $default = (object) ['label' => 'US Warehouse', 'geo' => 'United States', 'city' => 'United States', 'country' => 'United States'];
+    if (!$b) {
+        return $default;
+    }
+
+    // branch_city is free-text and often carries a trailing ", <zip/junk>".
+    $cityPart = trim(explode(',', (string) $b->branch_city)[0]);
+    $cityClean = trim(preg_replace('/[^\p{L}\s]/u', '', $cityPart));
+    $geoBase = $cityClean !== '' ? $cityClean : trim((string) $b->branch_address);
+    $geo = $geoBase !== '' ? ($geoBase . ', United States') : 'United States';
+
+    $label = trim((string) $b->name_branch);
+    if ($cityClean !== '') {
+        $label = ($label !== '' ? $label : 'US Warehouse') . ' · ' . $cityClean;
+    } elseif ($label === '') {
+        $label = 'US Warehouse';
+    }
+
+    return (object) [
+        'label'   => $label,
+        'geo'     => $geo,
+        'city'    => $cityClean !== '' ? $cityClean : 'United States',
+        'country' => 'United States',
+    ];
+}
+
 function cdp_saveShipmentVideos($filesVideo, $order_id, $order_track, $isCustomerPackage = false)
 {
     if (!is_array($filesVideo) || empty($filesVideo['name']) || !is_array($filesVideo['name'])) {

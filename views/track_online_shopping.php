@@ -22,84 +22,101 @@
 
 
 require_once('helpers/querys.php');
-
-
-
+require_once('helpers/track_progress.php');
+require_once('helpers/asset.php');
 
 if (isset($_GET['order_track'])) {
-
-	$results = cdp_getCustomersPackagesTrack($_GET['order_track']);
-
+	$rawOrderTrackInput = trim((string)$_GET['order_track']);
+	$sanitizedOrderTrack = preg_replace('/[^A-Za-z0-9-]/', '', $rawOrderTrackInput);
+	$results = cdp_getCustomersPackagesTrack($sanitizedOrderTrack);
 	$track = $results['data'];
 } else {
-
 	cdp_redirect_to("tracking.php");
 }
 
-
+$sender_data = null;
+$receiver_data = null;
+$delivery_time = null;
+$address_order = null;
+$order_items = [];
+$item_description = '';
+$sumador_libras = 0;
+$sumador_volumetric = 0;
+$count = 0;
 
 $db->cdp_query("
-
 	SELECT a.id, a.order_track, a.t_dest, a.t_date, a.t_city, a.comments, a.status_courier, b.mod_style FROM cdb_courier_track as a
-
-	INNER JOIN cdb_styles as b ON a.status_courier = b.id 
-
-	where a.order_track='" . $_GET['order_track'] . "' ORDER BY a.t_date");
-
+	INNER JOIN cdb_styles as b ON a.status_courier = b.id
+	where a.order_track=:order_track ORDER BY a.t_date");
+$db->bind(':order_track', $sanitizedOrderTrack);
+$db->cdp_execute();
 $courier_track = $db->cdp_registros();
+
 if ($track != null) {
 
-
-
-
-	$db->cdp_query("SELECT * FROM cdb_users where id= '" . $track->sender_id . "'");
+	$db->cdp_query("SELECT * FROM cdb_users where id=:sender_id");
+	$db->bind(':sender_id', (int)$track->sender_id);
+	$db->cdp_execute();
 	$sender_data = $db->cdp_registro();
 
+	// recipient_type='user': the sender doubles as recipient (cdb_users), not cdb_recipients.
+	if (($track->recipient_type ?? 'recipient') === 'user') {
+		$db->cdp_query("SELECT * FROM cdb_users where id=:receiver_id");
+	} else {
+		$db->cdp_query("SELECT * FROM cdb_recipients where id=:receiver_id");
+	}
+	$db->bind(':receiver_id', (int)$track->receiver_id);
+	$db->cdp_execute();
+	$receiver_data = $db->cdp_registro();
 
-	$db->cdp_query("SELECT * FROM cdb_delivery_time where id= '" . $track->order_deli_time . "'");
+	$db->cdp_query("SELECT * FROM cdb_delivery_time where id=:delivery_time_id");
+	$db->bind(':delivery_time_id', (int)$track->order_deli_time);
+	$db->cdp_execute();
 	$delivery_time = $db->cdp_registro();
 
-
-
-	$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $track->order_prefix . $track->order_no . "'");
+	$db->cdp_query("SELECT * FROM cdb_address_shipments where order_track=:order_track");
+	$db->bind(':order_track', (string)$track->order_prefix . (string)$track->order_no);
+	$db->cdp_execute();
 	$address_order = $db->cdp_registro();
+	if (!$address_order) {
+		$address_order = (object)[
+			'sender_country' => '',
+			'sender_city' => '',
+			'sender_address' => '',
+			'recipient_country' => '',
+			'recipient_city' => '',
+			'recipient_address' => ''
+		];
+	}
 
-
-	$db->cdp_query("SELECT SUM(order_item_length) as total0 FROM cdb_customers_packages_detail where order_id='" . $track->order_id . "'");
+	$db->cdp_query("SELECT SUM(order_item_length) as total0 FROM cdb_customers_packages_detail where order_id=:order_id");
+	$db->bind(':order_id', (int)$track->order_id);
 	$db->cdp_execute();
 	$row0 = $db->cdp_registro();
-
 	$rw_add0 = $row0->total0;
 
-
-	// volumetric query of the box width
-
-	$db->cdp_query("SELECT SUM(order_item_width) as total1 FROM cdb_customers_packages_detail where order_id='" . $track->order_id . "'");
+	$db->cdp_query("SELECT SUM(order_item_width) as total1 FROM cdb_customers_packages_detail where order_id=:order_id");
+	$db->bind(':order_id', (int)$track->order_id);
 	$db->cdp_execute();
 	$row1 = $db->cdp_registro();
-
 	$rw_add1 = $row1->total1;
 
-	// volumetric query of the box width
-
-	$db->cdp_query("SELECT SUM(order_item_height) as total2 FROM cdb_customers_packages_detail where order_id='" . $track->order_id . "'");
+	$db->cdp_query("SELECT SUM(order_item_height) as total2 FROM cdb_customers_packages_detail where order_id=:order_id");
+	$db->bind(':order_id', (int)$track->order_id);
 	$db->cdp_execute();
 	$row2 = $db->cdp_registro();
-
 	$rw_add2 = $row2->total2;
 
-	$length = $rw_add0; //Length
-	$width = $rw_add1; //Width
-	$height = $rw_add2; //Height
+	$length = $rw_add0;
+	$width = $rw_add1;
+	$height = $rw_add2;
 
+	$volPercent = (float)$track->volumetric_percentage;
 
-	$total_metric = $length * $width * $height / $track->volumetric_percentage;
-
-
-	$db->cdp_query("SELECT * FROM cdb_customers_packages_detail WHERE order_id='" . $track->order_id . "'");
+	$db->cdp_query("SELECT * FROM cdb_customers_packages_detail WHERE order_id=:order_id");
+	$db->bind(':order_id', (int)$track->order_id);
+	$db->cdp_execute();
 	$order_items = $db->cdp_registros();
-
-
 
 	$sumador_libras = 0;
 	$sumador_volumetric = 0;
@@ -107,28 +124,67 @@ if ($track != null) {
 	foreach ($order_items as $row_item) {
 
 		$weight_item = $row_item->order_item_weight;
-
 		$item_description = $row_item->order_item_description;
 
+		$total_metric = $volPercent > 0 ? ($row_item->order_item_length * $row_item->order_item_width * $row_item->order_item_height / $volPercent) : 0;
 
-		$total_metric = $row_item->order_item_length * $row_item->order_item_width * $row_item->order_item_height / $track->volumetric_percentage;
-
-		// calculate weight x price
 		if ($weight_item > $total_metric) {
-
 			$calculate_weight = $weight_item;
-			$sumador_libras += $weight_item; //Sumador
-
+			$sumador_libras += $weight_item;
 		} else {
-
 			$calculate_weight = $total_metric;
-			$sumador_volumetric += $total_metric; //Sumador
+			$sumador_volumetric += $total_metric;
 		}
 
 		$count++;
 	}
 }
 
+// ── Presentation-layer derived values ───────────────────────────────────────
+$e = function ($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); };
+$initial = function ($name) { $name = trim((string)$name); return $name !== '' ? mb_strtoupper(mb_substr($name, 0, 1)) : '?'; };
+
+$mode = 'air';
+$status_name = $track ? (string)$track->mod_style : '';
+$status_color = ($track && !empty($track->color)) ? $track->color : '#f2b21b';
+$progress = null;
+$consol_code = '';
+$origin_label = ''; $dest_label = '';
+$origin_geo = ''; $dest_geo = ''; $origin_country = ''; $dest_country = '';
+
+if ($track) {
+	// Freight mode + consolidation flag live on cdb_customers_packages.
+	$db->cdp_query("SELECT order_item_category, is_consolidate FROM cdb_customers_packages WHERE order_id=:id LIMIT 1");
+	$db->bind(':id', (int)$track->order_id);
+	$db->cdp_execute();
+	$meta = $db->cdp_registro();
+	$order_item_category = $meta ? (int)$meta->order_item_category : 0;
+	$is_consolidate_flag = $meta ? (int)$meta->is_consolidate : 0;
+
+	$mode = in_array($order_item_category, cdp_shipCategoryIds('air'), true) ? 'air' : 'sea';
+
+	// Effective status: a consolidated package shows its consolidation's status.
+	$eff = cdp_getEffectiveTrackStatus($track->order_no, (int)$track->status_courier, $is_consolidate_flag, true);
+	$status_name  = $eff->mod_style !== '' ? $eff->mod_style : (string)$track->mod_style;
+	$status_color = $eff->color;
+	$consol_code  = $eff->in_consolidation ? $eff->consolidate_code : '';
+	$progress     = cdp_trackProgress($eff->status_id, $status_name);
+
+	// Map anchors: US origin office → the customer's Ghana delivery city.
+	$us = cdp_getUsOriginOffice();
+	$origin_label   = $us->label;
+	$origin_geo     = $us->geo;
+	$origin_country = $us->country;
+	$dest_city      = $address_order->recipient_city ?: $address_order->sender_city;
+	$dest_country   = $address_order->recipient_country ?: $address_order->sender_country;
+	$dest_label     = $dest_city ?: ($dest_country ?: 'Destination');
+	$dest_geo       = trim(($dest_city ? $dest_city . ', ' : '') . $dest_country);
+}
+
+$total_weight  = ($sumador_libras > $sumador_volumetric) ? $sumador_libras : $sumador_volumetric;
+$sender_name   = ($track && $sender_data) ? trim($sender_data->fname . ' ' . $sender_data->lname) : '';
+$receiver_name = ($track && $receiver_data) ? trim($receiver_data->fname . ' ' . $receiver_data->lname) : '';
+$hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -138,386 +194,268 @@ if ($track != null) {
 	<meta name="keywords" content="Courier DEPRIXA-Integral Web System">
 	<meta name="author" content="Jaomweb">
 	<meta name="description" content="">
-	<!-- For IE -->
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<!-- For Resposive Device -->
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<!-- For Window Tab Color -->
-	<!-- Chrome, Firefox OS and Opera -->
-	<meta name="theme-color" content="#fff">
-	<!-- Windows Phone -->
-	<meta name="msapplication-navbutton-color" content="#fff">
-	<!-- iOS Safari -->
-	<meta name="apple-mobile-web-app-status-bar-style" content="#fff">
-	<title>Track Shipment Result | <?php echo $core->site_name; ?></title>
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
-	<!-- favicon -->
-    <!-- Bootstrap -->
-    <link href="assets/css_main_deprixa/main_deprixa/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <!-- Icons -->
-    <link href="assets/css_main_deprixa/main_deprixa/css/materialdesignicons.min.css" rel="stylesheet" type="text/css" /> 
-    <!-- Main css --> 
-    <link href="assets/css_main_deprixa/main_deprixa/css/style.css" rel="stylesheet" type="text/css" />
-	<link rel="stylesheet" href="assets/css_main_deprixa/main_deprixa/css/styles.css">
-	<link rel="stylesheet" href="assets/css_main_deprixa/css/bundle.css">
-	<link rel="stylesheet" type="text/css" href="assets/css_main_deprixa/main_deprixa/main.css">
-	<link rel="stylesheet" href="assets/css_main_deprixa/main_deprixa/themify-icons.css">
-	<link rel="stylesheet" href="assets/custom_dependencies/track_online_shopping.css">
-
-
-
-	<script>  
-		function mostrarMensaje(id) {
-			var popup = document.getElementById("myPopup_" + id);
-			popup.classList.toggle("show");
-		}
-	</script>
+	<meta name="theme-color" content="#111111">
+	<title><?php echo $e($lang['left127']); ?> | <?php echo $e($core->site_name); ?></title>
+	<link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $e($core->favicon); ?>">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="<?= cdp_asset('assets/vendor/libs/leaflet/leaflet.css') ?>">
+	<link rel="stylesheet" href="assets/css_main_deprixa/css/materialdesignicons.min.css">
+	<link rel="stylesheet" href="<?= cdp_asset('assets/css_main_deprixa/css/track-details.css') ?>">
 </head>
 
 <body>
+<div class="trk">
 
-	<!-- Loader -->
-	<div id="preloader">
-		<div id="status">
-			<div class="spinner">
-				<div class="double-bounce1"></div>
-				<div class="double-bounce2"></div>
-			</div>
-		</div>
-	</div>
-	<!-- Loader -->
-
-	<!-- Navbar STart -->
-	<header id="topnav" class="defaultscroll sticky">
-		<div class="container">
-			<!-- Logo container-->
-			<div>
-				<a class="logo" href="index.php">
-                    <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
-
-
-                </a>
-			</div>
-			<div class="buy-button">
-				<a href="index.php" class="btn btn-secondary btn-sm"><?php echo $lang['left180'] ?></a>
-			</div>
-			<!--end login button-->
-			<div class="menu-extras">
-				<div class="menu-item">
-					<!-- Mobile menu toggle-->
-					<a class="navbar-toggle">
-						<div class="lines">
-							<span></span>
-							<span></span>
-							<span></span>
-						</div>
-					</a>
-					<!-- End mobile menu toggle-->
-				</div>
-			</div>
-
+	<!-- ── Top bar ──────────────────────────────────────────────────────── -->
+	<header class="trk-nav">
+		<a class="trk-nav__logo" href="index.php">
+			<?php echo ($core->logo_web)
+				? '<img src="assets/' . $e($core->logo_web) . '" alt="' . $e($core->site_name) . '">'
+				: '<span>' . $e($core->site_name) . '</span>'; ?>
+		</a>
+		<div class="trk-nav__actions">
+			<a href="tracking.php" class="trk-btn trk-btn--ghost"><i class="mdi mdi-magnify"></i> <?php echo $e($lang['left127']); ?></a>
+			<a href="index.php" class="trk-btn trk-btn--dark"><i class="mdi mdi-home-outline"></i> <?php echo $e($lang['left180'] ?? 'Home'); ?></a>
 		</div>
 	</header>
-	<!-- Navbar End -->
 
+	<?php if (!$track) : ?>
 
-	<!-- ERROR PAGE -->
-	<section class="bg-home">
-		<div class="home-center">
-			<div class="home-desc-center">
-				<div class="container">
-					<div class="checkout-form">
-						<div class="row">
-							<?php if (!$track) : ?>
-
-								<!--============================= TRACKING NOT FOUND =============================-->
-								<div class="col-lg-12">
-									<div class="user-profile-data">
-										<div class="row justify-content-center">
-											<?php echo "
-									<div class='col-lg-8 col-md-12 text-center'>
-										<img src='assets/images/alert/ohh_shipment_rate.png' class='img-fluid' alt=''/>
-										<div class='text-uppercase mt-4 display-4'>Oh ! no</div>
-										<div class='text-capitalize text-dark mb-4 display-6'>" . $lang['track-shipment1'] . " <strong style='color:#FF0000;'>" . $_GET['order_track'] . " </strong></div>
-										<p class='text-muted para-desc mx-auto'><span class='text-primary font-weight-bold'>" . $lang['track-shipment2'] . "</span></p>
-									</div>
-								", false; ?>
-										</div>
-
-										<div class="row">
-											<div class="col-md-12 text-center">
-												<a href="tracking.php" class="btn btn-light-outline rounded mt-4"><?php echo $lang['left182'] ?></a>
-												<a href="index.php" class="btn btn-light rounded mt-4 ml-2"><?php echo $lang['left183'] ?></a>
-											</div>
-										</div>
-									</div>
-								</div>
-								<!--//END TRACKING NOT FOUND -->
-							<?php else : ?>
-
-								<div class="col-lg-7">
-									<div class="user-profile-data">
-
-										<br><br><br>
-										<div class="row">
-											<div class="col-md-3">
-												<div class="trackstatus-title">
-													<p><span class="ti-package align-top" style="font-size: 30px;"></span> <b><?php echo $track->mod_style; ?></b></p>
-													<label> </label>
-												</div>
-											</div>
-											<div class="col-md-5">
-												<div class="trackstatus-title">
-													<label><?php echo $lang['track-shipment4'] ?> <b><?php echo $track->order_prefix . $track->order_no; ?></b></label>
-												</div>
-											</div>
-
-											<div class="col-md-4">
-												<div class="trackstatus-title">
-
-													<a class="btn btn-secondary btn-sm" target="blank" href="print_customer_package_track.php?id=<?php echo $track->order_id; ?>"><i style="color:white" class="ti-printer"></i>&nbsp;<?php echo $lang['toolprint'] ?></a>
-
-												</div>
-											</div>
-										</div>
-
-
-
-										<?php
-
-										$db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . $track->order_id . "' ORDER BY date_file");
-										$files_order = $db->cdp_registros();
-										$numrows = $db->cdp_rowCount();
-
-
-										if ($numrows > 0) {
-										?>
-
-											<div class="payment-wrap">
-												<div class="row">
-													<div class="col-md-12">
-														<div class="track-title">
-															<h5 class="form_sub" style="background-color: #2eca8b; color:white">Photo Delivered</h5>
-														</div>
-													</div>
-
-													<?php
-
-													if (!empty($track->photo_delivered)) { ?>
-
-														<div class="col-md-12">
-															<img src="<?php echo $track->photo_delivered; ?>" width="400" height="250">
-														</div>
-													<?php
-													} ?>
-												</div>
-
-											</div>
-
-
-											<div class="payment-wrap">
-												<div class="row">
-													<div class="col-md-12">
-														<div class="track-title">
-															<h5 class="form_sub" style="background-color: #2eca8b; color:white">Attached Files</h5>
-														</div>
-													</div>
-
-													<div class="table-responsive">
-														<table id="zero_config" class="table table-sm">
-															<thead>
-																<tr>
-																	<th class="text-left"> <b> Nº </b></th>
-																	<th class="text-left"> <b> File </b></th>
-
-																</tr>
-															</thead>
-															<tbody id="projects-tbl">
-
-																<?php
-																$count = 0;
-																foreach ($files_order as $file) {
-
-																	$date_add = date("Y-m-d h:i A", strtotime($file->date_file));
-
-
-
-																	$count++;
-																?>
-
-																	<tr class="">
-																		<td><b><?php echo $count; ?></b></td>
-																		<td> <b><a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a> </b></td>
-
-																	</tr>
-																<?php
-																} ?>
-
-
-															</tbody>
-														</table>
-													</div>
-												</div>
-
-
-											</div>
-
-										<?php
-										} ?>
-
-
-										<!-- track shipment -->
-										<div class="payment-wrap">
-											<div class="row">
-												<div class="col-md-12">
-													<div class="track-title">
-														<h5 class="form_sub" style="background-color: #5a6d90; border-radius: 3px; color:white"><?php echo $lang['track-shipment15'] ?></h5>
-													</div>
-												</div>
-											</div>
-											<div class="row">
-												<div class="col-md-6">
-													<div class="track-title">
-														<span class="ti-location-pin align-top" style="font-size: 30px;"></span> <label><?php echo $lang['track-shipment16'] ?></br> <b><?php echo $address_order->sender_city; ?></b></label>
-													</div>
-												</div>
-												<div class="col-md-6">
-													<div class="track-title">
-														<span class="ti-location-pin align-top" style="font-size: 30px;"></span> <label><?php echo $lang['track-shipment17'] ?></br> <b><?php echo $address_order->sender_city; ?></b></label>
-													</div>
-												</div>
-											</div>
-											<div class="row">
-												<div class="col-md-6">
-													<div class="track-title">
-														<span class="ti-calendar align-top" style="font-size: 30px;"></span> <label><?php echo $lang['track-shipment9'] ?></br> <b><?php echo $delivery_time->delitime; ?></b></label>
-													</div>
-												</div>
-												<div class="col-md-6">
-													<div class="form-group">
-														<div class="track-title">
-															<span class="ti-timer align-top" style="font-size: 30px;"></span> <label><?php echo $lang['track-shipment19'] ?></br> <b><?php echo $track->order_datetime; ?></b></label>
-														</div>
-													</div>
-												</div>
-											</div>
-											<div class="row">
-												<div class="col-md-6">
-													<div class="track-title">
-
-														<label><?php echo $lang['track-shipment20'] ?></br> <b><?php echo $sender_data->fname . " " . $sender_data->lname; ?></b></label>
-
-													</div>
-												</div>
-												<div class="col-md-6">
-													<div class="form-group">
-														<div class="track-title">
-															<span class="ti-direction-alt align-top" style="font-size: 30px;"></span> <label><?php echo $lang['track-shipment10'] ?></br> <b><?php echo $address_order->sender_address; ?></b></label>
-														</div>
-													</div>
-												</div>
-											</div>
-
-											<div class="row">
-												<div class="col-md-12">
-													<div class="form-group">
-														<div class="track-title">
-															<span class="ti-comment-alt align-top" style="font-size: 30px;"></span> <label>Description</br> <b><?php echo $item_description; ?></b></label>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-
-									</div> <!-- /.user-profile-data -->
-								</div> <!-- /.col- -->
-
-								<?php if (!$courier_track) : ?>
-								<?php else : ?>
-								<div class="col-lg-5">
-									<br><br><br>
-									<div class="booking-summary_block">
-										<div class="booking-summary-box">
-											<h5><?php echo $lang['track-shipment22'] ?></h5>
-											<?php foreach ($courier_track  as $rows) : ?>
-												<div class="track-cost">
-													<ul class="timeline a">
-														<li class="event">
-															<div class="row">
-																<div class="col-md-7">
-																	<p class="text-left button5"><?php echo date('Y/m/d', strtotime($rows->t_date)); ?></p>
-																	<h6 class="text-left button4">
-																		<?php echo $rows->mod_style; ?>
-																		<br>
-																		<?php
-
-																		if ($rows->t_dest != null) {
-																			echo $rows->t_dest;
-																		}
-
-																		if ($rows->t_city != null) {
-																			echo ', ' . $rows->t_city;
-																		}
-
-																		?>
-																		<br>
-																		+ <?php echo $rows->comments; ?>
-
-																	</h6>
-																
-																</div>
-																<div class="col-md-5">
-																	<p class="text-right button5"><?php echo date('h:i:s a', strtotime($rows->t_date)); ?></p>
-																	<h4></h4>
-																</div>
-															</div>
-														</li>
-														<!--event schedule 1 end-->
-													</ul>
-												</div>
-											<?php endforeach; ?>
-											<?php unset($row); ?>
-										<?php endif; ?>
-										</div>
-									</div>
-								</div>
-
-							<?php endif; ?>
-
-						</div> <!-- /.row -->
-					</div> <!-- /.checkout-form -->
-				</div> <!-- /.container -->
+	<!-- ══════════════════════════ NOT FOUND ══════════════════════════════ -->
+	<section class="trk-empty">
+		<div class="trk-empty__box">
+			<div class="trk-empty__art">
+				<span class="ring"></span>
+				<span class="ring"></span>
+				<span class="em">🔍</span>
+			</div>
+			<h1><?php echo $e($lang['track-shipment1'] ?? 'We couldn’t find that shipment'); ?></h1>
+			<p>We looked everywhere but no shipment matches the tracking number you entered. It may have a typo, or it hasn’t been registered in our system yet.</p>
+			<span class="trk-empty__code"><?php echo $e($rawOrderTrackInput); ?></span>
+			<p class="mt-2"><?php echo $e($lang['track-shipment2'] ?? 'Please double-check the number, or reach out to our team and we’ll be glad to help.'); ?></p>
+			<div class="trk-empty__actions">
+				<a href="tracking.php" class="trk-btn trk-btn--grad"><i class="mdi mdi-magnify"></i> Try Another Number</a>
+				<a href="index.php" class="trk-btn trk-btn--ghost"><i class="mdi mdi-home-outline"></i> <?php echo $e($lang['left183'] ?? 'Back to Home'); ?></a>
 			</div>
 		</div>
 	</section>
-	
-	<!-- ERROR PAGE -->
 
-	<!-- Back to top -->
-	<a href="#" class="back-to-top rounded text-center" id="back-to-top">
-		<i class="mdi mdi-chevron-up d-block"> </i>
-	</a>
-	<!-- Back to top -->
+	<?php else : ?>
 
-	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
-	<!-- jQuery -->
-	<script src="assets/vendor/jquery.2.2.3.min.js"></script>
-	<!-- Popper js -->
-	<script src="assets/vendor/popper.js/popper.min.js"></script>
-	<!-- Bootstrap JS -->
-	<script src="assets/vendor/bootstrap/js/bootstrap.min.js"></script>
-	<!-- menu  -->
-	<script src="assets/vendor/mega-menu/assets/js/custom.js"></script>
-	<!-- js ui -->
-	<script src="assets/vendor/jquery-ui/jquery-ui.min.js"></script>
-	<script src="assets/css_main_deprixa/js/bootstrap.bundle.min.js"></script>
-	<script src="assets/css_main_deprixa/js/jquery.easing.min.js"></script>
-	<script src="assets/css_main_deprixa/js/scrollspy.min.js"></script>
-	<!-- Main Js -->
-	<script src="assets/css_main_deprixa/js/app.js"></script>
-	<!-- Theme js -->
-	<script src="assets/css_main_deprixa/js/theme.js"></script>
-	</div> <!-- /.main-page-wrapper -->
+	<!-- ══════════════════════════ FOUND ═════════════════════════════════ -->
+	<main class="trk-main">
+
+		<!-- ── Hero ─────────────────────────────────────────────────────── -->
+		<section class="trk-hero">
+			<div class="trk-hero__top">
+				<div class="trk-hero__meta">
+					<span class="trk-chip"><?php echo $mode === 'air' ? '✈️ Air Freight' : '🚢 Sea Freight'; ?></span>
+					<p class="trk-hero__label"><?php echo $e($lang['track-shipment4'] ?? 'Shipment Tracking'); ?></p>
+					<h1 class="trk-hero__code"><?php echo $e($track->order_prefix . $track->order_no); ?></h1>
+					<p class="trk-hero__sub">Here’s the latest on your shipment — its route, current whereabouts and full journey history, all in one place.</p>
+				</div>
+				<div class="trk-hero__status">
+					<span class="trk-status-badge" style="--c: <?php echo $e($status_color); ?>;">
+						<span class="dot"></span><?php echo $e($status_name); ?>
+					</span>
+					<span class="trk-live"><span class="dot"></span> Live tracking</span>
+					<?php if ($consol_code !== ''): ?>
+						<span class="trk-consol">🗃️ In consolidation <b><?php echo $e($consol_code); ?></b></span>
+					<?php endif; ?>
+				</div>
+			</div>
+
+			<!-- Progress stepper -->
+			<div class="trk-steps" style="--steps: <?php echo (int)$progress['count']; ?>; --inset: <?php echo $e($progress['inset']); ?>%;">
+				<span class="trk-steps__rail"></span>
+				<span class="trk-steps__fill" data-fill="<?php echo $e($progress['percent']); ?>"></span>
+				<?php foreach ($progress['steps'] as $i => $s):
+					$cls = $i < $progress['index'] ? 'is-done' : ($i === $progress['index'] ? 'is-current' : ''); ?>
+					<div class="trk-step <?php echo $cls; ?>">
+						<div class="trk-step__dot"><?php echo $s['icon']; ?></div>
+						<div class="trk-step__label"><?php echo $e($s['label']); ?></div>
+					</div>
+				<?php endforeach; ?>
+			</div>
+		</section>
+
+		<!-- ── Content grid ─────────────────────────────────────────────── -->
+		<div class="trk-grid">
+
+			<!-- Main column -->
+			<div class="trk-col">
+
+				<!-- Route map -->
+				<div class="trk-card" data-reveal>
+					<div class="trk-card__head"><span class="ico">🗺️</span> Shipment Route</div>
+					<div class="trk-map-wrap">
+						<div id="trk-map"
+							data-origin="<?php echo $e($origin_geo); ?>"
+							data-dest="<?php echo $e($dest_geo); ?>"
+							data-mode="<?php echo $e($mode); ?>"></div>
+						<div class="trk-map-fallback">
+							<span class="em">🧭</span>
+							<div><strong>Route map unavailable</strong><br>We couldn’t place this route on the map, but the journey details below are complete.</div>
+						</div>
+					</div>
+					<div class="trk-route-strip">
+						<div class="pt"><span class="pin pin--a"></span><span><?php echo $e($origin_label ?: 'US Warehouse'); ?><small><?php echo $e($origin_country); ?></small></span></div>
+						<div class="line"><span class="mover"><?php echo $mode === 'air' ? '✈️' : '🚢'; ?></span></div>
+						<div class="pt"><span class="pin pin--b"></span><span><?php echo $e($dest_label); ?><small><?php echo $e($dest_country); ?></small></span></div>
+					</div>
+				</div>
+
+				<!-- Sender & Recipient -->
+				<div class="trk-two">
+					<div class="trk-card" data-reveal>
+						<div class="trk-card__body">
+							<div class="trk-partyhead">
+								<div class="trk-avatar trk-avatar--a"><?php echo $e($initial($sender_name)); ?></div>
+								<div><h4><?php echo $e($lang['track-shipment5'] ?? 'Sender'); ?></h4><p><?php echo $e($sender_name ?: '—'); ?></p></div>
+							</div>
+							<div class="trk-facts mt-3">
+								<div class="trk-fact"><span class="trk-fact__ico">📍</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment6'] ?? 'Collection City'); ?></span><span class="trk-fact__v"><?php echo $e($address_order->sender_city ?: '—'); ?></span></span></div>
+								<div class="trk-fact"><span class="trk-fact__ico">🌍</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment7'] ?? 'Origin'); ?></span><span class="trk-fact__v"><?php echo $e($address_order->sender_country ?: '—'); ?></span></span></div>
+								<div class="trk-fact trk-fact--wide"><span class="trk-fact__ico">🏠</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment10'] ?? 'Contact Address'); ?></span><span class="trk-fact__v"><?php echo $e($address_order->sender_address ?: '—'); ?></span></span></div>
+							</div>
+						</div>
+					</div>
+					<div class="trk-card" data-reveal>
+						<div class="trk-card__body">
+							<div class="trk-partyhead">
+								<div class="trk-avatar trk-avatar--b"><?php echo $e($initial($receiver_name)); ?></div>
+								<div><h4><?php echo $e($lang['track-shipment15'] ?? 'Recipient'); ?></h4><p><?php echo $e($receiver_name ?: '—'); ?></p></div>
+							</div>
+							<div class="trk-facts mt-3">
+								<div class="trk-fact"><span class="trk-fact__ico">📍</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment16'] ?? 'Delivery City'); ?></span><span class="trk-fact__v"><?php echo $e($address_order->recipient_city ?: '—'); ?></span></span></div>
+								<div class="trk-fact"><span class="trk-fact__ico">🌍</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment17'] ?? 'Destination'); ?></span><span class="trk-fact__v"><?php echo $e($address_order->recipient_country ?: '—'); ?></span></span></div>
+								<div class="trk-fact trk-fact--wide"><span class="trk-fact__ico">🏠</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment10'] ?? 'Contact Address'); ?></span><span class="trk-fact__v"><?php echo $e($address_order->recipient_address ?: '—'); ?></span></span></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Shipment contents -->
+				<div class="trk-card" data-reveal>
+					<div class="trk-card__head"><span class="ico">📦</span> Shipment Details</div>
+					<div class="trk-card__body">
+						<div class="trk-metrics">
+							<div class="trk-metric">
+								<div class="trk-metric__v"><span data-countup="<?php echo (int)$count; ?>">0</span></div>
+								<div class="trk-metric__k"><?php echo $e($lang['track-shipment11'] ?? 'Packages'); ?></div>
+							</div>
+							<div class="trk-metric">
+								<div class="trk-metric__v"><span data-countup="<?php echo (float)cdp_round_out($total_weight); ?>">0</span> <small>kg</small></div>
+								<div class="trk-metric__k"><?php echo $e($lang['track-shipment13'] ?? 'Total Weight'); ?></div>
+							</div>
+							<div class="trk-metric">
+								<div class="trk-metric__v" style="font-size:1.05rem;line-height:1.3;"><?php echo $e($track->order_date); ?></div>
+								<div class="trk-metric__k"><?php echo $e($lang['track-shipment8'] ?? 'Date of Shipment'); ?></div>
+							</div>
+							<div class="trk-metric">
+								<div class="trk-metric__v" style="font-size:1.05rem;line-height:1.3;"><?php echo $e($delivery_time ? $delivery_time->delitime : '—'); ?></div>
+								<div class="trk-metric__k"><?php echo $e($lang['track-shipment9'] ?? 'Shipping Time'); ?></div>
+							</div>
+						</div>
+						<?php if (!empty($item_description)) : ?>
+						<div class="trk-facts">
+							<div class="trk-fact trk-fact--wide"><span class="trk-fact__ico">📝</span><span><span class="trk-fact__k"><?php echo $e($lang['message_title_track4'] ?? 'Description'); ?></span><span class="trk-fact__v"><?php echo $e($item_description); ?></span></span></div>
+						</div>
+						<?php endif; ?>
+					</div>
+				</div>
+
+				<?php
+				$db->cdp_query("SELECT * FROM cdb_order_files where order_id=:order_id ORDER BY date_file");
+				$db->bind(':order_id', (int)$track->order_id);
+				$db->cdp_execute();
+				$files_order = $db->cdp_registros();
+				$numrows = $db->cdp_rowCount();
+				if ($numrows > 0 || !empty($track->photo_delivered)) : ?>
+				<!-- Proof of delivery & files -->
+				<div class="trk-card" data-reveal>
+					<div class="trk-card__head"><span class="ico">📸</span> <?php echo $e($lang['leftorder55'] ?? 'Proof of Delivery'); ?></div>
+					<div class="trk-card__body">
+						<?php if (!empty($track->photo_delivered)) : ?>
+							<img src="<?php echo $e($track->photo_delivered); ?>" alt="Proof of delivery" class="trk-photo mb-3">
+						<?php endif; ?>
+						<?php if ($numrows > 0) : ?>
+							<div class="trk-sub"><?php echo $e($lang['message_title_track1'] ?? 'Attached Files'); ?></div>
+							<ul class="trk-files">
+								<?php foreach ($files_order as $file) : ?>
+									<li class="trk-file">
+										<span class="trk-file__ico">📄</span>
+										<a target="_blank" rel="noopener" href="<?php echo $e($file->url); ?>"><?php echo $e($file->name); ?></a>
+									</li>
+								<?php endforeach; ?>
+							</ul>
+						<?php endif; ?>
+					</div>
+				</div>
+				<?php endif; ?>
+
+			</div><!-- /.trk-col main -->
+
+			<!-- Side column -->
+			<aside class="trk-col">
+
+				<!-- Quick summary -->
+				<div class="trk-card" data-reveal>
+					<div class="trk-card__head"><span class="ico">🧾</span> Summary</div>
+					<div class="trk-card__body">
+						<div class="trk-facts">
+							<div class="trk-fact trk-fact--wide"><span class="trk-fact__ico">🔖</span><span><span class="trk-fact__k">Tracking Number</span><span class="trk-fact__v"><?php echo $e($track->order_prefix . $track->order_no); ?></span></span></div>
+							<div class="trk-fact"><span class="trk-fact__ico">🚦</span><span><span class="trk-fact__k">Status</span><span class="trk-fact__v"><?php echo $e($status_name); ?></span></span></div>
+							<div class="trk-fact"><span class="trk-fact__ico">⏱️</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment19'] ?? 'Est. Delivery'); ?></span><span class="trk-fact__v"><?php echo $e($track->order_datetime ?: '—'); ?></span></span></div>
+						</div>
+						<a class="trk-btn trk-btn--grad w-100 justify-content-center mt-3" style="display:flex;" target="_blank" href="print_customer_package_track.php?id=<?php echo (int)$track->order_id; ?>">
+							<i class="mdi mdi-printer"></i> <?php echo $e($lang['toolprint'] ?? 'Print'); ?>
+						</a>
+					</div>
+				</div>
+
+				<!-- History timeline -->
+				<div class="trk-card" data-reveal>
+					<div class="trk-card__head"><span class="ico">🕓</span> <?php echo $e($lang['track-shipment22'] ?? 'Shipping History'); ?></div>
+					<div class="trk-card__body" style="padding:12px;">
+						<?php if ($hist_count > 0) :
+							$reversed = array_reverse($courier_track); ?>
+							<ul class="trk-timeline">
+								<?php foreach ($reversed as $idx => $rows) :
+									$loc = trim(($rows->t_dest ?? '') . ($rows->t_city ? ', ' . $rows->t_city : '')); ?>
+									<li class="trk-tl <?php echo $idx === 0 ? 'is-latest' : ''; ?>">
+										<span class="trk-tl__dot"></span>
+										<div class="trk-tl__date"><?php echo $e(date('M d, Y · h:i A', strtotime($rows->t_date))); ?></div>
+										<div class="trk-tl__status"><?php echo $e($rows->mod_style); ?></div>
+										<?php if ($loc) : ?><div class="trk-tl__loc">📍 <?php echo $e($loc); ?></div><?php endif; ?>
+										<?php if (!empty($rows->comments)) : ?><div class="trk-tl__note"><?php echo $e($rows->comments); ?></div><?php endif; ?>
+									</li>
+								<?php endforeach; ?>
+							</ul>
+						<?php else : ?>
+							<p class="text-center" style="color:var(--muted);padding:20px 10px;">No tracking updates have been logged for this shipment yet. Please check back a little later.</p>
+						<?php endif; ?>
+					</div>
+				</div>
+
+			</aside>
+
+		</div><!-- /.trk-grid -->
+
+		<div class="trk-foot">Powered by <?php echo $e($core->site_name); ?> · Live shipment tracking</div>
+
+	</main>
+
+	<?php endif; ?>
+
+</div><!-- /.trk -->
+
+	<script src="<?= cdp_asset('assets/vendor/libs/leaflet/leaflet.js') ?>"></script>
+	<script src="<?= cdp_asset('dataJs/track_details.js') ?>"></script>
 </body>
 
 </html>

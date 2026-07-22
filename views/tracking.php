@@ -92,16 +92,16 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
                                         <div class="mb-3 d-flex gap-3">
                                             <div class="form-check mb-0">
                                                 <input class="form-check-input" type="radio"
-                                                       name="trackingType" id="trackingType1" value="1" checked>
-                                                <label class="form-check-label" for="trackingType1">
-                                                    <?php echo $lang['message_title_tracking1'] ?>
+                                                       name="trackingType" id="trackingType2" value="2" checked>
+                                                <label class="form-check-label" for="trackingType2">
+                                                    <?php echo $lang['message_title_tracking2'] ?>
                                                 </label>
                                             </div>
                                             <div class="form-check mb-0">
                                                 <input class="form-check-input" type="radio"
-                                                       name="trackingType" id="trackingType2" value="2">
-                                                <label class="form-check-label" for="trackingType2">
-                                                    <?php echo $lang['message_title_tracking2'] ?>
+                                                       name="trackingType" id="trackingType1" value="1">
+                                                <label class="form-check-label" for="trackingType1">
+                                                    <?php echo $lang['message_title_tracking1'] ?>
                                                 </label>
                                             </div>
                                         </div>
@@ -157,8 +157,6 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
     <script src="assets/css_main_deprixa/js/feather.min.js"></script>
     <script src="assets/css_main_deprixa/js/plugins.init.js"></script>
     <script src="assets/css_main_deprixa/js/app.js"></script>
-    <script src="<?= cdp_asset('dataJs/tracking.js') ?>"></script>
->
     <!--Note: All important javascript like page loader, menu, sticky menu, menu-toggler, one page menu etc. -->
 
     <script src="<?= cdp_asset('dataJs/tracking.js') ?>"></script>
