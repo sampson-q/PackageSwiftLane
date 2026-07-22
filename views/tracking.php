@@ -92,15 +92,15 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
                                         <div class="mb-3 d-flex gap-3">
                                             <div class="form-check mb-0">
                                                 <input class="form-check-input" type="radio"
-                                                       name="trackingType" id="trackingType2" value="2" checked>
-                                                <label class="form-check-label" for="trackingType2">
+                                                       name="trackingType" id="trackingType1" value="1" checked>
+                                                <label class="form-check-label" for="trackingType1">
                                                     <?php echo $lang['message_title_tracking2'] ?>
                                                 </label>
                                             </div>
                                             <div class="form-check mb-0">
                                                 <input class="form-check-input" type="radio"
-                                                       name="trackingType" id="trackingType1" value="1">
-                                                <label class="form-check-label" for="trackingType1">
+                                                       name="trackingType" id="trackingType2" value="2">
+                                                <label class="form-check-label" for="trackingType2">
                                                     <?php echo $lang['message_title_tracking1'] ?>
                                                 </label>
                                             </div>
