@@ -474,9 +474,9 @@ $shipment_total = count($order_list);
                         <div class="brand-text" style="color:#000 !important;">
                             <p class="brand-name"><?php echo htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8'); ?></p>
                             <p class="brand-lines">
-                                <strong><?php echo $lang['inv-shipping2']; ?>:</strong> <?php echo htmlspecialchars("+233(0)243438799 || +233(0)342292798", ENT_QUOTES, 'UTF-8'); ?><br>
+                                <strong><?php echo $lang['inv-shipping2']; ?>:</strong> <?php echo htmlspecialchars(cdp_printBrandPhones(), ENT_QUOTES, 'UTF-8'); ?><br>
                                 <strong><?php echo $lang['inv-shipping3']; ?>:</strong> <?php echo htmlspecialchars($core->site_email, ENT_QUOTES, 'UTF-8'); ?><br>
-                                <strong>Address:</strong> <?php echo htmlspecialchars("#01, Adaman Crescent, Behind The Allied Filling Station, Tesano Abeka Junction", ENT_QUOTES, 'UTF-8'); ?>
+                                <strong>Address:</strong> <?php echo htmlspecialchars(cdp_printBrandAddress(), ENT_QUOTES, 'UTF-8'); ?>
                             </p>
                         </div>
                     </div>

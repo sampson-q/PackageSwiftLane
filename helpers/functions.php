@@ -237,3 +237,30 @@ function cdp_round_outx($valor)
   $float_redondeado = round($valor * 100) / 100;
   return $float_redondeado;
 }
+
+/**
+ * Company address and phone numbers printed on shipment receipts and box
+ * labels.
+ *
+ * Deliberately kept out of Settings: cdb_settings.c_address holds the US
+ * receiving address, while the receipts and labels have to carry the Ghana
+ * office. Edit here to change every receipt and every box label at once.
+ *
+ * @param bool $multiline true => the address split into display lines,
+ *                        false => the same address as one comma-separated line
+ * @return string[]|string
+ */
+function cdp_printBrandAddress($multiline = false)
+{
+  $lines = ['#01, Adaman Crescent, Behind The Allied Filling Station', 'Tesano Abeka Junction'];
+
+  return $multiline ? $lines : implode(', ', $lines);
+}
+
+/**
+ * Phone numbers printed beside cdp_printBrandAddress() on receipts and labels.
+ */
+function cdp_printBrandPhones()
+{
+  return '+233(0)243438799 || +233(0)342292798';
+}

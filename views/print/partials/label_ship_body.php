@@ -93,8 +93,10 @@ $courier_barcode_url = $courier_track !== ''
                 </div>
                 <div class="contact">
                     <strong><?php echo h($core->site_name); ?></strong><br>
-                    Ghana, 4 Nii Attram Mensah CL <br>GS-0211-5741<br>
-                    <?php echo h($lang['print-text8'] ?? 'Tel'); ?>: +233 538 346 496
+                    <?php foreach (cdp_printBrandAddress(true) as $brand_line) : ?>
+                        <?php echo h($brand_line); ?><br>
+                    <?php endforeach; ?>
+                    <?php echo h($lang['print-text8'] ?? 'Tel'); ?>: <?php echo h(cdp_printBrandPhones()); ?>
                 </div>
             </div>
 

@@ -29,8 +29,8 @@
  */
 $sys_tracking     = (string) ($INV['sys_tracking'] ?? '');
 $barcode_data     = (string) ($INV['barcode_data'] ?? $sys_tracking);
-$brand_phones     = (string) ($INV['phones'] ?? '+233(0)243438799 || +233(0)342292798');
-$brand_address    = (string) ($INV['address'] ?? '#01, Adaman Crescent, Behind The Allied Filling Station, Tesano Abeka Junction');
+$brand_phones     = (string) ($INV['phones'] ?? cdp_printBrandPhones());
+$brand_address    = (string) ($INV['address'] ?? cdp_printBrandAddress());
 $sender_name      = (string) ($INV['sender_name'] ?? '');
 $sender_address   = (string) ($INV['sender_address'] ?? 'N/A');
 $sender_location  = (string) ($INV['sender_location'] ?? 'N/A');
