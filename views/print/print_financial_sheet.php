@@ -1,7 +1,26 @@
 <?php
 // *************************************************************************
-// * DEPRIXA PRO - Financial Sheet PDF (one consolidation)                *
+// *                                                                       *
+// * Swiftlane - Financial Sheet PDF (one consolidation)                   *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
+// *                                                                       *
+// *************************************************************************
+// *                                                                       *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
+// *                                                                       *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
+// *                                                                       *
+// *************************************************************************
+// *                                                                       *
 // * Sorted by sender name and fitted for A4                              *
+// *                                                                       *
 // *************************************************************************
 
 require_once("../../loader.php");
@@ -205,7 +224,7 @@ if (!$packages) {
 $h .= '</tbody></table>';
 
 try {
-    $pdf = deprixapro_render_html_to_pdf(
+    $pdf = swiftlane_render_html_to_pdf(
         $h,
         'financial_sheet_' . $cNo . '.pdf',
         [

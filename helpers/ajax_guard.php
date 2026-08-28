@@ -5,7 +5,7 @@
  * Respuesta: 401 sin sesión, 403 sin permiso (JSON). Con permiso sigue la ejecución.
  */
 
-if (!defined('DEPRIXAPRO_AJAX_GUARD_LOADED')) {
+if (!defined('SWIFTLANE_AJAX_GUARD_LOADED')) {
     require_once __DIR__ . '/csrf.php';
     if (!class_exists('User')) {
         require_once dirname(__DIR__) . '/loader.php';
@@ -13,7 +13,7 @@ if (!defined('DEPRIXAPRO_AJAX_GUARD_LOADED')) {
     if (!isset($user) || !$user instanceof User) {
         $user = new User();
     }
-    define('DEPRIXAPRO_AJAX_GUARD_LOADED', true);
+    define('SWIFTLANE_AJAX_GUARD_LOADED', true);
 }
 
 /**

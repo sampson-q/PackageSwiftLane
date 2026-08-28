@@ -1,8 +1,27 @@
 <?php
 // *************************************************************************
-// * DEPRIXA PRO - Financial Sheet (consolidation list + search)            *
+// *                                                                       *
+// * Swiftlane - Financial Sheet (consolidation list + search)             *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
+// *                                                                       *
+// *************************************************************************
+// *                                                                       *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
+// *                                                                       *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
+// *                                                                       *
+// *************************************************************************
+// *                                                                       *
 // * Hierarchy: consolidation -> customer -> packages -> items              *
 // * Each consolidation opens in its own page (financial_sheet_consolidation)*
+// *                                                                       *
 // *************************************************************************
 
 // Access is enforced by the entry point (financial_sheet.php -> cdp_hasPermission

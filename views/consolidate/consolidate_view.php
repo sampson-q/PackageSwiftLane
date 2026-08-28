@@ -1,21 +1,21 @@
 <?php
 // *************************************************************************
 // *                                                                       *
-// * DEPRIXA PRO -  Integrated Web Shipping System                         *
-// * Copyright (c) JAOMWEB. All Rights Reserved                            *
+// * Swiftlane - Integrated Web Shipping System                            *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
-// * Email: support@jaom.info                                              *
-// * Website: http://www.jaom.info                                         *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
 // *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * This software is furnished under a license and may be used and copied *
-// * only  in  accordance  with  the  terms  of such  license and with the *
-// * inclusion of the above copyright notice.                              *
-// * If you Purchased from Codecanyon, Please read the full License from   *
-// * here- http://codecanyon.net/licenses/standard                         *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
 // *                                                                       *
 // *************************************************************************
  
@@ -292,6 +292,12 @@ if ($row_order->status_invoice == 1) {
                                                     <?php if ($user->cdp_hasPermission('send_consolidate_email')) { ?>
                                                         <a class="dropdown-item" href="#" data-toggle="modal" data-id="<?php echo $row_order->consolidate_id; ?>" data-email="<?php echo $sender_data->email; ?>" data-order="<?php echo $row_order->c_prefix . $row_order->c_no; ?>" data-target="#myModal">
                                                             <i class="fas fa-envelope"></i>&nbsp;<?php echo $lang['leftorder36']; ?>
+                                                        </a>
+                                                    <?php } ?>
+
+                                                    <?php if ($user->cdp_hasPermission('push_notifications')) { ?>
+                                                        <a class="dropdown-item" href="push_notifications_consolidation.php?id=<?php echo $row_order->consolidate_id; ?>" title="<?php echo $lang['left-menu-sidebar-66'] ?>">
+                                                            <i style="color:#7460ee" class="mdi mdi-bell-ring"></i>&nbsp;<?php echo $lang['left-menu-sidebar-66'] ?>
                                                         </a>
                                                     <?php } ?>
                                                 </div>

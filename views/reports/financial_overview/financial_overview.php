@@ -64,7 +64,7 @@ $userData = $user->cdp_getUserData();
     <?php include('helpers/languages/translate_to_js.php'); ?>
     <script src="assets/template/assets/libs/moment/moment.min.js"></script>
     <script src="assets/template/assets/libs/daterangepicker/daterangepicker.js"></script>
-    <script src="assets/css_main_deprixa/js/apexcharts.min.js"></script>
+    <script src="assets/css_main_swiftlane/js/apexcharts.min.js"></script>
     <script src="<?= cdp_asset('dataJs/financial_overview.js') ?>"></script>
 </body>
 

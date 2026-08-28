@@ -1,21 +1,21 @@
 <?php
 // *************************************************************************
 // *                                                                       *
-// * DEPRIXA PRO -  Integrated Web Shipping System                         *
-// * Copyright (c) JAOMWEB. All Rights Reserved                            *
+// * Swiftlane - Integrated Web Shipping System                            *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
-// * Email: support@jaom.info                                              *
-// * Website: http://www.jaom.info                                         *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
 // *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * This software is furnished under a license and may be used and copied *
-// * only  in  accordance  with  the  terms  of such  license and with the *
-// * inclusion of the above copyright notice.                              *
-// * If you Purchased from Codecanyon, Please read the full License from   *
-// * here- http://codecanyon.net/licenses/standard                         *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
 // *                                                                       *
 // *************************************************************************
 
@@ -496,13 +496,9 @@ if (empty($errors)) {
                 //NOTIFY WHATSAPP API
 
                 if (isset($_POST['notify_whatsapp_sender']) && $_POST['notify_whatsapp_sender'] == 1) {
-                    $wa_extra_lines = array();
-                    if (trim((string) ($_POST['tracking_number'] ?? '')) !== '') {
-                        $wa_extra_lines[] = '• Carrier tracking #: ' . cdp_sanitize($_POST['tracking_number']);
-                    }
-                    if (trim((string) ($_POST['estimated_eta'] ?? '')) !== '') {
-                        $wa_extra_lines[] = '• Estimated arrival: ' . cdp_sanitize($_POST['estimated_eta']);
-                    }
+                    // Shared builder — the hand-rolled version here carried only the
+                    // carrier tracking # and ETA, so the package weight never showed.
+                    $wa_extra_lines = cdp_wa_buildShipmentExtraLines($shipment_id, 'air', true);
                     cdp_sendShipmentRegisteredWhatsApp($sender_data, $fullshipment, array(
                         'courier'  => intval($_POST['order_courier'] ?? 0),
                         'service'  => intval($_POST['order_service_options'] ?? 0),

@@ -33,7 +33,7 @@
 <link rel="stylesheet" type="text/css" href="<?= cdp_asset('assets/template/assets/libs/select2/dist/css/select2.min.css') ?>">
 <link rel="stylesheet" href="<?= cdp_asset('assets/template/assets/libs/intlTelInput/intlTelInput.css') ?>">
 <!-- SwiftLane design-system override — must load last so tokens cascade -->
-<link href="<?= cdp_asset('assets/css_main_deprixa/css/dashboard-swiftlane.css') ?>" rel="stylesheet" type="text/css" />
+<link href="<?= cdp_asset('assets/css_main_swiftlane/css/dashboard-swiftlane.css') ?>" rel="stylesheet" type="text/css" />
 
 
 <?php

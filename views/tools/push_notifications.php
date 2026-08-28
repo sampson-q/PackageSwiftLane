@@ -1,7 +1,13 @@
 <?php
 
-if ((!$user->cdp_is_Admin()))
-    cdp_redirect_to("login.php");
+// Access is enforced by the router (push_notifications.php), which checks
+// cdp_hasPermission('push_notifications'). Same fix as the consolidation page:
+// cdp_is_Admin() is userlevel 9/2 only, so any other role granted the permission
+// saw the sidebar link and was then bounced to login.php while already logged in.
+if (!isset($user) || !$user->cdp_hasPermission('push_notifications')) {
+    cdp_redirect_to("error403.php");
+    exit;
+}
 
 $userData = $user->cdp_getUserData();
 ?>

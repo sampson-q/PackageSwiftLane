@@ -5,11 +5,11 @@
  * Sustituye el uso de pdf/html2pdf.class.php + pdf/_tcpdf_5.0.002 (each/create_function).
  */
 
-if (!defined('DEPRIXAPRO_PDF_LOADED')) {
+if (!defined('SWIFTLANE_PDF_LOADED')) {
     if (file_exists(dirname(__DIR__) . '/vendor/autoload.php')) {
         require_once dirname(__DIR__) . '/vendor/autoload.php';
     }
-    define('DEPRIXAPRO_PDF_LOADED', true);
+    define('SWIFTLANE_PDF_LOADED', true);
 }
 
 use Spipu\Html2Pdf\Html2Pdf;
@@ -25,7 +25,7 @@ use Spipu\Html2Pdf\Exception\ExceptionFormatter;
  * @return string PDF binario (para Output('', 'S'))
  * @throws RuntimeException si falla la generación
  */
-function deprixapro_render_html_to_pdf($html, $filename = '', array $options = [])
+function swiftlane_render_html_to_pdf($html, $filename = '', array $options = [])
 {
     $orientation = $options['orientation'] ?? 'P';
     $format      = $options['format'] ?? 'LETTER';

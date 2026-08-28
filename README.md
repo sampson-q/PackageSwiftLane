@@ -27,3 +27,10 @@ The repository now includes a production API entrypoint at:
 ### Lightweight tests
 
 - Utility test script: `api/tests/ApiKernelUtilsTest.php`
+
+## License
+
+Copyright (c) iSolveAfrica Ltd. All rights reserved.
+
+Proprietary and confidential software developed specifically for Swiftlane.
+See [LICENSE](LICENSE) for the full notice.

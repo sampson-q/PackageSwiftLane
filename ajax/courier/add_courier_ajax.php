@@ -1,21 +1,21 @@
 <?php
 // *************************************************************************
 // *                                                                       *
-// * DEPRIXA PRO -  Integrated Web Shipping System                         *
-// * Copyright (c) JAOMWEB. All Rights Reserved                            *
+// * Swiftlane - Integrated Web Shipping System                            *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
-// * Email: support@jaom.info                                              *
-// * Website: http://www.jaom.info                                         *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
 // *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * This software is furnished under a license and may be used and copied *
-// * only  in  accordance  with  the  terms  of such  license and with the *
-// * inclusion of the above copyright notice.                              *
-// * If you Purchased from Codecanyon, Please read the full License from   *
-// * here- http://codecanyon.net/licenses/standard                         *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
 // *                                                                       *
 // *************************************************************************
 
@@ -280,6 +280,13 @@ if (empty($errors)) {
             $db_pa->cdp_execute();
         }
 
+        // Original total weight: the actual package weight entered by staff.
+        // Declared out here so a request without a packages payload can't leave
+        // it undefined and silently save a 0 weight.
+        $package_total_weight = (isset($_POST['package_total_weight']) && $_POST['package_total_weight'] !== '')
+            ? floatval($_POST['package_total_weight'])
+            : 0.0;
+
         if (isset($_POST["packages"])) {
 
             $packages = json_decode($_POST['packages']);
@@ -442,13 +449,12 @@ if (empty($errors)) {
             // == PESO TOTAL (para arancel) ==
             $total_peso = $sumador_libras + $sumador_volumetric;
 
-            // Original total weight: the actual package weight entered by staff.
             // Stored in cdb_add_order.total_weight (display/record only — the
             // customs tariff still uses the summed item weight above). Falls back
-            // to the summed weight when left blank.
-            $package_total_weight = (isset($_POST['package_total_weight']) && $_POST['package_total_weight'] !== '')
-                ? floatval($_POST['package_total_weight'])
-                : $total_peso;
+            // to the summed weight when staff left the field blank.
+            if ($package_total_weight <= 0) {
+                $package_total_weight = $total_peso;
+            }
 
             // == IMPUESTO ADUANERO ==
             $total_impuesto_aduanero = ($total_peso * $tariffs_value) / 100;
@@ -594,6 +600,12 @@ if (empty($errors)) {
             ), array_values($pkg_ph)),
             $email_template->body
         );
+
+        // Template 16 ships with a [SHIPMENT_DETAILS] slot, but an admin can edit
+        // it away — append the block so the package weight / items survive that.
+        if (strpos($email_template->body, '[SHIPMENT_DETAILS]') === false && $pkg_ph['[SHIPMENT_DETAILS]'] !== '') {
+            $body .= $pkg_ph['[SHIPMENT_DETAILS]'];
+        }
 
         $newbody = cdp_cleanOutx($body);
 
@@ -807,30 +819,29 @@ if (empty($errors)) {
                         $office_obj = $db_office->cdp_registro();
                         $origin_office = $office_obj ? $office_obj->name_off : 'N/A';
 
-                        // Extra, well-sourced details: pieces / weight / dims /
+                        // Extra, well-sourced details: pieces / weight /
                         // carrier tracking / ETA — only lines we actually have.
+                        require_once(__DIR__ . '/../../helpers/notify_placeholders.php');
+                        $wa_ph = cdp_buildPackageNotifyPlaceholders($shipment_id);
+
                         $extra_lines = array();
                         if (isset($_POST['packages'])) {
                             $pkgs_wa = json_decode($_POST['packages']);
                             if (is_array($pkgs_wa) && count($pkgs_wa) > 0) {
                                 $pieces_wa = 0;
-                                $weight_wa = 0.0;
                                 foreach ($pkgs_wa as $p_wa) {
-                                    $qty_wa = max(1, (int) ($p_wa->qty ?? 1));
-                                    $pieces_wa += $qty_wa;
-                                    $weight_wa += (float) ($p_wa->weight ?? 0) * $qty_wa;
+                                    $pieces_wa += max(1, (int) ($p_wa->qty ?? 1));
                                 }
-                                // Package weight = the staff-entered Original Total Weight
-                                // (item weights only price items; a custom-priced item carries
-                                // 0 weight, so the summed item weight can be 0). Fall back to
-                                // the summed weight only if the total wasn't entered.
-                                // Dimensions are retired — no longer shown.
-                                $ptw_wa = (isset($_POST['package_total_weight']) && $_POST['package_total_weight'] !== '')
-                                    ? (float) $_POST['package_total_weight'] : $weight_wa;
-                                $weight_unit_wa = trim((string) ($settings->weight_p ?? 'lb'));
                                 $extra_lines[] = '• Pieces: ' . $pieces_wa;
-                                $extra_lines[] = '• Total Weight: ' . (0 + round($ptw_wa, 2)) . ' ' . $weight_unit_wa;
                             }
+                        }
+                        // Package weight = the staff-entered Original Total Weight, read
+                        // back from the row we just saved. Item weights only price items
+                        // (a custom-priced item carries 0 weight), so they are never
+                        // summed here. This line used to sit inside the packages guard
+                        // above, which dropped it whenever no package json was posted.
+                        if ($wa_ph['[WEIGHT]'] !== 'N/A') {
+                            $extra_lines[] = '• Total Weight: ' . $wa_ph['[WEIGHT]'];
                         }
                         $postal_tracking_wa = trim((string) ($_POST['tracking_number'] ?? ''));
                         if ($postal_tracking_wa !== '' && $postal_tracking_wa !== '0') {
@@ -842,8 +853,6 @@ if (empty($errors)) {
                         }
 
                         // Status + full itemized list (qty x description, no prices)
-                        require_once(__DIR__ . '/../../helpers/notify_placeholders.php');
-                        $wa_ph = cdp_buildPackageNotifyPlaceholders($shipment_id);
                         if ($wa_ph['[STATUS]'] !== 'N/A') {
                             $extra_lines[] = '• Status: ' . $wa_ph['[STATUS]'];
                         }

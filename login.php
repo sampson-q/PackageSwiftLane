@@ -1,21 +1,21 @@
 <?php
 // *************************************************************************
 // *                                                                       *
-// * DEPRIXA PRO -  Integrated Web Shipping System                         *
-// * Copyright (c) JAOMWEB. All Rights Reserved                            *
+// * Swiftlane - Integrated Web Shipping System                            *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
-// * Email: support@jaom.info                                              *
-// * Website: http://www.jaom.info                                         *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
 // *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * This software is furnished under a license and may be used and copied *
-// * only  in  accordance  with  the  terms  of such  license and with the *
-// * inclusion of the above copyright notice.                              *
-// * If you Purchased from Codecanyon, Please read the full License from   *
-// * here- http://codecanyon.net/licenses/standard                         *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
 // *                                                                       *
 // *************************************************************************
 
@@ -55,8 +55,8 @@ if (isset($_POST['login'])) {
         <meta charset="utf-8" />
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="keywords" content="Courier DEPRIXA-Integral Web System">
-        <meta name="author" content="Jaomweb">
+        <meta name="keywords" content="Swiftlane - Integrated Web Shipping System">
+        <meta name="author" content="iSolveAfrica Ltd.">
         <meta name="description" content="">
         <!-- favicon -->
         <title><?php echo $lang['message_title_login0'] ?> | <?php echo $core->site_name ?></title>
@@ -64,13 +64,13 @@ if (isset($_POST['login'])) {
 
 
         <!-- Bootstrap -->
-        <link href="assets/css_main_deprixa/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="assets/css_main_swiftlane/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
         <!-- Icons -->
-        <link href="assets/css_main_deprixa/css/materialdesignicons.min.css" rel="stylesheet" type="text/css" />
+        <link href="assets/css_main_swiftlane/css/materialdesignicons.min.css" rel="stylesheet" type="text/css" />
         <!-- Main Css -->
-        <link href="assets/css_main_deprixa/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
-        <link href="assets/css_main_deprixa/css/colors/default.css" rel="stylesheet" id="color-opt">
-        <link href="assets/css_main_deprixa/css/auth-pages.css" rel="stylesheet" type="text/css" />
+        <link href="assets/css_main_swiftlane/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
+        <link href="assets/css_main_swiftlane/css/colors/default.css" rel="stylesheet" id="color-opt">
+        <link href="assets/css_main_swiftlane/css/auth-pages.css" rel="stylesheet" type="text/css" />
     </head>
 
     <body class="auth-page">
@@ -213,13 +213,13 @@ if (isset($_POST['login'])) {
 
         <!-- javascript -->
         <script src="assets/custom_dependencies/jquery-3.6.0.min.js"></script>
-        <script src="assets/css_main_deprixa/js/bootstrap.bundle.min.js"></script>
+        <script src="assets/css_main_swiftlane/js/bootstrap.bundle.min.js"></script>
         <!-- Icons -->
-        <script src="assets/css_main_deprixa/js/feather.min.js"></script>
+        <script src="assets/css_main_swiftlane/js/feather.min.js"></script>
         <!-- Main Js -->
-        <script src="assets/css_main_deprixa/js/plugins.init.js"></script>
+        <script src="assets/css_main_swiftlane/js/plugins.init.js"></script>
         <!--Note: All init js like tiny slider, counter, countdown, maintenance, lightbox, gallery, swiper slider, aos animation etc.-->
-        <script src="assets/css_main_deprixa/js/app.js"></script>
+        <script src="assets/css_main_swiftlane/js/app.js"></script>
         <!--Note: All important javascript like page loader, menu, sticky menu, menu-toggler, one page menu etc. -->
 
     </body>

@@ -1,21 +1,21 @@
 <?php
 // *************************************************************************
 // *                                                                       *
-// * DEPRIXA PRO -  Integrated Web Shipping System                         *
-// * Copyright (c) JAOMWEB. All Rights Reserved                            *
+// * Swiftlane - Integrated Web Shipping System                            *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
-// * Email: support@jaom.info                                              *
-// * Website: http://www.jaom.info                                         *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
 // *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * This software is furnished under a license and may be used and copied *
-// * only  in  accordance  with  the  terms  of such  license and with the *
-// * inclusion of the above copyright notice.                              *
-// * If you Purchased from Codecanyon, Please read the full License from   *
-// * here- http://codecanyon.net/licenses/standard                         *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
 // *                                                                       *
 // *************************************************************************
 
@@ -597,11 +597,11 @@ $lang = array(
 
 	"help-text0" => "Check for updates",
 	"help-text1" => "About",
-	"help-text2" => "Deprixa pro is a package and transport management software, developed in PHP and PDO",
+	"help-text2" => "Swiftlane is a package and transport management software, developed in PHP and PDO",
 	"help-text3" => "If you as a customer purchased 6 months of support, you can submit a support ticket or simply upgrade your support by purchasing 6 more months, so you can enjoy immediate answers and solutions.",
 	"help-text4" => "Purchase Support Link",
-	"help-text5" => "If you have any questions, please feel free to email us at support@jaom.info and we will be happy to assist you. Please note that we may have response times of up to (2 business days).",
-	"help-text6" => "Greetings! Deprixa pro is up to date.",
+	"help-text5" => "If you have any questions, please feel free to email us at support@isolveafrica.com and we will be happy to assist you. Please note that we may have response times of up to (2 business days).",
+	"help-text6" => "Greetings! Swiftlane is up to date.",
 	"help-text7" => "Back up your database and script files before upgrading.",
 	"help-text8" => "Support",
 	"help-text9" => "Download and install update",
@@ -3571,7 +3571,17 @@ $lang = array(
     'push_notifications_type' => "Push Type",
     'push_notifications_type0' => "Broadcast",
     'push_notifications_type1' => "Single User",
-    
+    'push_notifications_type2' => "Consolidation",
+
+    // Consolidation push page (push_notifications_consolidation.php). Without these
+    // the radio labels and hints on that page render empty.
+    'push_notifications_type_broadcast' => "Broadcast To All",
+    'push_notifications_hint_broadcast' => "Notifies every customer with a package in ",
+    'push_notifications_type_users' => "Select Users",
+    'push_notifications_hint_users' => "Choose specific customers from ",
+    'select_users_label' => "Select Users",
+
+
     'subject_matter' => "Notification's Subject",
     'message_matter' => "Notification Content/Message",
     'content_matter' => 'Content',

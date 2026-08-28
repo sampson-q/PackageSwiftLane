@@ -261,7 +261,7 @@ if (!function_exists('cdp_dashChartsRender')) {
     {
         echo '<script>window.cdpDashCharts = ' . json_encode($charts) . ';'
            . 'window.cdpDashCurrency = ' . json_encode((string) $currency) . ';</script>' . "\n";
-        echo '<script src="' . cdp_asset('assets/css_main_deprixa/js/apexcharts.min.js') . '"></script>' . "\n";
+        echo '<script src="' . cdp_asset('assets/css_main_swiftlane/js/apexcharts.min.js') . '"></script>' . "\n";
         echo '<script src="' . cdp_asset('dataJs/dashboard_charts.js') . '"></script>' . "\n";
     }
 }

@@ -1,6 +1,6 @@
 <?php
 // ini_set('display_errors', 1);
-if (!defined('DEPRIXAPRO_LOADER_LOADED')) {
+if (!defined('SWIFTLANE_LOADER_LOADED')) {
     require_once(__DIR__ . '/../../loader.php');
     require_once(__DIR__ . '/../../helpers/ajax_guard.php');
     require_login();

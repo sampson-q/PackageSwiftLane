@@ -1,8 +1,27 @@
 <?php
 // *************************************************************************
-// * DEPRIXA PRO - Financial Sheet: one consolidation (own page)            *
+// *                                                                       *
+// * Swiftlane - Financial Sheet: one consolidation (own page)             *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
+// *                                                                       *
+// *************************************************************************
+// *                                                                       *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
+// *                                                                       *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
+// *                                                                       *
+// *************************************************************************
+// *                                                                       *
 // * Header: number, date, weight, priced customers, due + paid, exports.   *
 // * Body: customer -> packages -> items tree (same AJAX as the list page). *
+// *                                                                       *
 // *************************************************************************
 
 // Access is enforced by the entry point (financial_sheet_consolidation.php ->

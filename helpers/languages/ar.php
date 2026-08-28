@@ -1,19 +1,23 @@
 <?php
+// *************************************************************************
 // *                                                                       *
-// * DEPRIXA PRO -  Integrated Web Shipping System                         *
-// * Copyright (c) JAOMWEB. All Rights Reserved                            *
+// * Swiftlane - Integrated Web Shipping System                            *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
 // *                                                                       *
+// *************************************************************************
 // *                                                                       *
-// * Email: support@jaom.info                                              *
-// * Website: http://www.jaom.info                                         *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
 // *                                                                       *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
 // *                                                                       *
-// * This software is furnished under a license and may be used and copied *
-// * only  in  accordance  with  the  terms  of such  license and with the *
-// * inclusion of the above copyright notice.                              *
-// * If you Purchased from Codecanyon, Please read the full License from   *
-// * here- http://codecanyon.net/licenses/standard                         *
-// *                                                                       *
+// *************************************************************************
 
 $lang = array(
 
@@ -585,11 +589,11 @@ $lang = array(
 
     "help-text0" => "تحقق من وجود تحديثات",
     "help-text1" => "حول",
-    "help-text2" => "Deprixa pro عبارة عن حزمة وبرامج لإدارة النقل , تم تطويرها في PHP و PDO",
+    "help-text2" => "Swiftlane عبارة عن حزمة وبرامج لإدارة النقل , تم تطويرها في PHP و PDO",
     "help-text3" => "إذا اشتريت كعميل 6 أشهر من الدعم , فيمكنك إرسال تذكرة دعم أو ببساطة ترقية الدعم الخاص بك عن طريق شراء 6 أشهر أخرى , حتى تتمكن من الاستمتاع بإجابات وحلول فورية.",
     "help-text4" => "شراء رابط الدعم",
-    "help-text5" => "إذا كانت لديك أي أسئلة , فلا تتردد في مراسلتنا عبر البريد الإلكتروني على support@jaom.info وسنكون سعداء بمساعدتك. يرجى ملاحظة أنه قد يكون لدينا أوقات استجابة تصل إلى (يومي عمل) ). ",
-    "help-text6" => "تحياتي! Deprixa pro محدث.",
+    "help-text5" => "إذا كانت لديك أي أسئلة , فلا تتردد في مراسلتنا عبر البريد الإلكتروني على support@isolveafrica.com وسنكون سعداء بمساعدتك. يرجى ملاحظة أنه قد يكون لدينا أوقات استجابة تصل إلى (يومي عمل) ). ",
+    "help-text6" => "تحياتي! Swiftlane محدث.",
     "help-text7" => "انسخ قاعدة البيانات وملفات البرامج النصية احتياطيًا قبل الترقية.",
     "help-text8" => "دعم",
     "help-text9" => "تنزيل التحديث وتثبيته",

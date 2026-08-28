@@ -1,21 +1,21 @@
 <?php
 // *************************************************************************
 // *                                                                       *
-// * DEPRIXA PRO -  Integrated Web Shipping System                         *
-// * Copyright (c) JAOMWEB. All Rights Reserved                            *
+// * Swiftlane - Integrated Web Shipping System                            *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
-// * Email: support@jaom.info                                              *
-// * Website: http://www.jaom.info                                         *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
 // *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * This software is furnished under a license and may be used and copied *
-// * only  in  accordance  with  the  terms  of such  license and with the *
-// * inclusion of the above copyright notice.                              *
-// * If you Purchased from Codecanyon, Please read the full License from   *
-// * here- http://codecanyon.net/licenses/standard                         *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
 // *                                                                       *
 // *************************************************************************
 
@@ -121,7 +121,7 @@ $userData = $user->cdp_getUserData();
                     <h6 class="card-subtitle">
                       <?php echo $lang['help-text3'] ?>
                     </h6>
-                    <p><a href="https://codecanyon.net/item/courier-deprixa-pro-integrated-web-system-v32/15216982"><b>
+                    <p><a href="mailto:support@isolveafrica.com"><b>
                           <i class="mdi mdi-cart-outline" style="color:#FD571E"></i> <?php echo $lang['help-text4'] ?></b></a></p>
                     <div><br><br></div>
                     <h3 id="item-description__support">
@@ -130,7 +130,7 @@ $userData = $user->cdp_getUserData();
                     </h3>
                     <p><?php echo $lang['help-text5'] ?><br></p>
 
-                    <a href="https://ticket.deprixapro.site/index.php"><img src="https://deprixapro.site/envato/support.png"></a>
+                    <a href="mailto:support@isolveafrica.com" class="btn btn-info"><i class="mdi mdi-lifebuoy"></i> Support</a>
                     <!-- div -->
                     <div><br></div>
                   </div>

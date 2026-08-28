@@ -10,6 +10,9 @@
 <script src="<?= cdp_asset('dataJs/persist_selection.js') ?>"></script>
 <!-- Sender auto-fill: selecting a sender fills the first address/recipient/recipient-address on every form. -->
 <script src="<?= cdp_asset('dataJs/sender_autofill.js') ?>"></script>
+<!-- Barcode-scanner Enter guard: a scan's trailing Enter must not submit the shipment forms
+     (it was firing the "Enter package description" error on every scan). #invoice_form only. -->
+<script src="<?= cdp_asset('dataJs/scanner_guard.js') ?>"></script>
 <script>
     (function ($) {
         if (!$ || !$.ajaxSetup) return;

@@ -2,21 +2,21 @@
 
 // *************************************************************************
 // *                                                                       *
-// * DEPRIXA PRO -  Integrated Web Shipping System                         *
-// * Copyright (c) JAOMWEB. All Rights Reserved                            *
+// * Swiftlane - Integrated Web Shipping System                            *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
-// * Email: support@jaom.info                                              *
-// * Website: http://www.jaom.info                                         *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
 // *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * This software is furnished under a license and may be used and copied *
-// * only  in  accordance  with  the  terms  of such  license and with the *
-// * inclusion of the above copyright notice.                              *
-// * If you Purchased from Codecanyon, Please read the full License from   *
-// * here- http://codecanyon.net/licenses/standard                         *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
 // *                                                                       *
 // *************************************************************************
 
@@ -32,10 +32,10 @@ $api = new License2l6aspi3ekdz14bfnxwtugjycm05hqcdpcoddingproV75(); // Initializ
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <title>Verify Purchase - Deprixa Pro - Courier & Logistics System v8.4</title>
+        <title>Verify Purchase - Swiftlane - Courier & Logistics System</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="keywords" content="Courier DEPRIXA-Integral Web System">
-        <meta name="author" content="Jaomweb">
+        <meta name="keywords" content="Swiftlane - Integrated Web Shipping System">
+        <meta name="author" content="iSolveAfrica Ltd.">
         <meta name="description" content="">
         <!-- favicon -->
          <link rel="icon" type="image/png" sizes="16x16" href="assets/uploads/1643022582_FAV.png">
@@ -59,14 +59,14 @@ $api = new License2l6aspi3ekdz14bfnxwtugjycm05hqcdpcoddingproV75(); // Initializ
                 <div class="left-sidebar-area-full">
                     <div class="logo">
                         
-                             <img class="p-t-lg m-t-sm" src="https://deprixapro.site/envato/deprixapro_install.png" width="240" alt="Coddingpro">
+                             <img class="p-t-lg m-t-sm" src="assets/custom_dependencies/img/logo-white.png" width="240" alt="Swiftlane">
                         
                     </div>
                     <div class="content mi-div">
                         <h2>Verify Purchase</h2>
                         <br>
                         <div class="content has-text-centered">
-                            <p>Copyright <?php echo date('Y'); ?> Deprixa Pro - Courier & Logistics System v8.4 All rights reserved.</p><br>
+                            <p>Copyright <?php echo date('Y'); ?> iSolveAfrica Ltd. - Swiftlane. All rights reserved.</p><br>
                         </div>
                     </div>
                 </div>

@@ -28,8 +28,8 @@ $e = function ($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css_main_deprixa/css/materialdesignicons.min.css">
-    <link rel="stylesheet" href="<?= cdp_asset('assets/css_main_deprixa/css/track-details.css') ?>">
+    <link rel="stylesheet" href="assets/css_main_swiftlane/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="<?= cdp_asset('assets/css_main_swiftlane/css/track-details.css') ?>">
     <style>
         body { margin: 0; background: #f5f1eb; }
         .err-badge {

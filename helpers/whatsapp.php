@@ -360,30 +360,58 @@ if (!function_exists('cdp_sendShipmentRegisteredWhatsApp')) {
 
 if (!function_exists('cdp_wa_buildShipmentExtraLines')) {
     /**
-     * Extra detail lines for the "shipment registered" message, sourced from the
-     * submitting form's POST: pieces / total weight / dimensions (packages json),
-     * carrier tracking number and ETA. Never money. Returns [] when none apply.
+     * Extra detail lines for the "shipment registered" message: total weight,
+     * contents, carrier tracking number and ETA. Never money.
+     *
+     * The submitting form's POST wins (it is the freshest value), but only the
+     * courier add/edit forms carry an "Original Total Weight" input — the sea,
+     * pickup, multiple and accept forms do not. So whenever a field is missing
+     * from the POST we fall back to what was just persisted for the order, which
+     * is why $order_id matters: without it those flows sent a message with no
+     * weight line at all.
+     *
+     * @param int    $order_id     order id in the module's order table (0 = POST only)
+     * @param string $module       'air' (cdb_add_order) | 'sea' (cdb_customers_packages)
+     * @param bool   $preferStored ignore the POST and describe the stored order only.
+     *                             Required by the "multiple" flows, where one request
+     *                             creates one shipment per posted package: the POST
+     *                             describes every shipment, the row describes this one.
+     * @return array pre-rendered "• ..." lines; [] when none apply
      */
-    function cdp_wa_buildShipmentExtraLines()
+    function cdp_wa_buildShipmentExtraLines($order_id = 0, $module = 'air', $preferStored = false)
     {
         $settings = cdp_getSettingsCourier();
         $lines = array();
 
-        // Total Weight is the Original Total Weight ONLY (the staff-entered
-        // package_total_weight). Item weights price the items — they do NOT make
-        // up the package weight — so they are never summed here. Omitted if unset.
+        // Persisted fallback for anything the form didn't post.
+        $ph = array();
+        if ((int) $order_id > 0) {
+            require_once __DIR__ . '/notify_placeholders.php';
+            if (function_exists('cdp_buildPackageNotifyPlaceholders')) {
+                $ph = cdp_buildPackageNotifyPlaceholders((int) $order_id, $module);
+            }
+        }
+        $post = ($preferStored && $ph) ? array() : $_POST;
+
+        // Total Weight is the PACKAGE weight — the staff-entered
+        // package_total_weight, stored as the order's total_weight. Item weights
+        // price the items — they do NOT make up the package weight — so they are
+        // never summed here. Omitted when the package was never weighed.
         $weightUnit = trim((string) ($settings->weight_p ?? 'lb'));
-        $ptw = (isset($_POST['package_total_weight']) && $_POST['package_total_weight'] !== '')
-            ? (float) $_POST['package_total_weight'] : 0.0;
+        if ($weightUnit === '') { $weightUnit = 'lb'; }
+        $ptw = (isset($post['package_total_weight']) && $post['package_total_weight'] !== '')
+            ? (float) $post['package_total_weight'] : 0.0;
         if ($ptw > 0) {
-            $lines[] = '• Total Weight: ' . (0 + $ptw) . ($weightUnit !== '' ? ' ' . $weightUnit : '');
+            $lines[] = '• Total Weight: ' . (0 + round($ptw, 2)) . ' ' . $weightUnit;
+        } elseif (!empty($ph['[WEIGHT]']) && $ph['[WEIGHT]'] !== 'N/A') {
+            $lines[] = '• Total Weight: ' . $ph['[WEIGHT]'];
         }
 
         // Contents = items + quantities (no pieces count, no dimensions).
-        if (isset($_POST['packages'])) {
-            $pkgs = json_decode($_POST['packages']);
+        $contents = array();
+        if (isset($post['packages'])) {
+            $pkgs = json_decode($post['packages']);
             if (is_array($pkgs) && count($pkgs) > 0) {
-                $contents = array();
                 foreach ($pkgs as $p) {
                     $qty = max(1, (int) ($p->qty ?? 1));
                     $desc = trim((string) ($p->description ?? ''));
@@ -391,16 +419,26 @@ if (!function_exists('cdp_wa_buildShipmentExtraLines')) {
                         $contents[] = $qty . ' x ' . $desc;
                     }
                 }
-                if ($contents) {
-                    $lines[] = '• Contents: ' . implode('; ', $contents);
-                }
             }
         }
-        $pt = trim((string) ($_POST['tracking_number'] ?? ''));
+        if ($contents) {
+            $lines[] = '• Contents: ' . implode('; ', $contents);
+        } elseif (!empty($ph['[ITEMS]']) && $ph['[ITEMS]'] !== 'N/A') {
+            $lines[] = '• Contents: ' . implode('; ', explode("\n", $ph['[ITEMS]']));
+        }
+
+        $pt = trim((string) ($post['tracking_number'] ?? ''));
+        if ($pt === '' || $pt === '0') {
+            $pt = (!empty($ph['[POSTAL_TRACKING]']) && $ph['[POSTAL_TRACKING]'] !== 'N/A') ? $ph['[POSTAL_TRACKING]'] : '';
+        }
         if ($pt !== '' && $pt !== '0') {
             $lines[] = '• Carrier Tracking #: *' . $pt . '*';
         }
-        $eta = trim((string) ($_POST['estimated_eta'] ?? ''));
+
+        $eta = trim((string) ($post['estimated_eta'] ?? ''));
+        if ($eta === '') {
+            $eta = (!empty($ph['[ETA]']) && $ph['[ETA]'] !== 'N/A') ? $ph['[ETA]'] : '';
+        }
         if ($eta !== '') {
             $lines[] = '• Estimated Arrival: ' . $eta;
         }

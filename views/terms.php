@@ -6,18 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Terms &amp; Conditions | <?php echo $core->site_name ?></title>
-    <meta name="keywords" content="Courier DEPRIXA-Integral Web System">
-    <meta name="author" content="Jaomweb">
+    <meta name="keywords" content="Swiftlane - Integrated Web Shipping System">
+    <meta name="author" content="iSolveAfrica Ltd.">
     <meta name="description" content="">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
     <!-- Bootstrap -->
-    <link href="assets/css_main_deprixa/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css_main_swiftlane/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <!-- Icons -->
-    <link href="assets/css_main_deprixa/css/materialdesignicons.min.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css_main_swiftlane/css/materialdesignicons.min.css" rel="stylesheet" type="text/css" />
     <!-- Main Css -->
-    <link href="assets/css_main_deprixa/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
-    <link href="assets/css_main_deprixa/css/colors/default.css" rel="stylesheet" id="color-opt">
-    <link href="assets/css_main_deprixa/css/auth-pages.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css_main_swiftlane/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
+    <link href="assets/css_main_swiftlane/css/colors/default.css" rel="stylesheet" id="color-opt">
+    <link href="assets/css_main_swiftlane/css/auth-pages.css" rel="stylesheet" type="text/css" />
 
     <style>
         /* ── Terms-specific layout ──────────────────────────────── */
@@ -224,10 +224,10 @@
     </main>
 
     <script src="assets/custom_dependencies/jquery-3.6.0.min.js"></script>
-    <script src="assets/css_main_deprixa/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/css_main_deprixa/js/feather.min.js"></script>
-    <script src="assets/css_main_deprixa/js/plugins.init.js"></script>
-    <script src="assets/css_main_deprixa/js/app.js"></script>
+    <script src="assets/css_main_swiftlane/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/css_main_swiftlane/js/feather.min.js"></script>
+    <script src="assets/css_main_swiftlane/js/plugins.init.js"></script>
+    <script src="assets/css_main_swiftlane/js/app.js"></script>
 </body>
 
 </html>

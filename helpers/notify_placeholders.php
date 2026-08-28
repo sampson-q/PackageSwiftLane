@@ -104,10 +104,19 @@ if (!function_exists('cdp_buildPackageNotifyPlaceholders')) {
             : 'N/A';
 
         $status = ($order && !empty($order->mod_style)) ? $order->mod_style : '';
-        // Treat a 0/empty total weight as "not set" so notifications don't show
-        // a meaningless "Weight: 0" line.
+        // PACKAGE weight = the order's own total_weight (the staff-entered
+        // "Original Total Weight"). Item weights price the items and are never
+        // summed here. Treat a 0/empty value as "not set" so notifications don't
+        // show a meaningless "Weight: 0" line.
         $weight = ($order && $order->total_weight !== null && (float) $order->total_weight != 0)
-            ? (string) $order->total_weight : '';
+            ? (string) (0 + round((float) $order->total_weight, 2)) : '';
+        // Carry the configured unit so every caller renders "15 lb", not "15".
+        if ($weight !== '' && function_exists('cdp_getSettingsCourier')) {
+            $wsettings  = cdp_getSettingsCourier();
+            $weightUnit = trim((string) ($wsettings->weight_p ?? 'lb'));
+            if ($weightUnit === '') { $weightUnit = 'lb'; }
+            $weight .= ' ' . $weightUnit;
+        }
 
         // Pre-built HTML details block for templates that expose a [SHIPMENT_DETAILS]
         // slot. Matches the existing email styling (left-accented light panels).

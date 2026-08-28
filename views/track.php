@@ -1,21 +1,21 @@
 <?php
 // *************************************************************************
 // *                                                                       *
-// * DEPRIXA PRO -  Integrated Web Shipping System                         *
-// * Copyright (c) JAOMWEB. All Rights Reserved                            *
+// * Swiftlane - Integrated Web Shipping System                            *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
 // *                                                                       *
 // *************************************************************************
 // *                                                                       *
-// * Email: support@jaom.info                                              *
-// * Website: http://www.jaom.info                                         *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
 // *                                                                       *
-// *************************************************************************
-// *                                                                       *
-// * This software is furnished under a license and may be used and copied *
-// * only  in  accordance  with  the  terms  of such  license and with the *
-// * inclusion of the above copyright notice.                              *
-// * If you Purchased from Codecanyon, Please read the full License from   *
-// * here- http://codecanyon.net/licenses/standard                         *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
 // *                                                                       *
 // *************************************************************************
 
@@ -225,8 +225,8 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 
 <head>
 	<meta charset="UTF-8">
-	<meta name="keywords" content="Courier DEPRIXA-Integral Web System">
-	<meta name="author" content="Jaomweb">
+	<meta name="keywords" content="Swiftlane - Integrated Web Shipping System">
+	<meta name="author" content="iSolveAfrica Ltd.">
 	<meta name="description" content="">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -237,8 +237,8 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="<?= cdp_asset('assets/vendor/libs/leaflet/leaflet.css') ?>">
-	<link rel="stylesheet" href="assets/css_main_deprixa/css/materialdesignicons.min.css">
-	<link rel="stylesheet" href="<?= cdp_asset('assets/css_main_deprixa/css/track-details.css') ?>">
+	<link rel="stylesheet" href="assets/css_main_swiftlane/css/materialdesignicons.min.css">
+	<link rel="stylesheet" href="<?= cdp_asset('assets/css_main_swiftlane/css/track-details.css') ?>">
 </head>
 
 <body>
@@ -480,7 +480,7 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 
 		</div><!-- /.trk-grid -->
 
-		<div class="trk-foot">Powered by <?php echo $e($core->site_name); ?> · Live shipment tracking</div>
+		<div class="trk-foot">Powered by <a href="https://www.isolveafrica.com" target="_blank">iSolveAfrica</a></div>
 
 	</main>
 

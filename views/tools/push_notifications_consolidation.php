@@ -1,11 +1,34 @@
 <?php
 // *************************************************************************
 // *                                                                       *
-// * DEPRIXA PRO -  Integrated Web Shipping System                         *
+// * Swiftlane - Integrated Web Shipping System                            *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
+// *                                                                       *
+// *************************************************************************
+// *                                                                       *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
+// *                                                                       *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
+// *                                                                       *
 // *************************************************************************
 
-if ((!$user->cdp_is_Admin()))
-    cdp_redirect_to("login.php");
+// Access is enforced by the router (push_notifications_consolidation.php), which
+// checks cdp_hasPermission('push_notifications'). This guard only covers a direct
+// request to this file. It deliberately checks the permission rather than
+// cdp_is_Admin(): that helper is userlevel 9/2 only, so it bounced every other
+// role the permission had been granted to — and bounced them to login.php while
+// already logged in.
+if (!isset($user) || !$user->cdp_hasPermission('push_notifications')) {
+    cdp_redirect_to("error403.php");
+    exit;
+}
 
 $userData = $user->cdp_getUserData();
 
@@ -76,7 +99,7 @@ $row_order = $data['data'];
                                                 <!-- Broadcast (users in consolidation) -->
                                                 <div class="col-6 custom-control custom-radio">
                                                     <input type="radio" id="broadcast" name="notification_type" class="custom-control-input" value="broadcast" checked>
-                                                    <label class="custom-control-label" for="broadcast"><?php echo $lang['push_notifications_type_broadcast']; ?>
+                                                    <label class="custom-control-label" for="broadcast"><?php echo $lang['push_notifications_type_broadcast']; ?></label>
                                                     <div class="small text-muted mt-1">
                                                         <?php echo $lang['push_notifications_hint_broadcast']; ?><span class="text-danger"><?php echo $row_order->c_prefix . $row_order->c_no; ?></span>
                                                     </div>

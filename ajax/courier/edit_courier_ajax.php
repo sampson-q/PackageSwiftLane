@@ -358,6 +358,13 @@ if (empty($errors)) {
             $total_envio = round($total_envio, 2);
         }
 
+        // No packages payload in this request means nothing recalculated the
+        // package weight — keep the stored one rather than writing a 0 that
+        // would wipe it out of every later notification.
+        if (!isset($package_total_weight)) {
+            $package_total_weight = (float) ($old_shipment->total_weight ?? 0);
+        }
+
         // =======================
         // UPDATE TOTALS
         // =======================
@@ -378,7 +385,7 @@ if (empty($errors)) {
             'total_tax_insurance'        => floatval($total_seguro),
             'total_tax_custom_tariffis'  => floatval($total_impuesto_aduanero),
             'total_tax'                  => floatval($total_impuesto),
-            'total_weight'               => floatval($package_total_weight ?? $total_peso),
+            'total_weight'               => floatval($package_total_weight),
             'total_order'                => floatval($total_envio),
         ));
 
@@ -624,12 +631,14 @@ if (empty($errors)) {
             if (isset($changed_fields['_packages_updated']) && isset($packages) && is_array($packages) && count($packages) > 0) {
                 $pkg_rows = '';
                 foreach ($packages as $index => $pkg) {
-                    // No monetary values (custom price / declared value) in customer
-                    // notifications — show description + weight only.
-                    $pkg_weight = isset($pkg->weight) ? $pkg->weight : 0;
+                    // Description + quantity only. No monetary values (custom price /
+                    // declared value), and no per-item weight either: item weight is
+                    // pricing data the customer never sees, and quoting it here read
+                    // as the package weight. The real package weight is in the
+                    // [SHIPMENT_DETAILS] block appended below.
+                    $pkg_qty = max(1, (int) ($pkg->qty ?? 1));
                     $pkg_rows .= ($index + 1) . ". " . htmlspecialchars($pkg->description ?? '') . "\n" .
-                        ((float) $pkg_weight != 0 ? "   Weight: " . $pkg_weight . " lbs\n" : "") .
-                        "\n";
+                        "   Qty: " . $pkg_qty . "\n\n";
                 }
                 $packages_section_html = '
                 <p style="margin:0 0 8px 0;font-size:14px;font-weight:700;color:#1a1a1a;font-family:Roboto,Arial,Helvetica,sans-serif;">Package Breakdown</p>
