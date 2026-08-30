@@ -676,6 +676,7 @@
 						'configurations_all',
 						'view_tools',
 						'view_system_logs',
+						'view_activity_logs',
 						'view_offices',
 						'view_branches',
 						'view_courier_companies',
@@ -728,6 +729,15 @@
 								<a class="sidebar-link waves-effect waves-dark" href="system_logs.php" aria-expanded="false">
 									<iconify-icon icon="mdi:history" class="fs-5"></iconify-icon>
 									<span class="hide-menu"> System Logs </span>
+								</a>
+							</li>
+							<?php } ?>
+
+							<?php if ($user->cdp_hasPermission('view_activity_logs')) { ?>
+							<li class="sidebar-item">
+								<a class="sidebar-link waves-effect waves-dark" href="activity_logs.php" aria-expanded="false">
+									<iconify-icon icon="solar:clipboard-list-linear" class="fs-5"></iconify-icon>
+									<span class="hide-menu"> Activity Logs </span>
 								</a>
 							</li>
 							<?php } ?>
