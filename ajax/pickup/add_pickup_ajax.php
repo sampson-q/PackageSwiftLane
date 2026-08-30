@@ -554,6 +554,15 @@ if (empty($errors)) {
         sendNotificationSMS($receiver_data, $newbodyS_receiver, $notify_sms_receiver);
 
 
+        cdp_activityLog([
+            'module'       => 'pickups',
+            'verb'         => 'create',
+            'entity_type'  => 'pickup',
+            'entity_id'    => (int) ($shipment_id ?? 0),
+            'entity_label' => (string) ($order_track ?? ''),
+            'summary'      => 'Created pickup request ' . (string) ($order_track ?? ''),
+        ]);
+
         $messages[] = $lang['message_ajax_success_add_pickup'];
     } else {
         $errors['critical_error'] = $lang['message_ajax_error2'];

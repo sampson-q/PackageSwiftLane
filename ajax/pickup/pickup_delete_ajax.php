@@ -85,6 +85,19 @@ if (empty($errors)) {
     $db->cdp_execute();
 
     if ($insert) {
+        cdp_activityLog([
+            'module'       => 'pickups',
+            'verb'         => 'delete',
+            'entity_type'  => 'pickup',
+            'entity_id'    => (int) $_POST['id_delete'],
+            'entity_label' => isset($trackings_order)
+                ? ($trackings_order->order_prefix . $trackings_order->order_no)
+                : ('#' . (int) $_POST['id_delete']),
+            'summary'      => 'Deleted pickup ' . (isset($trackings_order)
+                ? ($trackings_order->order_prefix . $trackings_order->order_no)
+                : ('#' . (int) $_POST['id_delete'])),
+        ]);
+
         $messages[] = $lang['message_ajax_success_delete'];
     } else {
         $errors['critical_error'] = $lang['message_ajax_error1'];

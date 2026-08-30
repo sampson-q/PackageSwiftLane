@@ -54,6 +54,17 @@ try {
             $applied[$aid] = $state;
         }
     }
+    cdp_activityLog([
+        'module'       => 'access',
+        'verb'         => 'update',
+        'action'       => 'access.department_permissions',
+        'label'        => 'Access Control - Department Permissions',
+        'entity_type'  => 'department',
+        'entity_id'    => $deptId,
+        'summary'      => 'Changed ' . count($applied) . ' permission(s) on department #' . $deptId,
+        'meta'         => ['applied' => $applied],
+    ]);
+
     echo json_encode(['status' => 'success', 'applied' => $applied, 'count' => count($applied)]);
 } catch (Throwable $e) {
     echo json_encode(['status' => 'error', 'message' => 'Save failed.']);

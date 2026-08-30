@@ -123,6 +123,18 @@ if (!isset($response['status'])) {
 
 
         // Respuesta exitosa
+        cdp_activityLog([
+            'module'       => 'access',
+            'verb'         => 'update',
+            'action'       => 'access.role_permissions',
+            'label'        => 'Access Control - Role Permissions',
+            'entity_type'  => 'role',
+            'entity_id'    => $roleId,
+            'entity_label' => cdp_sanitize($_POST['role_name'] ?? ('Role ' . $roleId)),
+            'summary'      => 'Rewrote the permission set for role #' . $roleId,
+            'meta'         => ['granted_count' => isset($permissions) && is_array($permissions) ? count($permissions) : null],
+        ]);
+
         echo json_encode(['status' => 'success', 'message' => $lang['message_ajax_success_add']]);
         exit;
 

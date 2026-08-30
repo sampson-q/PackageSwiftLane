@@ -80,6 +80,17 @@ try {
         }
     }
 
+    cdp_activityLog([
+        'module'       => 'access',
+        'verb'         => 'update',
+        'action'       => 'access.user_overrides',
+        'label'        => 'Access Control - User Overrides',
+        'entity_type'  => 'user',
+        'entity_id'    => $target_id,
+        'summary'      => 'Changed ' . count($applied) . ' permission override(s) on user #' . $target_id,
+        'meta'         => ['applied' => $applied],
+    ]);
+
     echo json_encode(['status' => 'success', 'applied' => $applied, 'count' => count($applied)]);
 } catch (Throwable $e) {
     echo json_encode(['status' => 'error', 'message' => 'Save failed.']);

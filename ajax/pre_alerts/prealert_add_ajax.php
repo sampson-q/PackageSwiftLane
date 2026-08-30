@@ -86,6 +86,21 @@ if (!isset($response['status'])) {
                 $response['status'] = 'success';
                 $response['message'] = $lang['message_ajax_success_add'];
 
+                cdp_activityLog([
+                    'module'       => 'prealerts',
+                    'verb'         => 'create',
+                    'entity_type'  => 'prealert',
+                    'entity_id'    => (int) $insert,
+                    'entity_label' => $data['tracking_prealert'],
+                    'summary'      => 'Raised pre-alert ' . $data['tracking_prealert']
+                                      . ' from ' . $data['provider_prealert'],
+                    'meta'         => [
+                        'courier_id'     => (int) $data['courier_prealert'],
+                        'purchase_price' => $data['price_prealert'],
+                        'estimated_date' => $data['estimated_date'],
+                    ],
+                ]);
+
                 $sender_data = cdp_getSenderCourier(intval($_SESSION['userid']));
 
                 // Guardar notificación
