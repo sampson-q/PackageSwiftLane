@@ -18,6 +18,11 @@
 // * proprietary notices.                                                  *
 // *                                                                       *
 // *************************************************************************
+//
+// Create Pre-Alert. Laid out like every other create form in the system
+// (page-breadcrumb → container-fluid → cards with card-title + hr → action
+// bar), instead of the old centred marketing-style page. Field names and
+// element ids are unchanged so dataJs/pre_alert_add.js keeps working.
 
 $userData = $user->cdp_getUserData();
 
@@ -50,8 +55,22 @@ $userData = $user->cdp_getUserData();
     <link rel="stylesheet" href="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css">
     <style type="text/css">
         .custom-file-input.is-invalid {
-            border-color: #dc3545; /* Color rojo para el borde */
+            border-color: #dc3545;
         }
+        /* Attachment drop area — same visual language as the other upload
+           controls in the system (dashed outline, muted body, single action). */
+        .pa-drop {
+            border: 2px dashed #d7dce5;
+            border-radius: .5rem;
+            padding: 26px 18px;
+            text-align: center;
+            background: #fbfcfe;
+            transition: border-color .15s ease, background .15s ease;
+        }
+        .pa-drop:hover { border-color: #f62d51; background: #fff; }
+        .pa-drop__ico { font-size: 34px; color: #a7b0c0; line-height: 1; }
+        .pa-drop__hint { font-size: .78rem; color: #8a94a6; margin-top: 6px; }
+        .pa-required { color: #f62d51; }
     </style>
 </head>
 
@@ -70,10 +89,6 @@ $userData = $user->cdp_getUserData();
         <!-- Topbar header - style you can find in pages.scss -->
         <!-- ============================================================== -->
 
-        <!-- ============================================================== -->
-        <!-- Preloader - style you can find in spinners.css -->
-        <!-- ============================================================== -->
-
         <?php include 'views/inc/topbar.php'; ?>
 
         <!-- End Topbar header -->
@@ -84,157 +99,165 @@ $userData = $user->cdp_getUserData();
         <?php include 'views/inc/left_sidebar.php'; ?>
         <?php $courierrow = $core->cdp_getCouriercom(); ?>
 
- 
 
         <!-- End Left Sidebar - style you can find in sidebar.scss  -->
 
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-            <div class="container-fluid" style="margin-bottom:100px ;">
-                <!-- Row -->
+
+            <div class="page-breadcrumb">
                 <div class="row">
-                    <!-- Column -->
-                    <div class="col-lg-12 col-xlg-12 col-md-12">
-                        <div class="card">
-                            <div class="">
-                                <div class="row">
-                                    <div class="col-lg-12 mx-auto text-center">
-                                        <h2 class="h1 text-danger">
-                                            <?php echo $lang['left56'] ?>
-                                        </h2>
-                                        <div class="u-h-4 u-w-50 bg-primary rounded mt-4 u-mb-40 mx-auto"></div>
-                                        <p>
-                                            <?php echo $lang['left57'] ?>
-                                        </p>
-                                    </div>
-                                </div> <!-- END row-->
-                                <div id="resultados_ajax"></div>
-                                <div class="">
-                                    <div class="col-lg-12 ml-auto mt-8 ">
-                                        <form method="post" accept-charset="utf-8" name="form_prealert" id="form_prealert" enctype="multipart/form-data">
-                                            <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-                                            <div class="row">
-
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="ReceiptKind"><strong><?php echo $lang['add-title15'] ?></strong></label>
-                                                        <div class="input-group">
-                                                            <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
-                                                                <div class="input-group-text">
-                                                                    <i class="fa fa-calendar"></i>
-                                                                </div>
-                                                            </div>
-                                                            <input type='text' class="form-control" name="date_prealert" id="date_prealert" placeholder="--<?php echo $lang['left206'] ?>--" data-toggle="tooltip" data-placement="bottom" title="<?php echo $lang['add-title16'] ?>" readonly / value="<?php echo date('Y-m-d'); ?>" required>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="ReceiptKind"><strong><?php echo $lang['add-title18'] ?></strong></label>
-
-                                                        <select class="form-control custom-select" name="courier_prealert" id="courier_prealert">
-                                                            <option value="">--<?php echo $lang['left204'] ?>--</option>
-
-                                                            <?php foreach ($courierrow as $row) : ?>
-                                                                <option value="<?php echo $row->id; ?>"><?php echo $row->name_com; ?></option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-12">
-                                                    <div class="form-group">
-                                                        <label for="sum2"><i class="fa fa-cube mr-1"></i><strong><?php echo $lang['left63'] ?></strong></label>
-
-                                                        <div class="input-group">
-                                                            <div class="input-group-prepend">
-                                                                <button class="btn btn-secondary" type="button"><i class="ti-package"></i></button>
-                                                            </div>
-                                                            <input type="text" class="form-control add-listing_form required" name="tracking_prealert" id="tracking_prealert" placeholder="<?php echo $lang['left63'] ?>">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="ReceiptKind"><strong><?php echo $lang['left64'] ?></strong></label>
-                                                        <div class="input-group">
-                                                            <div class="input-group-prepend">
-                                                                <button class="btn btn-secondary" type="button"><i class="ti-shopping-cart"></i></button>
-                                                            </div>
-                                                            <input type="text" class="form-control add-listing_form required" name="provider_prealert" id="provider_prealert" placeholder="<?php echo $lang['left65'] ?>">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="sum2"><strong><?php echo $lang['left66'] ?> <?php echo $core->currency; ?></strong></label>
-                                                        <div class="input-group">
-                                                            <div class="input-group-prepend">
-                                                                <span class="input-group-text">$</span>
-                                                            </div>
-                                                            <input type="text" onkeypress="return cdp_soloNumeros(event)" class="form-control add-listing_form required" name="price_prealert" id="price_prealert" placeholder="<?php echo $lang['left67'] ?>">
-                                                            <div class="input-group-append">
-                                                                <span class="input-group-text">.00</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="row">
-                                                <div class="col-md-12 nondoc">
-                                                    <div class="form-group">
-                                                        <label for="sum2"><strong><?php echo $lang['left68'] ?></strong></label>
-                                                        <textarea class="form-control" rows="2" name="description_prealert" id="description_prealert" placeholder="<?php echo $lang['left69'] ?>"></textarea>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="row">
-                                                <div class="col-md-12">
-
-                                                    <div>
-                                                        <label class="control-label" id="selectItem"> <?php echo $lang['messagesform40'] ?></label>
-                                                    </div>
-
-                                                    <input class="custom-file-input" id="file_invoice" name="file_invoice" type="file" style="display: none;" onchange="cdp_validateZiseFiles();" accept="image/*,.pdf" />
-
-
-                                                    <button type="button" id="openMultiFile" class="btn btn-default  pull-left "> <i class='fa fa-paperclip' id="openMultiFile" style="font-size:18px; cursor:pointer;"></i> <?php echo $lang['leftorder01215'] ?> </button>
-
-                                                    <div id="clean_files" class="hide">
-                                                        <button type="button" id="clean_file_button" class="btn btn-danger ml-3"> <i class='fa fa-trash' style="font-size:18px; cursor:pointer;"></i> <?php echo $lang['leftorder17'] ?> </button>
-
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <br>
-                                                    <div class="pull-right">
-
-                                                        <a href="prealert_list.php" class="btn btn-secondary btn-confirmation"><span><i class="ti-share-alt"></i></span> <?php echo $lang['global-buttons-3'] ?></a>
-                                                        <button type="submit" name="create_prealert" id="create_prealert" class=" ml-2 btn  btn-danger btn-confirmation pull-right"><i class="mdi mdi-bell mr-1"></i> <?php echo $lang['left70'] ?></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div> <!-- END     row-->
-
-                                <hr class="u-my-60">
-                            </div> <!-- END container-->
-                        </div>
+                    <div class="col-12 align-self-center">
+                        <h4 class="page-title"><i class="mdi mdi-bell-outline" aria-hidden="true"></i> <?php echo $lang['left53'] ?></h4>
+                        <span class="text-muted"><?php echo $lang['left57'] ?></span>
+                        <br>
                     </div>
-                    <!-- Column --> 
                 </div>
             </div>
+
+            <form method="post" accept-charset="utf-8" name="form_prealert" id="form_prealert" enctype="multipart/form-data">
+                <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
+
+                <div class="container-fluid">
+
+                    <div id="resultados_ajax"></div>
+
+                    <div class="row">
+
+                        <!-- ── Purchase details ───────────────────────────── -->
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h4 class="card-title"><i class="mdi mdi-information-outline" style="color:#20c997"></i> <?php echo $lang['left55'] ?></h4>
+                                    <hr>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="tracking_prealert" class="control-label col-form-label"><?php echo $lang['left63'] ?> <span class="pa-required">*</span></label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text"><i class="ti-package"></i></span>
+                                                    </div>
+                                                    <input type="text" class="form-control add-listing_form required" name="tracking_prealert" id="tracking_prealert" placeholder="<?php echo $lang['left63'] ?>">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="courier_prealert" class="control-label col-form-label"><?php echo $lang['add-title18'] ?> <span class="pa-required">*</span></label>
+                                                <select class="form-control custom-select" name="courier_prealert" id="courier_prealert">
+                                                    <option value="">--<?php echo $lang['left62'] ?>--</option>
+                                                    <?php foreach ($courierrow as $row) : ?>
+                                                        <option value="<?php echo $row->id; ?>"><?php echo $row->name_com; ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="provider_prealert" class="control-label col-form-label"><?php echo $lang['left64'] ?> <span class="pa-required">*</span></label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text"><i class="ti-shopping-cart"></i></span>
+                                                    </div>
+                                                    <input type="text" class="form-control add-listing_form required" name="provider_prealert" id="provider_prealert" placeholder="<?php echo $lang['left65'] ?>">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="price_prealert" class="control-label col-form-label"><?php echo $lang['left66'] ?> (<?php echo $core->currency; ?>) <span class="pa-required">*</span></label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">$</span>
+                                                    </div>
+                                                    <input type="text" onkeypress="return cdp_soloNumeros(event)" class="form-control add-listing_form required" name="price_prealert" id="price_prealert" placeholder="<?php echo $lang['left67'] ?>">
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text">.00</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="date_prealert" class="control-label col-form-label"><?php echo $lang['add-title15'] ?> <span class="pa-required">*</span></label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend" data-target="#date_prealert" data-toggle="datetimepicker">
+                                                        <span class="input-group-text"><i class="fa fa-calendar"></i></span>
+                                                    </div>
+                                                    <input type="text" class="form-control" name="date_prealert" id="date_prealert" placeholder="--<?php echo $lang['left206'] ?>--" data-toggle="tooltip" data-placement="bottom" title="<?php echo $lang['add-title16'] ?>" readonly value="<?php echo date('Y-m-d'); ?>" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-12 nondoc">
+                                            <div class="form-group">
+                                                <label for="description_prealert" class="control-label col-form-label"><?php echo $lang['left68'] ?> <span class="pa-required">*</span></label>
+                                                <textarea class="form-control" rows="3" name="description_prealert" id="description_prealert" placeholder="<?php echo $lang['left69'] ?>"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── Purchase invoice ───────────────────────────── -->
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h4 class="card-title"><i class="mdi mdi-paperclip" style="color:#20c997"></i> <?php echo $lang['leftorder01215'] ?></h4>
+                                    <hr>
+
+                                    <div class="resultados_file"></div>
+
+                                    <div class="form-group mb-0">
+                                        <label class="control-label col-form-label" id="selectItem"><?php echo $lang['messagesform40'] ?> <span class="pa-required">*</span></label>
+
+                                        <input class="custom-file-input" id="file_invoice" name="file_invoice" type="file" style="display: none;" onchange="cdp_validateZiseFiles();" accept="image/*,.pdf" />
+
+                                        <div class="pa-drop mt-2" id="openMultiFile" role="button" tabindex="0">
+                                            <div class="pa-drop__ico"><iconify-icon icon="solar:cloud-upload-linear"></iconify-icon></div>
+                                            <div class="mt-2"><b><?php echo $lang['leftorder01215'] ?></b></div>
+                                            <div class="pa-drop__hint">JPG, PNG or PDF &middot; max 5 MB</div>
+                                        </div>
+
+                                        <div id="clean_files" class="hide mt-2">
+                                            <button type="button" id="clean_file_button" class="btn btn-danger btn-sm btn-block"><i class="fa fa-trash"></i> <?php echo $lang['leftorder17'] ?></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ── Action bar ─────────────────────────────────────── -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body text-right">
+                                    <a href="prealert_list.php" class="btn btn-secondary btn-confirmation"><i class="ti-share-alt"></i> <?php echo $lang['global-buttons-3'] ?></a>
+                                    <button type="submit" name="create_prealert" id="create_prealert" class="btn btn-danger btn-confirmation ml-2"><i class="mdi mdi-bell mr-1"></i> <?php echo $lang['left70'] ?></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
 
             <?php include 'views/inc/footer.php'; ?>
         </div>

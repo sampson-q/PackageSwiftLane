@@ -1102,7 +1102,7 @@ $lang = array(
 	"left67" => "Purchase Value",
 	"left68" => "Package Description",
 	"left69" => "Enter purchase details",
-	"left70" => "Next, we're almost done!",
+	"left70" => "Create Pre Alert",
 
 
 	/** List Pickup Version 3.2.7.4 **/
