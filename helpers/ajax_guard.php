@@ -29,6 +29,13 @@ function require_login() {
     }
 
     _ajax_guard_require_csrf();
+
+    // Audit trail. Every authenticated AJAX endpoint passes through here, so
+    // arming the shutdown auto-logger at this one point means a mutating
+    // endpoint is recorded whether or not anyone instrumented it by hand.
+    // See helpers/activity_log.php.
+    require_once __DIR__ . '/activity_log.php';
+    cdp_activityArmAuto();
 }
 
 /**
@@ -48,6 +55,10 @@ function require_permission($permission) {
     // before session was fully initialised, leaving $this->permissions empty or stale.
     // The page controllers do the same: they call cdp_getUserPermissions() explicitly
     // before cdp_hasPermission(). Mirror that here so AJAX and page behave identically.
+    // Endpoints that gate on permission alone still need the audit trail armed.
+    require_once __DIR__ . '/activity_log.php';
+    cdp_activityArmAuto();
+
     $user->cdp_getUserPermissions();
     if ($user->cdp_hasPermission($perms)) {
         return;
@@ -90,6 +101,17 @@ function require_permission($permission) {
         ));
         return;
     }
+
+    // A hard denial is a security event: record it, then answer 403.
+    $denied = cdp_activityClassify(cdp_activityEndpoint());
+    cdp_activityLog([
+        'module'  => $denied['module'],
+        'verb'    => $denied['verb'],
+        'outcome' => 'denied',
+        'label'   => $denied['label'],
+        'summary' => 'Blocked — no permission for ' . implode(', ', $perms),
+        'meta'    => ['required' => $perms, 'source' => 'rbac'],
+    ]);
 
     $body = ['success' => false, 'error' => 'Forbidden', 'message' => 'No permission for this action'];
     if (defined('CDP_DEBUG_RBAC') && CDP_DEBUG_RBAC) {

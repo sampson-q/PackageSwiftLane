@@ -1,5 +1,12 @@
 <?php require_once __DIR__ . '/../../helpers/csrf.php'; ?>
 <?php require_once __DIR__ . '/../../helpers/asset.php'; ?>
+<?php
+// Audit trail: one `view` row per page a signed-in user opens. This include is
+// in the <head> of every authenticated page, which makes it the single place
+// page views can be captured. See helpers/activity_log.php.
+require_once __DIR__ . '/../../helpers/activity_log.php';
+cdp_activityPageView();
+?>
 <link href="<?= cdp_asset('assets/vendor/libs/sweetalert2/sweetalert2.css') ?>" rel="stylesheet">
 <meta name="csrf-param" content="<?php echo htmlspecialchars(cdp_csrf_param(), ENT_QUOTES, 'UTF-8'); ?>">
 <meta name="csrf-token" content="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
