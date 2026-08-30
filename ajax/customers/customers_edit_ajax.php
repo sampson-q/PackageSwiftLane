@@ -165,6 +165,21 @@ if (CDP_APP_MODE_DEMO === true) {
         }
 
         if ($update) {
+            cdp_activityLog([
+                'module'       => 'customers',
+                'verb'         => 'update',
+                'entity_type'  => 'user',
+                'entity_id'    => (int) $datos['id'],
+                'entity_label' => trim($datos['fname'] . ' ' . $datos['lname']),
+                'summary'      => 'Updated customer profile - ' . trim($datos['fname'] . ' ' . $datos['lname']),
+                'changes'      => cdp_activityDiff(
+                    $userDataEdit['data'] ?? null,
+                    $datos,
+                    ['fname', 'lname', 'email', 'phone', 'company', 'gender',
+                     'document_number', 'document_type', 'newsletter', 'notes', 'active']
+                ),
+            ]);
+
             $response['status'] = 'success';
             $response['message'] = $lang['message_ajax_success_updated'];
         } else {

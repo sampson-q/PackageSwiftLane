@@ -80,6 +80,19 @@ if (CDP_APP_MODE_DEMO === true) {
         $response = array();
 
             
+            $cdp_gone_user = cdp_getUserEdit4bozo($id);
+            $cdp_gone_name = isset($cdp_gone_user['data'])
+                ? trim($cdp_gone_user['data']->fname . ' ' . $cdp_gone_user['data']->lname)
+                : ('#' . (int) $id);
+            cdp_activityLog([
+                'module'       => 'users',
+                'verb'         => 'delete',
+                'entity_type'  => 'user',
+                'entity_id'    => (int) $id,
+                'entity_label' => $cdp_gone_name,
+                'summary'      => 'Deleted user account ' . $cdp_gone_name,
+            ]);
+
             $delete = cdp_deleteUsersrhv5($id);
 
 

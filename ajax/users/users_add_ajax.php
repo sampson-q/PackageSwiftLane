@@ -170,6 +170,21 @@ if (empty($errors)) {
 
 
 
+        cdp_activityLog([
+            'module'       => 'users',
+            'verb'         => 'create',
+            'entity_type'  => 'user',
+            'entity_id'    => (int) ($insertResult ?: 0),
+            'entity_label' => trim(cdp_sanitize($_POST['fname']) . ' ' . cdp_sanitize($_POST['lname'])),
+            'summary'      => 'Created user account ' . cdp_sanitize($_POST['username'])
+                              . ' with role #' . (int) $_POST['role'],
+            'meta'         => [
+                'username' => cdp_sanitize($_POST['username']),
+                'role_id'  => (int) $_POST['role'],
+                'email'    => cdp_sanitize($_POST['email'] ?? ''),
+            ],
+        ]);
+
         if (!empty($_POST['notify']) && $_POST['notify'] == 1) {
 
             $email_template = cdp_getEmailTemplatesdg1i4(3);

@@ -146,6 +146,16 @@ if (isset($_POST['total_address'])) {
 $_SESSION['client_add_pending_user_id'] = (int) $customer_id;
 unset($_SESSION['client_add_otp_challenge']);
 
+cdp_activityLog([
+    'module'       => 'customers',
+    'verb'         => 'create',
+    'entity_type'  => 'user',
+    'entity_id'    => (int) $customer_id,
+    'entity_label' => trim(($datos['fname'] ?? '') . ' ' . ($datos['lname'] ?? '')),
+    'summary'      => 'Created customer ' . trim(($datos['fname'] ?? '') . ' ' . ($datos['lname'] ?? '')) . ' (' . $email . ')',
+    'meta'         => ['email' => $email],
+]);
+
 echo json_encode([
     'status'  => 'verify',
     'message' => 'Client created. Verify their email to finish.',

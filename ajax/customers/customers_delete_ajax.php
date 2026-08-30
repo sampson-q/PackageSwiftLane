@@ -88,6 +88,20 @@ if (CDP_APP_MODE_DEMO === true) {
             $response['message'] = $lang['validate_field_ajax132'];
         } else {
             
+            // Audit: read the account before it goes, so the trail keeps a name.
+            $cdp_gone_user = cdp_getUserEdit4bozo($id);
+            $cdp_gone_name = isset($cdp_gone_user['data'])
+                ? trim($cdp_gone_user['data']->fname . ' ' . $cdp_gone_user['data']->lname)
+                : ('#' . (int) $id);
+            cdp_activityLog([
+                'module'       => 'customers',
+                'verb'         => 'delete',
+                'entity_type'  => 'user',
+                'entity_id'    => (int) $id,
+                'entity_label' => $cdp_gone_name,
+                'summary'      => 'Deleted customer ' . $cdp_gone_name,
+            ]);
+
             $delete = cdp_deleteUsersrhv5($id);
 
 

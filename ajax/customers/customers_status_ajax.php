@@ -32,6 +32,15 @@
             // Handle status update if requested
             if ($stat !== null) {
                 // Update the status (active/inactive)
+                cdp_activityLog([
+                    'module'       => 'customers',
+                    'verb'         => 'status',
+                    'entity_type'  => 'user',
+                    'entity_id'    => (int) $userId,
+                    'summary'      => 'Set customer #' . (int) $userId . ' to ' . ((int) $stat === 1 ? 'Active' : 'Inactive'),
+                    'changes'      => ['active' => ['from' => '', 'to' => (string) $stat]],
+                ]);
+
                 $statusUpdate = cdp_updateUserStatus4234sf($userId, $stat);
                 if ($statusUpdate) {
                     $response['status'] = 'success';

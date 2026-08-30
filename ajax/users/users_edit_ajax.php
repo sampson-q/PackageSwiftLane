@@ -219,6 +219,21 @@ require_once(__DIR__ . '/../../helpers/rbac.php');
 
     if ($result === true || $result == 1 || !empty($result)) {
         http_response_code(200);
+        cdp_activityLog([
+            'module'       => 'users',
+            'verb'         => 'update',
+            'entity_type'  => 'user',
+            'entity_id'    => (int) $user_id,
+            'entity_label' => trim(($updateData['fname'] ?? '') . ' ' . ($updateData['lname'] ?? '')),
+            'summary'      => 'Updated user account ' . ($updateData['username'] ?? ('#' . (int) $user_id)),
+            'changes'      => cdp_activityDiff(
+                $currentUser,
+                $updateData,
+                array_keys(array_filter($fieldsChanged))
+            ),
+            'meta'         => ['fields' => array_keys(array_filter($fieldsChanged))],
+        ]);
+
         echo json_encode([
             'status' => 'success',
             'message' => 'User updated successfully',

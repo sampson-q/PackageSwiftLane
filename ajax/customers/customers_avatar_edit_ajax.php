@@ -108,6 +108,21 @@ if (CDP_APP_MODE_DEMO === true) {
 
                     $record_history = cdp_insertAvatarUpdateHistory($avatarUpdateData);
 
+                    cdp_activityLog([
+                        'module'       => 'profile',
+                        'verb'         => 'update',
+                        'action'       => 'profile.avatar',
+                        'label'        => 'Profile · Avatar Changed',
+                        'entity_type'  => 'user',
+                        'entity_id'    => (int) $user_id,
+                        'entity_label' => trim(($userData->fname ?? '') . ' ' . ($userData->lname ?? '')),
+                        'summary'      => ((int) $user_id === (int) $userData->id)
+                            ? 'Changed their own profile photo'
+                            : 'Changed the profile photo of user #' . (int) $user_id,
+                        'changes'      => ['avatar' => ['from' => (string) $current_avatar, 'to' => 'uploads/' . $file_name]],
+                        'meta'         => ['file' => $file_name, 'type' => $file_type],
+                    ]);
+
                     $response = array('success' => true, 'message' => 'Avatar successfully updated.');
                 } else {
                     // Error al mover el archivo
