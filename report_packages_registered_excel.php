@@ -30,6 +30,10 @@
     {
 
        
+      // Audit: record who took this document out of the system.
+      require_once(__DIR__ . "/helpers/activity_log.php");
+      cdp_activityLogDocument();
+
       include('views/reports/packages_registered/report_packages_registered_general/report_packages_registered_general_excel.php');     
            
 

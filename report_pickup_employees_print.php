@@ -30,6 +30,10 @@
     {
 
        
+      // Audit: record who took this document out of the system.
+      require_once(__DIR__ . "/helpers/activity_log.php");
+      cdp_activityLogDocument();
+
       include('views/reports/pickup/report_pickup_employees/report_pickup_employees_print.php');     
            
 

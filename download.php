@@ -41,6 +41,21 @@ if (is_file($path)) {
  if ($type == '') {
  $type = "application/force-download";
  }
+ // Audit: a database backup leaving the server is worth a row of its own.
+ require_once(__DIR__ . "/loader.php");
+ require_once(__DIR__ . "/helpers/activity_log.php");
+ new User(); // opens the session the actor is read from
+ cdp_activityLog([
+     'module'      => 'system',
+     'verb'        => 'export',
+     'action'      => 'system.backup_download',
+     'label'       => 'System · Backup Downloaded',
+     'entity_type' => 'backup',
+     'entity_id'   => $file,
+     'summary'     => 'Downloaded backup file ' . $file,
+     'meta'        => ['size' => $size],
+ ]);
+
  // Definir headers
  header("Content-Type: $type");
  header("Content-Disposition: attachment; filename=$file");

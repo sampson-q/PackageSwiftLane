@@ -29,6 +29,10 @@ $core = new Core();
 if ($user->cdp_loginCheck() == true) {
 
 
+    // Audit: record who took this document out of the system.
+    require_once(__DIR__ . "/helpers/activity_log.php");
+    cdp_activityLogDocument();
+
     include('views/print/print_label_consolidate_multiple_package.php');
 } else {
 

@@ -12,6 +12,10 @@
             exit;
         }
 
+        // Audit: record who took this document out of the system.
+        require_once(__DIR__ . "/helpers/activity_log.php");
+        cdp_activityLogDocument();
+
         include('views/reports/shipments/report_users/top_users_air_excel.php');
            
     } else {
