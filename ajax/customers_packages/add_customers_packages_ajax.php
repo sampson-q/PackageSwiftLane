@@ -594,6 +594,21 @@ if (empty($errors)) {
 
 
         $messages[] = $lang['message_ajax_success_add_shipment'];
+
+        cdp_activityLog([
+            'module'       => 'packages',
+            'verb'         => 'create',
+            'entity_type'  => 'package',
+            'entity_id'    => (int) $shipment_id,
+            'entity_label' => $code_prefix . $_POST['order_no'],
+            'status_id'    => (int) $status_courier,
+            'status_name'  => cdp_activityStatusName($status_courier),
+            'summary'      => 'Registered package ' . $code_prefix . $_POST['order_no'],
+            'meta'         => [
+                'sender_id'    => (int) ($_POST['sender_id'] ?? 0),
+                'recipient_id' => (int) ($_POST['recipient_id'] ?? 0),
+            ],
+        ]);
     } else {
         $errors['critical_error'] = $lang['message_ajax_error2'];
     }

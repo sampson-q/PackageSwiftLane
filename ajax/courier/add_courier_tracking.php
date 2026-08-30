@@ -102,6 +102,9 @@ if (empty($errors)) {
 
         $order_track = $shipment->order_prefix . $shipment->order_no;
 
+        // Audit: capture the status we are moving away from.
+        $cdp_prev_status = cdp_activityStatusName((int) ($shipment->status_courier ?? 0));
+
         $update = updateCourierStatusFromTracking($status, $shipment_id);
 
         $dataTrack = array(
@@ -320,6 +323,16 @@ if (empty($errors)) {
             // Manejo del error, por ejemplo, establecer una variable para mostrar un mensaje de error al usuario
         }
 
+
+        cdp_activityLogStatus(
+            'shipments',
+            'shipment',
+            $shipment_id,
+            $order_track,
+            $status,
+            cdp_activityStatusName($status),
+            $cdp_prev_status
+        );
 
         $messages[] = $lang['notification_shipment11'];
     } else {

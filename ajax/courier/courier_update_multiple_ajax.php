@@ -55,6 +55,17 @@ foreach ($data as $key) {
         $user = $_SESSION['userid'];
         cdp_updateShipTrackingMultiple($tracking, $status, $comment, $office, $user);
 
+        // Audit: one row per shipment moved.
+        cdp_activityLogStatus(
+            'shipments',
+            'shipment',
+            (int) $key,
+            $tracking,
+            $status,
+            cdp_activityStatusName($status),
+            cdp_activityStatusName((int) $courier->status_courier)
+        );
+
         // =======================
         // WhatsApp v2 Notification (Template 11)
         // =======================

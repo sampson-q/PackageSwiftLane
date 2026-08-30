@@ -685,6 +685,21 @@ if (empty($errors)) {
 
         $messages[] = $lang['message_ajax_success_add_update'];
 
+        cdp_activityLog([
+            'module'       => 'packages',
+            'verb'         => 'update',
+            'entity_type'  => 'package',
+            'entity_id'    => (int) $shipment_id,
+            'entity_label' => $fullshipment,
+            'status_id'    => (int) $_POST['status_courier'],
+            'status_name'  => $add_status,
+            'summary'      => 'Edited package ' . $fullshipment . ' — status ' . $add_status,
+            'meta'         => [
+                'estimated_eta' => cdp_sanitize($_POST['estimated_eta'] ?? ''),
+                'total_order'   => (float) ($total_envio ?? 0),
+            ],
+        ]);
+
     } else {
         $errors['critical_error'] = $lang['message_ajax_error2'];
     }

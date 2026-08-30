@@ -102,6 +102,9 @@ if (empty($errors)) {
         $update = updateCustomerPackagesStatusFromTracking($status, $shipment_id);
         $order_track = $shipment->order_prefix . $shipment->order_no;
 
+        // Audit: capture the status we are moving away from.
+        $cdp_prev_status = cdp_activityStatusName((int) ($shipment->status_courier ?? 0));
+
         $dataTrack = array(
             'user_id' =>  $_SESSION['userid'],
             'order_track' =>  $order_track,
@@ -285,6 +288,16 @@ if (empty($errors)) {
             error_log('Error generating or sending SMS for sender: ' . $e->getMessage());
             // Manejo del error, por ejemplo, establecer una variable para mostrar un mensaje de error al usuario
         }
+
+        cdp_activityLogStatus(
+            'packages',
+            'package',
+            $shipment_id,
+            $order_track,
+            $status,
+            cdp_activityStatusName($status),
+            $cdp_prev_status
+        );
 
         $messages[] = $lang['notification_shipment11'];
     } else {

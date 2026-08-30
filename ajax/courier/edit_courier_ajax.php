@@ -790,6 +790,17 @@ if (empty($errors)) {
             } catch (Exception $e) { error_log('WhatsApp edit error: ' . $e->getMessage()); }
         }
 
+        cdp_activityLog([
+            'module'       => 'shipments',
+            'verb'         => 'update',
+            'entity_type'  => 'shipment',
+            'entity_id'    => (int) $shipment_id,
+            'entity_label' => $order_track,
+            'status_id'    => (int) ($_POST['status_courier'] ?? 0) ?: null,
+            'status_name'  => cdp_activityStatusName($_POST['status_courier'] ?? 0) ?: null,
+            'summary'      => 'Edited shipment ' . $order_track,
+        ]);
+
         $messages[] = $lang['message_ajax_success_add_update'];
 
     } else {

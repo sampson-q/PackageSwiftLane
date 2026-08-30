@@ -481,6 +481,16 @@ if (empty($errors)) {
 
         cdp_insertCourierShipmentAddresses($dataAddresses);
 
+        cdp_activityLog([
+            'module'       => 'shipments',
+            'verb'         => 'create',
+            'entity_type'  => 'shipment',
+            'entity_id'    => (int) $shipment_id,
+            'entity_label' => $order_track,
+            'summary'      => 'Created shipment ' . $order_track . ' (customer self-service)',
+            'meta'         => ['sender_id' => (int) ($_POST['sender_id'] ?? 0)],
+        ]);
+
         $messages[] = $lang['message_ajax_success_add_shipment'];
     } else {
         $errors['critical_error'] = $lang['message_ajax_error2'];

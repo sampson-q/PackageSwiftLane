@@ -932,6 +932,21 @@ if (empty($errors)) {
 
         cdp_insertPackageTracking($shipment_id, $_SESSION['userid'], cdp_sanitize($_POST['tracking_number']), cdp_sanitize($_POST['estimated_eta']));
 
+        cdp_activityLog([
+            'module'       => 'shipments',
+            'verb'         => 'create',
+            'entity_type'  => 'shipment',
+            'entity_id'    => (int) $shipment_id,
+            'entity_label' => $code_prefix . $_POST['order_no'],
+            'status_id'    => (int) ($_POST['status_courier'] ?? 0) ?: null,
+            'status_name'  => cdp_activityStatusName($_POST['status_courier'] ?? 0) ?: null,
+            'summary'      => 'Created shipment ' . $code_prefix . $_POST['order_no'],
+            'meta'         => [
+                'sender_id'    => (int) ($_POST['sender_id'] ?? 0),
+                'recipient_id' => (int) ($_POST['recipient_id'] ?? 0),
+            ],
+        ]);
+
         $messages[] = $lang['message_ajax_success_add_shipment'];
     } else {
         $errors['critical_error'] = $lang['message_ajax_error2'];

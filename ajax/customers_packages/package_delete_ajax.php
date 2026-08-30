@@ -93,6 +93,18 @@ if (empty($errors)) {
         $db->bind(':action', $lang['notification_shipment0888'] . $track_resulta . '');
         $db->bind(':date_history',  trim($date));
         $db->cdp_execute();
+
+        cdp_activityLog([
+            'module'       => 'packages',
+            'verb'         => 'delete',
+            'entity_type'  => 'package',
+            'entity_id'    => (int) $_POST['id_delete'],
+            'entity_label' => $track_resulta,
+            'status_id'    => (int) ($trackings_order->status_courier ?? 0) ?: null,
+            'status_name'  => cdp_activityStatusName($trackings_order->status_courier ?? 0) ?: null,
+            'summary'      => 'Deleted package ' . $track_resulta,
+            'meta'         => ['sender_id' => (int) ($trackings_order->sender_id ?? 0)],
+        ]);
     } else {
 
         $errors['critical_error'] = $lang['message_ajax_error1'];

@@ -77,6 +77,10 @@ foreach ($data as $key) {
         $user    = $_SESSION['userid'];
         cdp_updateShipTrackingMultiple($tracking, $status, $comment, $office, $user);
 
+        // Audit: one row per package moved, so the log can answer "who put this
+        // package into Ready For Pickup, and when".
+        cdp_activityLogStatus('packages', 'package', (int) $key, $tracking, $status, $new_status_label, $old_status_label);
+
         // Get sender details
         $sender_data = cdp_getSenderCourier((int)$courier->sender_id);
         $app_url     = rtrim((string) $msite_url, '/') . '/track_online_shopping.php?order_track=' . $tracking;

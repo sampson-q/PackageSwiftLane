@@ -42,9 +42,22 @@ if (empty($errors)) {
         'id' => trim($_POST['id'])
     );
 
+    // Audit: read the shipment before it goes, so the trail keeps its number.
+    $cdp_gone = cdp_getCourier((int) trim($_POST['id']));
+    $cdp_gone_track = $cdp_gone ? ($cdp_gone->order_prefix . $cdp_gone->order_no) : ('#' . (int) trim($_POST['id']));
+
     $insert = cdp_deleteCourier($data);
 
     if ($insert) {
+        cdp_activityLog([
+            'module'       => 'shipments',
+            'verb'         => 'delete',
+            'entity_type'  => 'shipment',
+            'entity_id'    => (int) trim($_POST['id']),
+            'entity_label' => $cdp_gone_track,
+            'summary'      => 'Deleted shipment ' . $cdp_gone_track,
+        ]);
+
         $messages[] = $lang['message_ajax_success_delete'];
     } else {
         $errors['critical_error'] = $lang['message_ajax_error1'];
