@@ -177,9 +177,6 @@ $mode = 'sea';
 $status_name = $track ? (string)$track->mod_style : '';
 $status_color = ($track && !empty($track->color)) ? $track->color : '#f2b21b';
 $progress = null;
-$consol_code = '';
-$origin_label = ''; $dest_label = '';
-$origin_geo = ''; $dest_geo = '';
 $print_href = 'print_inv_ship_track.php';
 
 if ($track) {
@@ -199,18 +196,8 @@ if ($track) {
 	$eff = cdp_getEffectiveTrackStatus($track->order_no, (int)$track->status_courier, $is_consolidate_flag, $is_package_source);
 	$status_name  = $eff->mod_style !== '' ? $eff->mod_style : (string)$track->mod_style;
 	$status_color = $eff->color;
-	$consol_code  = $eff->in_consolidation ? $eff->consolidate_code : '';
 	$progress     = cdp_trackProgress($eff->status_id, $status_name);
 
-	// Map anchors: US origin office → the customer's Ghana delivery city.
-	$us = cdp_getUsOriginOffice();
-	$origin_label   = $us->label;
-	$origin_geo     = $us->geo;
-	$origin_country = $us->country;
-	$dest_city      = $address_order->recipient_city ?: $address_order->sender_city;
-	$dest_country   = $address_order->recipient_country ?: $address_order->sender_country;
-	$dest_label     = $dest_city ?: ($dest_country ?: 'Destination');
-	$dest_geo       = trim(($dest_city ? $dest_city . ', ' : '') . $dest_country);
 
 	$print_href = $is_package_source ? 'print_customer_package_track.php' : 'print_inv_ship_track.php';
 }
@@ -230,13 +217,12 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 	<meta name="description" content="">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="theme-color" content="#111111">
+	<meta name="theme-color" content="#0d1b2a">
 	<title><?php echo $e($lang['left127']); ?> | <?php echo $e($core->site_name); ?></title>
 	<link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $e($core->favicon); ?>">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="<?= cdp_asset('assets/vendor/libs/leaflet/leaflet.css') ?>">
 	<link rel="stylesheet" href="assets/css_main_swiftlane/css/materialdesignicons.min.css">
 	<link rel="stylesheet" href="<?= cdp_asset('assets/css_main_swiftlane/css/track-details.css') ?>">
 </head>
@@ -278,104 +264,78 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 		</div>
 	</section>
 
-	<?php else : ?>
+	<?php else :
+		$track_code   = $track->order_prefix . $track->order_no;
+		$latest_entry = $hist_count > 0 ? $courier_track[$hist_count - 1] : null;
+		$current_step = $progress['steps'][$progress['index']] ?? null;
+	?>
 
 	<!-- ══════════════════════════ FOUND ═════════════════════════════════ -->
+
+	<!-- ── Header band ──────────────────────────────────────────────────── -->
+	<section class="trk-head">
+		<div class="trk-head__inner">
+			<div>
+				<p class="trk-eyebrow"><?php echo $e($lang['track-shipment4'] ?? 'Shipment Tracking'); ?></p>
+				<h1 class="trk-code">
+					<?php echo $e($track_code); ?>
+					<button type="button" class="trk-copy" data-copy="<?php echo $e($track_code); ?>"><i class="mdi mdi-content-copy"></i> Copy</button>
+				</h1>
+				<div class="trk-tags">
+					<span class="trk-tag"><i class="mdi <?php echo $mode === 'air' ? 'mdi-airplane' : 'mdi-ferry'; ?>"></i> <?php echo $mode === 'air' ? 'Air Freight' : 'Sea Freight'; ?></span>
+					<span class="trk-tag"><i class="mdi mdi-calendar-blank-outline"></i> <?php echo $e($track->order_date); ?></span>
+					<span class="trk-tag"><i class="mdi mdi-package-variant-closed"></i> <?php echo (int)$count; ?> <?php echo $e($lang['track-shipment11'] ?? 'Packages'); ?></span>
+				</div>
+			</div>
+			<div class="trk-state">
+				<span class="trk-status-badge" style="--c: <?php echo $e($status_color); ?>;">
+					<span class="dot"></span><?php echo $e($status_name); ?>
+				</span>
+				<span class="trk-live">
+					<span class="dot"></span>
+					<?php echo $latest_entry
+						? 'Last updated ' . $e(date('M d, Y · h:i A', strtotime($latest_entry->t_date)))
+						: 'Live tracking'; ?>
+				</span>
+			</div>
+		</div>
+	</section>
+
 	<main class="trk-main">
-
-		<!-- ── Hero ─────────────────────────────────────────────────────── -->
-		<section class="trk-hero">
-			<div class="trk-hero__top">
-				<div class="trk-hero__meta">
-					<span class="trk-chip"><?php echo $mode === 'air' ? '✈️ Air Freight' : '🚢 Sea Freight'; ?></span>
-					<p class="trk-hero__label"><?php echo $e($lang['track-shipment4'] ?? 'Shipment Tracking'); ?></p>
-					<h1 class="trk-hero__code"><?php echo $e($track->order_prefix . $track->order_no); ?></h1>
-					<p class="trk-hero__sub">Here’s the latest on your shipment — its route, current whereabouts and full journey history, all in one place.</p>
-				</div>
-				<div class="trk-hero__status">
-					<span class="trk-status-badge" style="--c: <?php echo $e($status_color); ?>;">
-						<span class="dot"></span><?php echo $e($status_name); ?>
-					</span>
-					<span class="trk-live"><span class="dot"></span> Live tracking</span>
-					<?php if ($consol_code !== ''): ?>
-						<span class="trk-consol">🗃️ In consolidation <b><?php echo $e($consol_code); ?></b></span>
-					<?php endif; ?>
-				</div>
-			</div>
-
-			<!-- Progress stepper -->
-			<div class="trk-steps" style="--steps: <?php echo (int)$progress['count']; ?>; --inset: <?php echo $e($progress['inset']); ?>%;">
-				<span class="trk-steps__rail"></span>
-				<span class="trk-steps__fill" data-fill="<?php echo $e($progress['percent']); ?>"></span>
-				<?php foreach ($progress['steps'] as $i => $s):
-					$cls = $i < $progress['index'] ? 'is-done' : ($i === $progress['index'] ? 'is-current' : ''); ?>
-					<div class="trk-step <?php echo $cls; ?>">
-						<div class="trk-step__dot"><?php echo $s['icon']; ?></div>
-						<div class="trk-step__label"><?php echo $e($s['label']); ?></div>
-					</div>
-				<?php endforeach; ?>
-			</div>
-		</section>
-
-		<!-- ── Content grid ─────────────────────────────────────────────── -->
 		<div class="trk-grid">
 
-			<!-- Main column -->
+			<!-- ── Main column ──────────────────────────────────────────── -->
 			<div class="trk-col">
 
-				<!-- Route map -->
+				<!-- Journey -->
 				<div class="trk-card" data-reveal>
-					<div class="trk-card__head"><span class="ico">🗺️</span> Shipment Route</div>
-					<div class="trk-map-wrap">
-						<div id="trk-map"
-							data-origin="<?php echo $e($origin_geo); ?>"
-							data-dest="<?php echo $e($dest_geo); ?>"
-							data-mode="<?php echo $e($mode); ?>"></div>
-						<div class="trk-map-fallback">
-							<span class="em">🧭</span>
-							<div><strong>Route map unavailable</strong><br>We couldn’t place this route on the map, but the journey details below are complete.</div>
-						</div>
-					</div>
-					<div class="trk-route-strip">
-						<div class="pt"><span class="pin pin--a"></span><span><?php echo $e($origin_label ?: 'US Warehouse'); ?><small><?php echo $e($origin_country); ?></small></span></div>
-						<div class="line"><span class="mover"><?php echo $mode === 'air' ? '✈️' : '🚢'; ?></span></div>
-						<div class="pt"><span class="pin pin--b"></span><span><?php echo $e($dest_label); ?><small><?php echo $e($dest_country); ?></small></span></div>
-					</div>
-				</div>
+					<div class="trk-card__head"><span class="ico"><i class="mdi mdi-transit-connection-variant"></i></span> Shipment Journey</div>
+					<div class="trk-journey">
+						<?php foreach ($progress['steps'] as $i => $s) :
+							$cls = $i < $progress['index'] ? 'is-done' : ($i === $progress['index'] ? 'is-current' : ''); ?>
+							<div class="trk-stage <?php echo $cls; ?>">
+								<div class="trk-stage__dot"><?php echo $i < $progress['index'] ? '<i class="mdi mdi-check"></i>' : $s['icon']; ?></div>
+								<div class="trk-stage__label">
+									<?php echo $e($s['label']); ?>
+									<?php if ($i === $progress['index']) : ?><span class="trk-now">Current Stage</span><?php endif; ?>
+								</div>
+							</div>
+						<?php endforeach; ?>
 
-				<!-- Sender & Recipient -->
-				<div class="trk-two">
-					<div class="trk-card" data-reveal>
-						<div class="trk-card__body">
-							<div class="trk-partyhead">
-								<div class="trk-avatar trk-avatar--a"><?php echo $e($initial($sender_name)); ?></div>
-								<div><h4><?php echo $e($lang['track-shipment5'] ?? 'Sender'); ?></h4><p><?php echo $e($sender_name ?: '—'); ?></p></div>
-							</div>
-							<div class="trk-facts mt-3">
-								<div class="trk-fact"><span class="trk-fact__ico">📍</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment6'] ?? 'Collection City'); ?></span><span class="trk-fact__v"><?php echo $e($address_order->sender_city ?: '—'); ?></span></span></div>
-								<div class="trk-fact"><span class="trk-fact__ico">🌍</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment7'] ?? 'Origin'); ?></span><span class="trk-fact__v"><?php echo $e($address_order->sender_country ?: '—'); ?></span></span></div>
-								<div class="trk-fact trk-fact--wide"><span class="trk-fact__ico">🏠</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment10'] ?? 'Contact Address'); ?></span><span class="trk-fact__v"><?php echo $e($address_order->sender_address ?: '—'); ?></span></span></div>
-							</div>
-						</div>
-					</div>
-					<div class="trk-card" data-reveal>
-						<div class="trk-card__body">
-							<div class="trk-partyhead">
-								<div class="trk-avatar trk-avatar--b"><?php echo $e($initial($receiver_name)); ?></div>
-								<div><h4><?php echo $e($lang['track-shipment15'] ?? 'Recipient'); ?></h4><p><?php echo $e($receiver_name ?: '—'); ?></p></div>
-							</div>
-							<div class="trk-facts mt-3">
-								<div class="trk-fact"><span class="trk-fact__ico">📍</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment16'] ?? 'Delivery City'); ?></span><span class="trk-fact__v"><?php echo $e($address_order->recipient_city ?: '—'); ?></span></span></div>
-								<div class="trk-fact"><span class="trk-fact__ico">🌍</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment17'] ?? 'Destination'); ?></span><span class="trk-fact__v"><?php echo $e($address_order->recipient_country ?: '—'); ?></span></span></div>
-								<div class="trk-fact trk-fact--wide"><span class="trk-fact__ico">🏠</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment10'] ?? 'Contact Address'); ?></span><span class="trk-fact__v"><?php echo $e($address_order->recipient_address ?: '—'); ?></span></span></div>
-							</div>
+						<div class="trk-journey__foot">
+							<?php if ($progress['index'] >= count($progress['steps']) - 1) : ?>
+								This shipment has reached the final stage of its journey.
+							<?php else : ?>
+								This shipment is at <b><?php echo $e($current_step['label'] ?? $status_name); ?></b>.
+								The stages above update as it moves.
+							<?php endif; ?>
 						</div>
 					</div>
 				</div>
 
 				<!-- Shipment contents -->
 				<div class="trk-card" data-reveal>
-					<div class="trk-card__head"><span class="ico">📦</span> Shipment Details</div>
+					<div class="trk-card__head"><span class="ico"><i class="mdi mdi-cube-outline"></i></span> Shipment Details</div>
 					<div class="trk-card__body">
 						<div class="trk-metrics">
 							<div class="trk-metric">
@@ -387,19 +347,59 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 								<div class="trk-metric__k"><?php echo $e($lang['track-shipment13'] ?? 'Total Weight'); ?></div>
 							</div>
 							<div class="trk-metric">
-								<div class="trk-metric__v" style="font-size:1.05rem;line-height:1.3;"><?php echo $e($track->order_date); ?></div>
+								<div class="trk-metric__v" style="font-size:1.05rem;"><?php echo $e($track->order_date); ?></div>
 								<div class="trk-metric__k"><?php echo $e($lang['track-shipment8'] ?? 'Date of Shipment'); ?></div>
 							</div>
 							<div class="trk-metric">
-								<div class="trk-metric__v" style="font-size:1.05rem;line-height:1.3;"><?php echo $e($delivery_time ? $delivery_time->delitime : '—'); ?></div>
+								<div class="trk-metric__v" style="font-size:1.05rem;"><?php echo $e($delivery_time ? $delivery_time->delitime : '—'); ?></div>
 								<div class="trk-metric__k"><?php echo $e($lang['track-shipment9'] ?? 'Shipping Time'); ?></div>
 							</div>
 						</div>
+
 						<?php if (!empty($item_description)) : ?>
-						<div class="trk-facts">
-							<div class="trk-fact trk-fact--wide"><span class="trk-fact__ico">📝</span><span><span class="trk-fact__k"><?php echo $e($lang['message_title_track4'] ?? 'Description'); ?></span><span class="trk-fact__v"><?php echo $e($item_description); ?></span></span></div>
+						<div class="trk-dl">
+							<div class="trk-dl__row">
+								<span class="trk-dl__k"><?php echo $e($lang['message_title_track4'] ?? 'Description'); ?></span>
+								<span class="trk-dl__v"><?php echo $e($item_description); ?></span>
+							</div>
 						</div>
 						<?php endif; ?>
+					</div>
+				</div>
+
+				<!-- Sender & Recipient -->
+				<div class="trk-two">
+					<div class="trk-card" data-reveal>
+						<div class="trk-card__body">
+							<div class="trk-partyhead">
+								<div class="trk-avatar trk-avatar--a"><?php echo $e($initial($sender_name)); ?></div>
+								<div>
+									<h4><?php echo $e($lang['track-shipment5'] ?? 'Sender'); ?></h4>
+									<p><?php echo $e($sender_name ?: '—'); ?></p>
+								</div>
+							</div>
+							<div class="trk-dl">
+								<div class="trk-dl__row"><span class="trk-dl__k"><?php echo $e($lang['track-shipment6'] ?? 'Collection City'); ?></span><span class="trk-dl__v"><?php echo $e($address_order->sender_city ?: '—'); ?></span></div>
+								<div class="trk-dl__row"><span class="trk-dl__k"><?php echo $e($lang['track-shipment7'] ?? 'Origin'); ?></span><span class="trk-dl__v"><?php echo $e($address_order->sender_country ?: '—'); ?></span></div>
+								<div class="trk-dl__row"><span class="trk-dl__k"><?php echo $e($lang['track-shipment10'] ?? 'Contact Address'); ?></span><span class="trk-dl__v"><?php echo $e($address_order->sender_address ?: '—'); ?></span></div>
+							</div>
+						</div>
+					</div>
+					<div class="trk-card" data-reveal>
+						<div class="trk-card__body">
+							<div class="trk-partyhead">
+								<div class="trk-avatar trk-avatar--b"><?php echo $e($initial($receiver_name)); ?></div>
+								<div>
+									<h4><?php echo $e($lang['track-shipment15'] ?? 'Recipient'); ?></h4>
+									<p><?php echo $e($receiver_name ?: '—'); ?></p>
+								</div>
+							</div>
+							<div class="trk-dl">
+								<div class="trk-dl__row"><span class="trk-dl__k"><?php echo $e($lang['track-shipment16'] ?? 'Delivery City'); ?></span><span class="trk-dl__v"><?php echo $e($address_order->recipient_city ?: '—'); ?></span></div>
+								<div class="trk-dl__row"><span class="trk-dl__k"><?php echo $e($lang['track-shipment17'] ?? 'Destination'); ?></span><span class="trk-dl__v"><?php echo $e($address_order->recipient_country ?: '—'); ?></span></div>
+								<div class="trk-dl__row"><span class="trk-dl__k"><?php echo $e($lang['track-shipment10'] ?? 'Contact Address'); ?></span><span class="trk-dl__v"><?php echo $e($address_order->recipient_address ?: '—'); ?></span></div>
+							</div>
+						</div>
 					</div>
 				</div>
 
@@ -412,7 +412,7 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 				if ($numrows > 0 || !empty($track->photo_delivered)) : ?>
 				<!-- Proof of delivery & files -->
 				<div class="trk-card" data-reveal>
-					<div class="trk-card__head"><span class="ico">📸</span> <?php echo $e($lang['leftorder55'] ?? 'Proof of Delivery'); ?></div>
+					<div class="trk-card__head"><span class="ico"><i class="mdi mdi-image-outline"></i></span> <?php echo $e($lang['leftorder55'] ?? 'Proof of Delivery'); ?></div>
 					<div class="trk-card__body">
 						<?php if (!empty($track->photo_delivered)) : ?>
 							<img src="<?php echo $e($track->photo_delivered); ?>" alt="Proof of delivery" class="trk-photo mb-3">
@@ -422,7 +422,7 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 							<ul class="trk-files">
 								<?php foreach ($files_order as $file) : ?>
 									<li class="trk-file">
-										<span class="trk-file__ico">📄</span>
+										<span class="trk-file__ico"><i class="mdi mdi-file-document-outline"></i></span>
 										<a target="_blank" rel="noopener" href="<?php echo $e($file->url); ?>"><?php echo $e($file->name); ?></a>
 									</li>
 								<?php endforeach; ?>
@@ -434,28 +434,27 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 
 			</div><!-- /.trk-col main -->
 
-			<!-- Side column -->
+			<!-- ── Side column ──────────────────────────────────────────── -->
 			<aside class="trk-col">
 
-				<!-- Quick summary -->
 				<div class="trk-card" data-reveal>
-					<div class="trk-card__head"><span class="ico">🧾</span> Summary</div>
+					<div class="trk-card__head"><span class="ico"><i class="mdi mdi-clipboard-text-outline"></i></span> Summary</div>
 					<div class="trk-card__body">
-						<div class="trk-facts">
-							<div class="trk-fact trk-fact--wide"><span class="trk-fact__ico">🔖</span><span><span class="trk-fact__k">Tracking Number</span><span class="trk-fact__v"><?php echo $e($track->order_prefix . $track->order_no); ?></span></span></div>
-							<div class="trk-fact"><span class="trk-fact__ico">🚦</span><span><span class="trk-fact__k">Status</span><span class="trk-fact__v"><?php echo $e($status_name); ?></span></span></div>
-							<div class="trk-fact"><span class="trk-fact__ico">⏱️</span><span><span class="trk-fact__k"><?php echo $e($lang['track-shipment19'] ?? 'Est. Delivery'); ?></span><span class="trk-fact__v"><?php echo $e($track->order_datetime ?: '—'); ?></span></span></div>
+						<div class="trk-dl">
+							<div class="trk-dl__row"><span class="trk-dl__k">Tracking Number</span><span class="trk-dl__v"><?php echo $e($track_code); ?></span></div>
+							<div class="trk-dl__row"><span class="trk-dl__k">Status</span><span class="trk-dl__v"><?php echo $e($status_name); ?></span></div>
+							<div class="trk-dl__row"><span class="trk-dl__k">Stage</span><span class="trk-dl__v"><?php echo $e($current_step['label'] ?? '—'); ?></span></div>
+							<div class="trk-dl__row"><span class="trk-dl__k"><?php echo $e($lang['track-shipment19'] ?? 'Est. Delivery'); ?></span><span class="trk-dl__v"><?php echo $e($track->order_datetime ?: '—'); ?></span></div>
 						</div>
-						<a class="trk-btn trk-btn--grad w-100 justify-content-center mt-3" style="display:flex;" target="_blank" href="<?php echo $e($print_href); ?>?id=<?php echo (int)$track->order_id; ?>">
+						<a class="trk-btn trk-btn--grad mt-3" style="display:flex;justify-content:center;" target="_blank" href="<?php echo $e($print_href); ?>?id=<?php echo (int)$track->order_id; ?>">
 							<i class="mdi mdi-printer"></i> <?php echo $e($lang['toolprint'] ?? 'Print'); ?>
 						</a>
 					</div>
 				</div>
 
-				<!-- History timeline -->
 				<div class="trk-card" data-reveal>
-					<div class="trk-card__head"><span class="ico">🕓</span> <?php echo $e($lang['track-shipment22'] ?? 'Shipping History'); ?></div>
-					<div class="trk-card__body" style="padding:12px;">
+					<div class="trk-card__head"><span class="ico"><i class="mdi mdi-history"></i></span> <?php echo $e($lang['track-shipment22'] ?? 'Shipping History'); ?></div>
+					<div class="trk-card__body">
 						<?php if ($hist_count > 0) :
 							$reversed = array_reverse($courier_track); ?>
 							<ul class="trk-timeline">
@@ -465,13 +464,13 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 										<span class="trk-tl__dot"></span>
 										<div class="trk-tl__date"><?php echo $e(date('M d, Y · h:i A', strtotime($rows->t_date))); ?></div>
 										<div class="trk-tl__status"><?php echo $e($rows->mod_style); ?></div>
-										<?php if ($loc) : ?><div class="trk-tl__loc">📍 <?php echo $e($loc); ?></div><?php endif; ?>
+										<?php if ($loc) : ?><div class="trk-tl__loc"><i class="mdi mdi-map-marker-outline"></i> <?php echo $e($loc); ?></div><?php endif; ?>
 										<?php if (!empty($rows->comments)) : ?><div class="trk-tl__note"><?php echo $e($rows->comments); ?></div><?php endif; ?>
 									</li>
 								<?php endforeach; ?>
 							</ul>
 						<?php else : ?>
-							<p class="text-center" style="color:var(--muted);padding:20px 10px;">No tracking updates have been logged for this shipment yet. Please check back a little later.</p>
+							<p class="trk-note">No tracking updates have been logged for this shipment yet.</p>
 						<?php endif; ?>
 					</div>
 				</div>
@@ -480,7 +479,7 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 
 		</div><!-- /.trk-grid -->
 
-		<div class="trk-foot">Powered by <a href="https://www.isolveafrica.com" target="_blank">iSolveAfrica</a></div>
+		<div class="trk-foot">Powered by <?php echo $e($core->site_name); ?> · Live shipment tracking</div>
 
 	</main>
 
@@ -488,7 +487,6 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 
 </div><!-- /.trk -->
 
-	<script src="<?= cdp_asset('assets/vendor/libs/leaflet/leaflet.js') ?>"></script>
 	<script src="<?= cdp_asset('dataJs/track_details.js') ?>"></script>
 </body>
 
