@@ -22,6 +22,7 @@
 
 require_once("loader.php");
 require_once("lib/OtpService.php");
+require_once("helpers/activity_log.php");
 
 $login = new User;
 $core = new Core;
@@ -36,6 +37,21 @@ if (isset($_POST['login'])) {
         'otp_service' => $otpService,
         'remember_me' => !empty($_POST['remember_me']),
     ]);
+
+    if ($result === 'otp_required') {
+        // Credentials were right; the session is not open until the OTP passes.
+        cdp_activityLog([
+            'module'     => 'auth',
+            'verb'       => 'login',
+            'outcome'    => 'success',
+            'actor_name' => cdp_activityClip($_POST['username'], 150),
+            'summary'    => 'Password accepted - one-time code sent',
+        ]);
+    } elseif ($result) {
+        cdp_activityLogLogin(true, (string) ($_SESSION['username'] ?? $_POST['username']), (int) ($_SESSION['userid'] ?? 0));
+    } else {
+        cdp_activityLogLogin(false, (string) $_POST['username'], 0, 'wrong username or password');
+    }
 
     if ($result) {
         if ($result === 'otp_required') {

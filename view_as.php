@@ -15,6 +15,7 @@
 
 require_once("loader.php");
 require_once("helpers/rbac.php");
+require_once("helpers/activity_log.php");
 
 $user = new User();
 $core = new Core();
@@ -60,6 +61,16 @@ if (isset($_GET['stop'])) {
         $db->bind(':u', $_SESSION['imp_original_username']);
         $db->cdp_execute();
         $orig = $db->cdp_registro();
+        cdp_activityLog([
+            'module'       => 'auth',
+            'verb'         => 'impersonate',
+            'action'       => 'auth.view_as_stop',
+            'label'        => 'Authentication - View As Ended',
+            'entity_type'  => 'user',
+            'entity_id'    => (int) ($_SESSION['userid'] ?? 0),
+            'summary'      => 'Stopped viewing the system as another user',
+        ]);
+
         if ($orig) {
             cdp_viewAsApplyIdentity($orig);
         }
@@ -134,6 +145,20 @@ if (empty($_SESSION['imp_original_username'])) {
     $_SESSION['imp_original_userid']    = $authUserid;
     $_SESSION['imp_return_url']         = cdp_viewAsSafeReturn($_SERVER['HTTP_REFERER'] ?? '');
 }
+
+cdp_activityLog([
+    'module'       => 'auth',
+    'verb'         => 'impersonate',
+    'action'       => 'auth.view_as_start',
+    'label'        => 'Authentication - View As Started',
+    'user_id'      => $authUserid,
+    'actor_name'   => $authName !== '' ? $authName : $authUsername,
+    'entity_type'  => 'user',
+    'entity_id'    => (int) $target->id,
+    'entity_label' => trim($target->fname . ' ' . $target->lname),
+    'summary'      => 'Started viewing the system as ' . trim($target->fname . ' ' . $target->lname)
+                      . ' (' . $target->username . ')',
+]);
 
 // Swap into the target and land on the dashboard as them.
 cdp_viewAsApplyIdentity($target);

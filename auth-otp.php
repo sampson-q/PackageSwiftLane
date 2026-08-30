@@ -2,6 +2,7 @@
 require_once("loader.php");
 require_once("helpers/querys.php");
 require_once("lib/OtpService.php");
+require_once("helpers/activity_log.php");
 
 $user = new User();
 $core = new Core();
@@ -140,6 +141,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // ── Login flow ────────────────────────────────────────────────────
             if ($flow === 'login') {
                 $user->cdp_finalizeLoginById($verify['user_id']);
+
+                cdp_activityLogLogin(
+                    true,
+                    (string) ($_SESSION['username'] ?? ''),
+                    (int) $verify['user_id']
+                );
 
                 if (!empty($_SESSION['otp_login_remember'])) {
                     $otp->rememberTrustedDevice($verify['user_id']);
