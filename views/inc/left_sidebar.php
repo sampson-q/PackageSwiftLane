@@ -1099,14 +1099,6 @@
 								</a>
 							</li>
 							<?php } ?>
-							<?php if ($user->cdp_hasPermission('view_package_list')) { ?>
-							<li class="sidebar-item">
-								<a class="sidebar-link waves-effect waves-dark" href="customer_packages_list.php" aria-expanded="false">
-									<iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
-									<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-11'] ?> </span>
-								</a>
-							</li>
-							<?php } ?>
 							<?php if ($user->cdp_hasPermission('view_payment_shipment_list')) { ?>
 							<li class="sidebar-item">
 								<a class="sidebar-link waves-effect waves-dark" href="payments_gateways_courier_list.php" aria-expanded="false"><iconify-icon icon="solar:alt-arrow-right-outline" class="fs-5" style="color:#fc3f7"></iconify-icon>
