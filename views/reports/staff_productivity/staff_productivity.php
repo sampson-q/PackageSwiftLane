@@ -113,7 +113,10 @@ $defaultTo   = date('Y-m-d');
                     Nothing in the system reports a heartbeat, so this counts runs of recorded
                     activity: a gap longer than the idle setting below ends a block, and the
                     blocks are added up. It is time spent working in the system — not time
-                    signed in with a tab open.
+                    signed in with a tab open. <b>Idle</b> is the rest of the working window
+                    — first action to last action each day — so it shows the breaks between
+                    spells of work. Time signed in but doing nothing is not recorded anywhere
+                    in this system, so it is not counted and no figure here claims to know it.
                     <?php if ($cutover) : ?>
                         Logins and page activity are recorded from
                         <b><?php echo $e(date('j M Y', strtotime($cutover))); ?></b>;
@@ -215,6 +218,8 @@ $defaultTo   = date('Y-m-d');
                                     <th>Staff</th>
                                     <th>Role</th>
                                     <th class="text-right">Active Hours</th>
+                                    <th class="text-right">Idle Hours</th>
+                                    <th class="text-right">Used</th>
                                     <th class="text-right">Days</th>
                                     <th class="text-right">Avg/Day</th>
                                     <th class="text-right">Packages Added</th>

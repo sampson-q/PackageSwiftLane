@@ -57,6 +57,7 @@ fputcsv($out, ['Staff Productivity Report']);
 fputcsv($out, ['Period', ($from !== '' ? $from : 'earliest') . ' to ' . ($to !== '' ? $to : 'today')]);
 fputcsv($out, ['Idle gap', $gap . ' minutes — a longer gap ends an active block']);
 fputcsv($out, ['Active hours', 'Reconstructed from recorded actions. Measures time working in the system, not time signed in.']);
+fputcsv($out, ['Idle hours', 'Breaks inside the working window (first action to last action each day). Time signed in but doing nothing is not recorded anywhere and is NOT included.']);
 fputcsv($out, ['Generated', date('Y-m-d H:i')]);
 if ($s['cutover']) {
     fputcsv($out, ['Note', 'Logins and page activity are only recorded from ' . $s['cutover'] . '. Before that date only package, consolidation and pickup actions are known, so active hours read low.']);
@@ -69,7 +70,8 @@ fputcsv($out, []);
 fputcsv($out, ['SUMMARY BY STAFF MEMBER']);
 fputcsv($out, [
     'Staff', 'Username', 'Role', 'Account', 'Data Coverage',
-    'Active Hours', 'Days Worked', 'Avg Hours/Day', 'Working Blocks',
+    'Active Hours', 'Idle Hours', 'Working Window Hours', 'Utilisation %',
+    'Days Worked', 'Avg Hours/Day', 'Working Blocks',
     'Packages Added', 'Packages Edited', 'Deletions',
     'Consolidations', 'Pickups', 'Logins',
     'Packages Per Active Hour', 'First Activity', 'Last Activity', 'Total Actions',
@@ -84,7 +86,11 @@ foreach ($s['rows'] as $r) {
 
     fputcsv($out, [
         $r['name'], $r['username'], $r['role'], $r['is_active'] ? 'Active' : 'Inactive', $coverage,
-        $r['active_hours'], $r['days_worked'], $r['avg_hours_day'], $r['blocks'],
+        $r['active_hours'],
+        $r['idle_reliable'] ? $r['idle_hours']   : 'not enough detail',
+        $r['idle_reliable'] ? $r['span_hours']   : 'not enough detail',
+        $r['idle_reliable'] ? $r['utilisation']  : '',
+        $r['days_worked'], $r['avg_hours_day'], $r['blocks'],
         $r['packages_added'], $r['packages_edited'], $r['deletions'],
         $r['consolidations'], $r['pickups'], $r['logins'],
         $r['per_hour'], $r['first_at'], $r['last_at'], $r['events'],
@@ -94,7 +100,8 @@ foreach ($s['rows'] as $r) {
 fputcsv($out, []);
 fputcsv($out, [
     'TOTAL', '', '', '', '',
-    $s['totals']['active_hours'], $s['totals']['days_worked'], '', '',
+    $s['totals']['active_hours'], $s['totals']['idle_hours'], $s['totals']['span_hours'],
+    $s['totals']['utilisation'], $s['totals']['days_worked'], '', '',
     $s['totals']['packages_added'], $s['totals']['packages_edited'], '',
     '', '', '',
     $s['totals']['per_hour'], '', '', $s['totals']['events'],
@@ -104,7 +111,8 @@ fputcsv($out, [
 fputcsv($out, []);
 fputcsv($out, ['DAY BY DAY']);
 fputcsv($out, [
-    'Staff', 'Date', 'Weekday', 'Active Hours', 'First Seen', 'Last Seen',
+    'Staff', 'Date', 'Weekday', 'Active Hours', 'Idle Hours', 'Working Window Hours',
+    'Utilisation %', 'First Seen', 'Last Seen',
     'Working Blocks', 'Packages Added', 'Packages Edited', 'Logins', 'Total Actions',
     'Block Times',
 ]);
@@ -117,6 +125,7 @@ foreach ($s['rows'] as $r) {
         }
         fputcsv($out, [
             $r['name'], $d['date'], $d['weekday'], $d['active_hours'],
+            $d['idle_hours'], $d['span_hours'], $d['utilisation'],
             $d['first_seen'], $d['last_seen'], $d['block_count'],
             $d['packages_added'], $d['packages_edited'], $d['logins'], $d['events'],
             implode(' | ', $blocks),

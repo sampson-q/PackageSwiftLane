@@ -64,6 +64,11 @@ if (($_REQUEST['action'] ?? '') === 'detail') {
 
     $days = cdp_spDailyDetail($uid, $from, $to, $gap);
     $u = $staff[$uid];
+
+    // Idle on a day before the activity trail started is the gap between two
+    // package actions, not a break — the trail simply was not recording
+    // anything else. Those days show no idle figure at all.
+    $cutDay = cdp_spCutover() ? substr(cdp_spCutover(), 0, 10) : null;
     ?>
     <div class="sp-detail">
         <div class="sp-detail__who">
@@ -91,6 +96,8 @@ if (($_REQUEST['action'] ?? '') === 'detail') {
                         <tr>
                             <th style="width:130px;">Date</th>
                             <th style="width:95px;" class="text-right">Active</th>
+                            <th style="width:90px;" class="text-right">Idle</th>
+                            <th style="width:80px;" class="text-right">Used</th>
                             <th style="width:80px;">First</th>
                             <th style="width:80px;">Last</th>
                             <th class="text-right" style="width:95px;">Packages</th>
@@ -106,6 +113,15 @@ if (($_REQUEST['action'] ?? '') === 'detail') {
                                 <small class="text-muted"><?php echo $e($d['weekday']); ?></small>
                             </td>
                             <td class="text-right"><b><?php echo $e(cdp_spDuration($d['active_hours'] * 3600)); ?></b></td>
+                            <?php $idleOk = ($cutDay !== null && $d['date'] >= $cutDay); ?>
+                            <td class="text-right text-muted">
+                                <?php echo $idleOk
+                                    ? $e(cdp_spDuration($d['idle_hours'] * 3600))
+                                    : '<span title="Before the activity trail started, so breaks cannot be told from gaps in recording.">&mdash;</span>'; ?>
+                            </td>
+                            <td class="text-right">
+                                <?php echo ($idleOk && $d['utilisation'] > 0) ? $e($d['utilisation']) . '%' : '&mdash;'; ?>
+                            </td>
                             <td><?php echo $e($d['first_seen']); ?></td>
                             <td><?php echo $e($d['last_seen']); ?></td>
                             <td class="text-right"><?php echo (int) $d['packages_added']; ?></td>
@@ -127,6 +143,8 @@ if (($_REQUEST['action'] ?? '') === 'detail') {
                 A working block is a run of activity with no gap longer than
                 <b><?php echo (int) $gap; ?> minutes</b>. Active time is the sum of those blocks,
                 so it measures time spent working in the system rather than time signed in.
+                <b>Idle</b> is the rest of the working window — first action to last action that
+                day — so it is the breaks between spells of work, not time after they stopped.
             </p>
         <?php endif; ?>
     </div>
@@ -145,6 +163,8 @@ $s = cdp_spSummary($from, $to, $userIds, $gap);
 // the same.
 foreach ($s['rows'] as &$r) {
     $r['active_label'] = cdp_spDuration($r['active_seconds']);
+    $r['idle_label']   = cdp_spDuration($r['idle_seconds']);
+    $r['span_label']   = cdp_spDuration($r['span_seconds']);
 }
 unset($r);
 
@@ -153,6 +173,7 @@ foreach ($s['by_day'] as $day => $v) {
     $byDay[] = [
         'date'     => $day,
         'hours'    => round($v['seconds'] / 3600, 2),
+        'idle'     => round(max(0, ($v['span'] ?? 0) - $v['seconds']) / 3600, 2),
         'packages' => (int) $v['packages'],
         'events'   => (int) $v['events'],
     ];

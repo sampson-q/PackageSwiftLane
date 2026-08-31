@@ -82,7 +82,7 @@ function cdpSpLoad() {
     $.getJSON(SP_URL, spFilters(), function (r) {
         $('#sp_loader').hide();
         if (!r || !r.ok) {
-            $('#sp_rows').html('<tr><td colspan="11" class="sp-empty">Could not load the report.</td></tr>');
+            $('#sp_rows').html('<tr><td colspan="13" class="sp-empty">Could not load the report.</td></tr>');
             return;
         }
         spRenderKpis(r.totals, r.rows);
@@ -91,7 +91,7 @@ function cdpSpLoad() {
         spRenderRows(r.rows);
     }).fail(function () {
         $('#sp_loader').hide();
-        $('#sp_rows').html('<tr><td colspan="11" class="sp-empty">Could not load the report.</td></tr>');
+        $('#sp_rows').html('<tr><td colspan="13" class="sp-empty">Could not load the report.</td></tr>');
     });
 }
 
@@ -126,6 +126,13 @@ function spRenderKpis(t, rows) {
 
     $('#sp_kpis').html(
         tile('#336aea', 'Total Active Hours', spHours(t.active_hours), 'Across all staff shown') +
+        tile('#b4770d', 'Total Idle Hours',
+             t.idle_rows ? spHours(t.idle_hours) : '—',
+             t.idle_rows ? 'Breaks inside the working window · ' + t.idle_rows + ' of ' + t.staff + ' staff'
+                         : 'Not enough detail recorded yet') +
+        tile('#7d8fa9', 'Utilisation',
+             t.idle_rows ? t.utilisation + '%' : '—',
+             t.idle_rows ? 'Active as a share of the window' : 'Needs the activity trail') +
         tile('#0aa699', 'Packages Added', spNum(t.packages_added), 'Registered in this period') +
         tile('#9b6ef3', 'Packages Per Hour', t.per_hour, 'Across all staff shown') +
         tile('#e8a33d', 'Staff Active', spNum(t.staff), 'Of the staff accounts on file') +
@@ -144,8 +151,9 @@ function spRenderDayChart(days) {
     var options = {
         chart: { type: 'line', height: 280, toolbar: { show: false }, fontFamily: 'Public Sans, sans-serif' },
         series: [
-            { name: 'Packages Added', type: 'column', data: days.map(function (d) { return d.packages; }) },
-            { name: 'Active Hours',   type: 'line',   data: days.map(function (d) { return d.hours; }) }
+            { name: 'Active Hours', type: 'column', data: days.map(function (d) { return d.hours; }) },
+            { name: 'Idle Hours',   type: 'column', data: days.map(function (d) { return d.idle; }) },
+            { name: 'Packages Added', type: 'line', data: days.map(function (d) { return d.packages; }) }
         ],
         xaxis: {
             categories: days.map(function (d) { return d.date; }),
@@ -153,19 +161,22 @@ function spRenderDayChart(days) {
             axisBorder: { show: false }, axisTicks: { show: false }
         },
         yaxis: [
-            { title: { text: 'Packages', style: { color: '#99a2b1', fontWeight: 600 } },
+            { seriesName: 'Active Hours',
+              title: { text: 'Hours', style: { color: '#99a2b1', fontWeight: 600 } },
               labels: { style: { colors: '#99a2b1', fontSize: '11px' } } },
-            { opposite: true, title: { text: 'Hours', style: { color: '#99a2b1', fontWeight: 600 } },
+            { seriesName: 'Active Hours', show: false },
+            { opposite: true, seriesName: 'Packages Added',
+              title: { text: 'Packages', style: { color: '#99a2b1', fontWeight: 600 } },
               labels: { style: { colors: '#99a2b1', fontSize: '11px' } } }
         ],
-        colors: ['#0aa699', '#336aea'],
-        stroke: { width: [0, 2.5], curve: 'smooth' },
-        plotOptions: { bar: { columnWidth: '55%', borderRadius: 3 } },
+        colors: ['#336aea', '#e3b765', '#0aa699'],
+        stroke: { width: [0, 0, 2.5], curve: 'smooth' },
+        plotOptions: { bar: { columnWidth: '70%', borderRadius: 3 } },
         dataLabels: { enabled: false },
         legend: { position: 'top', horizontalAlign: 'right', fontSize: '12px', markers: { width: 9, height: 9 } },
         grid: { borderColor: '#eef1f6', strokeDashArray: 4 },
         tooltip: { shared: true, y: { formatter: function (v, o) {
-            return o.seriesIndex === 1 ? spHours(v) : spNum(v);
+            return o.seriesIndex === 2 ? spNum(v) : spHours(v);
         } } },
         noData: { text: 'No activity in this period' }
     };
@@ -211,7 +222,7 @@ function spRenderHourChart(hours) {
 function spRenderRows(rows) {
     rows = rows || [];
     if (!rows.length) {
-        $('#sp_rows').html('<tr><td colspan="11" class="sp-empty">No staff activity in this period.</td></tr>');
+        $('#sp_rows').html('<tr><td colspan="13" class="sp-empty">No staff activity in this period.</td></tr>');
         return;
     }
 
@@ -241,6 +252,11 @@ function spRenderRows(rows) {
                    '<td class="text-muted">' + spEsc(r.role) + '</td>' +
                    '<td class="text-right"><span class="sp-hours">' + spEsc(r.active_label) + '</span>' + flag +
                        '<div class="sp-bar"><span style="width:' + pct + '%"></span></div></td>' +
+                   '<td class="text-right text-muted">' +
+                       (r.idle_reliable ? spEsc(r.idle_label) : '<span title="Not enough detail was ' +
+                        'recorded in this period to tell working time from breaks.">&mdash;</span>') + '</td>' +
+                   '<td class="text-right">' +
+                       (r.idle_reliable && r.span_seconds > 0 ? r.utilisation + '%' : '&mdash;') + '</td>' +
                    '<td class="text-right">' + spNum(r.days_worked) + '</td>' +
                    '<td class="text-right">' + spHours(r.avg_hours_day) + '</td>' +
                    '<td class="text-right"><b>' + spNum(r.packages_added) + '</b></td>' +
