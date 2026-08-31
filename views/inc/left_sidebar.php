@@ -677,6 +677,7 @@
 						'view_tools',
 						'view_system_logs',
 						'view_activity_logs',
+						'view_staff_productivity',
 						'view_offices',
 						'view_branches',
 						'view_courier_companies',
@@ -738,6 +739,18 @@
 								<a class="sidebar-link waves-effect waves-dark" href="activity_logs.php" aria-expanded="false">
 									<iconify-icon icon="solar:clipboard-list-linear" class="fs-5"></iconify-icon>
 									<span class="hide-menu"> Activity Logs </span>
+								</a>
+							</li>
+							<?php } ?>
+
+							<?php
+								// Admin / Super Admin only, matching cdp_spCanView().
+								require_once __DIR__ . '/../../helpers/staff_activity.php';
+								if (cdp_spCanView($user)) { ?>
+							<li class="sidebar-item">
+								<a class="sidebar-link waves-effect waves-dark" href="staff_productivity.php" aria-expanded="false">
+									<iconify-icon icon="solar:chart-square-linear" class="fs-5"></iconify-icon>
+									<span class="hide-menu"> Staff Productivity </span>
 								</a>
 							</li>
 							<?php } ?>
