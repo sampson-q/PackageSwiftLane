@@ -2,10 +2,11 @@
 // *************************************************************************
 // * Staff Productivity — CSV of the current selection.                    *
 // *                                                                       *
-// * Two sections in one file: the per-staff summary, then the day-by-day  *
-// * breakdown for every staff member in the selection. The owner asked to *
-// * "export the whole thing", and a summary without the days behind it     *
-// * cannot be checked.                                                     *
+// * Three sections in one file: the per-staff summary, the day-by-day     *
+// * rows (check-in, check-out, active, idle, the shipment ids created and *
+// * edited) and the full timeline — every active / idle stretch of every   *
+// * day with what happened in it. The owner asked to "export the whole    *
+// * thing", and a summary without the days behind it cannot be checked.   *
 // *************************************************************************
 
 require_once("../../loader.php");
@@ -35,12 +36,10 @@ if (!empty($_REQUEST['user_id'])) {
     $userIds = array_values(array_filter(array_map('intval', $raw)));
 }
 
-$gap = (int) ($_REQUEST['gap'] ?? CDP_SP_IDLE_GAP);
-if (!in_array($gap, [5, 10, 15, 30, 60], true)) {
-    $gap = CDP_SP_IDLE_GAP;
-}
-
-$s = cdp_spSummary($from, $to, $userIds, $gap);
+$settings = cdp_spSettings();
+$s        = cdp_spSummary($from, $to, $userIds);
+$allDays  = cdp_spBuildDays($from, $to, $userIds);
+$staff    = cdp_spStaffUsers();
 
 $filename = 'staff-productivity-' . ($from !== '' ? $from : 'start') . '_to_' . ($to !== '' ? $to : 'today') . '.csv';
 
@@ -52,17 +51,29 @@ header('Expires: 0');
 $out = fopen('php://output', 'w');
 fwrite($out, "\xEF\xBB\xBF"); // BOM, so Excel reads the names correctly
 
+$coverageText = function ($c) {
+    return [
+        'presence' => 'Presence data - idle measured from keyboard/mouse/screen input',
+        'log'      => 'Actions only - idle is the gaps between recorded actions',
+        'history'  => 'Package actions only - predates the activity trail, idle withheld',
+        'full'     => 'Actions recorded - idle is reliable',
+        'mixed'    => 'Part detail - some days predate the activity trail, idle covers the rest',
+        'partial'  => 'Low detail - all days predate the activity trail, idle withheld',
+    ][$c] ?? $c;
+};
+
 // ── Provenance, so the numbers can be argued with ───────────────────────────
 fputcsv($out, ['Staff Productivity Report']);
 fputcsv($out, ['Period', ($from !== '' ? $from : 'earliest') . ' to ' . ($to !== '' ? $to : 'today')]);
-fputcsv($out, ['Idle gap', $gap . ' minutes — a longer gap ends an active block']);
-fputcsv($out, ['Active hours', 'Reconstructed from recorded actions. Measures time working in the system, not time signed in.']);
-fputcsv($out, ['Idle hours', 'Breaks inside the working window (first action to last action each day). Time signed in but doing nothing is not recorded anywhere and is NOT included.']);
+fputcsv($out, ['Check-in', 'The first package ' . ($settings['checkin_scope'] === 'create_only' ? 'created' : 'created or edited') . ' that day. A day without one uses its first recorded activity and is marked "first activity".']);
+fputcsv($out, ['Check-out', 'The end of the last recorded activity that day.']);
+fputcsv($out, ['Idle after', $settings['idle_minutes'] . ' minutes without any keyboard, mouse or screen input (days with presence data)']);
+fputcsv($out, ['Legacy gap', $settings['gap_minutes'] . ' minutes between recorded actions ends a working stretch (days without presence data)']);
+fputcsv($out, ['Active', 'Time inside working stretches between check-in and check-out.']);
+fputcsv($out, ['Idle', 'Pauses inside the working window. Withheld for days that predate the activity trail. Work done outside this app is not visible and reads as idle.']);
 fputcsv($out, ['Generated', date('Y-m-d H:i')]);
 if ($s['cutover']) {
-    fputcsv($out, ['Note', 'Logins and page activity are only recorded from ' . $s['cutover'] . '. Before that date only package, consolidation and pickup actions are known, so active hours read low.']);
-} else {
-    fputcsv($out, ['Note', 'The activity trail is not deployed yet, so only package, consolidation and pickup actions are known and active hours read low.']);
+    fputcsv($out, ['Note', 'Page activity is recorded from ' . $s['cutover'] . '. Before that only package, consolidation and pickup actions are known.']);
 }
 fputcsv($out, []);
 
@@ -70,29 +81,24 @@ fputcsv($out, []);
 fputcsv($out, ['SUMMARY BY STAFF MEMBER']);
 fputcsv($out, [
     'Staff', 'Username', 'Role', 'Account', 'Data Coverage',
-    'Active Hours', 'Idle Hours', 'Working Window Hours', 'Utilisation %',
-    'Days Worked', 'Avg Hours/Day', 'Working Blocks',
-    'Packages Added', 'Packages Edited', 'Deletions',
-    'Consolidations', 'Pickups', 'Logins',
-    'Packages Per Active Hour', 'First Activity', 'Last Activity', 'Total Actions',
+    'Active Hours', 'Idle Hours', 'Working Window Hours', 'Utilisation %', 'Days Idle Measured',
+    'Days Worked', 'Check-Ins (package days)', 'Avg Active Hours/Day', 'Working Stretches',
+    'Packages Created', 'Packages Edited', 'Deletions',
+    'Consolidations', 'Pickups',
+    'Packages Per Active Hour', 'First Check-In', 'Last Check-Out', 'Total Actions',
 ]);
 
 foreach ($s['rows'] as $r) {
-    $coverage = [
-        'full'    => 'Full',
-        'mixed'   => 'Part detail - some days predate the activity trail, hours understated',
-        'partial' => 'Low detail - all days predate the activity trail, hours understated',
-    ][$r['coverage']] ?? '';
-
     fputcsv($out, [
-        $r['name'], $r['username'], $r['role'], $r['is_active'] ? 'Active' : 'Inactive', $coverage,
+        $r['name'], $r['username'], $r['role'], $r['is_active'] ? 'Active' : 'Inactive', $coverageText($r['coverage']),
         $r['active_hours'],
-        $r['idle_reliable'] ? $r['idle_hours']   : 'not enough detail',
-        $r['idle_reliable'] ? $r['span_hours']   : 'not enough detail',
-        $r['idle_reliable'] ? $r['utilisation']  : '',
-        $r['days_worked'], $r['avg_hours_day'], $r['blocks'],
+        $r['idle_reliable'] ? $r['idle_hours']  : 'not enough detail',
+        $r['idle_reliable'] ? $r['span_hours']  : 'not enough detail',
+        $r['idle_reliable'] ? $r['utilisation'] : '',
+        $r['idle_days'],
+        $r['days_worked'], $r['checkins'], $r['avg_hours_day'], $r['blocks'],
         $r['packages_added'], $r['packages_edited'], $r['deletions'],
-        $r['consolidations'], $r['pickups'], $r['logins'],
+        $r['consolidations'], $r['pickups'],
         $r['per_hour'], $r['first_at'], $r['last_at'], $r['events'],
     ]);
 }
@@ -101,9 +107,10 @@ fputcsv($out, []);
 fputcsv($out, [
     'TOTAL', '', '', '', '',
     $s['totals']['active_hours'], $s['totals']['idle_hours'], $s['totals']['span_hours'],
-    $s['totals']['utilisation'], $s['totals']['days_worked'], '', '',
+    $s['totals']['utilisation'], '',
+    $s['totals']['days_worked'], $s['totals']['checkins'], '', '',
     $s['totals']['packages_added'], $s['totals']['packages_edited'], '',
-    '', '', '',
+    '', '',
     $s['totals']['per_hour'], '', '', $s['totals']['events'],
 ]);
 
@@ -111,25 +118,71 @@ fputcsv($out, [
 fputcsv($out, []);
 fputcsv($out, ['DAY BY DAY']);
 fputcsv($out, [
-    'Staff', 'Date', 'Weekday', 'Active Hours', 'Idle Hours', 'Working Window Hours',
-    'Utilisation %', 'First Seen', 'Last Seen',
-    'Working Blocks', 'Packages Added', 'Packages Edited', 'Logins', 'Total Actions',
-    'Block Times',
+    'Staff', 'Date', 'Weekday', 'Data Coverage',
+    'Check-In', 'Check-In Basis', 'Check-Out',
+    'Active Hours', 'Idle Hours', 'Working Window Hours', 'Utilisation %',
+    'Working Stretches', 'Packages Created', 'Packages Edited',
+    'Actions Before Check-In', 'Total Actions',
+    'Shipments Created', 'Shipments Edited', 'Stretch Times',
 ]);
 
+$order = [];
 foreach ($s['rows'] as $r) {
-    foreach (cdp_spDailyDetail($r['user_id'], $from, $to, $gap) as $d) {
-        $blocks = [];
-        foreach ($d['blocks'] as $b) {
-            $blocks[] = $b['from'] . '-' . $b['to'] . ' (' . $b['minutes'] . 'm)';
+    $order[] = $r['user_id'];
+}
+foreach ($order as $uid) {
+    $name = $staff[$uid]->display_name ?? ('User #' . $uid);
+    foreach (($allDays[$uid] ?? []) as $d) {
+        $times = [];
+        foreach ($d['segments'] as $seg) {
+            $times[] = ucfirst($seg['type']) . ' ' . $seg['from'] . '-' . $seg['to'] . ' (' . (int) round($seg['seconds'] / 60) . 'm)';
         }
         fputcsv($out, [
-            $r['name'], $d['date'], $d['weekday'], $d['active_hours'],
-            $d['idle_hours'], $d['span_hours'], $d['utilisation'],
-            $d['first_seen'], $d['last_seen'], $d['block_count'],
-            $d['packages_added'], $d['packages_edited'], $d['logins'], $d['events'],
-            implode(' | ', $blocks),
+            $name, $d['date'], $d['weekday'], $coverageText($d['coverage']),
+            $d['check_in_time'],
+            $d['check_in_kind'] === 'package' ? ('package ' . $d['check_in_ref']) : 'first activity',
+            $d['check_out_time'],
+            round($d['active_seconds'] / 3600, 2),
+            $d['idle_reliable'] ? round($d['idle_seconds'] / 3600, 2) : 'not enough detail',
+            $d['idle_reliable'] ? round($d['window_seconds'] / 3600, 2) : 'not enough detail',
+            $d['idle_reliable'] ? $d['utilisation'] : '',
+            $d['blocks'], $d['created_count'], $d['edited_count'],
+            $d['pre_checkin_events'], $d['events'],
+            implode(' | ', $d['packages_created']),
+            implode(' | ', $d['packages_edited']),
+            implode(' | ', $times),
         ]);
+    }
+}
+
+// ── Section 3: the timeline, stretch by stretch ─────────────────────────────
+fputcsv($out, []);
+fputcsv($out, ['TIMELINE - EVERY ACTIVE AND IDLE STRETCH']);
+fputcsv($out, [
+    'Staff', 'Date', 'Stretch', 'From', 'To', 'Minutes',
+    'Actions', 'Shipments Created', 'Shipments Edited', 'Actions Performed',
+]);
+
+foreach ($order as $uid) {
+    $name = $staff[$uid]->display_name ?? ('User #' . $uid);
+    foreach (($allDays[$uid] ?? []) as $d) {
+        foreach ($d['segments'] as $seg) {
+            if ($seg['type'] === 'idle') {
+                fputcsv($out, [$name, $d['date'], 'Idle', $seg['from'], $seg['to'], (int) round($seg['seconds'] / 60), '', '', '', '']);
+                continue;
+            }
+            $acts = [];
+            foreach ($seg['actions'] as $a) {
+                $acts[] = $a['time'] . ' ' . $a['label'];
+            }
+            fputcsv($out, [
+                $name, $d['date'], 'Active', $seg['from'], $seg['to'], (int) round($seg['seconds'] / 60),
+                $seg['events'],
+                implode(' | ', $seg['created']),
+                implode(' | ', $seg['edited']),
+                implode(' | ', $acts),
+            ]);
+        }
     }
 }
 
@@ -144,6 +197,6 @@ if (function_exists('cdp_activityLog')) {
         'label'   => 'Reports · Staff Productivity Exported',
         'summary' => 'Exported the Staff Productivity report for '
                      . ($from !== '' ? $from : 'earliest') . ' to ' . ($to !== '' ? $to : 'today'),
-        'meta'    => ['from' => $from, 'to' => $to, 'gap' => $gap, 'staff' => count($s['rows'])],
+        'meta'    => ['from' => $from, 'to' => $to, 'staff' => count($s['rows'])],
     ]);
 }
