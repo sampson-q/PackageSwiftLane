@@ -3,67 +3,209 @@
  * ============================================================================
  * Staff Productivity — the engine behind the Staff Productivity report.
  *
- * Answers, per staff member and per period: how long were they actually
- * working in the system, how many packages did they register, what else did
- * they touch, and when did they start and finish.
+ * Answers, per staff member and per day: when did they check in, when did they
+ * finish, which stretches of the day were they working and which were they
+ * idle, and what exactly did they do in each stretch (with the shipment ids).
+ *
+ * THE MODEL
+ * ---------
+ * · CHECK-IN is the first package the person created or edited that day
+ *   (setting `checkin_scope` narrows it to created only). Logging in is not a
+ *   check-in — login is login. A day with activity but no package action still
+ *   counts: its check-in is the first recorded activity and is marked as such.
+ * · CHECK-OUT is the end of the last recorded activity that day.
+ * · Between the two, time is split into ACTIVE and IDLE segments. Every
+ *   segment knows its start, end, duration and — for active ones — the actions
+ *   performed inside it and the packages created / edited.
+ * · Activity BEFORE the check-in is reported (count of actions and minutes)
+ *   but is not part of the working window.
  *
  * WHERE THE DATA COMES FROM
  * -------------------------
- * Nothing new is recorded for this report. It reads one unified event stream
- * built from two existing tables:
+ *   · cdb_staff_presence — one row per staff member per minute in which they
+ *     touched the keyboard, mouse or screen in this app. Written by
+ *     dataJs/presence_beacon.js through staff_presence_ping_ajax.php. This is
+ *     the only honest idle signal the system has.
+ *   · cdb_activity_log — every recorded action, from the moment the audit
+ *     trail was deployed. Carries the action text and the shipment id.
+ *   · cdb_order_user_history — package / consolidation / pickup actions back
+ *     to 2022, read strictly BEFORE the activity log's first row (both tables
+ *     get a row on package create, so reading both in full double-counts).
  *
- *   · cdb_order_user_history — 140k+ rows going back to 2022, with a real
- *     datetime and the acting user. Package/consolidation/pickup events only,
- *     and its `action` text is free-form ("create shipment", "Shipment
- *     created", "Updated shipment"), so it is normalised by keyword here.
+ * TWO WAYS OF TELLING ACTIVE FROM IDLE
+ * ------------------------------------
+ * PRESENCE MODE — the day has presence minutes. Active minutes are the
+ * presence minutes plus the minute of every recorded action. A pause with no
+ * input longer than `idle_minutes` (setting) is idle, in full. Shorter pauses
+ * (reading a screen, thinking) are bridged and count as active.
  *
- *   · cdb_activity_log — everything, from the moment the audit trail was
- *     deployed (see helpers/activity_log.php).
+ * GAP MODE — no presence data for the day (before the beacon was deployed).
+ * Only server-side actions are known, so a working block is a run of actions
+ * with no gap longer than `gap_minutes` (setting). This cannot tell "filling a
+ * long form" from "walked away", which is why presence mode exists.
  *
- * Both tables receive a row when a package is created, so reading both in full
- * would double-count. The CUTOVER is the activity log's first row: history is
- * used strictly before it, the activity log strictly from it onwards.
+ * COVERAGE per day: 'presence' | 'log' (post-cutover, gap mode) | 'history'
+ * (pre-cutover, package actions only). Idle is NOT reliable on 'history' days —
+ * a full day of work leaves two marks and everything between reads as idle —
+ * so those days are excluded from every idle figure and shown with a dash.
+ * Never "fix" that by just showing the number; someone could be disciplined
+ * over a gap in our own records.
  *
- * WHAT "ACTIVE HOURS" MEANS
- * -------------------------
- * Nothing in this system sends a heartbeat, so there is no true "logged in for
- * 6h12m" to read. Active hours are RECONSTRUCTED: a person's events are sorted
- * and split into blocks wherever the gap between two consecutive events exceeds
- * CDP_SP_IDLE_GAP minutes. The sum of those blocks is the active time.
- *
- * This measures time spent working, not time with a tab open — somebody who
- * signs in and walks away is not credited. Every screen that shows this number
- * must call it "active", never "attendance".
- *
- * WHAT "IDLE HOURS" MEANS
- * ----------------------
- * The working window is a day's first action to its last. Idle is whatever
- * inside that window was not part of an active block — the breaks between
- * spells of work. Utilisation is active ÷ window.
- *
- * That is the only inactivity this system can honestly report. Time signed in
- * but doing nothing is NOT knowable here: there is no heartbeat and no reliable
- * session end, so nothing records somebody leaving a tab open at six o'clock.
- * Do not add a figure that claims to measure it.
+ * All timestamps are read from the database as strings and turned into unix
+ * time with strtotime() in the process timezone, then formatted back with
+ * date() in the same timezone, so day boundaries match the stored values.
  * ============================================================================
  */
 
 require_once __DIR__ . '/rbac.php';
 
-/** A gap longer than this (minutes) ends an active block. */
-if (!defined('CDP_SP_IDLE_GAP')) {
-    define('CDP_SP_IDLE_GAP', 15);
+/** Credit for a gap-mode block containing a single action, in seconds. */
+if (!defined('CDP_SP_MIN_BLOCK')) {
+    define('CDP_SP_MIN_BLOCK', 60);
+}
+
+/** The beacon may report minutes up to this far in the past (a flush that was delayed). */
+if (!defined('CDP_SP_PING_MAX_AGO')) {
+    define('CDP_SP_PING_MAX_AGO', 30);
+}
+
+// ---------------------------------------------------------------------------
+// Settings
+// ---------------------------------------------------------------------------
+
+/**
+ * The knobs, with their defaults. Mirrored by sql/staff_productivity_v2.sql.
+ *
+ * @return array<string,mixed>
+ */
+function cdp_spSettingDefaults()
+{
+    return [
+        'idle_minutes'   => 5,                 // presence mode: a longer pause is idle
+        'gap_minutes'    => 15,                // gap mode: a longer gap ends a block
+        'checkin_scope'  => 'create_or_edit',  // or 'create_only'
+        'ping_seconds'   => 60,                // beacon interval
+        'beacon_enabled' => 1,
+    ];
+}
+
+function cdp_spSettingsTableReady()
+{
+    static $ready = null;
+    if ($ready !== null) {
+        return $ready;
+    }
+    $ready = false;
+    try {
+        $db = new Conexion;
+        $db->cdp_query("SHOW TABLES LIKE 'cdb_staff_productivity_settings'");
+        $db->cdp_execute();
+        $ready = $db->cdp_rowCount() > 0;
+    } catch (Throwable $e) {
+        $ready = false;
+    }
+    return $ready;
 }
 
 /**
- * Credit for a block containing a single event, in seconds.
+ * Effective settings: defaults overlaid with whatever the table holds.
  *
- * A lone action has a duration of zero by definition (first event == last
- * event), which would report a real piece of work as no time at all. One
- * minute is the smallest honest non-zero credit.
+ * @param bool $fresh Bypass the per-request cache
+ * @return array<string,mixed>
  */
-if (!defined('CDP_SP_MIN_BLOCK')) {
-    define('CDP_SP_MIN_BLOCK', 60);
+function cdp_spSettings($fresh = false)
+{
+    static $cache = null;
+    if ($cache !== null && !$fresh) {
+        return $cache;
+    }
+    $s = cdp_spSettingDefaults();
+    if (cdp_spSettingsTableReady()) {
+        try {
+            $db = new Conexion;
+            $db->cdp_query("SELECT setting_key, setting_value FROM cdb_staff_productivity_settings");
+            $db->cdp_execute();
+            $raw = [];
+            foreach ((array) $db->cdp_registros() as $r) {
+                $raw[(string) $r->setting_key] = (string) $r->setting_value;
+            }
+            $s = array_merge($s, cdp_spCleanSettings($raw, $s));
+        } catch (Throwable $e) {
+            // defaults stand
+        }
+    }
+    $cache = $s;
+    return $cache;
+}
+
+/** One setting, typed. */
+function cdp_spSetting($key)
+{
+    $s = cdp_spSettings();
+    return $s[$key] ?? (cdp_spSettingDefaults()[$key] ?? null);
+}
+
+/**
+ * Validate a set of proposed settings. Unknown keys are dropped, out-of-range
+ * values fall back to the current value, so a bad form post can never leave
+ * the report with an idle threshold of zero.
+ *
+ * @param array      $in
+ * @param array|null $current
+ * @return array<string,mixed> only the keys that were present and valid
+ */
+function cdp_spCleanSettings(array $in, array $current = null)
+{
+    $cur = $current ?: cdp_spSettingDefaults();
+    $out = [];
+
+    $int = function ($key, $min, $max) use ($in, $cur, &$out) {
+        if (!array_key_exists($key, $in)) {
+            return;
+        }
+        $v = (int) $in[$key];
+        $out[$key] = ($v >= $min && $v <= $max) ? $v : (int) $cur[$key];
+    };
+    $int('idle_minutes', 1, 120);
+    $int('gap_minutes', 1, 240);
+    $int('ping_seconds', 15, 600);
+
+    if (array_key_exists('checkin_scope', $in)) {
+        $v = (string) $in['checkin_scope'];
+        $out['checkin_scope'] = in_array($v, ['create_or_edit', 'create_only'], true) ? $v : $cur['checkin_scope'];
+    }
+    if (array_key_exists('beacon_enabled', $in)) {
+        $b = $in['beacon_enabled'];
+        $out['beacon_enabled'] = ($b === true || $b === 1 || (string) $b === '1') ? 1 : 0;
+    }
+    return $out;
+}
+
+/**
+ * Persist settings. Returns the effective settings afterwards.
+ *
+ * @param array $in
+ * @param int   $userId who changed them
+ * @return array<string,mixed>
+ */
+function cdp_spSaveSettings(array $in, $userId)
+{
+    $clean = cdp_spCleanSettings($in, cdp_spSettings());
+    if ($clean && cdp_spSettingsTableReady()) {
+        $db = new Conexion;
+        foreach ($clean as $k => $v) {
+            $db->cdp_query("INSERT INTO cdb_staff_productivity_settings (setting_key, setting_value, updated_at, updated_by)
+                            VALUES (:k, :v, NOW(), :u)
+                            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value),
+                                                    updated_at    = VALUES(updated_at),
+                                                    updated_by    = VALUES(updated_by)");
+            $db->bind(':k', (string) $k);
+            $db->bind(':v', (string) $v);
+            $db->bind(':u', (int) $userId);
+            $db->cdp_execute();
+        }
+    }
+    return cdp_spSettings(true);
 }
 
 // ---------------------------------------------------------------------------
@@ -138,6 +280,145 @@ function cdp_spStaffUsers()
 }
 
 // ---------------------------------------------------------------------------
+// Presence
+// ---------------------------------------------------------------------------
+
+function cdp_spPresenceTableReady()
+{
+    static $ready = null;
+    if ($ready !== null) {
+        return $ready;
+    }
+    $ready = false;
+    try {
+        $db = new Conexion;
+        $db->cdp_query("SHOW TABLES LIKE 'cdb_staff_presence'");
+        $db->cdp_execute();
+        $ready = $db->cdp_rowCount() > 0;
+    } catch (Throwable $e) {
+        $ready = false;
+    }
+    return $ready;
+}
+
+/**
+ * Should this page load the presence beacon? Staff roles only, beacon switched
+ * on, table present. Under "View as" the ORIGINAL operator's role decides.
+ *
+ * @return bool
+ */
+function cdp_spBeaconWanted()
+{
+    if (empty($_SESSION['userid'])) {
+        return false;
+    }
+    $role = (int) ($_SESSION['imp_original_userlevel'] ?? ($_SESSION['userlevel'] ?? 0));
+    if (!in_array($role, cdp_spStaffRoleIds(), true)) {
+        return false;
+    }
+    if ((int) cdp_spSetting('beacon_enabled') !== 1) {
+        return false;
+    }
+    return cdp_spPresenceTableReady();
+}
+
+/**
+ * Store the minutes the beacon reports as active. Offsets are "minutes ago"
+ * relative to the server clock, so a wrong client clock cannot backdate rows.
+ *
+ * @param int    $userId
+ * @param int[]  $agoList 0 = the current minute
+ * @param string $page
+ * @return int minutes written (or already present)
+ */
+function cdp_spRecordPresence($userId, array $agoList, $page = '')
+{
+    $userId = (int) $userId;
+    if ($userId <= 0 || !cdp_spPresenceTableReady()) {
+        return 0;
+    }
+    require_once __DIR__ . '/activity_log.php';
+    $now = new DateTime(cdp_activityNow());
+    $now->setTime((int) $now->format('G'), (int) $now->format('i'), 0);
+
+    $minutes = [];
+    foreach ($agoList as $a) {
+        $a = (int) $a;
+        if ($a < 0 || $a > CDP_SP_PING_MAX_AGO) {
+            continue;
+        }
+        $m = clone $now;
+        if ($a > 0) {
+            $m->modify('-' . $a . ' minutes');
+        }
+        $minutes[$m->format('Y-m-d H:i:s')] = true;
+    }
+    if (!$minutes) {
+        return 0;
+    }
+
+    $page = substr(preg_replace('/[^A-Za-z0-9_.\-]/', '', (string) $page), 0, 80);
+
+    $values = [];
+    $binds  = [];
+    $i = 0;
+    foreach (array_keys($minutes) as $at) {
+        $values[] = "(:u, :m$i, :p)";
+        $binds[":m$i"] = $at;
+        $i++;
+    }
+    try {
+        $db = new Conexion;
+        $db->cdp_query("INSERT IGNORE INTO cdb_staff_presence (user_id, minute_at, page) VALUES " . implode(',', $values));
+        $db->bind(':u', $userId);
+        $db->bind(':p', $page);
+        foreach ($binds as $k => $v) {
+            $db->bind($k, $v);
+        }
+        $db->cdp_execute();
+    } catch (Throwable $e) {
+        error_log('STAFF_PRESENCE_FAIL ' . $e->getMessage());
+        return 0;
+    }
+    return count($minutes);
+}
+
+/**
+ * Presence minutes for a period, as minute-of-day sets.
+ *
+ * @return array<int,array<string,array<int,bool>>> [user id]['Y-m-d'][minute of day] = true
+ */
+function cdp_spPresence($from, $to, array $userIds)
+{
+    if (!$userIds || !cdp_spPresenceTableReady()) {
+        return [];
+    }
+    $in = implode(',', array_map('intval', $userIds));
+    $lo = $from !== '' ? $from . ' 00:00:00' : '1970-01-01 00:00:00';
+    $hi = $to   !== '' ? $to . ' 23:59:59'   : '2999-12-31 23:59:59';
+
+    $out = [];
+    try {
+        $db = new Conexion;
+        $db->cdp_query("SELECT user_id, minute_at FROM cdb_staff_presence
+                        WHERE user_id IN ($in) AND minute_at >= :lo AND minute_at <= :hi
+                        ORDER BY user_id, minute_at");
+        $db->bind(':lo', $lo);
+        $db->bind(':hi', $hi);
+        $db->cdp_execute();
+        foreach ((array) $db->cdp_registros() as $r) {
+            $s   = (string) $r->minute_at;               // 'Y-m-d H:i:s'
+            $day = substr($s, 0, 10);
+            $min = ((int) substr($s, 11, 2)) * 60 + (int) substr($s, 14, 2);
+            $out[(int) $r->user_id][$day][$min] = true;
+        }
+    } catch (Throwable $e) {
+        return [];
+    }
+    return $out;
+}
+
+// ---------------------------------------------------------------------------
 // The event stream
 // ---------------------------------------------------------------------------
 
@@ -172,8 +453,6 @@ function cdp_spCutover()
 /**
  * Normalise cdb_order_user_history's free-text action into a verb + entity.
  *
- * @param string $action
- * @param int    $isConsolidate
  * @return array{verb:string,entity:string}
  */
 function cdp_spClassifyHistory($action, $isConsolidate)
@@ -199,12 +478,7 @@ function cdp_spClassifyHistory($action, $isConsolidate)
     return ['verb' => $verb, 'entity' => $entity];
 }
 
-/**
- * Map an activity-log row's module onto this report's entity vocabulary.
- *
- * @param string $module
- * @return string
- */
+/** Map an activity-log module onto this report's entity vocabulary. */
 function cdp_spEntityForModule($module)
 {
     switch ($module) {
@@ -223,14 +497,14 @@ function cdp_spEntityForModule($module)
 /**
  * The unified event stream for a period and a set of staff.
  *
- * Every event is used for the active-hours reconstruction — including page
- * views, which are the strongest presence signal the system has. Only `create`
- * events on packages are counted as packages added.
+ * Each event: user_id, at (unix), verb, entity, source (history|log), label
+ * (what the person did, in words) and ref (the shipment / consolidation id
+ * when there is one).
  *
  * @param string $from    'Y-m-d' inclusive, '' for no lower bound
  * @param string $to      'Y-m-d' inclusive, '' for no upper bound
  * @param int[]  $userIds Restrict to these staff (empty = all staff)
- * @return array<int,array{at:int,verb:string,entity:string,source:string,user_id:int}>
+ * @return array<int,array>
  */
 function cdp_spEvents($from, $to, array $userIds = [])
 {
@@ -252,7 +526,7 @@ function cdp_spEvents($from, $to, array $userIds = [])
     $histHi = ($cut !== null && $cut < $hi) ? $cut : $hi;
     if ($histHi > $lo) {
         try {
-            $db->cdp_query("SELECT user_id, action, date_history, is_consolidate
+            $db->cdp_query("SELECT user_id, action, date_history, is_consolidate, order_track
                             FROM cdb_order_user_history
                             WHERE user_id IN ($in)
                               AND date_history >= :lo AND date_history < :hi
@@ -262,12 +536,15 @@ function cdp_spEvents($from, $to, array $userIds = [])
             $db->cdp_execute();
             foreach ((array) $db->cdp_registros() as $r) {
                 $c = cdp_spClassifyHistory($r->action, $r->is_consolidate);
+                $track = trim((string) $r->order_track);
                 $events[] = [
                     'user_id' => (int) $r->user_id,
                     'at'      => strtotime((string) $r->date_history),
                     'verb'    => $c['verb'],
                     'entity'  => $c['entity'],
                     'source'  => 'history',
+                    'label'   => ucfirst(trim((string) $r->action)) . ($track !== '' ? ' ' . $track : ''),
+                    'ref'     => $track,
                 ];
             }
         } catch (Throwable $e) {
@@ -280,7 +557,7 @@ function cdp_spEvents($from, $to, array $userIds = [])
         $logLo = ($cut > $lo) ? $cut : $lo;
         if ($logLo <= $hi) {
             try {
-                $db->cdp_query("SELECT user_id, verb, module, created_at
+                $db->cdp_query("SELECT user_id, verb, module, created_at, summary, action_label, entity_label
                                 FROM cdb_activity_log
                                 WHERE user_id IN ($in)
                                   AND created_at >= :lo AND created_at <= :hi
@@ -289,12 +566,18 @@ function cdp_spEvents($from, $to, array $userIds = [])
                 $db->bind(':hi', $hi);
                 $db->cdp_execute();
                 foreach ((array) $db->cdp_registros() as $r) {
+                    $label = trim((string) $r->summary);
+                    if ($label === '') {
+                        $label = (string) $r->action_label;
+                    }
                     $events[] = [
                         'user_id' => (int) $r->user_id,
                         'at'      => strtotime((string) $r->created_at),
                         'verb'    => (string) $r->verb,
                         'entity'  => cdp_spEntityForModule((string) $r->module),
                         'source'  => 'log',
+                        'label'   => $label,
+                        'ref'     => trim((string) $r->entity_label),
                     ];
                 }
             } catch (Throwable $e) {
@@ -303,7 +586,6 @@ function cdp_spEvents($from, $to, array $userIds = [])
         }
     }
 
-    // One ordering for the whole stream, since the two halves were read apart.
     usort($events, function ($a, $b) {
         if ($a['user_id'] !== $b['user_id']) {
             return $a['user_id'] - $b['user_id'];
@@ -315,431 +597,551 @@ function cdp_spEvents($from, $to, array $userIds = [])
 }
 
 // ---------------------------------------------------------------------------
-// Reconstruction
+// Reconstruction — one person, one day
 // ---------------------------------------------------------------------------
 
-/**
- * Split each person's events into active blocks.
- *
- * A block ends when the next event is more than $gapMinutes away. A block is
- * attributed to the calendar date of its FIRST event, so one that runs past
- * midnight counts against the day it started — rare, and the alternative
- * (splitting it) reports two part-days nobody worked.
- *
- * @param array $events From cdp_spEvents()
- * @param int   $gapMinutes
- * @return array<int,array<int,array{start:int,end:int,seconds:int,events:int}>> keyed by user id
- */
-function cdp_spSessionize(array $events, $gapMinutes = null)
+/** Is this event a package action that starts the working day? */
+function cdp_spIsCheckInEvent(array $e, $scope)
 {
-    $gap = (int) ($gapMinutes ?: CDP_SP_IDLE_GAP) * 60;
-    $out = [];
-
-    $curUser = null;
-    $block = null;
-
-    $close = function () use (&$block, &$curUser, &$out) {
-        if ($block === null) {
-            return;
-        }
-        $block['seconds'] = max($block['end'] - $block['start'], CDP_SP_MIN_BLOCK);
-        $out[$curUser][] = $block;
-        $block = null;
-    };
-
-    foreach ($events as $e) {
-        if ($e['user_id'] !== $curUser) {
-            $close();
-            $curUser = $e['user_id'];
-            if (!isset($out[$curUser])) {
-                $out[$curUser] = [];
-            }
-        }
-
-        if ($block === null) {
-            $block = ['start' => $e['at'], 'end' => $e['at'], 'events' => 1];
-            continue;
-        }
-
-        if (($e['at'] - $block['end']) > $gap) {
-            $close();
-            $block = ['start' => $e['at'], 'end' => $e['at'], 'events' => 1];
-            continue;
-        }
-
-        $block['end'] = $e['at'];
-        $block['events']++;
+    if ($e['entity'] !== 'package') {
+        return false;
     }
-    $close();
-
-    return $out;
+    if ($e['verb'] === 'create') {
+        return true;
+    }
+    return $scope === 'create_or_edit' && ($e['verb'] === 'update' || $e['verb'] === 'status');
 }
 
 /**
- * Everything the report shows, per staff member, for one period.
+ * Build one staff member's day: check-in, check-out, active/idle segments with
+ * the actions inside them, package ids, hour distribution.
  *
- * @param string $from
- * @param string $to
- * @param int[]  $userIds
- * @param int    $gapMinutes
- * @return array{rows:array,totals:array,by_day:array,by_hour:array,cutover:?string}
+ * @param int         $uid
+ * @param string      $day      'Y-m-d'
+ * @param array       $events   that person's events on that day (any order)
+ * @param array       $presence minute-of-day => true, may be empty
+ * @param array       $s        settings
+ * @param string|null $cutDay   'Y-m-d' of the activity log's first row
+ * @return array|null null when there is nothing at all to report
  */
-function cdp_spSummary($from, $to, array $userIds = [], $gapMinutes = null)
+function cdp_spBuildDay($uid, $day, array $events, array $presence, array $s, $cutDay)
 {
-    $staff  = cdp_spStaffUsers();
-    $events = cdp_spEvents($from, $to, $userIds);
-    $blocks = cdp_spSessionize($events, $gapMinutes);
+    $dayStart = strtotime($day . ' 00:00:00');
+    $idleMin  = max(1, (int) $s['idle_minutes']);
+    $gapSec   = max(1, (int) $s['gap_minutes']) * 60;
+    $scope    = (string) $s['checkin_scope'];
 
-    // Per-user counters.
-    $acc = [];
-    $init = function ($uid) use (&$acc, $staff) {
-        if (isset($acc[$uid])) {
-            return;
+    usort($events, function ($a, $b) { return $a['at'] - $b['at']; });
+
+    $hasPresence = !empty($presence);
+    $coverage = $hasPresence ? 'presence' : (($cutDay !== null && $day >= $cutDay) ? 'log' : 'history');
+
+    // ── Check-in ─────────────────────────────────────────────────────────────
+    $checkIn = null;
+    $kind = 'package';
+    $ref = '';
+    foreach ($events as $e) {
+        if (cdp_spIsCheckInEvent($e, $scope)) {
+            $checkIn = $e['at'];
+            $ref = $e['ref'];
+            break;
         }
-        $u = $staff[$uid] ?? null;
-        $acc[$uid] = [
-            'user_id'        => $uid,
-            'name'           => $u ? $u->display_name : ('User #' . $uid),
-            'username'       => $u ? (string) $u->username : '',
-            'role'           => $u ? (string) $u->role_name : '',
-            'active'         => $u ? (int) $u->active : 1,
-            'seconds'        => 0,
-            'blocks'         => 0,
-            'events'         => 0,
-            'packages_added' => 0,
-            'packages_edited'=> 0,
-            'deletions'      => 0,
-            'consolidations' => 0,
-            'pickups'        => 0,
-            'logins'         => 0,
-            'first_at'       => null,
-            'last_at'        => null,
-            'days'           => [],
-            'daymm'          => [],   // day => [first event ts, last event ts]
-            'src_history'    => 0,
-            'src_log'        => 0,
-        ];
-    };
+    }
+    if ($checkIn === null) {
+        $cands = [];
+        if ($events) {
+            $cands[] = $events[0]['at'];
+        }
+        if ($hasPresence) {
+            $cands[] = $dayStart + min(array_keys($presence)) * 60;
+        }
+        if (!$cands) {
+            return null;
+        }
+        $checkIn = min($cands);
+        $kind = 'activity';
+    }
 
-    // Day and hour-of-day distributions, across the whole selection.
-    $byDay  = [];   // 'Y-m-d' => ['seconds'=>, 'packages'=>, 'events'=>]
-    $byHour = array_fill(0, 24, ['seconds' => 0, 'packages' => 0, 'events' => 0]);
+    // ── Active blocks ────────────────────────────────────────────────────────
+    $blocks = [];      // [['start'=>ts,'end'=>ts], ...]
+    $preMinutes = 0;
+
+    if ($hasPresence) {
+        $mode = 'presence';
+        $checkInMin = intdiv($checkIn - $dayStart, 60);
+        $mins = $presence;
+        foreach ($events as $e) {
+            $m = intdiv($e['at'] - $dayStart, 60);
+            if ($m >= 0 && $m < 1440) {
+                $mins[$m] = true;
+            }
+        }
+        ksort($mins);
+
+        $cur = null;
+        foreach ($mins as $m => $_) {
+            if ($m < $checkInMin) {
+                $preMinutes++;
+                continue;
+            }
+            if ($cur === null) {
+                $cur = ['s' => $m, 'e' => $m];
+                continue;
+            }
+            // Minutes with no input strictly between two active minutes.
+            if (($m - $cur['e'] - 1) > $idleMin) {
+                $blocks[] = $cur;
+                $cur = ['s' => $m, 'e' => $m];
+                continue;
+            }
+            $cur['e'] = $m;
+        }
+        if ($cur !== null) {
+            $blocks[] = $cur;
+        }
+        foreach ($blocks as $i => $b) {
+            $blocks[$i] = ['start' => $dayStart + $b['s'] * 60, 'end' => $dayStart + ($b['e'] + 1) * 60];
+        }
+        if ($blocks) {
+            // The check-in minute started before the check-in action itself.
+            $blocks[0]['start'] = max($blocks[0]['start'], $checkIn);
+        }
+    } else {
+        $mode = 'gap';
+        $cur = null;
+        foreach ($events as $e) {
+            if ($e['at'] < $checkIn) {
+                continue;
+            }
+            if ($cur === null) {
+                $cur = ['start' => $e['at'], 'end' => $e['at']];
+                continue;
+            }
+            if (($e['at'] - $cur['end']) > $gapSec) {
+                $blocks[] = $cur;
+                $cur = ['start' => $e['at'], 'end' => $e['at']];
+                continue;
+            }
+            $cur['end'] = $e['at'];
+        }
+        if ($cur !== null) {
+            $blocks[] = $cur;
+        }
+        foreach ($blocks as $i => $b) {
+            if ($b['end'] - $b['start'] < CDP_SP_MIN_BLOCK) {
+                $blocks[$i]['end'] = $b['start'] + CDP_SP_MIN_BLOCK;
+            }
+        }
+    }
+
+    $checkOut = $blocks ? $blocks[count($blocks) - 1]['end'] : $checkIn;
+
+    // ── Segments: active / idle / active / … ─────────────────────────────────
+    $segments = [];
+    $activeSec = 0;
+    $n = count($blocks);
+    for ($i = 0; $i < $n; $i++) {
+        $b = $blocks[$i];
+        $sec = max(0, $b['end'] - $b['start']);
+        $activeSec += $sec;
+        $segments[] = [
+            'type' => 'active', 'start' => $b['start'], 'end' => $b['end'], 'seconds' => $sec,
+            'events' => 0, 'created' => [], 'edited' => [], 'other' => 0, 'actions' => [],
+        ];
+        if ($i < $n - 1) {
+            $nx = $blocks[$i + 1];
+            $segments[] = [
+                'type' => 'idle', 'start' => $b['end'], 'end' => $nx['start'],
+                'seconds' => max(0, $nx['start'] - $b['end']),
+            ];
+        }
+    }
+
+    // ── Place every action in its segment; tally the day ────────────────────
+    $created = [];       // unique shipment ids created today
+    $edited  = [];       // unique shipment ids edited today
+    $createdCount = 0;   // create actions (an id-less row still counts one)
+    $editedCount  = 0;
+    $tally = ['consolidations' => 0, 'pickups' => 0, 'deletions' => 0, 'logins' => 0, 'pre' => 0];
+    $hourPackages = array_fill(0, 24, 0);
+    $p = 0;
+    $segCount = count($segments);
 
     foreach ($events as $e) {
-        $uid = $e['user_id'];
-        $init($uid);
-        $a = &$acc[$uid];
+        $isPkg    = $e['entity'] === 'package';
+        $isCreate = $isPkg && $e['verb'] === 'create';
+        $isEdit   = $isPkg && ($e['verb'] === 'update' || $e['verb'] === 'status');
 
-        $a['events']++;
-        if ($e['source'] === 'log') {
-            $a['src_log']++;
-        } else {
-            $a['src_history']++;
-        }
-        $a['first_at'] = $a['first_at'] === null ? $e['at'] : min($a['first_at'], $e['at']);
-        $a['last_at']  = $a['last_at']  === null ? $e['at'] : max($a['last_at'],  $e['at']);
-
-        $day = date('Y-m-d', $e['at']);
-        $hr  = (int) date('G', $e['at']);
-        $a['days'][$day] = true;
-        if (!isset($a['daymm'][$day])) {
-            $a['daymm'][$day] = [$e['at'], $e['at']];
-        } else {
-            if ($e['at'] < $a['daymm'][$day][0]) { $a['daymm'][$day][0] = $e['at']; }
-            if ($e['at'] > $a['daymm'][$day][1]) { $a['daymm'][$day][1] = $e['at']; }
-        }
-
-        if (!isset($byDay[$day])) {
-            $byDay[$day] = ['seconds' => 0, 'span' => 0, 'packages' => 0, 'events' => 0];
-        }
-        $byDay[$day]['events']++;
-        $byHour[$hr]['events']++;
-
-        if ($e['verb'] === 'login') {
-            $a['logins']++;
-        }
-
-        if ($e['entity'] === 'package') {
-            if ($e['verb'] === 'create') {
-                $a['packages_added']++;
-                $byDay[$day]['packages']++;
-                $byHour[$hr]['packages']++;
-            } elseif ($e['verb'] === 'update' || $e['verb'] === 'status') {
-                $a['packages_edited']++;
-            } elseif ($e['verb'] === 'delete') {
-                $a['deletions']++;
+        if ($isCreate) {
+            if ($e['ref'] === '' || !in_array($e['ref'], $created, true)) {
+                $createdCount++;
+                if ($e['ref'] !== '') {
+                    $created[] = $e['ref'];
+                }
             }
+            $hourPackages[(int) date('G', $e['at'])]++;
+        } elseif ($isEdit) {
+            if ($e['ref'] === '' || !in_array($e['ref'], $edited, true)) {
+                $editedCount++;
+                if ($e['ref'] !== '') {
+                    $edited[] = $e['ref'];
+                }
+            }
+        } elseif ($isPkg && $e['verb'] === 'delete') {
+            $tally['deletions']++;
         } elseif ($e['entity'] === 'consolidation') {
-            $a['consolidations']++;
+            $tally['consolidations']++;
         } elseif ($e['entity'] === 'pickup') {
-            $a['pickups']++;
+            $tally['pickups']++;
+        }
+        if ($e['verb'] === 'login') {
+            $tally['logins']++;
         }
 
-        unset($a);
-    }
-
-    // Active time, from the reconstructed blocks.
-    foreach ($blocks as $uid => $list) {
-        $init($uid);
-        foreach ($list as $b) {
-            $acc[$uid]['seconds'] += $b['seconds'];
-            $acc[$uid]['blocks']++;
-
-            $day = date('Y-m-d', $b['start']);
-            if (!isset($byDay[$day])) {
-                $byDay[$day] = ['seconds' => 0, 'span' => 0, 'packages' => 0, 'events' => 0];
+        if ($e['at'] < $checkIn) {
+            $tally['pre']++;
+            continue;
+        }
+        while ($p < $segCount && ($segments[$p]['type'] === 'idle' || $segments[$p]['end'] < $e['at'])) {
+            $p++;
+        }
+        if ($p >= $segCount) {
+            break; // cannot happen: every post-check-in action sits inside a block
+        }
+        $segments[$p]['events']++;
+        if ($isCreate) {
+            if ($e['ref'] !== '' && !in_array($e['ref'], $segments[$p]['created'], true)) {
+                $segments[$p]['created'][] = $e['ref'];
             }
-            $byDay[$day]['seconds'] += $b['seconds'];
-            $byHour[(int) date('G', $b['start'])]['seconds'] += $b['seconds'];
-        }
-    }
-
-    // Each day's working window across all staff shown, so the day chart can
-    // stack active against idle.
-    foreach ($acc as $a) {
-        foreach ($a['daymm'] as $day => $mm) {
-            if (!isset($byDay[$day])) {
-                $byDay[$day] = ['seconds' => 0, 'span' => 0, 'packages' => 0, 'events' => 0];
+        } elseif ($isEdit) {
+            if ($e['ref'] !== '' && !in_array($e['ref'], $segments[$p]['edited'], true)) {
+                $segments[$p]['edited'][] = $e['ref'];
             }
-            $byDay[$day]['span'] += max(0, $mm[1] - $mm[0]);
+        } else {
+            $segments[$p]['other']++;
+        }
+        $segments[$p]['actions'][] = [
+            'at'     => $e['at'],
+            'time'   => date('H:i:s', $e['at']),
+            'label'  => $e['label'],
+            'ref'    => $e['ref'],
+            'verb'   => $e['verb'],
+            'entity' => $e['entity'],
+            'source' => $e['source'],
+        ];
+    }
+
+    // ── Hour distribution of active time ────────────────────────────────────
+    $hourSec = array_fill(0, 24, 0);
+    foreach ($segments as $seg) {
+        if ($seg['type'] !== 'active') {
+            continue;
+        }
+        $t = $seg['start'];
+        while ($t < $seg['end']) {
+            $h = (int) date('G', $t);
+            $hourEnd = strtotime(date('Y-m-d H:00:00', $t)) + 3600;
+            $chunk = min($seg['end'], $hourEnd) - $t;
+            if ($chunk <= 0) {
+                break;
+            }
+            $hourSec[$h] += $chunk;
+            $t += $chunk;
         }
     }
-    foreach ($byDay as $day => $v) {
-        if ($v['seconds'] > $v['span']) {
-            $byDay[$day]['span'] = $v['seconds'];
-        }
+
+    // Presentation fields on the segments.
+    foreach ($segments as $i => $seg) {
+        $segments[$i]['from']  = date('H:i', $seg['start']);
+        $segments[$i]['to']    = date('H:i', $seg['end']);
+        $segments[$i]['label'] = cdp_spDuration($seg['seconds']);
     }
 
-    // Shape the rows.
-    $rows = [];
-    foreach ($acc as $uid => $a) {
-        $days = count($a['days']);
+    $window = max(0, $checkOut - $checkIn);
+    if ($activeSec > $window) {
+        $window = $activeSec; // a one-action day: the window cannot be shorter than the work in it
+    }
+    $idle = max(0, $window - $activeSec);
 
-        // The working window: for each day, first action to last action. Idle
-        // time is whatever inside that window was not part of an active block —
-        // the breaks between spells of work.
-        //
-        // This is the ONLY inactivity the system can honestly report. Time
-        // signed in but doing nothing is not knowable: there is no heartbeat
-        // and no reliable session end, so nothing records someone leaving a tab
-        // open. Anything beyond the window would be invented.
-        $span = 0;
-        foreach ($a['daymm'] as $mm) {
-            $span += max(0, $mm[1] - $mm[0]);
-        }
-        // A day with a single action has a zero-length window but is credited
-        // CDP_SP_MIN_BLOCK of active time, which would make idle negative.
-        // The window can never be shorter than the work inside it.
-        if ($a['seconds'] > $span) {
-            $span = $a['seconds'];
-        }
-        $idle = max(0, $span - $a['seconds']);
+    return [
+        'date'                => $day,
+        'weekday'             => date('D', $dayStart),
+        'user_id'             => (int) $uid,
+        'coverage'            => $coverage,
+        'mode'                => $mode,
+        'idle_reliable'       => $coverage !== 'history',
+        'check_in'            => $checkIn,
+        'check_in_time'       => date('H:i', $checkIn),
+        'check_in_kind'       => $kind,
+        'check_in_ref'        => $ref,
+        'check_out'           => $checkOut,
+        'check_out_time'      => date('H:i', $checkOut),
+        'window_seconds'      => $window,
+        'active_seconds'      => $activeSec,
+        'idle_seconds'        => $idle,
+        'utilisation'         => $window > 0 ? round(($activeSec / $window) * 100, 1) : 0.0,
+        'blocks'              => $n,
+        'segments'            => $segments,
+        'packages_created'    => $created,
+        'packages_edited'     => $edited,
+        'created_count'       => $createdCount,
+        'edited_count'        => $editedCount,
+        'consolidations'      => $tally['consolidations'],
+        'pickups'             => $tally['pickups'],
+        'deletions'           => $tally['deletions'],
+        'logins'              => $tally['logins'],
+        'events'              => count($events),
+        'pre_checkin_events'  => $tally['pre'],
+        'pre_checkin_minutes' => $preMinutes,
+        'hour_seconds'        => $hourSec,
+        'hour_packages'       => $hourPackages,
+    ];
+}
 
-        // How complete is this row? Before the activity log existed the only
-        // events on record are package/consolidation/pickup actions — no page
-        // views, no logins — so active hours for that period are understated,
-        // sometimes badly (a person who registered two packages in a day shows
-        // as two minutes). The row says so rather than leaving the reader to
-        // infer it from a banner.
-        if ($a['src_history'] === 0) {
+/**
+ * Every (staff member, day) in the period.
+ *
+ * @return array<int,array<string,array>> [user id]['Y-m-d'] => day, days ascending
+ */
+function cdp_spBuildDays($from, $to, array $userIds = [])
+{
+    $staff = cdp_spStaffUsers();
+    $ids = $userIds ? array_values(array_intersect($userIds, array_keys($staff))) : array_keys($staff);
+    if (!$ids) {
+        return [];
+    }
+
+    $events   = cdp_spEvents($from, $to, $ids);
+    $presence = cdp_spPresence($from, $to, $ids);
+    $s        = cdp_spSettings();
+    $cut      = cdp_spCutover();
+    $cutDay   = $cut !== null ? substr($cut, 0, 10) : null;
+
+    $byUD = [];
+    foreach ($events as $e) {
+        $byUD[$e['user_id']][date('Y-m-d', $e['at'])][] = $e;
+    }
+    unset($events);
+
+    $out = [];
+    $uids = array_unique(array_merge(array_keys($byUD), array_keys($presence)));
+    foreach ($uids as $uid) {
+        $days = array_unique(array_merge(array_keys($byUD[$uid] ?? []), array_keys($presence[$uid] ?? [])));
+        sort($days);
+        foreach ($days as $day) {
+            $model = cdp_spBuildDay($uid, $day, $byUD[$uid][$day] ?? [], $presence[$uid][$day] ?? [], $s, $cutDay);
+            if ($model !== null) {
+                $out[$uid][$day] = $model;
+            }
+        }
+    }
+    return $out;
+}
+
+// ---------------------------------------------------------------------------
+// Aggregates
+// ---------------------------------------------------------------------------
+
+/**
+ * Everything the report page shows, per staff member, for one period.
+ *
+ * Idle, window and utilisation are built ONLY from days whose idle figure is
+ * reliable; active time and package counts span every day.
+ *
+ * @return array{rows:array,totals:array,by_day:array,by_hour:array,heat:array,cutover:?string,settings:array}
+ */
+function cdp_spSummary($from, $to, array $userIds = [])
+{
+    $staff = cdp_spStaffUsers();
+    $all   = cdp_spBuildDays($from, $to, $userIds);
+
+    $rows   = [];
+    $byDay  = [];
+    $byHour = array_fill(0, 24, ['seconds' => 0, 'packages' => 0, 'events' => 0]);
+    $heat   = [];
+
+    foreach ($all as $uid => $days) {
+        $u = $staff[$uid] ?? null;
+        $a = [
+            'active' => 0, 'rel_active' => 0, 'rel_window' => 0, 'idle_days' => 0,
+            'blocks' => 0, 'events' => 0, 'created' => 0, 'edited' => 0, 'deletions' => 0,
+            'consolidations' => 0, 'pickups' => 0, 'logins' => 0, 'checkins' => 0,
+            'first' => null, 'last' => null,
+            'presence_days' => 0, 'log_days' => 0, 'history_days' => 0,
+        ];
+
+        foreach ($days as $day => $d) {
+            $a['active'] += $d['active_seconds'];
+            if ($d['idle_reliable']) {
+                $a['rel_active'] += $d['active_seconds'];
+                $a['rel_window'] += $d['window_seconds'];
+                $a['idle_days']++;
+            }
+            $a['blocks']         += $d['blocks'];
+            $a['events']         += $d['events'];
+            $a['created']        += $d['created_count'];
+            $a['edited']         += $d['edited_count'];
+            $a['deletions']      += $d['deletions'];
+            $a['consolidations'] += $d['consolidations'];
+            $a['pickups']        += $d['pickups'];
+            $a['logins']         += $d['logins'];
+            if ($d['check_in_kind'] === 'package') {
+                $a['checkins']++;
+            }
+            $a['first'] = $a['first'] === null ? $d['check_in'] : min($a['first'], $d['check_in']);
+            $a['last']  = $a['last']  === null ? $d['check_out'] : max($a['last'], $d['check_out']);
+            $a[$d['coverage'] . '_days']++;
+
+            if (!isset($byDay[$day])) {
+                $byDay[$day] = ['seconds' => 0, 'rel_seconds' => 0, 'span' => 0, 'packages' => 0, 'events' => 0, 'staff' => 0];
+            }
+            $byDay[$day]['seconds']  += $d['active_seconds'];
+            $byDay[$day]['packages'] += $d['created_count'];
+            $byDay[$day]['events']   += $d['events'];
+            $byDay[$day]['staff']++;
+            if ($d['idle_reliable']) {
+                $byDay[$day]['rel_seconds'] += $d['active_seconds'];
+                $byDay[$day]['span']        += $d['window_seconds'];
+            }
+            if (!isset($heat[$day])) {
+                $heat[$day] = array_fill(0, 24, 0);
+            }
+            for ($h = 0; $h < 24; $h++) {
+                $byHour[$h]['seconds']  += $d['hour_seconds'][$h];
+                $byHour[$h]['packages'] += $d['hour_packages'][$h];
+                $heat[$day][$h]         += $d['hour_seconds'][$h];
+            }
+            foreach ($d['segments'] as $seg) {
+                if ($seg['type'] === 'active') {
+                    foreach ($seg['actions'] as $act) {
+                        $byHour[(int) date('G', $act['at'])]['events']++;
+                    }
+                }
+            }
+        }
+
+        $dayCount = count($days);
+        if ($a['history_days'] === 0 && $a['presence_days'] === $dayCount) {
+            $coverage = 'presence';
+        } elseif ($a['history_days'] === 0) {
             $coverage = 'full';
-        } elseif ($a['src_log'] === 0) {
+        } elseif ($a['presence_days'] + $a['log_days'] === 0) {
             $coverage = 'partial';
         } else {
             $coverage = 'mixed';
         }
-
-        // Idle is only meaningful when the working window is real. Before the
-        // activity log existed the only events recorded are package actions, so
-        // a full day's work leaves two marks and the window between them reads
-        // as hours of idleness. That is an artifact of missing data, not a
-        // finding about the person — so the figure is computed but marked
-        // unreliable, and the report shows nothing rather than a number that
-        // would get somebody blamed for a gap in our own records.
-        $idleReliable = ($coverage === 'full');
+        $idle = max(0, $a['rel_window'] - $a['rel_active']);
 
         $rows[] = [
+            'user_id'         => (int) $uid,
+            'name'            => $u ? $u->display_name : ('User #' . $uid),
+            'username'        => $u ? (string) $u->username : '',
+            'role'            => $u ? (string) $u->role_name : '',
+            'is_active'       => $u ? (int) $u->active : 1,
             'coverage'        => $coverage,
-            'idle_reliable'   => $idleReliable,
-            'events_history'  => $a['src_history'],
-            'events_log'      => $a['src_log'],
-            'user_id'         => $uid,
-            'name'            => $a['name'],
-            'username'        => $a['username'],
-            'role'            => $a['role'],
-            'is_active'       => $a['active'],
-            'active_seconds'  => $a['seconds'],
-            'active_hours'    => round($a['seconds'] / 3600, 2),
-            'span_seconds'    => $span,
-            'span_hours'      => round($span / 3600, 2),
+            'presence_days'   => $a['presence_days'],
+            'log_days'        => $a['log_days'],
+            'history_days'    => $a['history_days'],
+            'idle_reliable'   => $a['idle_days'] > 0,
+            'idle_days'       => $a['idle_days'],
+            'active_seconds'  => $a['active'],
+            'active_hours'    => round($a['active'] / 3600, 2),
+            'rel_active_seconds' => $a['rel_active'],
+            'span_seconds'    => $a['rel_window'],
+            'span_hours'      => round($a['rel_window'] / 3600, 2),
             'idle_seconds'    => $idle,
             'idle_hours'      => round($idle / 3600, 2),
-            'utilisation'     => $span > 0 ? round(($a['seconds'] / $span) * 100, 1) : 0.0,
+            'utilisation'     => $a['rel_window'] > 0 ? round(($a['rel_active'] / $a['rel_window']) * 100, 1) : 0.0,
             'blocks'          => $a['blocks'],
-            'days_worked'     => $days,
-            'avg_hours_day'   => $days > 0 ? round(($a['seconds'] / 3600) / $days, 2) : 0.0,
+            'days_worked'     => $dayCount,
+            'checkins'        => $a['checkins'],
+            'avg_hours_day'   => $dayCount > 0 ? round(($a['active'] / 3600) / $dayCount, 2) : 0.0,
             'events'          => $a['events'],
-            'packages_added'  => $a['packages_added'],
-            'packages_edited' => $a['packages_edited'],
+            'packages_added'  => $a['created'],
+            'packages_edited' => $a['edited'],
             'deletions'       => $a['deletions'],
             'consolidations'  => $a['consolidations'],
             'pickups'         => $a['pickups'],
             'logins'          => $a['logins'],
-            'first_at'        => $a['first_at'] ? date('Y-m-d H:i', $a['first_at']) : '',
-            'last_at'         => $a['last_at']  ? date('Y-m-d H:i', $a['last_at'])  : '',
-            'per_hour'        => $a['seconds'] > 0
-                ? round($a['packages_added'] / ($a['seconds'] / 3600), 2)
-                : 0.0,
+            'first_at'        => $a['first'] ? date('Y-m-d H:i', $a['first']) : '',
+            'last_at'         => $a['last']  ? date('Y-m-d H:i', $a['last'])  : '',
+            'per_hour'        => $a['active'] > 0 ? round($a['created'] / ($a['active'] / 3600), 2) : 0.0,
         ];
     }
 
     usort($rows, function ($a, $b) {
         return $b['active_seconds'] <=> $a['active_seconds'];
     });
-
     ksort($byDay);
+    ksort($heat);
 
-    $totalActive = array_sum(array_column($rows, 'active_seconds'));
-
-    // The idle total is built ONLY from rows whose window is trustworthy;
-    // mixing in the rest would produce a headline figure made mostly of gaps in
-    // our own recording. `idle_rows` says how many of the staff it covers.
     $relActive = 0;
     $relSpan   = 0;
     $relRows   = 0;
     foreach ($rows as $r) {
-        if (!empty($r['idle_reliable'])) {
-            $relActive += $r['active_seconds'];
+        if ($r['idle_reliable']) {
+            $relActive += $r['rel_active_seconds'];
             $relSpan   += $r['span_seconds'];
             $relRows++;
         }
     }
 
     $totals = [
-        'staff'          => count($rows),
-        'active_hours'   => round($totalActive / 3600, 2),
-        'span_hours'     => round($relSpan / 3600, 2),
-        'idle_hours'     => round(max(0, $relSpan - $relActive) / 3600, 2),
-        'utilisation'    => $relSpan > 0 ? round(($relActive / $relSpan) * 100, 1) : 0.0,
-        'idle_rows'      => $relRows,
-        'packages_added' => array_sum(array_column($rows, 'packages_added')),
-        'packages_edited'=> array_sum(array_column($rows, 'packages_edited')),
-        'events'         => array_sum(array_column($rows, 'events')),
-        'days_worked'    => count($byDay),
+        'staff'           => count($rows),
+        'active_hours'    => round(array_sum(array_column($rows, 'active_seconds')) / 3600, 2),
+        'span_hours'      => round($relSpan / 3600, 2),
+        'idle_hours'      => round(max(0, $relSpan - $relActive) / 3600, 2),
+        'utilisation'     => $relSpan > 0 ? round(($relActive / $relSpan) * 100, 1) : 0.0,
+        'idle_rows'       => $relRows,
+        'packages_added'  => array_sum(array_column($rows, 'packages_added')),
+        'packages_edited' => array_sum(array_column($rows, 'packages_edited')),
+        'checkins'        => array_sum(array_column($rows, 'checkins')),
+        'staff_days'      => array_sum(array_column($rows, 'days_worked')),
+        'events'          => array_sum(array_column($rows, 'events')),
+        'days_worked'     => count($byDay),
     ];
     $totals['per_hour'] = $totals['active_hours'] > 0
         ? round($totals['packages_added'] / $totals['active_hours'], 2)
         : 0.0;
 
+    $heatOut = [];
+    foreach ($heat as $day => $hours) {
+        $heatOut[] = [
+            'date'    => $day,
+            'minutes' => array_map(function ($sec) { return (int) round($sec / 60); }, $hours),
+        ];
+    }
+
     return [
-        'rows'    => $rows,
-        'totals'  => $totals,
-        'by_day'  => $byDay,
-        'by_hour' => $byHour,
-        'cutover' => cdp_spCutover(),
+        'rows'     => $rows,
+        'totals'   => $totals,
+        'by_day'   => $byDay,
+        'by_hour'  => $byHour,
+        'heat'     => $heatOut,
+        'cutover'  => cdp_spCutover(),
+        'settings' => cdp_spSettings(),
     ];
 }
 
 /**
- * One staff member's day-by-day detail: the working blocks of each day, with
- * what they did in them.
+ * One staff member's days, newest first.
  *
  * @return array<int,array>
  */
-function cdp_spDailyDetail($userId, $from, $to, $gapMinutes = null)
+function cdp_spDailyDetail($userId, $from, $to)
 {
-    $events = cdp_spEvents($from, $to, [(int) $userId]);
-    $blocks = cdp_spSessionize($events, $gapMinutes)[(int) $userId] ?? [];
-
-    // Packages added per day, so the day rows carry output as well as time.
-    $perDay = [];
-    foreach ($events as $e) {
-        $d = date('Y-m-d', $e['at']);
-        if (!isset($perDay[$d])) {
-            $perDay[$d] = ['packages' => 0, 'edits' => 0, 'events' => 0, 'logins' => 0];
-        }
-        $perDay[$d]['events']++;
-        if ($e['verb'] === 'login') {
-            $perDay[$d]['logins']++;
-        }
-        if ($e['entity'] === 'package') {
-            if ($e['verb'] === 'create') {
-                $perDay[$d]['packages']++;
-            } elseif ($e['verb'] === 'update' || $e['verb'] === 'status') {
-                $perDay[$d]['edits']++;
-            }
-        }
-    }
-
-    // A day's window is its first to its last event, which is not the same as
-    // its first to last active BLOCK — an event can fall outside any block only
-    // at the edges, so they usually agree, but the window is what idle is
-    // measured against.
-    $window = [];
-    foreach ($events as $e) {
-        $d = date('Y-m-d', $e['at']);
-        if (!isset($window[$d])) {
-            $window[$d] = [$e['at'], $e['at']];
-        } else {
-            if ($e['at'] < $window[$d][0]) { $window[$d][0] = $e['at']; }
-            if ($e['at'] > $window[$d][1]) { $window[$d][1] = $e['at']; }
-        }
-    }
-
-    $days = [];
-    foreach ($blocks as $b) {
-        $d = date('Y-m-d', $b['start']);
-        if (!isset($days[$d])) {
-            $days[$d] = [
-                'date'    => $d,
-                'seconds' => 0,
-                'blocks'  => [],
-                'first'   => $b['start'],
-                'last'    => $b['end'],
-            ];
-        }
-        $days[$d]['seconds'] += $b['seconds'];
-        $days[$d]['first'] = min($days[$d]['first'], $b['start']);
-        $days[$d]['last']  = max($days[$d]['last'], $b['end']);
-        $days[$d]['blocks'][] = [
-            'from'    => date('H:i', $b['start']),
-            'to'      => date('H:i', $b['end']),
-            'minutes' => (int) round($b['seconds'] / 60),
-            'events'  => $b['events'],
-        ];
-    }
-
+    $days = cdp_spBuildDays($from, $to, [(int) $userId])[(int) $userId] ?? [];
     krsort($days);
+    return array_values($days);
+}
 
-    $out = [];
-    foreach ($days as $d => $row) {
-        $p = $perDay[$d] ?? ['packages' => 0, 'edits' => 0, 'events' => 0, 'logins' => 0];
-
-        $span = isset($window[$d]) ? max(0, $window[$d][1] - $window[$d][0]) : 0;
-        if ($row['seconds'] > $span) {
-            $span = $row['seconds']; // the window cannot be shorter than the work in it
-        }
-        $idle = max(0, $span - $row['seconds']);
-
-        $out[] = [
-            'date'            => $d,
-            'weekday'         => date('D', strtotime($d)),
-            'active_hours'    => round($row['seconds'] / 3600, 2),
-            'span_hours'      => round($span / 3600, 2),
-            'idle_hours'      => round($idle / 3600, 2),
-            'utilisation'     => $span > 0 ? round(($row['seconds'] / $span) * 100, 1) : 0.0,
-            'first_seen'      => date('H:i', $row['first']),
-            'last_seen'       => date('H:i', $row['last']),
-            'blocks'          => $row['blocks'],
-            'block_count'     => count($row['blocks']),
-            'packages_added'  => $p['packages'],
-            'packages_edited' => $p['edits'],
-            'logins'          => $p['logins'],
-            'events'          => $p['events'],
-        ];
+/** One staff member's single day, or null. */
+function cdp_spDay($userId, $day)
+{
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $day)) {
+        return null;
     }
-
-    return $out;
+    return cdp_spBuildDays($day, $day, [(int) $userId])[(int) $userId][$day] ?? null;
 }
 
 /** Seconds → "6h 12m", the way the report shows durations. */
@@ -749,7 +1151,7 @@ function cdp_spDuration($seconds)
     $h = intdiv($seconds, 3600);
     $m = intdiv($seconds % 3600, 60);
     if ($h === 0 && $m === 0) {
-        return '—';
+        return $seconds > 0 ? '<1m' : '—';
     }
     return ($h > 0 ? $h . 'h ' : '') . $m . 'm';
 }
