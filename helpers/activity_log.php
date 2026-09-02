@@ -610,7 +610,7 @@ function cdp_activityClassify($endpoint)
     $readOnly = false;
     foreach (['_list', 'list_', 'select2', 'select3', 'select_', 'load_', 'report_',
               'graphics', 'check_', 'validate_', 'get_', 'getuser', 'search',
-              '_detail', 'modal_', 'view_ajax', 'stats', 'items', 'effective_'] as $t) {
+              '_detail', 'modal_', 'view_ajax', 'stats', 'items', 'effective_', 'presence'] as $t) {
         if (strpos($base, $t) !== false) { $readOnly = true; break; }
     }
     // …but a "list" endpoint that also performs an action is not read-only.

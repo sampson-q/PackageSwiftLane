@@ -13,6 +13,14 @@
 <!-- Barcode-scanner Enter guard: a scan's trailing Enter must not submit the shipment forms
      (it was firing the "Enter package description" error on every scan). #invoice_form only. -->
 <script src="<?= cdp_asset('dataJs/scanner_guard.js') ?>"></script>
+<?php /* Staff presence beacon — staff roles only, switched on/off from the Staff
+         Productivity settings. Records "this minute had input", nothing else.
+         See helpers/staff_activity.php::cdp_spBeaconWanted(). */
+require_once __DIR__ . '/../../helpers/staff_activity.php';
+if (cdp_spBeaconWanted()) : ?>
+<script>window.CDP_PRESENCE = { url: 'ajax/reports/staff_presence_ping_ajax.php', every: <?php echo (int) cdp_spSetting('ping_seconds'); ?> };</script>
+<script src="<?= cdp_asset('dataJs/presence_beacon.js') ?>"></script>
+<?php endif; ?>
 <script>
     (function ($) {
         if (!$ || !$.ajaxSetup) return;
