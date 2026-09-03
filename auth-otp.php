@@ -3,6 +3,7 @@ require_once("loader.php");
 require_once("helpers/querys.php");
 require_once("lib/OtpService.php");
 require_once("helpers/activity_log.php");
+require_once("helpers/otp_settings.php");
 
 $user = new User();
 $core = new Core();
@@ -18,6 +19,37 @@ $otpRedirect = 'index.php';
 
 $sessionKey  = 'otp_' . $flow . '_challenge';
 $challengeId = isset($_SESSION[$sessionKey]) ? (int) $_SESSION[$sessionKey] : 0;
+
+// ── System-wide OTP switch OFF: complete the flow without a code ─────────────
+// (password reset is excluded on purpose: the code is the proof of ownership).
+if (!cdp_otpEnabled() && $flow !== 'forgot') {
+    if ($flow === 'login' && !empty($_SESSION['otp_login_user_id'])) {
+        $user->cdp_finalizeLoginById((int) $_SESSION['otp_login_user_id']);
+        unset($_SESSION['otp_login_challenge'], $_SESSION['otp_login_user_id'], $_SESSION['otp_login_remember']);
+        header('Location: index.php');
+        exit;
+    }
+    if ($flow === 'signup' && !empty($_SESSION['signup_user_id'])) {
+        $suid = (int) $_SESSION['signup_user_id'];
+        $db->cdp_query("SELECT email, fname, lname, username, locker FROM cdb_users WHERE id=:id LIMIT 1");
+        $db->bind(':id', $suid);
+        $su = $db->cdp_registro();
+        $db->cdp_query("UPDATE cdb_users SET registration_complete = 1 WHERE id = :id");
+        $db->bind(':id', $suid);
+        $db->cdp_execute();
+        if ($su) {
+            cdp_sendTemplateEmail(26, $su->email, [
+                '[NAME]'     => trim($su->fname . ' ' . $su->lname),
+                '[USERNAME]' => $su->username,
+                '[LOCKER]'   => $su->locker,
+                '[EMAIL]'    => $su->email,
+            ]);
+        }
+        unset($_SESSION['otp_signup_challenge'], $_SESSION['signup_user_id']);
+        header('Location: login.php?notice=registration_complete');
+        exit;
+    }
+}
 
 // Passed to JS so the timer can resume correctly after a page reload/resend
 // Holds the Unix timestamp (seconds) when the current challenge was created,

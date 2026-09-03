@@ -21,6 +21,8 @@
 
 
 
+require_once __DIR__ . '/../helpers/otp_settings.php';
+
 class User
 {
 
@@ -137,8 +139,9 @@ class User
 
         $user = $this->cdp_getUserInfo($username);
 
-        if (empty($options['otp_service'])) {
-            // OTP not configured — finalize directly
+        // No OTP service wired, or one-time codes switched off system-wide
+        // (Tools > Set Company > Security): open the session directly.
+        if (empty($options['otp_service']) || !cdp_otpEnabled()) {
             return $this->cdp_finalizeLogin($user);
         }
 
