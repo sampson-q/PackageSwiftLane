@@ -23,6 +23,8 @@ ini_set('display_errors', 0);
 
 
 require_once("../../loader.php");
+require_once(__DIR__ . '/../../helpers/unique_ids.php');
+
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
@@ -165,7 +167,8 @@ if (empty($errors)) {
             $price_lb = $_POST["price_lb"];
             $insured_value = $_POST["insured_value"];
 
-            $next_order = $core->cdp_order_track();
+            // Uniqueness: reserve each number server-side (see helpers/unique_ids.php).
+            $next_order = cdp_uidClaim('order_no');
 
             $is_pickup = false;
             $order_incomplete = 0;

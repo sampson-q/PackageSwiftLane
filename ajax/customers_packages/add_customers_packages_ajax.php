@@ -22,6 +22,8 @@
 ini_set('display_errors', 0); 
 
 require_once("../../loader.php");
+require_once(__DIR__ . '/../../helpers/unique_ids.php');
+
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_client_list');
@@ -104,7 +106,10 @@ if (empty($errors)) {
     $templatessender = 7;
 
 
-    $next_order = $core->cdp_online_shopping_track();
+    // Uniqueness: the posted number is only a suggestion. Claim it (or the next
+    // free one) so two people saving at once can never share a number.
+    $_POST['order_no'] = cdp_uidClaim('package_no', $_POST['order_no'] ?? '');
+    $next_order = $_POST['order_no'];
     $min_cost_tax = $core->min_cost_tax;
     $min_cost_declared_tax = $core->min_cost_declared_tax;
 

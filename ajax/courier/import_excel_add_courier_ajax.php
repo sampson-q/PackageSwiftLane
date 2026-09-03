@@ -6,6 +6,8 @@
 ini_set('display_errors', 0);
 
 require_once("../../loader.php");
+require_once(__DIR__ . '/../../helpers/unique_ids.php');
+
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once("../../helpers/querys.php");
 require_once("../../helpers/vendor/autoload.php");
@@ -588,7 +590,8 @@ if ($action === 'create') {
             }
         }
 
-        $order_no = $core->cdp_order_track();
+        // Uniqueness: reserve each number server-side (see helpers/unique_ids.php).
+        $order_no = cdp_uidClaim('order_no');
         $date     = date('Y-m-d H:i:s');
 
         $dataShipment = [

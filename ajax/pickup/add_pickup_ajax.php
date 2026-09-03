@@ -23,6 +23,8 @@ ini_set('display_errors', 0);
 
 
 require_once("../../loader.php");
+require_once(__DIR__ . '/../../helpers/unique_ids.php');
+
 require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
@@ -107,7 +109,10 @@ if (empty($errors)) {
     $meter = $settings->meter;
 
 
-    $next_order = $core->cdp_order_track();
+    // Uniqueness: the posted number is only a suggestion. Claim it (or the next
+    // free one) so two people saving at once can never share a number.
+    $_POST['order_no'] = cdp_uidClaim('order_no', $_POST['order_no'] ?? '');
+    $next_order = $_POST['order_no'];
     $min_cost_tax = $core->min_cost_tax;
     $min_cost_declared_tax = $core->min_cost_declared_tax;
 
