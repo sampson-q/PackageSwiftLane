@@ -27,7 +27,12 @@ header('Content-type: application/json; charset=UTF-8');
 
 try {
     require_login();
-    require_permission('edit_user');
+    // Everyone may save their OWN account; editing someone else needs edit_user
+    // (Employees lack it, which used to 403 their "My Profile" page).
+    $selfEdit = isset($_POST['id']) && (int) $_POST['id'] === (int) $user->uid;
+    if (!$selfEdit) {
+        require_permission('edit_user');
+    }
 require_once(__DIR__ . '/../../helpers/rbac.php');
 
     $user = new User;
@@ -94,12 +99,22 @@ require_once(__DIR__ . '/../../helpers/rbac.php');
         'active'        => isset($_POST['active']) ? intval($_POST['active']) : null,
         'newsletter'    => isset($_POST['newsletter']) ? intval($_POST['newsletter']) : null,
         'notes'         => $_POST['notes'] ?? '',
-        'branch_office' => trim($_POST['branch_office'] ?? ''),
+        // The field is only rendered for super admins; a missing/"undefined"
+        // value must never overwrite the stored office.
+        'branch_office' => (isset($_POST['branch_office']) && $_POST['branch_office'] !== 'undefined' && trim($_POST['branch_office']) !== '')
+                            ? trim($_POST['branch_office']) : (string) $currentUser->name_off,
         'password'      => $_POST['password'] ?? '',
         'document_type' => $_POST['document_type'] ?? '',
         'document_number' => $_POST['document_number'] ?? '',
         'userlevel'     => isset($_POST['userlevel']) ? intval($_POST['userlevel']) : (int)$currentUser->userlevel,
     );
+
+    // Editing yourself without the rank to manage your own role: role and
+    // active flag stay as they are (the form still posts them).
+    if ($isSelf && !cdp_canManageUser($user, (int)$currentUser->userlevel)) {
+        $newData['userlevel'] = (int)$currentUser->userlevel;
+        $newData['active']    = (int)$currentUser->active;
+    }
 
     // Role changes only downward from the editor's own rank (superadmin: any).
     if ((int)$newData['userlevel'] !== (int)$currentUser->userlevel && !cdp_canAssignRole($user, (int)$newData['userlevel'])) {
@@ -110,18 +125,21 @@ require_once(__DIR__ . '/../../helpers/rbac.php');
 
     // Detect what changed
     $fieldsChanged = array(
-        'fname'         => $newData['fname'] !== $currentUser->fname,
-        'lname'         => $newData['lname'] !== $currentUser->lname,
-        'email'         => $newData['email'] !== $currentUser->email,
-        'phone'         => $newData['phone'] !== $currentUser->phone,
-        'gender'        => $newData['gender'] !== $currentUser->gender,
+        'fname'         => (string) $newData['fname'] !== (string) $currentUser->fname,
+        'lname'         => (string) $newData['lname'] !== (string) $currentUser->lname,
+        'email'         => (string) $newData['email'] !== (string) $currentUser->email,
+        'phone'         => (string) $newData['phone'] !== (string) $currentUser->phone,
+        'gender'        => (string) $newData['gender'] !== (string) $currentUser->gender,
         'active'        => $newData['active'] !== (int)$currentUser->active,
         'newsletter'    => $newData['newsletter'] !== (int)$currentUser->newsletter,
-        'notes'         => $newData['notes'] !== $currentUser->notes,
-        'branch_office' => $newData['branch_office'] !== $currentUser->name_off,
+        'notes'         => (string) $newData['notes'] !== (string) $currentUser->notes,
+        // Only counts as changed when the (super-admin-only) field was really
+        // posted; NULL vs '' on accounts without an office is not a change.
+        'branch_office' => isset($_POST['branch_office']) && $_POST['branch_office'] !== 'undefined'
+                           && trim((string) $_POST['branch_office']) !== (string) $currentUser->name_off,
         'password'      => !empty($newData['password']),
-        'document_type' => $newData['document_type'] !== $currentUser->document_type,
-        'document_number' => $newData['document_number'] !== $currentUser->document_number,
+        'document_type' => (string) $newData['document_type'] !== (string) $currentUser->document_type,
+        'document_number' => (string) $newData['document_number'] !== (string) $currentUser->document_number,
         'userlevel'     => $newData['userlevel'] !== (int)$currentUser->userlevel,
     );
 

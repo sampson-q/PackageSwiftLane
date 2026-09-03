@@ -165,7 +165,7 @@ $current_role = $role_query['rowCount'] ? $role_query['data']->role_name : '';
 
 								<center class="m-t-30">
                                     <label for="avatarInput">
-                                        <img src="assets/<?php echo ($row_user->avatar) ? $row_user->avatar : "/uploads/blank.png"; ?>" class="rounded-circle" width="150" />
+                                        <img id="avatarPreview" src="<?php echo cdp_avatarUrl($row_user->avatar); ?>" class="rounded-circle" width="150" height="150" style="object-fit:cover;cursor:pointer" title="Click to change your photo" />
                                     </label>
                                     <div><br><br></div>
 
@@ -173,7 +173,7 @@ $current_role = $role_query['rowCount'] ? $role_query['data']->role_name : '';
                                         <div class="col-md-6 mb-3">
                                             <div class="form-group" style="display: none;">
                                                 <!-- Este input está oculto y se activa haciendo clic en la imagen -->
-                                                <input class="form-control" id="avatarInput" name="avatar" type="file" />
+                                                <input class="form-control" id="avatarInput" name="avatar" type="file" accept="image/*" />
                                             </div>
                                         </div>
                                         <div class="col-md-6 mb-3">
@@ -255,7 +255,7 @@ $current_role = $role_query['rowCount'] ? $role_query['data']->role_name : '';
 														<div class="col-md-12">
 															<div class="form-group">
 																<label for="firstName1"><?php echo $lang['user_manage54'] ?></label>
-																<input class="form-control" id="branch_office" name="branch_office" value="<?php echo $user->name_off; ?>" readonly>
+																<input class="form-control" id="branch_office" name="branch_office" value="<?php echo htmlspecialchars((string) $row_user->name_off, ENT_QUOTES, 'UTF-8'); ?>" readonly>
 															</div>
 														</div>
 													<?php } ?>

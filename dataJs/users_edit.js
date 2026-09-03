@@ -14,6 +14,9 @@ var errorMap = [
 ];
 
 var input = document.querySelector("#phone_custom");
+// Number as rendered by the server; an unchanged number is never re-validated
+// (legacy numbers are stored in several formats the widget may reject).
+var initialPhoneRaw = input ? input.value.trim() : "";
 var iti = window.intlTelInput(input, {
     geoIpLookup: function (callback) {
         $.get("http://ipinfo.io", function () { }, "jsonp").always(function (resp) {
@@ -81,7 +84,7 @@ $("#edit_user").on("submit", function (event) {
     event.preventDefault();
 
     // Validate phone if it was changed
-    if (input.value.trim() && !iti.isValidNumber()) {
+    if (input.value.trim() && input.value.trim() !== initialPhoneRaw && !iti.isValidNumber()) {
         input.classList.add("error");
         var errorCode = iti.getValidationError();
         errorMsg.innerHTML = errorMap[errorCode];
@@ -98,7 +101,7 @@ $("#edit_user").on("submit", function (event) {
 
     // Collect all form data
     var username = $("#username").val();
-    var branch_office = $('#branch_office').val();
+    var branch_office = $('#branch_office').length ? $('#branch_office').val() : null;
     var email = $("#email").val();
     var fname = $("#fname").val();
     var lname = $("#lname").val();
@@ -119,7 +122,9 @@ $("#edit_user").on("submit", function (event) {
     var data = new FormData();
 
     data.append("username", username);
-    data.append("branch_office", branch_office);
+    if (branch_office !== null) {
+        data.append("branch_office", branch_office);
+    }
     data.append("password", password);
     data.append("fname", fname);
     data.append("lname", lname);
@@ -235,6 +240,14 @@ $("#edit_user").on("submit", function (event) {
 // ============================================================
 
 $(document).ready(function() {
+    $('#avatarInput').on('change', function () {
+        var file = this.files && this.files[0];
+        if (!file) { return; }
+        var reader = new FileReader();
+        reader.onload = function (e) { $('#avatarPreview').attr('src', e.target.result); };
+        reader.readAsDataURL(file);
+    });
+
     $('#edit_avatar_form').on('submit', function(event) {
         event.preventDefault();
         updateAvatar();

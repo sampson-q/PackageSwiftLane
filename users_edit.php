@@ -36,7 +36,10 @@
 
         $permissions = $user->cdp_getUserPermissions();
 
-        if (!$user->cdp_hasPermission('edit_user')) {
+        // Everyone may open their OWN account ("My Profile"); other accounts
+        // need the edit_user permission (Employees do not have it).
+        $isOwnProfile = isset($_GET['user']) && (int) $_GET['user'] === (int) $user->uid;
+        if (!$isOwnProfile && !$user->cdp_hasPermission('edit_user')) {
             header("location: error403.php");
             exit;
         }
