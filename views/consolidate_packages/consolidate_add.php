@@ -99,7 +99,11 @@ $templatesreceiver = 16;
 
 if (isset($_POST["create_invoice"])) {
 
-    $next_order = $core->cdp_consolidate_track();
+    // Uniqueness: the posted number is only a suggestion. Claim it (or the next
+    // free one) so two people saving at once can never share a number.
+    require_once 'helpers/unique_ids.php';
+    $_POST['order_no'] = cdp_uidClaim('consolidate_no', $_POST['order_no'] ?? '');
+    $next_order = $_POST['order_no'];
     $date = date('Y-m-d', strtotime(trim($_POST["order_date"])));
     $time = date("H:i:s");
 
