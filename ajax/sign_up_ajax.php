@@ -62,6 +62,11 @@ if (empty($error)) {
     $settings = cdp_getSettingsCourier();
     $prefixlk = $settings->prefix_locker;
 
+    // Uniqueness: the locker digits pre-filled on the form are only a suggestion;
+    // claim them (or the next free ones) so no two customers share a locker.
+    require_once __DIR__ . '/../helpers/unique_ids.php';
+    $_POST['locker'] = cdp_claimLockerDigits($_POST['locker'] ?? '');
+
     $allowedMimeTypes  = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
@@ -229,6 +234,33 @@ if (empty($error)) {
     // The OTP is created + emailed when the user lands on the OTP page (see
     // auth-otp.php), so the code and its countdown start then — not now, where a
     // success modal could sit open and let the code expire before they arrive.
+    // System-wide OTP switch OFF: no email code — the registration is complete
+    // now (still inactive until an admin approves it, exactly as after a code).
+    require_once __DIR__ . '/../helpers/otp_settings.php';
+    if (!cdp_otpEnabled()) {
+        $db->cdp_query("UPDATE cdb_users SET registration_complete = 1 WHERE id = :id");
+        $db->bind(':id', $userId);
+        $db->cdp_execute();
+        $db->cdp_query("SELECT email, fname, lname, username, locker FROM cdb_users WHERE id = :id LIMIT 1");
+        $db->bind(':id', $userId);
+        $su = $db->cdp_registro();
+        if ($su && function_exists('cdp_sendTemplateEmail')) {
+            cdp_sendTemplateEmail(26, $su->email, [
+                '[NAME]'     => trim($su->fname . ' ' . $su->lname),
+                '[USERNAME]' => $su->username,
+                '[LOCKER]'   => $su->locker,
+                '[EMAIL]'    => $su->email,
+            ]);
+        }
+        unset($_SESSION['signup_user_id'], $_SESSION['otp_signup_challenge']);
+        echo json_encode([
+            'success'  => true,
+            'messages' => 'Success! Your registration has been received and is awaiting approval.',
+            'redirect' => 'login.php?notice=registration_complete'
+        ]);
+        exit;
+    }
+
     $_SESSION['signup_user_id'] = $userId;
     unset($_SESSION['otp_signup_challenge']);
 
