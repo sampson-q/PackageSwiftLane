@@ -4,7 +4,7 @@
 
             <div class="modal-header">
                 <h4 class="modal-title" id="userUpdateDocumentLabel">
-                    <?php echo $lang['leftorder164']; ?>
+                    <?php echo $lang['leftorder164']; ?> <small class="text-muted">(optional)</small>
                 </h4>
             </div>
 
@@ -16,11 +16,12 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">
-                                    <?php echo $lang['leftorder164']; ?> <span class="text-danger">*</span>
+                                    <?php echo $lang['leftorder164']; ?>
                                 </label>
                                 <div class="form-icon position-relative">
                                     <i data-feather="list" class="fea icon-sm icons"></i>
                                     <select class="custom-select form-control ps-5" id="force_document_type" name="document_type">
+                                        <option value="">-- Select --</option>
                                         <option value="PSP"><?php echo $lang['leftorder174'] ?></option>
                                         <option value="ECW"><?php echo $lang['leftorder1746'] ?></option>
                                         <option value="DNI"><?php echo $lang['leftorder165'] ?></option>
@@ -32,7 +33,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">
-                                    <?php echo $lang['leftorder175']; ?> <span class="text-danger">*</span>
+                                    <?php echo $lang['leftorder175']; ?>
                                 </label>
                                 <div class="form-icon position-relative">
                                     <i data-feather="more-horizontal" class="fea icon-sm icons"></i>
@@ -76,6 +77,7 @@
             </div>
 
             <div class="modal-footer">
+                <button type="button" class="btn btn-light" id="btn_force_skip_document">Skip for now</button>
                 <button type="button" class="btn btn-danger" id="btn_force_save_document">
                     Update Document
                 </button>
