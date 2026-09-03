@@ -21,7 +21,9 @@
 
 
 
+ini_set('display_errors', 0);
 require_once("../../loader.php");
+require_once("../../helpers/profile.php");
 require_once("../../helpers/querys.php");
 require_once("../../helpers/ajax_guard.php");
 require_login();
@@ -84,7 +86,7 @@ if (CDP_APP_MODE_DEMO === true) {
             } else {
                 // Genera un nombre único para el archivo
                 $user_id = $_POST['id']; // Ajusta según tu lógica de obtener el ID
-                $current_document = $_POST['current_document'];
+                $current_document = $_POST['current_document'] ?? '';
                 $file_name = $user_id . '_' . time() . '_' . $file_name;
 
                 // Ruta completa donde se guardará el archivo
@@ -99,15 +101,8 @@ if (CDP_APP_MODE_DEMO === true) {
                     $db->bind(':id', $user_id);
                     $db->cdp_execute();
 
-                    $documentUpdateData = array(
-                        'user_id' =>  $user_id,
-                        'update_by' => $userData->id,
-                        'prev_document' =>  $current_document,
-                        'remarks' =>  'Document updated',
-                        'datetime' =>  cdp_sanitize(date("Y-m-d H:i:s")),
-                    );
-
-                    $record_history = cdp_insertDocumentUpdateHistory($documentUpdateData);
+                    // History table is created on demand; logging never breaks the save.
+                    cdp_profileHistoryLog($user_id, $userData->id, $current_document, 'Document updated');
 
                     // if ($record_history) {
                     //     $response = array('success' => true, 'message' => 'Document successfully updated.');
