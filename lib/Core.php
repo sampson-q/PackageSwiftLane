@@ -178,6 +178,8 @@ class Core
     $this->api_ws_token = $settings->api_ws_token;
     $this->api_ws_url = $settings->api_ws_url;
     $this->active_whatsapp = $settings->active_whatsapp;
+    // System-wide OTP switch; absent column = codes required.
+    $this->active_otp = isset($settings->active_otp) ? (int) $settings->active_otp : 1;
     //SETTINGS TRACK INVOICE AND TAXES
     $this->version = $settings->version;
     $this->prefix = $settings->prefix;
@@ -532,30 +534,11 @@ class Core
    */
   public function cdp_order_track()
   {
-    //Prefix tracking	
-    $sql = "SELECT * FROM cdb_settings";
-
-    $this->db->cdp_query($sql);
-    $this->db->cdp_execute();
-    $trackd = $this->db->cdp_registro();
-
-    $digitss = $trackd->track_digit;
-
-
-    $this->db->cdp_query("SELECT MAX(order_no) AS order_no FROM cdb_add_order");
-    $this->db->cdp_execute();
-
-    $invNum = $this->db->cdp_fetch_assoc();
-    $max_id = $invNum['order_no'];
-    $cod = $max_id;
-    $sig = (int) $cod + 1;
-
-    $Strsig = (string)$sig;
-    $formato = str_pad($Strsig, "" . $digitss . "", "0", STR_PAD_LEFT);
-
-
-
-    return $formato;
+    // Next free number for pre-filling a form. Numeric-safe (junk rows no
+    // longer collapse the sequence) — see helpers/unique_ids.php. The value
+    // is only a suggestion; the save handler claims the real number.
+    require_once __DIR__ . '/../helpers/unique_ids.php';
+    return cdp_uidNext('order_no');
   }
 
 
@@ -564,29 +547,11 @@ class Core
    */
   public function cdp_consolidate_track()
   {
-    //Prefix tracking 
-    $sql = "SELECT * FROM cdb_settings";
-
-    $this->db->cdp_query($sql);
-    $this->db->cdp_execute();
-    $trackd = $this->db->cdp_registro();
-
-    $digits = $trackd->track_digit;
-
-    $this->db->cdp_query("SELECT MAX(c_no) AS c_no FROM cdb_consolidate");
-    $this->db->cdp_execute();
-
-    $invNum = $this->db->cdp_fetch_assoc();
-    $max_id = $invNum['c_no'];
-    $cod = $max_id;
-    $sig = $cod + 1;
-
-    $Strsig = (string)$sig;
-    $formato = str_pad($Strsig, (int)$digits, "0", STR_PAD_LEFT);
-
-
-
-    return $formato;
+    // Next free number for pre-filling a form. Numeric-safe (junk rows no
+    // longer collapse the sequence) — see helpers/unique_ids.php. The value
+    // is only a suggestion; the save handler claims the real number.
+    require_once __DIR__ . '/../helpers/unique_ids.php';
+    return cdp_uidNext('consolidate_no');
   }
 
 
@@ -595,29 +560,11 @@ class Core
    */
   public function cdp_online_shopping_track()
   {
-    //Prefix tracking 
-    $sql = "SELECT * FROM cdb_settings";
-
-    $this->db->cdp_query($sql);
-    $this->db->cdp_execute();
-    $trackd = $this->db->cdp_registro();
-
-    $digits = $trackd->track_digit;
-
-    $this->db->cdp_query("SELECT MAX(order_no) AS order_no FROM cdb_customers_packages");
-    $this->db->cdp_execute();
-
-    $invNum = $this->db->cdp_fetch_assoc();
-    $max_id = $invNum['order_no'];
-    $cod = $max_id;
-    $sig = $cod + 1;
-
-    $Strsig = (string)$sig;
-    $formato = str_pad($Strsig, (int)$digits, "0", STR_PAD_LEFT);
-
-
-
-    return $formato;
+    // Next free number for pre-filling a form. Numeric-safe (junk rows no
+    // longer collapse the sequence) — see helpers/unique_ids.php. The value
+    // is only a suggestion; the save handler claims the real number.
+    require_once __DIR__ . '/../helpers/unique_ids.php';
+    return cdp_uidNext('package_no');
   }
 
 
@@ -628,29 +575,11 @@ class Core
    */
   public function cdp_virtual_locker()
   {
-  //verify locker
-    $sql = "SELECT * FROM cdb_settings";
-
-    $this->db->cdp_query($sql);
-    $this->db->cdp_execute();
-    $verifylock = $this->db->cdp_registro();
-
-    $digits = $verifylock->digit_random_locker;
-
-    $this->db->cdp_query("SELECT MAX(digitslockers) AS digitslockers FROM cdb_virtual_locker");
-    $this->db->cdp_execute();
-
-    $invNum = $this->db->cdp_fetch_assoc();
-    $max_id = $invNum['digitslockers'];
-    $cod = $max_id;
-    $sig = $cod + 1;
-
-    $Strsig = (string)$sig;
-    $formato = str_pad($Strsig, (int)$digits, "0", STR_PAD_LEFT);
-
-
-
-    return $formato;
+    // Next free number for pre-filling a form. Numeric-safe (junk rows no
+    // longer collapse the sequence) — see helpers/unique_ids.php. The value
+    // is only a suggestion; the save handler claims the real number.
+    require_once __DIR__ . '/../helpers/unique_ids.php';
+    return cdp_uidNext('locker');
   }
 
 
