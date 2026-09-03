@@ -78,6 +78,10 @@ if (!isset($response['status'])) {
     $settings = cdp_getSettingsCourier();
     $prefixlk = $settings->prefix_locker;
 
+    // Uniqueness: claim the locker digits server-side (see helpers/unique_ids.php).
+    require_once __DIR__ . '/../../helpers/unique_ids.php';
+    $_POST['locker'] = cdp_claimLockerDigits($_POST['locker'] ?? '');
+
 
     $data = array(
         'lname' => cdp_sanitize($_POST['lname']),
