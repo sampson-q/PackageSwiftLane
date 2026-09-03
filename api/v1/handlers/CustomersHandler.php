@@ -89,9 +89,10 @@ class CustomersHandler
         }
 
         $core    = new Core();
-        $locker  = $core->cdp_order_track();  // re-used as unique locker seed
+        require_once dirname(__DIR__, 3) . '/helpers/unique_ids.php';
         $prefix  = $core->prefix_locker ?? 'L';
-        $lockerCode = $prefix . str_pad((string)rand(100, 9999), 4, '0', STR_PAD_LEFT);
+        // Uniqueness: locker digits are claimed against every existing customer.
+        $lockerCode = $prefix . ' ' . cdp_claimLockerDigits($data['locker'] ?? '');
 
         $customerData = [
             'username'        => cdp_sanitize($data['username']),

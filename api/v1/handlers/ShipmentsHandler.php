@@ -138,7 +138,9 @@ class ShipmentsHandler
         }
 
         $core       = new Core();
-        $orderTrack = $core->cdp_order_track();
+        require_once dirname(__DIR__, 3) . '/helpers/unique_ids.php';
+        // Uniqueness: a client-supplied number is only honoured when still free.
+        $orderTrack = cdp_uidClaim('order_no', $data['order_no'] ?? '');
 
         $payMethods = new Conexion();
         $payMethods->cdp_query('SELECT * FROM cdb_payment_methods WHERE id = :id LIMIT 1');
@@ -159,7 +161,7 @@ class ShipmentsHandler
             'order_prefix'          => $codePrefix,
             'is_pickup'             => 0,
             'order_incomplete'      => 1,
-            'order_no'              => cdp_sanitize($data['order_no'] ?? $orderTrack),
+            'order_no'              => $orderTrack,
             'order_datetime'        => $date,
             'sender_id'             => (int)$data['sender_id'],
             'recipient_id'          => (int)$data['recipient_id'],
