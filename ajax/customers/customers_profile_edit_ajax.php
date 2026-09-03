@@ -19,216 +19,191 @@
 // *                                                                       *
 // *************************************************************************
 
-
+/**
+ * Customer profile save ("My Profile").
+ *
+ * Always answers JSON. The previous version printed HTML on validation
+ * errors, relied on a staff-only permission and let the browser decide which
+ * fields were mandatory — customers saw a generic error for every failure.
+ *
+ * Rules (per product decision):
+ *   - Name, last name, email, gender and at least one complete address are
+ *     mandatory. Password is optional (blank = unchanged).
+ *   - The ID document is optional and is handled by its own endpoint.
+ *   - The WhatsApp phone number is never changed here: it goes through the
+ *     confirm-then-OTP flow (send/verify_profile_phone_otp_ajax.php).
+ */
+ini_set('display_errors', 0);
 
 require_once("../../loader.php");
 require_once("../../helpers/querys.php");
+require_once("../../helpers/rbac.php");
+require_once("../../helpers/profile.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
-require_permission('view_client_list');
+
+header('Content-Type: application/json; charset=UTF-8');
 
 $user = new User;
 $core = new Core;
-$errors = array();
-
-
-
-if (empty($_POST['fname']))
-
-    $errors['fname'] = $lang['validate_field_ajax122'];
-if (empty($_POST['lname']))
-
-    $errors['lname'] = $lang['validate_field_ajax123'];
-
-if (empty($_POST['email']))
-
-    $errors['email'] = $lang['validate_field_ajax125'];
-
-if ($user->cdp_emailExists($_POST['email'], $_POST['id']))
-
-    $errors[] = $lang['validate_field_ajax126'];
-
-if (!$user->cdp_isValidEmail($_POST['email']))
-
-    $errors[] = $lang['validate_field_ajax127'];
-
-if (empty($_POST['phone']))
-
-    $errors['phone'] = $lang['validate_field_ajax128'];
-
-if (empty($_POST['address']))
-
-    $errors['phone'] = $lang['validate_field_ajax134'];
-
-
-
-
-if (CDP_APP_MODE_DEMO === true) {
-?>
-
-    <div class="alert alert-warning" id="success-alert">
-        <p><span class="icon-minus-sign"></span><i class="close icon-remove-circle"></i>
-            <span>Error! </span> There was an error processing the request
-        <ul class="error">
-
-            <li>
-                <i class="icon-double-angle-right"></i>
-                This is a demo version, this action is not allowed. Contact iSolveAfrica Ltd. to enable the full version of Swiftlane.
-
-            </li>
-
-
-        </ul>
-        </p>
-    </div>
-    <?php
-} else {
-
-    if (empty($errors)) {
-
-        
-        header('Content-type: application/json; charset=UTF-8');
-    
-        $response = array();
-
-
-
-        if (isset($_POST['document_type'])) {
-
-            $document_type = $_POST['document_type'];
-        } else {
-
-            $document_type = '';
-        }
-
-        if (isset($_POST['document_number'])) {
-
-            $document_number = $_POST['document_number'];
-        } else {
-
-            $document_number = '';
-        }
-
-        $datos = array(
-            'email' => cdp_sanitize($_POST['email']),
-            'lname' => cdp_sanitize($_POST['lname']),
-            'fname' => cdp_sanitize($_POST['fname']),
-            'document_number' => cdp_sanitize($document_number),
-            'document_type' => cdp_sanitize($document_type),
-            'notes' => cdp_sanitize($_POST['notes']),
-            'phone' => cdp_sanitize($_POST['phone']),
-            'gender' => cdp_sanitize($_POST['gender']),
-            'id' => cdp_sanitize($_POST['id'])
-        );
-
-        $userDataEdit = cdp_getUserEdit4bozo($_POST['id']);
-
-        if ($_POST['password'] != "") {
-
-            $datos['password'] = password_hash($_POST['password'], PASSWORD_DEFAULT);
-        } else {
-
-            $datos['password'] = $userDataEdit['data']->password;
-        }
-
-        $update = cdp_updateCustomersprofile($datos);
-
-
-        if ($update  && isset($_POST["total_address"])) {
-
-            for ($count = 0; $count < $_POST["total_address"]; $count++) {
-
-                if (isset($_POST["address_id"][$count]) && !empty($_POST["address_id"][$count])) {
-
-                    $dataAddresses = array(
-                        'address_id' =>  cdp_sanitize($_POST["address_id"][$count]),
-                        'address' =>  cdp_sanitize($_POST["address"][$count]),
-                        'country' =>  cdp_sanitize($_POST["country"][$count]),
-                        'city' =>  cdp_sanitize($_POST["city"][$count]),
-                        'state' =>  cdp_sanitize($_POST["state"][$count]),
-                        'postal' =>  cdp_sanitize($_POST["postal"][$count])
-                    );
-
-                    cdp_updateCustomerAddress($dataAddresses);
-                } else {
-
-                    $dataAddresses = array(
-                        'user_id' =>   cdp_sanitize($_POST['id']),
-                        'address' =>  cdp_sanitize($_POST["address"][$count]),
-                        'country' =>  cdp_sanitize($_POST["country"][$count]),
-                        'city' =>  cdp_sanitize($_POST["city"][$count]),
-                        'state' =>  cdp_sanitize($_POST["state"][$count]),
-                        'postal' =>  cdp_sanitize($_POST["postal"][$count])
-                    );
-
-                    cdp_insertAddressCustomer($dataAddresses);
-                }
-            }
-        }
-
-
-        if ($update) {
-            $response['status'] = 'success';
-            $response['message'] = $lang['message_ajax_success_updated'];
-        } else {
-            $response['status'] = 'error';
-            $response['message'] = $lang['message_ajax_error1'];
-        }
-
-
-        echo json_encode($response);
-    }
-
-
-    if (!empty($errors)) {
-    ?>
-        <div class="alert alert-danger" id="success-alert">
-            <p><span class="icon-minus-sign"></span><i class="close icon-remove-circle"></i>
-                <?php echo $lang['message_ajax_error2']; ?>
-            <ul class="error">
-                <?php
-                foreach ($errors as $error) { ?>
-                    <li>
-                        <i class="icon-double-angle-right"></i>
-                        <?php
-                        echo $error;
-
-                        ?>
-
-                    </li>
-                <?php
-
-                }
-                ?>
-
-
-            </ul>
-            </p>
-        </div>
-
-
-
-    <?php
-    }
-
-    if (isset($messages)) {
-
-    ?>
-        <div class="alert alert-info alert-dismissible fade show" role="alert">
-            <p><span class="icon-info-sign"></span>
-                <?php
-                foreach ($messages as $message) {
-                    echo $message;
-                }
-                ?>
-            </p>
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-
-<?php
-    }
+$db   = new Conexion;
+
+function cdp_profileRespond($status, $message, array $extra = [])
+{
+    echo json_encode(array_merge(['status' => $status, 'message' => $message], $extra));
+    exit;
 }
 
-?>
+if (CDP_APP_MODE_DEMO === true) {
+    cdp_profileRespond('error', 'This is a demo version, this action is not allowed.');
+}
+
+$targetId = (int) ($_POST['id'] ?? 0);
+if (!cdp_profileCanEdit($user, $targetId, 'edit_client')) {
+    cdp_profileRespond('error', 'You can only edit your own profile.');
+}
+
+$current = cdp_getUserEdit4bozo($targetId);
+if (!$current || $current['rowCount'] != 1) {
+    cdp_profileRespond('error', 'Account not found.');
+}
+$row = $current['data'];
+if (!cdp_roleIsClient((int) $row->userlevel)) {
+    cdp_profileRespond('error', 'This page can only edit customer accounts.');
+}
+
+// ── Validation ───────────────────────────────────────────────────────────────
+$errors = [];
+
+$fname  = trim((string) ($_POST['fname'] ?? ''));
+$lname  = trim((string) ($_POST['lname'] ?? ''));
+$email  = trim((string) ($_POST['email'] ?? ''));
+$gender = trim((string) ($_POST['gender'] ?? ''));
+$notes  = trim((string) ($_POST['notes'] ?? ''));
+$pass   = (string) ($_POST['password'] ?? '');
+
+if ($fname === '' || mb_strlen($fname) < 2) {
+    $errors['fname'] = $lang['validate_field_ajax122'] ?? 'First name is required.';
+}
+if ($lname === '' || mb_strlen($lname) < 2) {
+    $errors['lname'] = $lang['validate_field_ajax123'] ?? 'Last name is required.';
+}
+if ($email === '') {
+    $errors['email'] = $lang['validate_field_ajax125'] ?? 'Email is required.';
+} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || !$user->cdp_isValidEmail($email)) {
+    $errors['email'] = $lang['validate_field_ajax127'] ?? 'Invalid email address.';
+} elseif ($user->cdp_emailExists($email, $targetId)) {
+    $errors['email'] = $lang['validate_field_ajax126'] ?? 'This email is already in use by another account.';
+}
+if (!in_array($gender, ['Male', 'Female', 'Other'], true)) {
+    $errors['gender'] = 'Please select your gender.';
+}
+if ($pass !== '' && strlen($pass) < 6) {
+    $errors['password'] = 'Password must be at least 6 characters.';
+}
+
+// Addresses: at least one, every field filled, ids must belong to this account.
+$total     = (int) ($_POST['total_address'] ?? 0);
+$addresses = [];
+$posted    = 0;
+for ($i = 0; $i < $total; $i++) {
+    if (!isset($_POST['address'][$i]) && !isset($_POST['country'][$i])) {
+        continue; // a removed row leaves a gap in the index
+    }
+    $posted++;
+    $a = [
+        'address_id' => (int) ($_POST['address_id'][$i] ?? 0),
+        'address'    => trim((string) ($_POST['address'][$i] ?? '')),
+        'country'    => (int) ($_POST['country'][$i] ?? 0),
+        'state'      => (int) ($_POST['state'][$i] ?? 0),
+        'city'       => (int) ($_POST['city'][$i] ?? 0),
+        'postal'     => trim((string) ($_POST['postal'][$i] ?? '')),
+    ];
+    if ($a['address'] === '' || $a['country'] <= 0 || $a['state'] <= 0 || $a['city'] <= 0 || $a['postal'] === '') {
+        $errors['address_' . ($posted)] = 'Address ' . $posted . ': country, state, city, zip code and address are all required.';
+    }
+    $addresses[] = $a;
+}
+if ($posted === 0) {
+    $errors['address'] = $lang['validate_field_ajax134'] ?? 'At least one address is required.';
+}
+
+if (!empty($errors)) {
+    cdp_profileRespond('error', implode(' ', array_values($errors)), ['errors' => $errors]);
+}
+
+// ── Save ─────────────────────────────────────────────────────────────────────
+$sql = 'UPDATE cdb_users SET fname = :fname, lname = :lname, email = :email, gender = :gender, notes = :notes'
+     . ($pass !== '' ? ', password = :password' : '')
+     . ' WHERE id = :id';
+$db->cdp_query($sql);
+$db->bind(':fname', cdp_sanitize($fname));
+$db->bind(':lname', cdp_sanitize($lname));
+$db->bind(':email', cdp_sanitize($email));
+$db->bind(':gender', cdp_sanitize($gender));
+$db->bind(':notes', cdp_sanitize($notes));
+if ($pass !== '') {
+    $db->bind(':password', password_hash($pass, PASSWORD_DEFAULT));
+}
+$db->bind(':id', $targetId);
+
+if (!$db->cdp_execute()) {
+    cdp_profileRespond('error', $lang['message_ajax_error1'] ?? 'Could not save your profile.');
+}
+
+foreach ($addresses as $a) {
+    if ($a['address_id'] > 0) {
+        // Only rows that belong to this account may be updated.
+        $db->cdp_query("SELECT id_addresses FROM cdb_senders_addresses WHERE id_addresses = :aid AND user_id = :uid LIMIT 1");
+        $db->bind(':aid', $a['address_id']);
+        $db->bind(':uid', $targetId);
+        if ($db->cdp_registro()) {
+            cdp_updateCustomerAddress([
+                'address_id' => $a['address_id'],
+                'address'    => cdp_sanitize($a['address']),
+                'country'    => $a['country'],
+                'city'       => $a['city'],
+                'state'      => $a['state'],
+                'postal'     => cdp_sanitize($a['postal']),
+            ]);
+            continue;
+        }
+    }
+    cdp_insertAddressCustomer([
+        'user_id' => $targetId,
+        'address' => cdp_sanitize($a['address']),
+        'country' => $a['country'],
+        'city'    => $a['city'],
+        'state'   => $a['state'],
+        'postal'  => cdp_sanitize($a['postal']),
+    ]);
+}
+cdp_profileMarkStep($targetId, 'update_address');
+
+$changed = [];
+foreach (['fname' => $fname, 'lname' => $lname, 'email' => $email, 'gender' => $gender, 'notes' => $notes] as $k => $v) {
+    if ((string) $row->$k !== (string) $v) {
+        $changed[$k] = ['from' => (string) $row->$k, 'to' => (string) $v];
+    }
+}
+if ($pass !== '') {
+    $changed['password'] = ['from' => '••••', 'to' => '•••• (changed)'];
+}
+if (function_exists('cdp_activityLog')) {
+    cdp_activityLog([
+        'module'       => 'profile',
+        'verb'         => 'update',
+        'action'       => 'profile.details',
+        'label'        => 'Profile · Details Updated',
+        'entity_type'  => 'user',
+        'entity_id'    => $targetId,
+        'entity_label' => trim($fname . ' ' . $lname),
+        'summary'      => ($targetId === (int) $user->uid)
+            ? 'Updated their own profile details'
+            : 'Updated the profile of customer #' . $targetId,
+        'changes'      => $changed,
+        'meta'         => ['addresses' => count($addresses)],
+    ]);
+}
+
+cdp_profileRespond('success', $lang['message_ajax_success_updated'] ?? 'Profile updated.');
