@@ -244,3 +244,26 @@ function cdp_sanitize($string, $trim = false, $int = false, $str = false)
 
 	return $string;
 }
+
+/**
+ * Browser URL for a stored avatar / document photo, whatever format the row
+ * carries. Historic rows hold "uploads/x.jpg", "../assets/uploads/users/x.jpg",
+ * "assets/uploads/x.jpg", "../" (a broken signup) or nothing at all; the topbar
+ * and sidebar used to print the raw value (a 404 for every customer photo).
+ */
+if (!function_exists('cdp_avatarUrl')) {
+    function cdp_avatarUrl($stored, $blank = 'uploads/blank.png')
+    {
+        $p = trim((string) $stored);
+        $p = str_replace('\\', '/', $p);
+        $p = preg_replace('#^(\.\./)+#', '', $p);   // "../assets/uploads/…" -> "assets/uploads/…"
+        $p = preg_replace('#^/+#', '', $p);
+        if (strpos($p, 'assets/') === 0) {
+            $p = substr($p, 7);
+        }
+        if ($p === '' || $p === '/' || strpos($p, 'uploads/') !== 0 || substr($p, -1) === '/') {
+            $p = $blank;
+        }
+        return 'assets/' . $p;
+    }
+}
