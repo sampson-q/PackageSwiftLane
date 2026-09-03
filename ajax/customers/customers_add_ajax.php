@@ -77,6 +77,10 @@ if (!empty($errors)) {
 $settings = cdp_getSettingsCourier();
 $prefixlk = $settings->prefix_locker;
 
+// Uniqueness: claim the locker digits server-side (see helpers/unique_ids.php).
+require_once __DIR__ . '/../../helpers/unique_ids.php';
+$_POST['locker'] = cdp_claimLockerDigits($_POST['locker'] ?? '');
+
 $datos = array(
     'username'        => cdp_sanitize($username),
     'locker'          => cdp_sanitize($prefixlk . ' ' . ($_POST['locker'] ?? '')),
@@ -143,6 +147,39 @@ if (isset($_POST['total_address'])) {
 // Bind the pending verification to THIS admin session so the OTP endpoints can
 // only ever act on the account just created here (prevents OTP abuse on
 // arbitrary user ids).
+// System-wide OTP switch OFF: the client is usable straight away (same end
+// state the email code would have produced).
+require_once __DIR__ . '/../../helpers/otp_settings.php';
+if (!cdp_otpEnabled()) {
+    $db->cdp_query("UPDATE cdb_users SET registration_complete = 1, active = 1 WHERE id = :id");
+    $db->bind(':id', $customer_id);
+    $db->cdp_execute();
+    if (function_exists('cdp_sendTemplateEmail')) {
+        $db->cdp_query("SELECT email, fname, lname, username, locker FROM cdb_users WHERE id = :id LIMIT 1");
+        $db->bind(':id', $customer_id);
+        $su = $db->cdp_registro();
+        if ($su) {
+            cdp_sendTemplateEmail(26, $su->email, [
+                '[NAME]'     => trim($su->fname . ' ' . $su->lname),
+                '[USERNAME]' => $su->username,
+                '[LOCKER]'   => $su->locker,
+                '[EMAIL]'    => $su->email,
+            ]);
+        }
+    }
+    cdp_activityLog([
+        'module'       => 'customers',
+        'verb'         => 'create',
+        'entity_type'  => 'user',
+        'entity_id'    => (int) $customer_id,
+        'entity_label' => trim(($datos['fname'] ?? '') . ' ' . ($datos['lname'] ?? '')),
+        'summary'      => 'Created customer ' . trim(($datos['fname'] ?? '') . ' ' . ($datos['lname'] ?? '')) . ' (' . $email . ') — OTP disabled system-wide',
+        'meta'         => ['email' => $email],
+    ]);
+    echo json_encode(['status' => 'success', 'message' => 'Client created.']);
+    exit;
+}
+
 $_SESSION['client_add_pending_user_id'] = (int) $customer_id;
 unset($_SESSION['client_add_otp_challenge']);
 
