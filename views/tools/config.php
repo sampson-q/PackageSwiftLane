@@ -113,6 +113,31 @@
 							</div>
 						</div>
 						<hr />
+						<h4 class="card-title"><b><?php echo $lang['tools-config-otp-title'] ?? 'Security'; ?></b></h4>
+
+						<div class="row">
+							<div class="col-md-6">
+								<div class="form-group">
+									<?php $cdp_otp_on = (isset($core->active_otp) ? (int) $core->active_otp : 1) === 1; ?>
+									<div class="btn-group" data-toggle="buttons">
+										<label class="btn">
+											<div class="custom-control custom-radio">
+												<input type="radio" id="active_otp_yes" name="active_otp" value="1" <?php echo $cdp_otp_on ? 'checked' : ''; ?> class="custom-control-input">
+												<label class="custom-control-label" for="active_otp_yes"> <?php echo $lang['tools-config14'] ?></label>
+											</div>
+										</label>
+										<label class="btn">
+											<div class="custom-control custom-radio">
+												<input type="radio" id="active_otp_no" name="active_otp" value="0" <?php echo $cdp_otp_on ? '' : 'checked'; ?> class="custom-control-input">
+												<label class="custom-control-label" for="active_otp_no"> <?php echo $lang['tools-config15'] ?></label>
+											</div>
+										</label>
+									</div>
+									<div class="note"><?php echo $lang['tools-config-otp-note'] ?? 'Require One-Time Password (OTP) codes'; ?> <i class="icon-exclamation-sign  tooltip" data-title="<?php echo $lang['tools-config-otp-help'] ?? 'Applies to the whole system: login, sign-up email verification, admin client verification and WhatsApp number changes. Password reset always keeps its code.'; ?>"></i></div>
+								</div>
+							</div>
+						</div>
+						<hr />
 						<h4 class="card-title"><b><?php echo $lang['left803'] ?></b></h4>
 
 						<div class="row">

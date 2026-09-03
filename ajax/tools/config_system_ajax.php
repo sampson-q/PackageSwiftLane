@@ -106,6 +106,12 @@ if (CDP_APP_MODE_DEMO === true) {
 
         $insert = cdp_updateConfigSystemytdb1($data);
 
+        // System-wide OTP switch (column is created on demand).
+        require_once __DIR__ . '/../../helpers/otp_settings.php';
+        if ($insert && isset($_POST['active_otp'])) {
+            cdp_otpSetEnabled(intval($_POST['active_otp']) === 1);
+        }
+
         if ($insert) {
             $response['status'] = 'success';
             $response['message'] = $lang['message_ajax_success_updated'];
