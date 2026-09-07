@@ -1,4 +1,9 @@
 <?php
+// Consolidation status inheritance (cdp_effectiveStatusSql) lives in
+// helpers/querys.php; the guard covers callers that have not loaded it.
+if (!function_exists('cdp_effectiveStatusSql')) {
+    require_once __DIR__ . '/querys.php';
+}
 // ============================================================================
 // Shared control-panel data + presentation helpers.
 //
@@ -135,18 +140,32 @@ if (!function_exists('cdp_dashStatusBreakdown')) {
      * Rows grouped by status_courier joined to the cdb_styles vocabulary.
      * Statuses missing from the vocabulary are folded into "Other".
      *
+     * Shipments and packages are grouped by their EFFECTIVE status — a row
+     * inside a consolidation counts under the consolidation's status, which is
+     * what every screen shows for it. Consolidations themselves have no parent,
+     * so they group by their own.
+     *
      * @return array{labels: string[], colors: string[], totals: int[]}
      */
     function cdp_dashStatusBreakdown($table, $where = '', $limit = 8)
     {
+        $inherits = array(
+            'cdb_add_order'          => false,
+            'cdb_customers_packages' => true,
+        );
+        $statusExpr = 'o.status_courier';
+        if (isset($inherits[$table]) && function_exists('cdp_effectiveStatusSql')) {
+            $statusExpr = cdp_effectiveStatusSql('o', $inherits[$table]);
+        }
+
         $labels = $colors = $totals = [];
         try {
             $db = new Conexion;
-            $db->cdp_query("SELECT o.status_courier sc, COALESCE(s.mod_style, 'Other') lbl,
+            $db->cdp_query("SELECT $statusExpr sc, COALESCE(s.mod_style, 'Other') lbl,
                                    COALESCE(s.color, '#94a3b8') col, COUNT(*) t
-                            FROM $table o LEFT JOIN cdb_styles s ON s.id = o.status_courier
+                            FROM $table o LEFT JOIN cdb_styles s ON s.id = $statusExpr
                             WHERE 1=1 $where
-                            GROUP BY o.status_courier, lbl, col
+                            GROUP BY sc, lbl, col
                             ORDER BY t DESC");
             $db->cdp_execute();
             // Merge by display label (several unknown status ids all fold into
