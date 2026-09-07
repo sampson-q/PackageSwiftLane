@@ -59,7 +59,10 @@ if ($search != null) {
 }
 if ($status_courier > 0) {
 
-	$sWhere .= " and  a.status_courier = '" . $status_courier . "'";
+	// Filter on the status the row actually SHOWS — a consolidated shipment
+	// reports its consolidation's status, so filtering on its own would return
+	// rows labelled with something else.
+	$sWhere .= " and  " . cdp_effectiveStatusSql('a') . " = '" . $status_courier . "'";
 }
 
 
@@ -79,7 +82,10 @@ if ($filterby > 0) {
 
 if ($filterby == 3) {
 
-	$sWhere .= " and  a.is_consolidate = '1'";
+	// Real membership, not the drifting is_consolidate flag.
+	$sWhere .= " and EXISTS (SELECT 1 FROM cdb_consolidate_detail d_f
+							  INNER JOIN cdb_consolidate c_f ON c_f.consolidate_id = d_f.consolidate_id
+							  WHERE d_f.order_no = a.order_no) ";
 }
 
 // Air vs Sea segregation — the dedicated Air Shipping / Sea Shipping menus each
@@ -115,6 +121,10 @@ $numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 $db->cdp_query($sql . " limit $offset, $per_page");
 $data = $db->cdp_registros();
+
+// Consolidation membership for this page in one query: a shipment inside a
+// consolidation shows the CONSOLIDATION's status, not its own.
+cdp_prefetchConsolidations(array_map(function ($r) { return $r->order_no; }, $data ?: array()));
 
 $total_pages = ceil($numrows / $per_page);
 
@@ -242,15 +252,8 @@ if ($numrows > 0) { ?>
 
 						$address_order = $address_map[$row->order_prefix . $row->order_no] ?? null;
 
-                        $db->cdp_query("SELECT consolidate_id FROM cdb_consolidate_detail where order_no='" . $row->order_no . "'");
-						$consolidate_id = $db->cdp_registro() -> consolidate_id;
-						
-                        $db->cdp_query("SELECT status_courier FROM cdb_consolidate where consolidate_id='" . $consolidate_id . "'");
-						$consolidate_status_courier = $db->cdp_registro() -> status_courier;
-                        
-                        $db->cdp_query("SELECT * FROM cdb_styles where id='" . $consolidate_status_courier . "'");
-						$consolidate_style = $db->cdp_registro();
-                        
+						// Status to display: the consolidation's while the shipment is in one.
+						$eff = cdp_getEffectiveStatus($row->order_no, $row->status_courier, $row->is_consolidate);
 
 
 					?>
@@ -297,7 +300,7 @@ if ($numrows > 0) { ?>
 							<td class="">
 
 								<!-- <span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->mod_style; ?></span> -->
-                                 <span style="background: <?php echo $row->is_consolidate ? $consolidate_style->color : $row->color; ?>;" class="label label-large"><?php echo $row->is_consolidate ? $consolidate_style->mod_style : $row->mod_style; ?></span>
+                                 <span style="background: <?php echo $eff->color; ?>;" class="label label-large"><?php echo $eff->mod_style; ?></span>
 								<br>
 
 								<?php if ((int)$row->is_dangerous_good === 1 && ($dg_style = cdp_getDangerousGoodsStyle())) { ?>
@@ -314,7 +317,7 @@ if ($numrows > 0) { ?>
 								?>
 
 								<?php
-								if ($row->is_consolidate == true) { ?>
+								if ($eff->in_consolidation) { ?>
 
 									<span style="background: <?php echo $status_style_consolidate->color; ?>;" class="label label-large"><?php echo $status_style_consolidate->mod_style; ?></span>
 								<?php
