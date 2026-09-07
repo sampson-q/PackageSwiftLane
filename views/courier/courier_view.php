@@ -123,14 +123,10 @@ $met_payment = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . $_GET['id'] . "'");
 $order_items = $db->cdp_registros();
 
-$db->cdp_query("SELECT consolidate_id FROM cdb_consolidate_detail where order_no='" . $row_order->order_no . "'");
-$consolidate_id = $db->cdp_registro() -> consolidate_id;
-
-$db->cdp_query("SELECT status_courier FROM cdb_consolidate where consolidate_id='" . $consolidate_id . "'");
-$consolidate_status_courier = $db->cdp_registro() -> status_courier;
-
-$db->cdp_query("SELECT * FROM cdb_styles where id='" . $consolidate_status_courier . "'");
-$consolidate_style = $db->cdp_registro();
+// Inside a consolidation the shipment reports the CONSOLIDATION's status and
+// the CONSOLIDATION's ETA; on its own it reports its own.
+$eff     = cdp_getEffectiveStatus($row_order->order_no, $row_order->status_courier, $row_order->is_consolidate);
+$eff_eta = cdp_getEffectiveEta((int) $_GET['id'], $row_order->order_no, $row_order->order_deli_time ?? null, $row_order->is_consolidate, false, $row_order->status_courier);
 
 // Legacy-aware: old-system orders kept the postal tracking on cdb_add_order.tracking_num.
 $postal_tracking = cdp_getPackageTrackingLegacyAware((int) $_GET['id']);
@@ -384,7 +380,7 @@ if ($row_order->status_invoice == 1) {
                                 <div class="row">
                                     <div class=" col-sm-12 col-md-6 mb-2">
                                         <b class=""><?php echo $lang['left506']?></b>
-                                        <span class="label" style="background-color: <?php echo $row_order->is_consolidate ? $consolidate_style->color : $status_courier->color; ?>"><?php echo $row_order->is_consolidate ? $consolidate_style->mod_style : $status_courier->mod_style; ?></span>
+                                        <span class="label" style="background-color: <?php echo $eff->color; ?>"><?php echo $eff->mod_style; ?></span>
                                         <?php if (isset($row_order->is_dangerous_good) && (int)$row_order->is_dangerous_good === 1) { $dg_style = cdp_getDangerousGoodsStyle(); if ($dg_style) { ?>
                                             <span class="label" style="background-color: <?php echo htmlspecialchars($dg_style->color, ENT_QUOTES, 'UTF-8'); ?>"><i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars(str_replace('_', ' ', $dg_style->mod_style), ENT_QUOTES, 'UTF-8'); ?></span>
                                         <?php } } ?>
@@ -457,7 +453,7 @@ if ($row_order->status_invoice == 1) {
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo $lang['eta'] ?></b></h5>
                                             <p class="text-muted  m-l-5">
-                                                <?php echo $postal_tracking->estimated_eta != null ? $postal_tracking->estimated_eta : 'N/A'; ?>
+                                                <?php echo $eff_eta; ?>
                                             </p>
 
                                             <h5> &nbsp;<b><?php echo $lang['postal_tracking'] ?></b></h5>
