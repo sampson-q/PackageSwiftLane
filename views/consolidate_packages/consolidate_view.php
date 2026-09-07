@@ -101,9 +101,8 @@ $offices = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_consolidate_packages_detail WHERE consolidate_id='" . $_GET['id'] . "'");
 $order_items = $db->cdp_registros();
 
-$db->cdp_query("SELECT estimated_eta FROM cdb_package_tracking_number WHERE order_id = :id");
-$db->bind(':id', $_GET['id']);
-$estimated_eta = $db->cdp_registro();
+// The consolidation's own ETA (its entered date, else its delivery-time label).
+$estimated_eta = cdp_getConsolidationEtaById($_GET['id'], true);
 
 $dias_ = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
 $meses_ = array(
@@ -341,11 +340,7 @@ if ($row_order->status_invoice == 1) {
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo 'Estimated Time of Arrival' ?></b></h5>
 
-                                            <p class="text-muted  m-l-5"><?php if ($estimated_eta !== null) {
-                                                                                echo $estimated_eta->estimated_eta;
-                                                                            } else {
-                                                                                echo 'N/A';
-                                                                            } ?></p>
+                                            <p class="text-muted  m-l-5"><?php echo $estimated_eta; ?></p>
                                             <h5> &nbsp;<b><?php echo $lang['tools-shipmode1'] ?></b></h5>
                                             <p class="text-muted  m-l-5"><?php if ($order_service_options != null) {
                                                                                 echo $order_service_options->ship_mode;

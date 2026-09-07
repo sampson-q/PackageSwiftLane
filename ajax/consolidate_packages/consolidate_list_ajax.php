@@ -158,8 +158,7 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_styles where id= '14'");
 						$status_style_pickup = $db->cdp_registro();
 
-                        $db->cdp_query("SELECT * FROM cdb_package_tracking_number WHERE order_id = '" . $row->consolidate_id . "'");                        
-                        $package_tracking = $db->cdp_registro();
+
 
 						if ($row->status_invoice == 1) {
 							$text_status = $lang['invoice_paid'];
@@ -198,7 +197,7 @@ if ($numrows > 0) { ?>
 							</td>
 
                             <td>
-                                <?php echo cdp_etaOrDelivery($package_tracking->estimated_eta ?? null, $row->order_deli_time ?? null); ?>
+                                <?php echo cdp_getConsolidationEtaById($row->consolidate_id, true); ?>
                             </td>
 
 							<!-- <td>
