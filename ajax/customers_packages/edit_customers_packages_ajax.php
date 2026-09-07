@@ -121,12 +121,8 @@ if (empty($errors)) {
         $old_status_obj   = cdp_getCourierstatusApi((int)$old_shipment->status_courier);
         $old_status_label = $old_status_obj ? $old_status_obj->mod_style : '';
 
-        // Old ETA from tracking
-        $db_old->cdp_query("SELECT estimated_eta FROM cdb_package_tracking WHERE order_id = :id LIMIT 1");
-        $db_old->bind(':id', $shipment_id);
-        $db_old->cdp_execute();
-        $r = $db_old->cdp_registro();
-        $old_eta = $r ? $r->estimated_eta : '';
+        // Old ETA, as stored on the package row.
+        $old_eta = cdp_getPackageEtaRaw($shipment_id);
     }
 
     // =====================
@@ -268,9 +264,8 @@ if (empty($errors)) {
         $shipment    = cdp_getCustomerPackage($shipment_id);
         $order_track = $shipment->order_prefix . $shipment->order_no;
 
-        // Signature: (order_id, user_id, tracking_number, estimated_eta) — the ETA
-        // was previously passed in the tracking_number slot.
-        cdp_updatePackageTracking($shipment_id, $_SESSION['userid'] ?? null, null, cdp_sanitize($_POST['estimated_eta']));
+        // A package's own ETA lives on the package row.
+        cdp_setPackageEta($shipment_id, cdp_sanitize($_POST['estimated_eta']));
 
         // =====================
         // DELETE EXISTING FILES

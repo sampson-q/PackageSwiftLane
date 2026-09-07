@@ -146,7 +146,9 @@ if (empty($errors)) {
     );
 
     $shipment_id = cdp_insertCustomerPackages($dataShipment);
-    cdp_insertPackageTracking($shipment_id, $_SESSION['userid'], null, cdp_sanitize($_POST["estimated_eta"]));
+    // A package's own ETA lives on the package row — cdb_package_tracking_number
+    // is keyed by an order_id that shipments also claim.
+    cdp_setPackageEta($shipment_id, cdp_sanitize($_POST["estimated_eta"]));
 
     if ($shipment_id !== null) {
 
@@ -330,12 +332,8 @@ if (empty($errors)) {
         $email_service_type = $service_obj_email ? $service_obj_email->ship_mode : 'Standard';
 
         // Get delivery time for email
-        $db_delivery_email = new Conexion;
-        $db_delivery_email->cdp_query("SELECT estimated_eta FROM cdb_package_tracking_number WHERE order_id = :id");
-        $db_delivery_email->bind(':id', $shipment_id);
-        $db_delivery_email->cdp_execute();
-        $delivery_obj_email = $db_delivery_email->cdp_registro();
-        $email_delivery_time = $delivery_obj_email ? $delivery_obj_email->estimated_eta : 'N/A';
+        $email_delivery_time = cdp_getPackageEtaRaw($shipment_id);
+        if ($email_delivery_time === '') { $email_delivery_time = 'N/A'; }
 
         $body = str_replace(
             array(

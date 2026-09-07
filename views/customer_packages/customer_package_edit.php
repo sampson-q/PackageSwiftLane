@@ -61,8 +61,7 @@ $ship_modes = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row_order->order_prefix . $row_order->order_no . "'");
 $address_order = $db->cdp_registro();
 
-$db->cdp_query("SELECT * FROM cdb_package_tracking_number WHERE order_id='" . (int) cdp_sanitize($_GET['id']) . "'");
-$tracking_row = $db->cdp_registro();
+$tracking_row = (object) array('estimated_eta' => cdp_getPackageEtaRaw((int) cdp_sanitize($_GET['id'])));
 
 // recipient (may be null on older records)
 $receiver_data = null;

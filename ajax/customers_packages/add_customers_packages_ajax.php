@@ -160,7 +160,9 @@ if (empty($errors)) {
 
     $shipment_id = cdp_insertCustomerPackages($dataShipment);
 
-    cdp_insertPackageTracking($shipment_id, $_SESSION['userid'], null, cdp_sanitize($_POST['estimated_eta']));
+    // A package's own ETA lives on the package row — cdb_package_tracking_number
+    // is keyed by an order_id that shipments also claim.
+    cdp_setPackageEta($shipment_id, cdp_sanitize($_POST['estimated_eta']));
 
     if ($shipment_id !== null) {
 
