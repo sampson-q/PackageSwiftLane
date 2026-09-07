@@ -55,7 +55,9 @@ class ShipmentsHandler
             }
         }
 
-        if ($status > 0)   $where .= ' AND a.status_courier = ' . $status;
+        // Filter on the status the API REPORTS (a consolidated shipment reports
+        // its consolidation's status), so ?status= agrees with what comes back.
+        if ($status > 0)   $where .= ' AND ' . cdp_effectiveStatusSql('a') . ' = ' . $status;
         if ($senderId > 0) $where .= ' AND a.sender_id = '      . $senderId;
 
         // String filters – parameterized to prevent SQL injection
@@ -103,6 +105,9 @@ class ShipmentsHandler
         $db->cdp_query("{$baseSql} ORDER BY a.{$sortCol} {$sortDir} LIMIT {$offset}, {$perPage}");
         foreach ($params as $key => $val) { $db->bind($key, $val); }
         $rows = $db->cdp_registros();
+
+        // Consolidation membership for the whole page in one query.
+        cdp_prefetchConsolidations(array_map(function ($r) { return $r->order_no; }, $rows ?: []));
 
         $items = array_map([self::class, 'formatRow'], $rows ?: []);
         ApiResponse::paginated($items, $total, $page, $perPage);
@@ -193,6 +198,17 @@ class ShipmentsHandler
 
         if ($shipmentId === null) {
             ApiResponse::serverError('Failed to create shipment.');
+        }
+
+        // cdb_add_order has no ETA column — a shipment's own ETA lives in
+        // cdb_package_tracking_number alongside its carrier tracking number.
+        if (($data['estimated_eta'] ?? '') !== '' || ($data['tracking_number'] ?? '') !== '') {
+            cdp_updatePackageTracking(
+                (int)$shipmentId,
+                (int)($authUser->user_id ?? $authUser->id ?? 0),
+                (string)($data['tracking_number'] ?? ''),
+                cdp_sanitize($data['estimated_eta'] ?? '')
+            );
         }
 
         // Insert package lines if provided
@@ -356,6 +372,7 @@ class ShipmentsHandler
         if (!$row) {
             return [];
         }
+        $eff = cdp_getEffectiveStatus($row->order_no ?? '', $row->status_courier ?? 0, $row->is_consolidate ?? null);
         return [
             'id'                   => (int)$row->order_id,
             'order_prefix'         => $row->order_prefix,
@@ -374,9 +391,21 @@ class ShipmentsHandler
             'order_deli_time'      => (int)($row->order_deli_time ?? 0),
             'order_payment_method' => (int)($row->order_payment_method ?? 0),
             'driver_id'            => (int)($row->driver_id ?? 0),
-            'status'               => (int)($row->status_courier ?? 0),
-            'status_label'         => $row->status_label ?? null,
-            'status_color'         => $row->status_color ?? null,
+            // Inside a consolidation a shipment reports the CONSOLIDATION's
+            // status and ETA — the same answer every screen gives.
+            'status'               => $eff->status_id,
+            'status_label'         => $eff->mod_style !== '' ? $eff->mod_style : ($row->status_label ?? null),
+            'status_color'         => $eff->color,
+            'in_consolidation'     => $eff->in_consolidation,
+            'consolidation'        => $eff->in_consolidation ? $eff->consolidate_code : null,
+            'eta'                  => cdp_getEffectiveEta(
+                                          (int)$row->order_id,
+                                          $row->order_no ?? '',
+                                          $row->order_deli_time ?? null,
+                                          $row->is_consolidate ?? null,
+                                          false,
+                                          $row->status_courier ?? null
+                                      ),
             'status_invoice'       => (int)($row->status_invoice ?? 0),
             'is_pickup'            => (bool)(int)($row->is_pickup ?? 0),
             'is_consolidate'       => (bool)(int)($row->is_consolidate ?? 0),

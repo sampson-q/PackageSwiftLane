@@ -862,9 +862,12 @@ components:
         order_deli_time:            { type: integer }
         order_payment_method:       { type: integer }
         driver_id:                  { type: integer }
-        status:                     { type: integer }
+        status:                     { type: integer, description: "Effective status: the consolidation's while the shipment is travelling inside one, its own otherwise" }
         status_label:               { type: string, nullable: true }
         status_color:               { type: string, nullable: true }
+        in_consolidation:           { type: boolean, description: "The shipment belongs to a consolidation" }
+        consolidation:              { type: string, nullable: true, description: "That consolidation's tracking number, null when there is none" }
+        eta:                        { type: string, description: "Effective ETA: the consolidation's while the shipment is travelling inside one, its own otherwise. Falls back to the delivery-time label, then 'N/A'" }
         status_invoice:             { type: integer }
         is_pickup:                  { type: boolean }
         is_consolidate:             { type: boolean }
@@ -1066,9 +1069,12 @@ components:
       properties:
         type:            { type: string, enum: [shipment, package, consolidation] }
         tracking_number: { type: string }
-        status:          { type: integer }
+        status:          { type: integer, description: "Effective status: the consolidation's while the item is travelling inside one, its own otherwise" }
         status_label:    { type: string }
         status_color:    { type: string }
+        in_consolidation: { type: boolean, description: "The item belongs to a consolidation" }
+        consolidation:   { type: string, nullable: true, description: "That consolidation's tracking number, null when there is none" }
+        eta:             { type: string, description: "Effective ETA, or 'N/A'" }
         order_date:      { type: string, format: date-time, nullable: true }
         due_date:        { type: string, format: date-time, nullable: true, description: "Shipments only" }
         total_order:     { type: number }

@@ -67,12 +67,19 @@ class TrackingHandler
         $db->cdp_execute();
         $events = $db->cdp_registros();
 
+        // Inside a consolidation the shipment reports the CONSOLIDATION's status
+        // and ETA — the whole consolidation moves as one.
+        $eff = cdp_getEffectiveStatus($row->order_no, $row->status_courier, $row->is_consolidate ?? null);
+
         return [
             'type'            => 'shipment',
             'tracking_number' => $orderNo,
-            'status'          => (int)$row->status_courier,
-            'status_label'    => $row->status_label,
-            'status_color'    => $row->status_color,
+            'status'          => $eff->status_id,
+            'status_label'    => $eff->mod_style !== '' ? $eff->mod_style : $row->status_label,
+            'status_color'    => $eff->color,
+            'in_consolidation' => $eff->in_consolidation,
+            'consolidation'   => $eff->in_consolidation ? $eff->consolidate_code : null,
+            'eta'             => cdp_getEffectiveEta((int)$row->order_id, $row->order_no, $row->order_deli_time ?? null, $row->is_consolidate ?? null, false, $row->status_courier),
             'order_date'      => $row->order_date ?? null,
             'due_date'        => $row->due_date ?? null,
             'total_order'     => (float)($row->total_order ?? 0),
@@ -108,12 +115,19 @@ class TrackingHandler
         $db->cdp_execute();
         $events = $db->cdp_registros();
 
+        // Inside a consolidation the package reports the CONSOLIDATION's status
+        // and ETA — the whole consolidation moves as one.
+        $eff = cdp_getEffectiveStatus($row->order_no, $row->status_courier, $row->is_consolidate ?? null, true);
+
         return [
             'type'            => 'package',
             'tracking_number' => $orderNo,
-            'status'          => (int)$row->status_courier,
-            'status_label'    => $row->status_label,
-            'status_color'    => $row->status_color,
+            'status'          => $eff->status_id,
+            'status_label'    => $eff->mod_style !== '' ? $eff->mod_style : $row->status_label,
+            'status_color'    => $eff->color,
+            'in_consolidation' => $eff->in_consolidation,
+            'consolidation'   => $eff->in_consolidation ? $eff->consolidate_code : null,
+            'eta'             => cdp_getEffectiveEta((int)$row->order_id, $row->order_no, $row->order_deli_time ?? null, $row->is_consolidate ?? null, true, $row->status_courier),
             'order_date'      => $row->order_date ?? null,
             'total_order'     => (float)($row->total_order ?? 0),
             'events'          => $events ?: [],
