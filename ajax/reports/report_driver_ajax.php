@@ -22,6 +22,7 @@
 
 
 require_once("../../loader.php");
+require_once(__DIR__ . '/../../helpers/querys.php');
 
 $db = new Conexion;
 $user = new User;
@@ -76,6 +77,9 @@ $numrows = $db->cdp_rowCount();
 
 $db->cdp_query($sql);
 $data = $db->cdp_registros();
+
+// Consolidation membership for the whole page in one query.
+cdp_prefetchConsolidations(array_map(function ($r) { return $r->order_no; }, $data ?: array()));
 
 
 if ($numrows > 0) { ?>
@@ -202,7 +206,9 @@ if ($numrows > 0) { ?>
 
 							<td class="">
 
-								<span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->mod_style; ?></span>
+								<?php // Status to display: the consolidation's while the shipment is in one.
+								$eff = cdp_getEffectiveStatus($row->order_no, $row->status_courier, $row->is_consolidate ?? null); ?>
+								<span style="background: <?php echo $eff->color; ?>;" class="label label-large"><?php echo $eff->mod_style; ?></span>
 								<br>
 
 								<?php
@@ -214,7 +220,7 @@ if ($numrows > 0) { ?>
 								?>
 
 								<?php
-								if ($row->is_consolidate == true) { ?>
+								if ($eff->in_consolidation) { ?>
 
 									<span style="background: <?php echo $status_style_consolidate->color; ?>;" class="label label-large"><?php echo $status_style_consolidate->mod_style; ?></span>
 								<?php

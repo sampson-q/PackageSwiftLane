@@ -247,7 +247,7 @@ $fecha = str_replace('-', '/', $fecha);
                             }
                             ?>
                         </td>
-                        <td><?php echo $row->mod_style; ?></td>
+                        <td><?php echo cdp_getEffectiveStatus($row->order_no, $row->status_courier, $row->is_consolidate ?? null)->mod_style; ?></td>
                         <td><?php echo  $row->total_weight; ?></td>
                         <td><?php echo  cdb_money_format_bar($row->sub_total); ?></td>
                         <td><?php echo  cdb_money_format_bar($row->total_tax_discount); ?></td>
