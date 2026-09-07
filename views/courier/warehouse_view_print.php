@@ -27,7 +27,8 @@ if ($search != null) {
 }
 
 if ($status_courier > 0) {
-    $sWhere .= " and a.status_courier = '" . $status_courier . "'";
+    // Same rule as the on-screen list: filter on the status the row is shown as.
+    $sWhere .= " and " . cdp_effectiveStatusSql('a') . " = '" . $status_courier . "'";
 }
 
 $range_label = '';
@@ -63,6 +64,9 @@ $numrows = $db->cdp_rowCount();
 
 $db->cdp_query($sql);
 $data = $db->cdp_registros();
+
+// Consolidation membership for the whole report in one query.
+cdp_prefetchConsolidations(array_map(function ($r) { return $r->order_no; }, $data ?: array()));
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html dir="<?php echo $direction_layout; ?>">
@@ -136,14 +140,8 @@ $data = $db->cdp_registros();
                         $db->cdp_query("SELECT * FROM cdb_styles WHERE id = '14'");
                         $status_style_pickup = $db->cdp_registro();
 
-                        $db->cdp_query("SELECT consolidate_id FROM cdb_consolidate_detail WHERE order_no = '" . $row->order_no . "'");
-                        $consolidate_id = $db->cdp_registro()->consolidate_id;
-
-                        $db->cdp_query("SELECT status_courier FROM cdb_consolidate WHERE consolidate_id = '" . $consolidate_id . "'");
-                        $consolidate_status_courier = $db->cdp_registro()->status_courier;
-
-                        $db->cdp_query("SELECT * FROM cdb_styles WHERE id = '" . $consolidate_status_courier . "'");
-                        $consolidate_style = $db->cdp_registro();
+                        // Status to display: the consolidation's while the shipment is in one.
+                        $eff = cdp_getEffectiveStatus($row->order_no, $row->status_courier, $row->is_consolidate);
 
                         if ($row->status_invoice == 1) {
                             $text_status = $lang['invoice_paid'];
@@ -156,7 +154,7 @@ $data = $db->cdp_registros();
                         }
 
                         $postal_tracking = cdp_getPackageTrackingLegacyAware($row->order_id);
-                        $status_label = $row->is_consolidate ? $consolidate_style->mod_style . 'd' : $row->mod_style;
+                        $status_label = $eff->mod_style;
                 ?>
                     <tr>
                         <td><b><?php echo $count; ?></b></td>
@@ -169,7 +167,7 @@ $data = $db->cdp_registros();
                         <td>
                             <?php echo h($status_label); ?>
                             <?php if ($row->is_pickup) echo '<br>' . h($status_style_pickup->mod_style); ?>
-                            <?php if ($row->is_consolidate) echo '<br>' . h($status_style_consolidate->mod_style . 'd'); ?>
+                            <?php if ($eff->in_consolidation) echo '<br>' . h($status_style_consolidate->mod_style . 'd'); ?>
                         </td>
                         <td><?php echo h($text_status); ?></td>
                     </tr>
