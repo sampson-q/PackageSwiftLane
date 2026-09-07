@@ -55,8 +55,7 @@ $order_items = $db->cdp_registros();
 $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->sender_id . "'");
 $sender_data = $db->cdp_registro();
 
-$db->cdp_query("SELECT estimated_eta FROM cdb_package_tracking_number WHERE order_id='" . $row_order->consolidate_id . "'");
-$package_tracking_data = $db->cdp_registro();
+$package_tracking_data = (object) array('estimated_eta' => cdp_getConsolidationEtaRaw($row_order->consolidate_id));
 
 if ($row_order->recipient_type == 'user') {
     $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->receiver_id . "'");
@@ -125,9 +124,8 @@ if (isset($_POST["total_item"])) {
                 cp.status_courier,
                 cp.driver_id,
                 cp.seals_package,
-                ptn.estimated_eta
+                cp.estimated_eta
              FROM cdb_consolidate cp
-             LEFT JOIN cdb_package_tracking_number ptn ON ptn.order_id = cp.consolidate_id
              WHERE cp.consolidate_id = :cid
              LIMIT 1"
         );
@@ -372,10 +370,9 @@ if (isset($_POST["total_item"])) {
     // ETA UPDATE
     // ═════════════════════════════════════════════════════════════════════
 
-    $db->cdp_query("UPDATE cdb_package_tracking_number SET estimated_eta = :estimated_eta WHERE order_id = :order_id");
-    $db->bind(':estimated_eta', cdp_sanitize($_POST["estimated_eta"]));
-    $db->bind(':order_id', $order_id);
-    $db->cdp_execute();
+    // The consolidation's ETA lives on the consolidation itself; every package
+    // inside it inherits this value.
+    cdp_setConsolidationEta($order_id, cdp_sanitize($_POST["estimated_eta"]));
 
     // ═════════════════════════════════════════════════════════════════════
     // DELETE AND INSERT DETAIL ROWS

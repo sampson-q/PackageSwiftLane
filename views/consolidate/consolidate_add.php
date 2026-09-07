@@ -291,7 +291,9 @@ if (isset($_POST["create_invoice"])) {
 
     $order_id = $db->dbh->lastInsertId();
     
-    cdp_insertPackageTracking($order_id, $_SESSION['userid'], '', cdp_sanitize($_POST['estimated_eta']));
+    // The consolidation's ETA lives on the consolidation itself; every package
+    // inside it inherits this value.
+    cdp_setConsolidationEta($order_id, cdp_sanitize($_POST['estimated_eta']));
 
     for ($count = 0; $count < $_POST["total_item"]; $count++) {
 
