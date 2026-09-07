@@ -43,15 +43,24 @@ if (empty($_POST['driver_id']))
 
 if (empty($errors)) {
 
-    $customer_packages = cdp_getCustomerPackagePrint(cdp_sanitize($_POST['id_shipment']))['data'];
-    
+    // id_shipment is a cdb_add_order id.
+    $customer_packages = cdp_getPackagePrint(cdp_sanitize($_POST['id_shipment']))['data'];
+
     $sender_id = $customer_packages->sender_id;
     $sender_data = cdp_getSenderCourier($sender_id);
-    
+
     $driver_data = cdp_getSenderCourier(cdp_sanitize($_POST['driver_id']));
 
-    $estimated_eta = cdp_getPackageTracking(cdp_sanitize($_POST['id_shipment']));
-    $eta = $estimated_eta->estimated_eta ? "*Estimated Time of Arrival:* " . $estimated_eta->estimated_eta . "\n\n" :  "\n";
+    // Inside a consolidation the shipment quotes the CONSOLIDATION's ETA.
+    $eta_value = cdp_getEffectiveEta(
+        (int) cdp_sanitize($_POST['id_shipment']),
+        $customer_packages->order_no ?? '',
+        $customer_packages->order_deli_time ?? null,
+        $customer_packages->is_consolidate ?? null,
+        false,
+        $customer_packages->status_courier ?? null
+    );
+    $eta = ($eta_value !== '' && $eta_value !== 'N/A') ? "*Estimated Time of Arrival:* " . $eta_value . "\n\n" : "\n";
 
     $data = array(
         'id_shipment' => trim($_POST['id_shipment']),

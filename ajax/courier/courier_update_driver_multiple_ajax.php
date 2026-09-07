@@ -39,17 +39,19 @@ foreach ($data as $key) {
 
     cdp_updateDriverCourierMultiple($key, $driver);
 
-    $customer_packages = cdp_getPackageMultiple($key);
-        
+    // $key is a shipment tracking number (cdb_add_order.order_no).
+    $customer_packages = cdp_getPackageMultiple_($key);
+
     $sender_id = $customer_packages->sender_id;
     $sender_data = cdp_getSenderCourier($sender_id);
 
     $driver_data = cdp_getSenderCourier($driver);
 
     $order_id = $customer_packages->order_id;
-    $estimated_eta = cdp_getPackageTracking($order_id);
 
-    $eta = $estimated_eta->estimated_eta ? "*Estimated Time of Arrival:* " . $estimated_eta->estimated_eta . "\n\n" :  "\n";
+    // Inside a consolidation the shipment quotes the CONSOLIDATION's ETA.
+    $eta_value = cdp_getEffectiveEta($order_id, $customer_packages->order_no, $customer_packages->order_deli_time ?? null, $customer_packages->is_consolidate ?? null, false, $customer_packages->status_courier ?? null);
+    $eta = ($eta_value !== '' && $eta_value !== 'N/A') ? "*Estimated Time of Arrival:* " . $eta_value . "\n\n" : "\n";
 
     try {
         require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
