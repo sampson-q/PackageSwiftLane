@@ -43,15 +43,20 @@ if (empty($_POST['driver_id']))
 
 if (empty($errors)) {
 
-    $customer_packages = cdp_getPackagePrint(cdp_sanitize($_POST['id_shipment']))['data'];
-    
+    // id_shipment is a consolidate_id — read the CONSOLIDATION, not the shipment
+    // that happens to share the number.
+    $customer_packages = cdp_getConsolidatePrint(cdp_sanitize($_POST['id_shipment']))['data'];
+
     $sender_id = $customer_packages->sender_id;
     $sender_data = cdp_getSenderCourier($sender_id);
-    
+
     $driver_data = cdp_getSenderCourier(cdp_sanitize($_POST['driver_id']));
 
-    $estimated_eta = cdp_getPackageTracking(cdp_sanitize($_POST['id_shipment']));
-    $eta = $estimated_eta->estimated_eta ? "*Estimated Time of Arrival:* " . $estimated_eta->estimated_eta . "\n\n" :  "\n";
+    $tracking_code = $customer_packages->c_prefix . $customer_packages->c_no;
+
+    // The consolidation's ETA — every package inside it inherits this.
+    $eta_value = cdp_getConsolidationEtaById(cdp_sanitize($_POST['id_shipment']));
+    $eta = ($eta_value !== '' && $eta_value !== 'N/A') ? "*Estimated Time of Arrival:* " . $eta_value . "\n\n" : "\n";
 
     $data = array(
         'id_shipment' => trim($_POST['id_shipment']),
@@ -109,7 +114,7 @@ if (empty($errors)) {
             if ($sender_data && !empty($sender_data->phone)) {
                 $whatsapp_body = "Dear {$sender_data->fname } {$sender_data->lname },\n\n
                 Your shipment has been updated with a new driver assignment. Here are the details:\n
-                *Tracking Number:* {$customer_packages->order_prefix}{$customer_packages->order_no}\n
+                *Tracking Number:* {$tracking_code}\n
                 *Courier:* {$driver_data->fname}\n
                 $eta
                 

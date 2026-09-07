@@ -37,17 +37,21 @@ foreach ($data as $key) {
 
     cdp_updateDriverConsolidatePackagesMultiple($key, $driver);
 
-    $customer_packages = cdp_getPackageMultiple($key);
-        
+    // $key is a consolidation number (c_no) — read the CONSOLIDATION, not a
+    // package that happens to share the number.
+    $customer_packages = cdp_getConsolidatePackagesMultiple($key);
+
     $sender_id = $customer_packages->sender_id;
     $sender_data = cdp_getSenderCourier($sender_id);
 
     $driver_data = cdp_getSenderCourier($driver);
 
-    $order_id = $customer_packages->order_id;
-    $estimated_eta = cdp_getPackageTracking($order_id);
+    $order_id = $customer_packages->consolidate_id;
+    $tracking_code = $customer_packages->c_prefix . $customer_packages->c_no;
 
-    $eta = $estimated_eta->estimated_eta ? "*Estimated Time of Arrival:* " . $estimated_eta->estimated_eta . "\n\n" :  "\n";
+    // The consolidation's ETA — every package inside it inherits this.
+    $eta_value = cdp_getConsolidationEtaById($order_id, true);
+    $eta = ($eta_value !== '' && $eta_value !== 'N/A') ? "*Estimated Time of Arrival:* " . $eta_value . "\n\n" : "\n";
 
     try {
         require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
@@ -56,7 +60,7 @@ foreach ($data as $key) {
         if ($sender_data && !empty($sender_data->phone)) {
             $whatsapp_body = "Dear {$sender_data->fname } {$sender_data->lname },\n\n
             Your shipment has been updated with a new driver assignment. Here are the details:\n
-            *Tracking Number:* {$customer_packages->order_prefix}{$customer_packages->order_no}\n
+            *Tracking Number:* {$tracking_code}\n
             *Courier:* {$driver_data->fname}\n
             $eta
             
