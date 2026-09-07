@@ -96,8 +96,10 @@ $offices = $db->cdp_registro();
 $db->cdp_query("SELECT * FROM cdb_customers_packages_detail WHERE order_id='" . $_GET['id'] . "'");
 $order_items = $db->cdp_registros();
 
-$db->cdp_query("SELECT estimated_eta FROM cdb_package_tracking_number WHERE order_id='" . (int) cdp_sanitize($_GET['id']) . "'");
-$eta = $db->cdp_registro();
+// Inside a consolidation the package reports the CONSOLIDATION's status and
+// the CONSOLIDATION's ETA; on its own it reports its own.
+$eff     = cdp_getEffectiveStatus($row_order->order_no, $row_order->status_courier, $row_order->is_consolidate, true);
+$eff_eta = cdp_getEffectiveEta((int) $_GET['id'], $row_order->order_no, $row_order->order_deli_time ?? null, $row_order->is_consolidate, true, $row_order->status_courier);
 
 
 $dias_ = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
@@ -331,7 +333,7 @@ if ($row_order->status_invoice == 1) {
                                 <div class="row">
                                     <div class=" col-sm-12 col-md-6 mb-2">
                                         <b class=""><?php echo $lang['left506'] ?></b>
-                                        <span class="label" style="background-color: <?php echo $status_courier->color; ?>"><?php echo $status_courier->mod_style; ?>
+                                        <span class="label" style="background-color: <?php echo $eff->color; ?>"><?php echo $eff->mod_style; ?>
                                         </span>
                                     </div>
 
@@ -441,7 +443,7 @@ if ($row_order->status_invoice == 1) {
                                     <div class=" col-sm-12 col-md-4 mb-2">
                                         <div class="">
                                             <h5> &nbsp;<b><?php echo 'Estimated Time of Arrival' ?></b></h5>
-                                            <p class="text-muted m-l-5"><?php echo $eta->estimated_eta; ?></p>
+                                            <p class="text-muted m-l-5"><?php echo $eff_eta; ?></p>
                                         </div>
                                     </div>
                                 </div>
