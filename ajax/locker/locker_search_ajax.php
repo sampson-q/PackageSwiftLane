@@ -2,6 +2,7 @@
 if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
 // ajax/locker_search_ajax.php
 require_once("../../loader.php");
+require_once(__DIR__ . '/../../helpers/querys.php');
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
@@ -53,6 +54,7 @@ $sql = "SELECT
             a.status_courier,
             a.driver_id,
             a.order_service_options,
+            a.order_deli_time,
             b.mod_style,
             b.color,
             COALESCE(NULLIF(c.tracking_number, ''), a.tracking_num) AS tracking_number,
@@ -71,6 +73,10 @@ $sql = "SELECT
             a.order_id DESC";
 $db->cdp_query($sql);
 $orders = $db->cdp_registros();
+
+// Consolidation membership for the whole list in one query: a shipment inside a
+// consolidation reports the CONSOLIDATION's status and ETA.
+cdp_prefetchConsolidations(array_map(function ($r) { return $r->order_no; }, $orders ?: array()));
 
 if (!$orders) {
     echo '<div class="alert alert-warning">No orders found for this locker.</div>';
@@ -179,7 +185,7 @@ if (!$orders) {
                         </td>
                         <td><?php echo $row->tracking_number; ?></td>
                         <td><?php echo $row->order_date; ?></td>
-                        <td><?php echo $row->estimated_eta; ?></td>
+                        <td><?php echo cdp_getEffectiveEta($row->order_id, $row->order_no, $row->order_deli_time ?? null, $row->is_consolidate, false, $row->status_courier); ?></td>
                         <?php if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
                             <td><?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?></td>
                         <?php } ?>
@@ -189,14 +195,15 @@ if (!$orders) {
                         <?php } ?>
                         <td><?php echo $address_order->recipient_country; ?>-<?php echo $address_order->recipient_city; ?></td>
                         <td>
-                            <span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->mod_style; ?></span>
+                            <?php $eff = cdp_getEffectiveStatus($row->order_no, $row->status_courier, $row->is_consolidate); ?>
+                            <span style="background: <?php echo $eff->color; ?>;" class="label label-large"><?php echo $eff->mod_style; ?></span>
                             <br>
                             <?php if ($row->is_pickup) { ?>
                                 <span style="background: <?php echo $status_style_pickup->color; ?>;" class="label label-large">
                                     <?php echo $status_style_pickup->mod_style; ?>
                                 </span>
                             <?php } ?>
-                            <?php if ($row->is_consolidate) { ?>
+                            <?php if ($eff->in_consolidation) { ?>
                                 <span style="background: <?php echo $status_style_consolidate->color; ?>;" class="label label-large">
                                     <?php echo $status_style_consolidate->mod_style; ?>
                                 </span>
