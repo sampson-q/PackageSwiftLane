@@ -114,9 +114,8 @@ $order_items = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);
 
-$db->cdp_query("SELECT estimated_eta FROM cdb_package_tracking_number WHERE order_id = :id");
-$db->bind(':id', $_GET['id']);
-$estimated_eta = $db->cdp_registro();
+// The consolidation's own ETA (its entered date, else its delivery-time label).
+$estimated_eta = cdp_getConsolidationEtaById($_GET['id']);
 
 
 $dias_ = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
@@ -331,7 +330,7 @@ if ($row_order->status_invoice == 1) {
                                     </div>
                                     <div class="col-4">
                                         <h5> &nbsp;<b><?php echo 'Estimated Time of Arrival' ?></b></h5>
-                                        <p class="text-muted m-l-5"><?php echo $estimated_eta ? $estimated_eta->estimated_eta : 'N/A'; ?></p>
+                                        <p class="text-muted m-l-5"><?php echo $estimated_eta; ?></p>
                                     </div>
                                 </div>
 
@@ -984,8 +983,8 @@ if ($row_order->status_invoice == 1) {
                                                     $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id = '" . $order_details->order_id . "'");
                                                     $items = $db->cdp_registros();
                                                     
-                                                    $db->cdp_query("SELECT * FROM cdb_styles where id='" . $order_details->status_courier . "'");
-						                            $package_style = $db->cdp_registro();
+                                                    // A package inside a consolidation reports the CONSOLIDATION's status.
+                                                    $package_style = cdp_getEffectiveStatus($row_order_item->order_no, $order_details->status_courier, 1);
 
                                                     $postal_tracking = cdp_getPackageTrackingLegacyAware($row_order_item->order_id);
                                                     

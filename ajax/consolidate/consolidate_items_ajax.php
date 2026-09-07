@@ -57,8 +57,8 @@ if ($order_items):
         $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id = '" . $order_details->order_id . "'");
         $items = $db->cdp_registros();
 
-        $db->cdp_query("SELECT * FROM cdb_styles where id='" . $order_details->status_courier . "'");
-        $package_style = $db->cdp_registro();
+        // A package inside a consolidation reports the CONSOLIDATION's status.
+        $package_style = cdp_getEffectiveStatus($row_order_item->order_no, $order_details->status_courier, 1);
 
         $postal_tracking = cdp_getPackageTrackingLegacyAware($row_order_item->order_id);
         ?>
