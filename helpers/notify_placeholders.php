@@ -26,6 +26,13 @@
  * [ITEMS]      — plain text ("2 x Shoes\n1 x Laptop"), for WhatsApp/SMS.
  * [ITEMS_HTML] — an HTML <table>, for email.
  */
+// Consolidation inheritance (cdp_getEffectiveStatus / cdp_getEffectiveEtaRaw)
+// lives in helpers/querys.php; most callers already have it, the guard covers
+// the ones that don't.
+if (!function_exists('cdp_getEffectiveStatus')) {
+    require_once __DIR__ . '/querys.php';
+}
+
 if (!function_exists('cdp_buildPackageNotifyPlaceholders')) {
 
     function cdp_buildPackageNotifyPlaceholders($order_id, $module = 'air')
@@ -45,12 +52,20 @@ if (!function_exists('cdp_buildPackageNotifyPlaceholders')) {
         $itemsTable  = $map[$module]['items'];
 
         // Order: original total weight + current status label
-        $db->cdp_query("SELECT a.total_weight, a.status_courier, b.mod_style
+        $db->cdp_query("SELECT a.total_weight, a.status_courier, a.order_no, a.is_consolidate, b.mod_style
                         FROM {$ordersTable} a
                         LEFT JOIN cdb_styles b ON a.status_courier = b.id
                         WHERE a.order_id = :id LIMIT 1");
         $db->bind(':id', $order_id);
         $order = $db->cdp_registro();
+
+        // Inside a consolidation the package reports the CONSOLIDATION's status
+        // and the CONSOLIDATION's ETA — the same answer the customer sees on the
+        // tracking page and in the back office.
+        $isPackageFamily = ($module === 'sea');
+        $eff = $order
+            ? cdp_getEffectiveStatus($order->order_no, $order->status_courier, $order->is_consolidate, $isPackageFamily)
+            : null;
 
         // Items (quantity + description only — never monetary fields)
         $db->cdp_query("SELECT order_item_quantity, order_item_description
@@ -58,11 +73,11 @@ if (!function_exists('cdp_buildPackageNotifyPlaceholders')) {
         $db->bind(':id', $order_id);
         $items = $db->cdp_registros();
 
-        // Postal / carrier tracking + ETA. Air falls back to the legacy
+        // Postal / carrier tracking. Air falls back to the legacy
         // cdb_add_order.tracking_num column for the ~41k old orders; sea has no
-        // such legacy column, so read the new tracking table only.
+        // such legacy column, so read the new tracking table only. The carrier
+        // tracking number stays the package's own — it is not inherited.
         $postal = '';
-        $eta    = '';
         $pt     = null;
         if ($module === 'sea') {
             if (function_exists('cdp_getPackageTracking')) {
@@ -75,9 +90,12 @@ if (!function_exists('cdp_buildPackageNotifyPlaceholders')) {
         }
         if ($pt) {
             $postal = !empty($pt->tracking_number) ? (string) $pt->tracking_number : '';
-            // ETA is ONLY the explicitly-entered estimated_eta. No fallback.
-            $eta    = !empty($pt->estimated_eta)   ? (string) $pt->estimated_eta   : '';
         }
+
+        // ETA is ONLY an explicitly-entered date — the consolidation's while the
+        // package is in one, its own otherwise. No delivery-time fallback: a
+        // customer must never be told "Sea 4 - 6 weeks" in an ETA slot.
+        $eta = $order ? cdp_getEffectiveEtaRaw($order_id, $order->order_no, $isPackageFamily, $order->status_courier) : '';
 
         // Build the item list in both plain-text and HTML form
         $lines = [];
@@ -103,7 +121,7 @@ if (!function_exists('cdp_buildPackageNotifyPlaceholders')) {
                 . '</tr></thead><tbody>' . $rows . '</tbody></table>'
             : 'N/A';
 
-        $status = ($order && !empty($order->mod_style)) ? $order->mod_style : '';
+        $status = ($eff && $eff->mod_style !== '') ? $eff->mod_style : '';
         // PACKAGE weight = the order's own total_weight (the staff-entered
         // "Original Total Weight"). Item weights price the items and are never
         // summed here. Treat a 0/empty value as "not set" so notifications don't
