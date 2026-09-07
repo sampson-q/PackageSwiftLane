@@ -244,7 +244,7 @@ $fecha = str_replace('-', '/', $fecha);
 
                             <?php } ?>
 
-                            <?php echo $row->mod_style; ?>
+                            <?php echo cdp_getEffectiveStatus($row->order_no, $row->status_courier, $row->is_consolidate ?? null, true)->mod_style; ?>
 
                         </td>
 
