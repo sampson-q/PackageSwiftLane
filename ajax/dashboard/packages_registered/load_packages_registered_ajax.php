@@ -72,6 +72,9 @@ $numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 $db->cdp_query($sql . " limit $offset, $per_page");
 $data = $db->cdp_registros();
 
+// Consolidation membership for the whole page in one query.
+cdp_prefetchConsolidations(array_map(function ($r) { return $r->order_no; }, $data ?: array()));
+
 $total_pages = ceil($numrows / $per_page);
 
 
@@ -194,7 +197,9 @@ if ($numrows > 0) { ?>
 									<span style="background: #ffa6a6;" class="label label-large">Pre alert</span>
 
 								<?php } ?>
-								<span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->mod_style; ?></span>
+								<?php // Status to display: the consolidation's while the shipment is in one.
+								$eff = cdp_getEffectiveStatus($row->order_no, $row->status_courier, $row->is_consolidate ?? null); ?>
+								<span style="background: <?php echo $eff->color; ?>;" class="label label-large"><?php echo $eff->mod_style; ?></span>
 
 							</td>
 
