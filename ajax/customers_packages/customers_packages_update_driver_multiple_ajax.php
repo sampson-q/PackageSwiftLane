@@ -47,7 +47,7 @@ foreach ($data as $key) {
     $order_id = $customer_packages->order_id;
 
     // Inside a consolidation the package quotes the CONSOLIDATION's ETA.
-    $eta_value = cdp_getEffectiveEta($order_id, $customer_packages->order_no, $customer_packages->order_deli_time ?? null, $customer_packages->is_consolidate ?? null, true, $customer_packages->status_courier ?? null);
+    $eta_value = cdp_getEffectiveEta($order_id, $customer_packages->order_no, $customer_packages->order_deli_time ?? null, $customer_packages->is_consolidate ?? null, true);
     $eta = ($eta_value !== '' && $eta_value !== 'N/A') ? "*Estimated Time of Arrival:* " . $eta_value . "\n\n" : "\n";
 
     try {

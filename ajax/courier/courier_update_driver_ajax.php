@@ -56,9 +56,7 @@ if (empty($errors)) {
         (int) cdp_sanitize($_POST['id_shipment']),
         $customer_packages->order_no ?? '',
         $customer_packages->order_deli_time ?? null,
-        $customer_packages->is_consolidate ?? null,
-        false,
-        $customer_packages->status_courier ?? null
+        $customer_packages->is_consolidate ?? null
     );
     $eta = ($eta_value !== '' && $eta_value !== 'N/A') ? "*Estimated Time of Arrival:* " . $eta_value . "\n\n" : "\n";
 

@@ -95,7 +95,7 @@ if (!function_exists('cdp_buildPackageNotifyPlaceholders')) {
         // ETA is ONLY an explicitly-entered date — the consolidation's while the
         // package is in one, its own otherwise. No delivery-time fallback: a
         // customer must never be told "Sea 4 - 6 weeks" in an ETA slot.
-        $eta = $order ? cdp_getEffectiveEtaRaw($order_id, $order->order_no, $isPackageFamily, $order->status_courier) : '';
+        $eta = $order ? cdp_getEffectiveEtaRaw($order_id, $order->order_no, $isPackageFamily) : '';
 
         // Build the item list in both plain-text and HTML form
         $lines = [];

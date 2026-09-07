@@ -185,7 +185,7 @@ if (!$orders) {
                         </td>
                         <td><?php echo $row->tracking_number; ?></td>
                         <td><?php echo $row->order_date; ?></td>
-                        <td><?php echo cdp_getEffectiveEta($row->order_id, $row->order_no, $row->order_deli_time ?? null, $row->is_consolidate, false, $row->status_courier); ?></td>
+                        <td><?php echo cdp_getEffectiveEta($row->order_id, $row->order_no, $row->order_deli_time ?? null, $row->is_consolidate); ?></td>
                         <?php if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
                             <td><?php echo $sender_data->fname; ?> <?php echo $sender_data->lname; ?></td>
                         <?php } ?>

@@ -402,9 +402,7 @@ class ShipmentsHandler
                                           (int)$row->order_id,
                                           $row->order_no ?? '',
                                           $row->order_deli_time ?? null,
-                                          $row->is_consolidate ?? null,
-                                          false,
-                                          $row->status_courier ?? null
+                                          $row->is_consolidate ?? null
                                       ),
             'status_invoice'       => (int)($row->status_invoice ?? 0),
             'is_pickup'            => (bool)(int)($row->is_pickup ?? 0),

@@ -126,7 +126,7 @@ $order_items = $db->cdp_registros();
 // Inside a consolidation the shipment reports the CONSOLIDATION's status and
 // the CONSOLIDATION's ETA; on its own it reports its own.
 $eff     = cdp_getEffectiveStatus($row_order->order_no, $row_order->status_courier, $row_order->is_consolidate);
-$eff_eta = cdp_getEffectiveEta((int) $_GET['id'], $row_order->order_no, $row_order->order_deli_time ?? null, $row_order->is_consolidate, false, $row_order->status_courier);
+$eff_eta = cdp_getEffectiveEta((int) $_GET['id'], $row_order->order_no, $row_order->order_deli_time ?? null, $row_order->is_consolidate);
 
 // Legacy-aware: old-system orders kept the postal tracking on cdb_add_order.tracking_num.
 $postal_tracking = cdp_getPackageTrackingLegacyAware((int) $_GET['id']);

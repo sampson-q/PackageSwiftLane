@@ -3817,12 +3817,15 @@ function cdp_shipModeWhere($mode, $alias = 'a')
  * report, export and notification that shows a member's status or ETA goes
  * through them, so the answer is the same everywhere.
  *
- * The one carve-out: once a package has arrived and is handled individually
- * again — Delivered, Picked Up, Not Picked Up, Cancelled, Returned to Vendor,
- * Ready for PickUp, Auction — it goes back to its own status and ETA, because
- * from that point the consolidation is no longer what is moving it. See
- * cdp_statusLeavesConsolidation(). Membership itself (the "Consolidated" badge,
- * the consolidation code) is reported either way.
+ * The ETA is inherited for as long as the package belongs to a consolidation,
+ * with no exceptions.
+ *
+ * The STATUS has one carve-out: once a package has arrived and is handled
+ * individually again — Delivered, Picked Up, Not Picked Up, Cancelled, Returned
+ * to Vendor, Ready for PickUp, Auction — it reports its own status again, so a
+ * delivered package never reads "In Transit" just because its consolidation
+ * does. See cdp_statusLeavesConsolidation(). Membership itself (the
+ * "Consolidated" badge, the consolidation code) is reported either way.
  *
  * Membership is NOT read from cdb_add_order.is_consolidate /
  * cdb_customers_packages.is_consolidate — that flag drifts (shipments flagged
@@ -4232,10 +4235,10 @@ function cdp_getOwnEta($order_id, $order_deli_time = null, $isPackage = false)
  *
  * @return string  the date, or '' when none was entered
  */
-function cdp_getEffectiveEtaRaw($order_id, $order_no, $isPackage = false, $status_courier = null)
+function cdp_getEffectiveEtaRaw($order_id, $order_no, $isPackage = false)
 {
     $con = cdp_getConsolidationOf($order_no, $isPackage);
-    if ($con && ($status_courier === null || !cdp_statusLeavesConsolidation($status_courier, $order_no, $isPackage))) {
+    if ($con) {
         return cdp_getConsolidationEtaRaw($con->consolidate_id, $isPackage);
     }
     if ($isPackage) {
@@ -4253,6 +4256,14 @@ function cdp_getEffectiveEtaRaw($order_id, $order_no, $isPackage = false, $statu
  * carrier tracking number); a package's own ETA lives on the package row. Both
  * fall back to the delivery-time label, then to 'N/A'.
  *
+ * Unlike the status, the ETA is inherited for as long as the package belongs to
+ * a consolidation — there is no hand-over carve-out here. The ETA describes the
+ * journey the package actually took, and it took the consolidation's; its own
+ * order_deli_time is frequently the wrong mode outright (an Air 3 - 5 Days
+ * shipment that in fact sailed inside a Sea 4 - 6 weeks consolidation). The
+ * status carve-out exists because a delivered package must not read "In
+ * Transit"; that reasoning does not transfer to an arrival estimate.
+ *
  * @param int      $order_id
  * @param string   $order_no
  * @param int|null $order_deli_time the row's own order_deli_time id
@@ -4260,10 +4271,10 @@ function cdp_getEffectiveEtaRaw($order_id, $order_no, $isPackage = false, $statu
  * @param bool     $isPackage
  * @return string
  */
-function cdp_getEffectiveEta($order_id, $order_no, $order_deli_time = null, $is_consolidate = null, $isPackage = false, $status_courier = null)
+function cdp_getEffectiveEta($order_id, $order_no, $order_deli_time = null, $is_consolidate = null, $isPackage = false)
 {
     $con = cdp_getConsolidationOf($order_no, $isPackage);
-    if ($con && ($status_courier === null || !cdp_statusLeavesConsolidation($status_courier, $order_no, $isPackage))) {
+    if ($con) {
         return cdp_getConsolidationEta($con);
     }
     return cdp_getOwnEta($order_id, $order_deli_time, $isPackage);
