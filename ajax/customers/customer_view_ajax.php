@@ -2,6 +2,7 @@
 if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
 // ajax/courier_view_ajax.php
 require_once("../../loader.php");
+require_once(__DIR__ . '/../../helpers/querys.php');
 $db    = new Conexion;
 $core  = new Core;
 
@@ -52,6 +53,7 @@ $sql = "SELECT
             a.status_courier,
             a.driver_id,
             a.order_service_options,
+            a.order_deli_time,
             b.mod_style,
             b.color,
             COALESCE(NULLIF(c.tracking_number, ''), a.tracking_num) AS tracking_number,
@@ -71,6 +73,10 @@ $numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 $db->cdp_query($sql . " limit $offset, $per_page");
 $orders = $db->cdp_registros();
+
+// Consolidation membership for this page in one query: a shipment inside a
+// consolidation reports the CONSOLIDATION's status and ETA.
+cdp_prefetchConsolidations(array_map(function ($r) { return $r->order_no; }, $orders ?: array()));
 
 $total_pages = ceil($numrows / $per_page);
 
@@ -225,6 +231,9 @@ $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
 
                     $db->cdp_query("SELECT * FROM cdb_address_shipments WHERE order_track='" . $row->order_prefix . $row->order_no . "'");
                     $address_order = $db->cdp_registro();
+
+                    // Status to display: the consolidation's while the shipment is in one.
+                    $eff = cdp_getEffectiveStatus($row->order_no, $row->status_courier, $row->is_consolidate);
                     ?>
                     <tr class="card-hovera">
                         <?php if ($userData->userlevel == 9) { ?>
@@ -253,14 +262,14 @@ $total_amount_payable_ghs = $payable_ghs_subtotal + $payable_handling_total;
                             <?php endif; ?>
                         </td>
                         <td>
-                            <span style="background: <?php echo $row->color; ?>;" class="label label-large"><?php echo $row->mod_style; ?></span>
+                            <span style="background: <?php echo $eff->color; ?>;" class="label label-large"><?php echo $eff->mod_style; ?></span>
                             <br>
                             <?php if ($row->is_pickup) { ?>
                                 <span style="background: <?php echo $status_style_pickup->color; ?>;" class="label label-large">
                                     <?php echo $status_style_pickup->mod_style; ?>
                                 </span>
                             <?php } ?>
-                            <?php if ($row->is_consolidate) { ?>
+                            <?php if ($eff->in_consolidation) { ?>
                                 <span style="background: <?php echo $status_style_consolidate->color; ?>;" class="label label-large">
                                     <?php echo $status_style_consolidate->mod_style; ?>
                                 </span>
