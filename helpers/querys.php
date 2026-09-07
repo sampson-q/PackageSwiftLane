@@ -3914,7 +3914,19 @@ function cdp_prefetchConsolidations(array $order_nos, $isPackage = false)
     }
 
     $tables = cdp_consolidationTables($isPackage);
-    $etaCol = cdp_consolidationHasEtaColumn($isPackage) ? 'c.estimated_eta' : 'NULL AS estimated_eta';
+
+    // Before sql/consolidation_status_eta.sql is applied there is no column to
+    // read, so fall back to where the ETA used to live: cdb_package_tracking_number
+    // keyed by consolidate_id. That key is shared with cdb_add_order.order_id and
+    // is why the column exists — but reading it is exactly what the old code did,
+    // so the fallback is never worse than the previous behaviour.
+    if (cdp_consolidationHasEtaColumn($isPackage)) {
+        $etaCol  = 'c.estimated_eta';
+        $etaJoin = '';
+    } else {
+        $etaCol  = 'ptn_eta.estimated_eta';
+        $etaJoin = 'LEFT JOIN cdb_package_tracking_number ptn_eta ON ptn_eta.order_id = c.consolidate_id';
+    }
 
     $list  = array_keys($want);
     $marks = implode(',', array_fill(0, count($list), '?'));
@@ -3923,9 +3935,10 @@ function cdp_prefetchConsolidations(array $order_nos, $isPackage = false)
     // Newest membership row per tracking number: walk the rows oldest-first and
     // let later ones overwrite earlier ones.
     $db->cdp_query("SELECT d.order_no, d.detail_id, c.consolidate_id, c.c_prefix, c.c_no,
-                           c.status_courier, c.order_deli_time, $etaCol
+                           c.status_courier, c.order_deli_time, $etaCol AS estimated_eta
                     FROM {$tables['detail']} d
                     INNER JOIN {$tables['parent']} c ON c.consolidate_id = d.consolidate_id
+                    $etaJoin
                     WHERE d.order_no IN ($marks)
                     ORDER BY d.detail_id ASC");
     foreach ($list as $i => $no) {
@@ -4122,10 +4135,18 @@ function cdp_getConsolidationEtaById($consolidate_id, $isPackage = false)
         return 'N/A';
     }
     $tables = cdp_consolidationTables($isPackage);
-    $etaCol = cdp_consolidationHasEtaColumn($isPackage) ? 'estimated_eta' : 'NULL AS estimated_eta';
-
     $db = new Conexion;
-    $db->cdp_query("SELECT order_deli_time, $etaCol FROM {$tables['parent']} WHERE consolidate_id = :cid LIMIT 1");
+
+    if (cdp_consolidationHasEtaColumn($isPackage)) {
+        $db->cdp_query("SELECT order_deli_time, estimated_eta FROM {$tables['parent']}
+                        WHERE consolidate_id = :cid LIMIT 1");
+    } else {
+        // Pre-migration fallback — see cdp_prefetchConsolidations().
+        $db->cdp_query("SELECT c.order_deli_time, ptn_eta.estimated_eta
+                        FROM {$tables['parent']} c
+                        LEFT JOIN cdb_package_tracking_number ptn_eta ON ptn_eta.order_id = c.consolidate_id
+                        WHERE c.consolidate_id = :cid LIMIT 1");
+    }
     $db->bind(':cid', $consolidate_id);
     return cdp_getConsolidationEta($db->cdp_registro());
 }
@@ -4137,12 +4158,18 @@ function cdp_getConsolidationEtaById($consolidate_id, $isPackage = false)
 function cdp_getConsolidationEtaRaw($consolidate_id, $isPackage = false)
 {
     $consolidate_id = (int) $consolidate_id;
-    if ($consolidate_id <= 0 || !cdp_consolidationHasEtaColumn($isPackage)) {
+    if ($consolidate_id <= 0) {
         return '';
     }
     $tables = cdp_consolidationTables($isPackage);
     $db = new Conexion;
-    $db->cdp_query("SELECT estimated_eta FROM {$tables['parent']} WHERE consolidate_id = :cid LIMIT 1");
+
+    if (cdp_consolidationHasEtaColumn($isPackage)) {
+        $db->cdp_query("SELECT estimated_eta FROM {$tables['parent']} WHERE consolidate_id = :cid LIMIT 1");
+    } else {
+        // Pre-migration fallback — see cdp_prefetchConsolidations().
+        $db->cdp_query('SELECT estimated_eta FROM cdb_package_tracking_number WHERE order_id = :cid LIMIT 1');
+    }
     $db->bind(':cid', $consolidate_id);
     $row = $db->cdp_registro();
     return ($row && $row->estimated_eta !== null) ? (string) $row->estimated_eta : '';
@@ -4158,12 +4185,19 @@ function cdp_getConsolidationEtaRaw($consolidate_id, $isPackage = false)
 function cdp_setConsolidationEta($consolidate_id, $estimated_eta, $isPackage = false)
 {
     $consolidate_id = (int) $consolidate_id;
-    if ($consolidate_id <= 0 || !cdp_consolidationHasEtaColumn($isPackage)) {
+    if ($consolidate_id <= 0) {
         return false;
     }
-    $tables = cdp_consolidationTables($isPackage);
     $eta = trim((string) $estimated_eta);
 
+    // Pre-migration fallback: keep writing where the ETA used to go, so saving a
+    // consolidation still behaves as it did before. It shares a key with
+    // cdb_add_order.order_id — that collision is what the migration removes.
+    if (!cdp_consolidationHasEtaColumn($isPackage)) {
+        return cdp_updatePackageTracking($consolidate_id, (int) ($_SESSION['userid'] ?? 0), '', $eta);
+    }
+
+    $tables = cdp_consolidationTables($isPackage);
     $db = new Conexion;
     $db->cdp_query("UPDATE {$tables['parent']} SET estimated_eta = :eta WHERE consolidate_id = :cid");
     $db->bind(':eta', $eta === '' ? null : $eta);
@@ -4180,10 +4214,15 @@ function cdp_setConsolidationEta($consolidate_id, $estimated_eta, $isPackage = f
 function cdp_setPackageEta($order_id, $estimated_eta)
 {
     $order_id = (int) $order_id;
-    if ($order_id <= 0 || !cdp_packagesHaveEtaColumn()) {
+    if ($order_id <= 0) {
         return false;
     }
     $eta = trim((string) $estimated_eta);
+
+    // Pre-migration fallback — see cdp_setConsolidationEta().
+    if (!cdp_packagesHaveEtaColumn()) {
+        return cdp_updatePackageTracking($order_id, (int) ($_SESSION['userid'] ?? 0), '', $eta);
+    }
 
     $db = new Conexion;
     $db->cdp_query('UPDATE cdb_customers_packages SET estimated_eta = :eta WHERE order_id = :id');
@@ -4196,10 +4235,17 @@ function cdp_setPackageEta($order_id, $estimated_eta)
 function cdp_getPackageEtaRaw($order_id)
 {
     $order_id = (int) $order_id;
-    if ($order_id <= 0 || !cdp_packagesHaveEtaColumn()) {
+    if ($order_id <= 0) {
         return '';
     }
     $db = new Conexion;
+    if (!cdp_packagesHaveEtaColumn()) {
+        // Pre-migration fallback — see cdp_prefetchConsolidations().
+        $db->cdp_query('SELECT estimated_eta FROM cdb_package_tracking_number WHERE order_id = :id LIMIT 1');
+        $db->bind(':id', $order_id);
+        $row = $db->cdp_registro();
+        return ($row && $row->estimated_eta !== null) ? (string) $row->estimated_eta : '';
+    }
     $db->cdp_query('SELECT estimated_eta FROM cdb_customers_packages WHERE order_id = :id LIMIT 1');
     $db->bind(':id', $order_id);
     $row = $db->cdp_registro();
@@ -4213,12 +4259,9 @@ function cdp_getOwnEta($order_id, $order_deli_time = null, $isPackage = false)
     $eta = null;
 
     if ($isPackage) {
-        if ($order_id > 0 && cdp_packagesHaveEtaColumn()) {
-            $db = new Conexion;
-            $db->cdp_query('SELECT estimated_eta FROM cdb_customers_packages WHERE order_id = :id LIMIT 1');
-            $db->bind(':id', $order_id);
-            $row = $db->cdp_registro();
-            $eta = $row ? $row->estimated_eta : null;
+        if ($order_id > 0) {
+            $raw = cdp_getPackageEtaRaw($order_id);
+            $eta = $raw !== '' ? $raw : null;
         }
     } elseif ($order_id > 0) {
         $row = cdp_getPackageTracking($order_id);
