@@ -3806,69 +3806,481 @@ function cdp_shipModeWhere($mode, $alias = 'a')
     return ' AND ' . $alias . '.order_item_category IN (' . implode(',', array_map('intval', $ids)) . ') ';
 }
 
+/* =========================================================================
+ * CONSOLIDATION INHERITANCE — status and ETA
+ *
+ * A shipment/package stops carrying its own status and its own ETA the moment
+ * it joins a consolidation: the consolidation travels as one unit, so every
+ * member reports the consolidation's status and the consolidation's ETA.
+ *
+ * These helpers are the ONLY place that rule lives. Every list, view, print,
+ * report, export and notification that shows a member's status or ETA goes
+ * through them, so the answer is the same everywhere.
+ *
+ * The one carve-out: once a package has arrived and is handled individually
+ * again — Delivered, Picked Up, Not Picked Up, Cancelled, Returned to Vendor,
+ * Ready for PickUp, Auction — it goes back to its own status and ETA, because
+ * from that point the consolidation is no longer what is moving it. See
+ * cdp_statusLeavesConsolidation(). Membership itself (the "Consolidated" badge,
+ * the consolidation code) is reported either way.
+ *
+ * Membership is NOT read from cdb_add_order.is_consolidate /
+ * cdb_customers_packages.is_consolidate — that flag drifts (shipments flagged
+ * with no detail row, and detail rows whose shipment is still unflagged).
+ * The truth is a row in the detail table pointing at a consolidation that
+ * still exists; the newest such row wins, because a shipment can be pulled out
+ * of one consolidation and put into another.
+ * ========================================================================= */
+
 /**
- * Effective tracking status for a shipment.
+ * Shared per-request cache for consolidation lookups.
+ * Returned by reference so the prefetch and the single-row lookup fill and read
+ * the same store.
  *
- * When a package is inside a consolidation, the CONSOLIDATION's status is shown
- * over the package's own status (a consolidation houses many packages and they
- * all inherit its status — the same rule courier_list_ajax.php applies to the
- * list). Otherwise the package keeps its own status.
- *
- * @param string $order_no        cdb_add_order.order_no / cdb_customers_packages.order_no
- * @param int    $status_courier  the shipment's own cdb_styles id
- * @param int    $is_consolidate  1 if the shipment sits in a consolidation
- * @param bool   $isPackage       true for cdb_customers_packages, false for cdb_add_order
- * @return object {status_id,mod_style,color,in_consolidation,consolidate_code}
+ * @return array ['s' => [order_no => object|null], 'p' => [...]]
  */
-function cdp_getEffectiveTrackStatus($order_no, $status_courier, $is_consolidate, $isPackage = false)
+function &cdp_consolidationCache()
 {
+    static $cache = array('s' => array(), 'p' => array());
+    return $cache;
+}
+
+/** Table names for the shipment family (false) or the package family (true). */
+function cdp_consolidationTables($isPackage = false)
+{
+    return $isPackage
+        ? array('detail' => 'cdb_consolidate_packages_detail', 'parent' => 'cdb_consolidate_packages')
+        : array('detail' => 'cdb_consolidate_detail',          'parent' => 'cdb_consolidate');
+}
+
+/**
+ * Does the consolidation table carry its own estimated_eta column yet?
+ *
+ * The consolidation ETA used to be squeezed into cdb_package_tracking_number
+ * keyed by consolidate_id, which collides with shipment order_ids. It now lives
+ * on the consolidation itself (sql/consolidation_status_eta.sql). This check
+ * keeps the code running on a database where that migration has not been
+ * applied — it just falls back to the delivery-time label there.
+ */
+function cdp_consolidationHasEtaColumn($isPackage = false)
+{
+    static $has = array();
+    $tables = cdp_consolidationTables($isPackage);
+    $t = $tables['parent'];
+    if (!isset($has[$t])) {
+        $db = new Conexion;
+        $db->cdp_query("SHOW COLUMNS FROM $t LIKE 'estimated_eta'");
+        $has[$t] = (bool) $db->cdp_registro();
+    }
+    return $has[$t];
+}
+
+/** Same check for the per-package ETA column on cdb_customers_packages. */
+function cdp_packagesHaveEtaColumn()
+{
+    static $has = null;
+    if ($has === null) {
+        $db = new Conexion;
+        $db->cdp_query("SHOW COLUMNS FROM cdb_customers_packages LIKE 'estimated_eta'");
+        $has = (bool) $db->cdp_registro();
+    }
+    return $has;
+}
+
+/**
+ * Warm the cache for a whole page of rows in one query, so rendering a list
+ * costs one lookup instead of three per row.
+ *
+ * @param array $order_nos tracking numbers (order_no) about to be rendered
+ * @param bool  $isPackage
+ */
+function cdp_prefetchConsolidations(array $order_nos, $isPackage = false)
+{
+    $cache  = &cdp_consolidationCache();
+    $bucket = $isPackage ? 'p' : 's';
+
+    $want = array();
+    foreach ($order_nos as $no) {
+        $no = trim((string) $no);
+        if ($no !== '' && !array_key_exists($no, $cache[$bucket])) {
+            $want[$no] = true;
+        }
+    }
+    if (!$want) {
+        return;
+    }
+
+    $tables = cdp_consolidationTables($isPackage);
+    $etaCol = cdp_consolidationHasEtaColumn($isPackage) ? 'c.estimated_eta' : 'NULL AS estimated_eta';
+
+    $list  = array_keys($want);
+    $marks = implode(',', array_fill(0, count($list), '?'));
+
     $db = new Conexion;
-    $out = (object) [
+    // Newest membership row per tracking number: walk the rows oldest-first and
+    // let later ones overwrite earlier ones.
+    $db->cdp_query("SELECT d.order_no, d.detail_id, c.consolidate_id, c.c_prefix, c.c_no,
+                           c.status_courier, c.order_deli_time, $etaCol
+                    FROM {$tables['detail']} d
+                    INNER JOIN {$tables['parent']} c ON c.consolidate_id = d.consolidate_id
+                    WHERE d.order_no IN ($marks)
+                    ORDER BY d.detail_id ASC");
+    foreach ($list as $i => $no) {
+        $db->bind($i + 1, $no);
+    }
+    $rows = $db->cdp_registros();
+
+    foreach ($list as $no) {
+        $cache[$bucket][$no] = null;
+    }
+    foreach ($rows as $r) {
+        $r->code = trim((string) $r->c_prefix . (string) $r->c_no);
+        $cache[$bucket][trim((string) $r->order_no)] = $r;
+    }
+}
+
+/**
+ * The consolidation a shipment/package currently sits in, or null.
+ *
+ * @param string $order_no  tracking number (cdb_add_order/cdb_customers_packages.order_no)
+ * @param bool   $isPackage true = cdb_customers_packages family
+ * @return object|null {consolidate_id,c_prefix,c_no,code,status_courier,order_deli_time,estimated_eta}
+ */
+function cdp_getConsolidationOf($order_no, $isPackage = false)
+{
+    $order_no = trim((string) $order_no);
+    if ($order_no === '') {
+        return null;
+    }
+
+    $cache  = &cdp_consolidationCache();
+    $bucket = $isPackage ? 'p' : 's';
+    if (array_key_exists($order_no, $cache[$bucket])) {
+        return $cache[$bucket][$order_no];
+    }
+
+    cdp_prefetchConsolidations(array($order_no), $isPackage);
+    return isset($cache[$bucket][$order_no]) ? $cache[$bucket][$order_no] : null;
+}
+
+/**
+ * Statuses that hand a package back to individual handling: it has arrived and
+ * is no longer travelling with its consolidation, so it keeps its OWN status
+ * and its own ETA even though the membership row is still there.
+ *
+ * This is the same set helpers/whatsapp.php uses to decide who still receives
+ * consolidation alerts (8, 15, 16, 21, 27, 32), plus Auction (35), the end of
+ * the pickup-aging ladder.
+ *
+ * Pending Collection (1) is deliberately NOT in the list: it is both a
+ * pre-consolidation state and the second rung of the aging ladder, and only the
+ * aging ledger tells the two apart.
+ *
+ * @param int    $status_id  the row's own status
+ * @param string $order_no   needed only to disambiguate Pending Collection
+ * @param bool   $isPackage
+ */
+function cdp_statusLeavesConsolidation($status_id, $order_no = '', $isPackage = false)
+{
+    $status_id = (int) $status_id;
+    if (in_array($status_id, array(8, 15, 16, 21, 27, 32, 35), true)) {
+        return true;
+    }
+
+    // Pending Collection reached through the aging ladder (which only shipments
+    // have) means the package is already sitting in Accra waiting for its owner.
+    if ($status_id === 1 && !$isPackage && trim((string) $order_no) !== '') {
+        static $aged = array();
+        $key = trim((string) $order_no);
+        if (!array_key_exists($key, $aged)) {
+            $db = new Conexion;
+            $db->cdp_query('SELECT 1 AS x FROM cdb_package_pickup_aging
+                            WHERE RIGHT(order_track, CHAR_LENGTH(:no)) = :no2 LIMIT 1');
+            $db->bind(':no', $key);
+            $db->bind(':no2', $key);
+            $aged[$key] = (bool) $db->cdp_registro();
+        }
+        return $aged[$key];
+    }
+
+    return false;
+}
+
+/** cdb_styles row for a status id, cached per request. */
+function cdp_getStyleById($status_id)
+{
+    static $styles = array();
+    $status_id = (int) $status_id;
+    if ($status_id <= 0) {
+        return null;
+    }
+    if (!array_key_exists($status_id, $styles)) {
+        $db = new Conexion;
+        $db->cdp_query('SELECT id, mod_style, color, status_type FROM cdb_styles WHERE id = :id LIMIT 1');
+        $db->bind(':id', $status_id);
+        $row = $db->cdp_registro();
+        $styles[$status_id] = $row ? $row : null;
+    }
+    return $styles[$status_id];
+}
+
+/**
+ * The status a shipment/package should be SHOWN as: the consolidation's while
+ * it is in one, its own otherwise.
+ *
+ * @param string   $order_no
+ * @param int      $status_courier the row's own cdb_styles id
+ * @param int|null $is_consolidate kept so call sites stay readable; NOT trusted
+ * @param bool     $isPackage
+ * @return object {status_id,mod_style,color,in_consolidation,consolidate_id,consolidate_code}
+ */
+function cdp_getEffectiveStatus($order_no, $status_courier, $is_consolidate = null, $isPackage = false)
+{
+    $out = (object) array(
         'status_id'        => (int) $status_courier,
         'mod_style'        => '',
         'color'            => '#f2b21b',
         'in_consolidation' => false,
+        'inherits'         => false,
+        'consolidate_id'   => 0,
         'consolidate_code' => '',
-    ];
+    );
 
-    if ((int) $is_consolidate === 1 && $order_no !== '' && $order_no !== null) {
-        $detailTable = $isPackage ? 'cdb_consolidate_packages_detail' : 'cdb_consolidate_detail';
-        $parentTable = $isPackage ? 'cdb_consolidate_packages' : 'cdb_consolidate';
+    $con = cdp_getConsolidationOf($order_no, $isPackage);
+    if ($con) {
+        // Membership is a fact regardless of whether the status is inherited —
+        // the "Consolidated" badge and the consolidation code hang off this.
+        $out->in_consolidation = true;
+        $out->consolidate_id   = (int) $con->consolidate_id;
+        $out->consolidate_code = (string) $con->code;
+        $out->inherits         = !cdp_statusLeavesConsolidation($status_courier, $order_no, $isPackage);
 
-        $db->cdp_query("SELECT consolidate_id FROM $detailTable WHERE order_no=:order_no ORDER BY detail_id DESC LIMIT 1");
-        $db->bind(':order_no', (string) $order_no);
-        $db->cdp_execute();
-        $det = $db->cdp_registro();
-
-        if ($det && !empty($det->consolidate_id)) {
-            $db->cdp_query("SELECT c.status_courier, c.c_prefix, c.c_no, s.mod_style, s.color
-                            FROM $parentTable c LEFT JOIN cdb_styles s ON s.id = c.status_courier
-                            WHERE c.consolidate_id=:cid LIMIT 1");
-            $db->bind(':cid', (int) $det->consolidate_id);
-            $db->cdp_execute();
-            $con = $db->cdp_registro();
-
-            if ($con && $con->mod_style !== null && $con->mod_style !== '') {
-                $out->status_id        = (int) $con->status_courier;
-                $out->mod_style        = (string) $con->mod_style;
-                $out->color            = !empty($con->color) ? (string) $con->color : '#f2b21b';
-                $out->in_consolidation = true;
-                $out->consolidate_code = trim((string) $con->c_prefix . (string) $con->c_no);
-                return $out;
-            }
+        // Only take the consolidation's status when the package is still
+        // travelling with it AND that status resolves to a real style: a
+        // consolidation carrying a blank or deleted status must not wipe the
+        // member's label off the screen.
+        $conStyle = $out->inherits ? cdp_getStyleById($con->status_courier) : null;
+        if ($conStyle) {
+            $out->status_id = (int) $con->status_courier;
+            $out->mod_style = (string) $conStyle->mod_style;
+            $out->color     = !empty($conStyle->color) ? (string) $conStyle->color : '#f2b21b';
+            return $out;
         }
     }
 
-    // Not consolidated (or the consolidation had no usable status) → own status.
-    $db->cdp_query("SELECT mod_style, color FROM cdb_styles WHERE id=:id LIMIT 1");
-    $db->bind(':id', (int) $status_courier);
-    $db->cdp_execute();
-    $own = $db->cdp_registro();
+    $own = cdp_getStyleById($status_courier);
     if ($own) {
         $out->mod_style = (string) $own->mod_style;
         $out->color     = !empty($own->color) ? (string) $own->color : '#f2b21b';
     }
     return $out;
+}
+
+/**
+ * SQL expression for the EFFECTIVE status of a shipment/package row, for use in
+ * WHERE clauses so that filtering by status agrees with what the list shows.
+ *
+ * @param string $alias     table alias of cdb_add_order / cdb_customers_packages
+ * @param bool   $isPackage
+ * @return string
+ */
+function cdp_effectiveStatusSql($alias = 'a', $isPackage = false)
+{
+    $t = cdp_consolidationTables($isPackage);
+    // Mirrors cdp_getEffectiveStatus(), including the hand-over carve-out: a row
+    // that has arrived (Delivered / Picked Up / Not Picked Up / Cancelled /
+    // Returned to Vendor / Ready for PickUp / Auction) keeps its own status.
+    $left = implode(',', array(8, 15, 16, 21, 27, 32, 35));
+    return "COALESCE((SELECT c_eff.status_courier
+                        FROM {$t['detail']} d_eff
+                  INNER JOIN {$t['parent']} c_eff ON c_eff.consolidate_id = d_eff.consolidate_id
+                       WHERE d_eff.order_no = $alias.order_no
+                         AND $alias.status_courier NOT IN ($left)
+                    ORDER BY d_eff.detail_id DESC LIMIT 1), $alias.status_courier)";
+}
+
+/** The consolidation's own ETA: its entered date, else its delivery-time label. */
+function cdp_getConsolidationEta($con)
+{
+    if (!$con) {
+        return 'N/A';
+    }
+    return cdp_etaOrDelivery(
+        isset($con->estimated_eta) ? $con->estimated_eta : null,
+        isset($con->order_deli_time) ? $con->order_deli_time : null
+    );
+}
+
+/** ETA stored against a consolidation id, resolved from scratch. */
+function cdp_getConsolidationEtaById($consolidate_id, $isPackage = false)
+{
+    $consolidate_id = (int) $consolidate_id;
+    if ($consolidate_id <= 0) {
+        return 'N/A';
+    }
+    $tables = cdp_consolidationTables($isPackage);
+    $etaCol = cdp_consolidationHasEtaColumn($isPackage) ? 'estimated_eta' : 'NULL AS estimated_eta';
+
+    $db = new Conexion;
+    $db->cdp_query("SELECT order_deli_time, $etaCol FROM {$tables['parent']} WHERE consolidate_id = :cid LIMIT 1");
+    $db->bind(':cid', $consolidate_id);
+    return cdp_getConsolidationEta($db->cdp_registro());
+}
+
+/**
+ * The raw ETA stored on a consolidation (no delivery-time fallback), for
+ * prefilling the edit form. Empty string when unset or not yet migrated.
+ */
+function cdp_getConsolidationEtaRaw($consolidate_id, $isPackage = false)
+{
+    $consolidate_id = (int) $consolidate_id;
+    if ($consolidate_id <= 0 || !cdp_consolidationHasEtaColumn($isPackage)) {
+        return '';
+    }
+    $tables = cdp_consolidationTables($isPackage);
+    $db = new Conexion;
+    $db->cdp_query("SELECT estimated_eta FROM {$tables['parent']} WHERE consolidate_id = :cid LIMIT 1");
+    $db->bind(':cid', $consolidate_id);
+    $row = $db->cdp_registro();
+    return ($row && $row->estimated_eta !== null) ? (string) $row->estimated_eta : '';
+}
+
+/**
+ * Store a consolidation's ETA on the consolidation itself.
+ *
+ * It used to go into cdb_package_tracking_number keyed by consolidate_id, which
+ * collides with cdb_add_order.order_id — see sql/consolidation_status_eta.sql.
+ * No-ops on a database where that migration has not been applied.
+ */
+function cdp_setConsolidationEta($consolidate_id, $estimated_eta, $isPackage = false)
+{
+    $consolidate_id = (int) $consolidate_id;
+    if ($consolidate_id <= 0 || !cdp_consolidationHasEtaColumn($isPackage)) {
+        return false;
+    }
+    $tables = cdp_consolidationTables($isPackage);
+    $eta = trim((string) $estimated_eta);
+
+    $db = new Conexion;
+    $db->cdp_query("UPDATE {$tables['parent']} SET estimated_eta = :eta WHERE consolidate_id = :cid");
+    $db->bind(':eta', $eta === '' ? null : $eta);
+    $db->bind(':cid', $consolidate_id);
+    return $db->cdp_execute();
+}
+
+/**
+ * Store a package's own ETA on the package row (cdb_customers_packages), which
+ * is where it belongs — the shared cdb_package_tracking_number is keyed by an
+ * order_id that packages and shipments both claim.
+ * No-ops until sql/consolidation_status_eta.sql has been applied.
+ */
+function cdp_setPackageEta($order_id, $estimated_eta)
+{
+    $order_id = (int) $order_id;
+    if ($order_id <= 0 || !cdp_packagesHaveEtaColumn()) {
+        return false;
+    }
+    $eta = trim((string) $estimated_eta);
+
+    $db = new Conexion;
+    $db->cdp_query('UPDATE cdb_customers_packages SET estimated_eta = :eta WHERE order_id = :id');
+    $db->bind(':eta', $eta === '' ? null : $eta);
+    $db->bind(':id', $order_id);
+    return $db->cdp_execute();
+}
+
+/** A package's raw stored ETA (no fallback), for prefilling the edit form. */
+function cdp_getPackageEtaRaw($order_id)
+{
+    $order_id = (int) $order_id;
+    if ($order_id <= 0 || !cdp_packagesHaveEtaColumn()) {
+        return '';
+    }
+    $db = new Conexion;
+    $db->cdp_query('SELECT estimated_eta FROM cdb_customers_packages WHERE order_id = :id LIMIT 1');
+    $db->bind(':id', $order_id);
+    $row = $db->cdp_registro();
+    return ($row && $row->estimated_eta !== null) ? (string) $row->estimated_eta : '';
+}
+
+/** A shipment's/package's own ETA, ignoring any consolidation. */
+function cdp_getOwnEta($order_id, $order_deli_time = null, $isPackage = false)
+{
+    $order_id = (int) $order_id;
+    $eta = null;
+
+    if ($isPackage) {
+        if ($order_id > 0 && cdp_packagesHaveEtaColumn()) {
+            $db = new Conexion;
+            $db->cdp_query('SELECT estimated_eta FROM cdb_customers_packages WHERE order_id = :id LIMIT 1');
+            $db->bind(':id', $order_id);
+            $row = $db->cdp_registro();
+            $eta = $row ? $row->estimated_eta : null;
+        }
+    } elseif ($order_id > 0) {
+        $row = cdp_getPackageTracking($order_id);
+        $eta = $row ? $row->estimated_eta : null;
+    }
+
+    return cdp_etaOrDelivery($eta, $order_deli_time);
+}
+
+/**
+ * Effective ETA with NO delivery-time fallback: the explicitly-entered date and
+ * nothing else. Notifications use this so a customer is never told "Sea 4 - 6
+ * weeks" as if it were a date.
+ *
+ * @return string  the date, or '' when none was entered
+ */
+function cdp_getEffectiveEtaRaw($order_id, $order_no, $isPackage = false, $status_courier = null)
+{
+    $con = cdp_getConsolidationOf($order_no, $isPackage);
+    if ($con && ($status_courier === null || !cdp_statusLeavesConsolidation($status_courier, $order_no, $isPackage))) {
+        return cdp_getConsolidationEtaRaw($con->consolidate_id, $isPackage);
+    }
+    if ($isPackage) {
+        return cdp_getPackageEtaRaw($order_id);
+    }
+    $row = cdp_getPackageTracking((int) $order_id);
+    return ($row && !empty($row->estimated_eta)) ? (string) $row->estimated_eta : '';
+}
+
+/**
+ * The ETA a shipment/package should be SHOWN as: the consolidation's while it
+ * is in one, its own otherwise.
+ *
+ * A shipment's own ETA lives in cdb_package_tracking_number (alongside its
+ * carrier tracking number); a package's own ETA lives on the package row. Both
+ * fall back to the delivery-time label, then to 'N/A'.
+ *
+ * @param int      $order_id
+ * @param string   $order_no
+ * @param int|null $order_deli_time the row's own order_deli_time id
+ * @param int|null $is_consolidate  kept so call sites stay readable; NOT trusted
+ * @param bool     $isPackage
+ * @return string
+ */
+function cdp_getEffectiveEta($order_id, $order_no, $order_deli_time = null, $is_consolidate = null, $isPackage = false, $status_courier = null)
+{
+    $con = cdp_getConsolidationOf($order_no, $isPackage);
+    if ($con && ($status_courier === null || !cdp_statusLeavesConsolidation($status_courier, $order_no, $isPackage))) {
+        return cdp_getConsolidationEta($con);
+    }
+    return cdp_getOwnEta($order_id, $order_deli_time, $isPackage);
+}
+/**
+ * Effective tracking status for a shipment — kept as the name the public
+ * tracking pages already call. Thin wrapper over cdp_getEffectiveStatus().
+ *
+ * @param string $order_no       cdb_add_order.order_no / cdb_customers_packages.order_no
+ * @param int    $status_courier the shipment's own cdb_styles id
+ * @param int    $is_consolidate legacy flag; membership is resolved from the detail table
+ * @param bool   $isPackage      true for cdb_customers_packages, false for cdb_add_order
+ * @return object {status_id,mod_style,color,in_consolidation,consolidate_id,consolidate_code}
+ */
+function cdp_getEffectiveTrackStatus($order_no, $status_courier, $is_consolidate, $isPackage = false)
+{
+    return cdp_getEffectiveStatus($order_no, $status_courier, $is_consolidate, $isPackage);
 }
 
 /**
