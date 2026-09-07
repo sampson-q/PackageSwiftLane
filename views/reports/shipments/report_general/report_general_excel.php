@@ -1,4 +1,6 @@
 <?php
+// Consolidation status inheritance lives in helpers/querys.php.
+require_once(__DIR__ . '/../../../../helpers/querys.php');
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -224,7 +226,7 @@ if ($numrows > 0) {
 		$html .= '<td>' . $row->order_date . '</td>';
 		$html .= '<td>' . $sender_data->fname . ' ' . $sender_data->lname . '</td>';
 		$html .= '<td>' . $address_order->sender_country . '-' . $address_order->sender_city . '</td>';
-		$html .= '<td>' . $row->mod_style . '</td>';
+		$html .= '<td>' . cdp_getEffectiveStatus($row->order_no, $row->status_courier, $row->is_consolidate ?? null)->mod_style . '</td>';
 		$html .= '<td>' . $row->total_weight . '</td>';
 		$html .= '<td>' . cdb_money_format_bar($row->total_fixed_value) . '</td>';
 		$html .= '<td>' . cdb_money_format_bar($row->sub_total) . '</td>';
