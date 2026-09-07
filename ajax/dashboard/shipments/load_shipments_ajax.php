@@ -86,6 +86,9 @@ $numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 $db->cdp_query($sql . " limit $offset, $per_page");
 $data = $db->cdp_registros();
 
+// Consolidation membership for this page in one query.
+cdp_prefetchConsolidations(array_map(function ($r) { return $r->order_no; }, $data ?: array()));
+
 $total_pages = ceil($numrows / $per_page);
 
 
@@ -155,14 +158,8 @@ if ($numrows > 0) { ?>
 						$db->cdp_query("SELECT * FROM cdb_styles where id= '13'");
 						$status_style_consolidate = $db->cdp_registro();
 
-                        $db->cdp_query("SELECT consolidate_id FROM cdb_consolidate_detail where order_no='" . $row->order_no . "'");
-						$consolidate_id = $db->cdp_registro() -> consolidate_id;
-						
-                        $db->cdp_query("SELECT status_courier FROM cdb_consolidate where consolidate_id='" . $consolidate_id . "'");
-						$consolidate_status_courier = $db->cdp_registro() -> status_courier;
-                        
-                        $db->cdp_query("SELECT * FROM cdb_styles where id='" . $consolidate_status_courier . "'");
-						$consolidate_style = $db->cdp_registro();
+						// Status to display: the consolidation's while the shipment is in one.
+						$eff = cdp_getEffectiveStatus($row->order_no, $row->status_courier, $row->is_consolidate);
 
 
 						if ($row->status_invoice == 1) {
@@ -211,7 +208,7 @@ if ($numrows > 0) { ?>
 							</td>
 
 							<td class="">
-								<span style="background: <?php echo $row->is_consolidate ? $consolidate_style -> color : $row->color; ?>;" class="label label-large"><?php echo $row->is_consolidate ? $consolidate_style -> mod_style . 'd' : $row->mod_style; ?></span>
+								<span style="background: <?php echo $eff->color; ?>;" class="label label-large"><?php echo $eff->mod_style; ?></span>
 								<br>
 
 								<?php
@@ -222,7 +219,7 @@ if ($numrows > 0) { ?>
 								?>
 
 								<?php
-								if ($row->is_consolidate == true) { ?>
+								if ($eff->in_consolidation) { ?>
 									<span style="background: <?php echo $status_style_consolidate->color; ?>;" class="label label-large"><?php echo $status_style_consolidate->mod_style . 'd'; ?></span>
 								<?php
 								}
