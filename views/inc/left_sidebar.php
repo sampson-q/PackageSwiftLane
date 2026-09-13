@@ -677,6 +677,7 @@
 						'view_tools',
 						'view_system_logs',
 						'view_activity_logs',
+						'view_message_logs',
 						'view_staff_productivity',
 						'view_offices',
 						'view_branches',
@@ -739,6 +740,15 @@
 								<a class="sidebar-link waves-effect waves-dark" href="activity_logs.php" aria-expanded="false">
 									<iconify-icon icon="solar:clipboard-list-linear" class="fs-5"></iconify-icon>
 									<span class="hide-menu"> Activity Logs </span>
+								</a>
+							</li>
+							<?php } ?>
+
+							<?php if ($user->cdp_hasPermission('view_message_logs')) { ?>
+							<li class="sidebar-item">
+								<a class="sidebar-link waves-effect waves-dark" href="message_logs.php" aria-expanded="false">
+									<iconify-icon icon="solar:chat-round-dots-linear" class="fs-5"></iconify-icon>
+									<span class="hide-menu"> Message Logs </span>
 								</a>
 							</li>
 							<?php } ?>
