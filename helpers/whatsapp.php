@@ -354,7 +354,10 @@ if (!function_exists('cdp_sendShipmentRegisteredWhatsApp')) {
         if ($body === null) {
             return ['success' => false, 'skipped' => true, 'message' => 'WhatsApp template 4 not found.'];
         }
-        return sendNotificationWhatsApp_v2($sender, $body);
+        cdp_msgSetContext(['template_id' => 4, 'entity_type' => 'shipment', 'entity_label' => (string) $tracking, 'subject' => 'Shipment registered ' . $tracking]);
+        $res = sendNotificationWhatsApp_v2($sender, $body);
+        cdp_msgClearContext(['template_id', 'entity_type', 'entity_label', 'subject']);
+        return $res;
     }
 }
 
@@ -473,7 +476,10 @@ if (!function_exists('cdp_sendStatusUpdateWhatsApp')) {
         if ($body === null) {
             return ['success' => false, 'skipped' => true, 'message' => 'WhatsApp template 11 not found.'];
         }
-        return sendNotificationWhatsApp_v2($sender, $body);
+        cdp_msgSetContext(['template_id' => 11, 'entity_type' => 'shipment', 'entity_label' => (string) $tracking, 'subject' => 'Status update: ' . $statusLabel]);
+        $res = sendNotificationWhatsApp_v2($sender, $body);
+        cdp_msgClearContext(['template_id', 'entity_type', 'entity_label', 'subject']);
+        return $res;
     }
 }
 
@@ -540,6 +546,7 @@ if (!function_exists('cdp_notifyConsolidationPackageSenders')) {
         $sent = 0;
         $skipped = 0;
         $only = ($onlyOrderIds === null) ? null : array_map('intval', (array) $onlyOrderIds);
+        $msgBatch = function_exists('cdp_msgNewBatchId') ? cdp_msgNewBatchId('con') : '';
 
         foreach ($packages as $pkg) {
             try {
@@ -594,6 +601,9 @@ if (!function_exists('cdp_notifyConsolidationPackageSenders')) {
                     }
                 }
 
+                cdp_msgSetContext(['source' => 'consolidation_update', 'template_id' => 17, 'batch_id' => $msgBatch,
+                    'entity_type' => 'shipment', 'entity_id' => (string) $pkg->order_id, 'entity_label' => $tracking,
+                    'subject' => 'Consolidation ' . $consolidationTracking . ': ' . $statusLabel]);
                 $res = sendNotificationWhatsApp_v2($sender, $body);
                 if (!empty($res['success'])) {
                     $sent++;
@@ -601,6 +611,7 @@ if (!function_exists('cdp_notifyConsolidationPackageSenders')) {
                     $skipped++;
                     cdp_wa_log("fan-out skip/fail for {$tracking}: " . ($res['message'] ?? ''));
                 }
+                cdp_msgClearContext(['source', 'template_id', 'batch_id', 'entity_type', 'entity_id', 'entity_label', 'subject']);
             } catch (Exception $e) {
                 $skipped++;
                 cdp_wa_log('fan-out error for order_id ' . $pkg->order_id . ': ' . $e->getMessage());

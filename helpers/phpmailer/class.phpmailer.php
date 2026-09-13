@@ -659,6 +659,11 @@ class PHPMailer
         if ($exceptions !== null) {
             $this->exceptions = (boolean)$exceptions;
         }
+        // Message log (helpers/message_log.php): record every e-mail this mailer
+        // sends, unless the caller installs its own callback.
+        if ($this->action_function === '' && function_exists('cdp_msgMailCallback')) {
+            $this->action_function = 'cdp_msgMailCallback';
+        }
     }
 
     /**
@@ -1214,6 +1219,11 @@ class PHPMailer
         } catch (phpmailerException $exc) {
             $this->mailHeader = '';
             $this->setError($exc->getMessage());
+            // Message log (helpers/message_log.php): the send died before any
+            // per-recipient callback ran (connection, auth, no address...).
+            if (function_exists('cdp_msgMailFailed')) {
+                cdp_msgMailFailed($this, $exc->getMessage());
+            }
             if ($this->exceptions) {
                 throw $exc;
             }
@@ -1346,6 +1356,11 @@ class PHPMailer
         } catch (phpmailerException $exc) {
             $this->setError($exc->getMessage());
             $this->edebug($exc->getMessage());
+            // Message log (helpers/message_log.php): transport failed before any
+            // per-recipient callback ran (SMTP connect/auth/data errors).
+            if (function_exists('cdp_msgMailFailed')) {
+                cdp_msgMailFailed($this, $exc->getMessage());
+            }
             if ($this->exceptions) {
                 throw $exc;
             }

@@ -38,7 +38,15 @@ function sendNotificationSMS($user, $sms_body, $notify)
 {
     $settings = cdp_getSettingsCourier();
 
+    $who = function_exists('cdp_msgRecipientFromEntity') ? cdp_msgRecipientFromEntity($user) : ['id' => 0, 'name' => '', 'phone' => (string) ($user->phone ?? '')];
+    $log = function ($status, $detail) use ($who, $sms_body) {
+        if (!function_exists('cdp_msgLog')) return;
+        cdp_msgLog(['channel' => 'sms', 'status' => $status, 'status_detail' => $detail, 'body' => (string) $sms_body,
+            'recipient_user_id' => $who['id'], 'recipient_name' => $who['name'], 'recipient_to' => $who['phone']]);
+    };
+
     if (!$notify || intval($settings->active_sms) != 1) {
+        if ($notify) { $log('skipped', 'SMS is not active in settings.'); }
         return [
             'success' => false,
             'message' => 'Notification not enabled'
@@ -71,11 +79,14 @@ function sendNotificationSMS($user, $sms_body, $notify)
             $resultAPI = $apiInstance->smsSendPost($sms_messages);
             $result['success'] = true;
             $result['message'] = "Notification sent successfully";
+            $log('sent', 'Accepted by ClickSend');
         } catch (Exception $e) {
             $result['message'] = 'Exception when calling SMSApi->smsSendPost: ' . $e->getMessage();
+            $log('failed', $result['message']);
         }
     } else {
         $result['message'] = "Error: No body defined for the SMS";
+        $log('failed', $result['message']);
     }
 
     return $result;

@@ -3,6 +3,7 @@
 $projectRoot = dirname(__DIR__, 2);
 require_once $projectRoot . '/helpers/querys.php';
 require_once $projectRoot . '/helpers/whatsapp.php';
+require_once $projectRoot . '/helpers/message_log.php';
 require_once $projectRoot . '/helpers/vendor/autoload.php';
 
 /**
@@ -11,6 +12,11 @@ require_once $projectRoot . '/helpers/vendor/autoload.php';
  * Respects the global `active_whatsapp` switch, normalises the recipient phone,
  * and skips numbers the API confirms are NOT on WhatsApp (fail-open: unknown
  * numbers are still sent). See helpers/whatsapp.php.
+ *
+ * Every attempt — sent, failed or skipped — is written to cdb_message_log
+ * (helpers/message_log.php), so the Message Logs page shows the whole system's
+ * WhatsApp traffic without callers doing anything. Callers that know the
+ * shipment / template describe it with cdp_msgSetContext() beforehand.
  *
  * @param object     $sender                 Record with at least a `phone` property.
  * @param string     $template_whatsapp_body The fully-rendered message body to send.
@@ -21,8 +27,23 @@ function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryH
     // Fetch your API credentials & endpoint
     $settings = cdp_getSettingsCourier();
 
+    $who = cdp_msgRecipientFromEntity($sender);
+    $log = function ($status, $detail, $to = '', $response = null) use ($who, $template_whatsapp_body) {
+        cdp_msgLog([
+            'channel'           => 'whatsapp',
+            'status'            => $status,
+            'status_detail'     => $detail,
+            'body'              => $template_whatsapp_body,
+            'recipient_user_id' => $who['id'],
+            'recipient_name'    => $who['name'],
+            'recipient_to'      => $to !== '' ? $to : $who['phone'],
+            'provider_response' => $response,
+        ]);
+    };
+
     // Global kill-switch: if WhatsApp is disabled, send nothing.
     if (intval($settings->active_whatsapp) != 1) {
+        $log('skipped', 'WhatsApp is not active in settings.');
         return [
             'success' => false,
             'skipped' => true,
@@ -33,6 +54,7 @@ function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryH
     // Normalise + verify the destination number (anti-ban gate).
     $target = cdp_wa_resolveSendTarget($sender, $countryHint);
     if ($target['skip']) {
+        $log('skipped', $target['reason'], (string) $target['phone']);
         return [
             'success' => false,
             'skipped' => true,
@@ -70,6 +92,7 @@ function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryH
     // Transport failure: the request never completed.
     if ($err || $response === false) {
         cdp_wa_log("send transport error to {$target['phone']}: {$err}");
+        $log('failed', "cURL error: {$err}", $target['phone']);
         return [
             'success' => false,
             'message' => "cURL error: {$err}",
@@ -83,25 +106,31 @@ function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryH
     //   success:  {"sent":"true","message":"ok","id":...}
     //   failure:  {"error":"..."} | {"sent":"false","message":"..."}
     $data = json_decode((string) $response, true);
+    $rawResponse = "HTTP {$http_code}: " . (string) $response;
 
     if (is_array($data)) {
         if (!empty($data['error'])) {
             $reason = is_scalar($data['error']) ? (string) $data['error'] : json_encode($data['error']);
             cdp_wa_log("send rejected for {$target['phone']} (HTTP {$http_code}): {$reason}");
+            $log('failed', "WhatsApp API error: {$reason}", $target['phone'], $rawResponse);
             return ['success' => false, 'message' => "WhatsApp API error: {$reason}"];
         }
         if (isset($data['sent']) && filter_var($data['sent'], FILTER_VALIDATE_BOOLEAN) === false) {
             $reason = isset($data['message']) ? (string) $data['message'] : 'message not sent';
             cdp_wa_log("send not sent for {$target['phone']} (HTTP {$http_code}): {$reason}");
+            $log('failed', "WhatsApp API: {$reason}", $target['phone'], $rawResponse);
             return ['success' => false, 'message' => "WhatsApp API: {$reason}"];
         }
     } elseif ($http_code < 200 || $http_code >= 300) {
         // Non-JSON body on a non-2xx response is a clear failure.
         cdp_wa_log("send failed for {$target['phone']} (HTTP {$http_code}): " . substr((string) $response, 0, 200));
+        $log('failed', "WhatsApp API HTTP {$http_code}", $target['phone'], $rawResponse);
         return ['success' => false, 'message' => "WhatsApp API HTTP {$http_code}"];
     }
 
     // Explicit acceptance, or an ambiguous/unrecognised 2xx body (fail-open).
+    $detail = (is_array($data) && isset($data['id'])) ? 'Accepted by UltraMsg (id ' . $data['id'] . ')' : 'Accepted by UltraMsg';
+    $log('sent', $detail, $target['phone'], $rawResponse);
     return [
         'success' => true,
         'message' => "WhatsApp notification sent successfully",

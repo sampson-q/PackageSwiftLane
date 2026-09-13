@@ -1,4 +1,7 @@
 <?php
+// Message log (cdb_message_log) — loaded here so every send primitive and every
+// PHPMailer hook can write to it without each page having to require it.
+require_once __DIR__ . '/message_log.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
