@@ -8,6 +8,10 @@
  *   Received Office → Approved For Shipping → Transit → Clearing At Customs
  *   → Accra Sorting Office → Billed → Ready For Pickup
  *
+ * Air shipments do NOT use this pipeline: the tracking pages route them to
+ * cdp_airJourney() (helpers/air_journey.php), the 16-stage JFK → London →
+ * Accra flow. This helper is the sea (and fallback) pipeline.
+ *
  * Consolidation is deliberately NOT a step: it is an internal warehouse
  * operation and means nothing to the customer, so consolidated packages sit at
  * "Approved For Shipping" until they actually move. (A consolidated package

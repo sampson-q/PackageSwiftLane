@@ -23,6 +23,7 @@
 
 require_once('helpers/querys.php');
 require_once('helpers/track_progress.php');
+require_once('helpers/air_journey.php');
 require_once('helpers/asset.php');
 
 if (isset($_GET['order_track'])) {
@@ -54,14 +55,9 @@ $sumador_libras = 0;
 $sumador_volumetric = 0;
 $count = 0;
 
-$db->cdp_query("
-	SELECT a.id, a.order_track, a.t_dest, a.t_date, a.t_city, a.comments, a.status_courier, b.mod_style FROM cdb_courier_track as a
-	INNER JOIN cdb_styles as b ON a.status_courier = b.id
-	where a.order_track=:order_track ORDER BY a.t_date");
-$db->bind(':order_track', $sanitizedOrderTrack);
-$db->cdp_execute();
-
-$courier_track = $db->cdp_registros();
+// Tracking history is fetched once the effective status is known (below), so a
+// consolidated package can merge its consolidation's events into its own.
+$courier_track = [];
 if ($track != null) {
 
 	$db->cdp_query("SELECT * FROM cdb_users where id=:sender_id");
@@ -196,7 +192,20 @@ if ($track) {
 	$eff = cdp_getEffectiveTrackStatus($track->order_no, (int)$track->status_courier, $is_consolidate_flag, $is_package_source);
 	$status_name  = $eff->mod_style !== '' ? $eff->mod_style : (string)$track->mod_style;
 	$status_color = $eff->color;
-	$progress     = cdp_trackProgress($eff->status_id, $status_name);
+
+	// History: the shipment's own events plus, when it travels inside a
+	// consolidation, the consolidation's (that is where the flight legs are logged).
+	$track_codes = [$sanitizedOrderTrack, (string)$track->order_prefix . (string)$track->order_no];
+	if (!empty($eff->consolidate_code)) {
+		$track_codes[] = (string)$eff->consolidate_code;
+	}
+	$courier_track = cdp_getTrackEvents($track_codes);
+
+	// Air shipments follow the 16-stage JFK → London → Accra journey; sea keeps
+	// the generic pipeline. Company name comes from settings, never hard-coded.
+	$progress = $mode === 'air'
+		? cdp_airJourney($eff->status_id, $status_name, $courier_track, $core->site_name)
+		: cdp_trackProgress($eff->status_id, $status_name);
 
 
 	$print_href = $is_package_source ? 'print_customer_package_track.php' : 'print_inv_ship_track.php';
@@ -283,6 +292,7 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 				</h1>
 				<div class="trk-tags">
 					<span class="trk-tag"><i class="mdi <?php echo $mode === 'air' ? 'mdi-airplane' : 'mdi-ferry'; ?>"></i> <?php echo $mode === 'air' ? 'Air Freight' : 'Sea Freight'; ?></span>
+					<?php if ($mode === 'air') : ?><span class="trk-tag"><i class="mdi mdi-map-marker-path"></i> <?php echo $e($progress['route']['origin']['code']); ?> → <?php echo $e($progress['route']['transit']['code']); ?> → <?php echo $e($progress['route']['destination']['code']); ?></span><?php endif; ?>
 					<span class="trk-tag"><i class="mdi mdi-calendar-blank-outline"></i> <?php echo $e($track->order_date); ?></span>
 					<span class="trk-tag"><i class="mdi mdi-package-variant-closed"></i> <?php echo (int)$count; ?> <?php echo $e($lang['track-shipment11'] ?? 'Packages'); ?></span>
 				</div>
@@ -307,31 +317,9 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 			<!-- ── Main column ──────────────────────────────────────────── -->
 			<div class="trk-col">
 
-				<!-- Journey -->
-				<div class="trk-card" data-reveal>
-					<div class="trk-card__head"><span class="ico"><i class="mdi mdi-transit-connection-variant"></i></span> Shipment Journey</div>
-					<div class="trk-journey">
-						<?php foreach ($progress['steps'] as $i => $s) :
-							$cls = $i < $progress['index'] ? 'is-done' : ($i === $progress['index'] ? 'is-current' : ''); ?>
-							<div class="trk-stage <?php echo $cls; ?>">
-								<div class="trk-stage__dot"><?php echo $i < $progress['index'] ? '<i class="mdi mdi-check"></i>' : $s['icon']; ?></div>
-								<div class="trk-stage__label">
-									<?php echo $e($s['label']); ?>
-									<?php if ($i === $progress['index']) : ?><span class="trk-now">Current Stage</span><?php endif; ?>
-								</div>
-							</div>
-						<?php endforeach; ?>
-
-						<div class="trk-journey__foot">
-							<?php if ($progress['index'] >= count($progress['steps']) - 1) : ?>
-								This shipment has reached the final stage of its journey.
-							<?php else : ?>
-								This shipment is at <b><?php echo $e($current_step['label'] ?? $status_name); ?></b>.
-								The stages above update as it moves.
-							<?php endif; ?>
-						</div>
-					</div>
-				</div>
+				<!-- Journey (+ Flight Details on air shipments) -->
+				<?php include "views/track_parts/journey.php"; ?>
+				<?php include "views/track_parts/flight.php"; ?>
 
 				<!-- Shipment contents -->
 				<div class="trk-card" data-reveal>
@@ -452,28 +440,7 @@ $hist_count    = is_array($courier_track) ? count($courier_track) : 0;
 					</div>
 				</div>
 
-				<div class="trk-card" data-reveal>
-					<div class="trk-card__head"><span class="ico"><i class="mdi mdi-history"></i></span> <?php echo $e($lang['track-shipment22'] ?? 'Shipping History'); ?></div>
-					<div class="trk-card__body">
-						<?php if ($hist_count > 0) :
-							$reversed = array_reverse($courier_track); ?>
-							<ul class="trk-timeline">
-								<?php foreach ($reversed as $idx => $rows) :
-									$loc = trim(($rows->t_dest ?? '') . ($rows->t_city ? ', ' . $rows->t_city : '')); ?>
-									<li class="trk-tl <?php echo $idx === 0 ? 'is-latest' : ''; ?>">
-										<span class="trk-tl__dot"></span>
-										<div class="trk-tl__date"><?php echo $e(date('M d, Y · h:i A', strtotime($rows->t_date))); ?></div>
-										<div class="trk-tl__status"><?php echo $e($rows->mod_style); ?></div>
-										<?php if ($loc) : ?><div class="trk-tl__loc"><i class="mdi mdi-map-marker-outline"></i> <?php echo $e($loc); ?></div><?php endif; ?>
-										<?php if (!empty($rows->comments)) : ?><div class="trk-tl__note"><?php echo $e($rows->comments); ?></div><?php endif; ?>
-									</li>
-								<?php endforeach; ?>
-							</ul>
-						<?php else : ?>
-							<p class="trk-note">No tracking updates have been logged for this shipment yet.</p>
-						<?php endif; ?>
-					</div>
-				</div>
+				<?php include "views/track_parts/history.php"; ?>
 
 			</aside>
 

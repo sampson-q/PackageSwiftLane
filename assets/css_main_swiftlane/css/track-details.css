@@ -371,6 +371,78 @@ body:has(.trk) {
     color: var(--muted);
 }
 
+/* ── Air journey additions (16-stage JFK → London → Accra flow) ─────────── */
+.trk-card__hint {
+    margin-left: auto;
+    font-size: .72rem;
+    letter-spacing: .06em;
+    color: var(--faint);
+    white-space: nowrap;
+}
+
+.trk-stage__body { min-width: 0; align-self: center; }
+.trk-journey--air .trk-stage { padding: 11px 0; }
+.trk-journey--air .trk-stage::before { top: 38px; bottom: -11px; }
+
+.trk-stage__desc {
+    font-size: .78rem;
+    color: var(--faint);
+    margin-top: 2px;
+    line-height: 1.4;
+}
+.trk-stage.is-done .trk-stage__desc,
+.trk-stage.is-current .trk-stage__desc { color: var(--muted); }
+
+.trk-stage__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 5px;
+    font-size: .74rem;
+    font-weight: 600;
+}
+.trk-stage__time { color: var(--muted); }
+.trk-stage__time.is-missing { color: var(--faint); font-weight: 500; font-style: italic; }
+.trk-stage.is-current .trk-stage__time { color: var(--accent); }
+.trk-stage__flight {
+    color: var(--ink);
+    background: var(--line-2);
+    border-radius: 5px;
+    padding: 1px 7px;
+}
+
+/* Origin → Transit → Destination strip on the Flight Details card */
+.trk-route {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 14px 16px;
+    background: var(--canvas);
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius);
+}
+.trk-route__pt { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; }
+.trk-route__code { font-weight: 800; font-size: 1.15rem; color: var(--ink); letter-spacing: .02em; }
+.trk-route__city { font-size: .78rem; color: var(--muted); }
+.trk-route__role {
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-top: 3px;
+}
+.trk-route__arrow { flex: 1; text-align: center; color: var(--accent); font-size: 1rem; position: relative; }
+.trk-route__arrow::before {
+    content: "";
+    position: absolute;
+    left: 8px; right: 8px; top: 50%;
+    border-top: 1px dashed var(--line);
+    z-index: 0;
+}
+.trk-route__arrow i { position: relative; z-index: 1; background: var(--canvas); padding: 0 4px; }
+
 /* ── Definition grids (parties, details) ─────────────────────────────────── */
 .trk-partyhead {
     display: flex;
@@ -647,4 +719,8 @@ html.trk-js .trk [data-reveal].is-in { opacity: 1; transform: none; }
     .trk-dl__row { grid-template-columns: 1fr; gap: 2px; }
     .trk-card__body { padding: 16px; }
     .trk-empty__box { padding: 32px 22px; }
+    .trk-card__hint { display: none; }
+    .trk-route { padding: 12px 10px; }
+    .trk-route__code { font-size: .95rem; }
+    .trk-route__city { font-size: .7rem; }
 }
