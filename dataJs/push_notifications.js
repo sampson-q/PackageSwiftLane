@@ -168,10 +168,11 @@ $("#push_notification_form").on("submit", function (event) {
         },
         success: function (response) {
             $("#send_notification").attr("disabled", false);
-            if (response.success === true) cdp_showSuccess();
+            if (response.success === true) cdp_showSuccess(response.summary);
             else {
-                if (response.errors) cdp_showError(response.errors);
-                else cdp_showError({ general: 'Unknown error' });
+                var errs = response.errors || { general: 'Unknown error' };
+                if (response.summary) errs = (Array.isArray(errs) ? errs : Object.values(errs)).concat([cdp_pushSummaryHtml(response.summary)]);
+                cdp_showError(errs);
             }
 
             $('#push_notification_form')[0].reset();
@@ -191,8 +192,25 @@ $("#push_notification_form").on("submit", function (event) {
     });
 });
 
-function cdp_showSuccess() {
-  Swal.fire({ title: 'Push Notifications Sent', icon: "success", allowOutsideClick: false, confirmButtonText: "OK" })
+function cdp_pushSummaryHtml(s) {
+  if (!s) return '';
+  var esc = function (t) { return $('<div>').text(t == null ? '' : t).html(); };
+  var line = function (label, c) { return '<b>' + label + ':</b> ' + c.sent + ' sent · ' + c.failed + ' failed · ' + c.skipped + ' skipped'; };
+  var html = '<div class="text-left" style="font-size:.9rem">' +
+    '<div><b>Recipients:</b> ' + s.recipients + '</div>' +
+    '<div>' + line('WhatsApp', s.whatsapp) + '</div>' +
+    '<div>' + line('E-mail', s.email) + '</div>';
+  if (s.lines && s.lines.length) {
+    html += '<details class="mt-2"><summary style="cursor:pointer">Per-recipient results</summary><ul class="pl-3 mt-2" style="max-height:220px;overflow:auto">';
+    s.lines.forEach(function (l) { html += '<li>' + esc(l) + '</li>'; });
+    html += '</ul></details>';
+  }
+  html += '<div class="mt-2 text-muted">Every attempt is recorded in Settings → Message Logs.</div></div>';
+  return html;
+}
+
+function cdp_showSuccess(summary) {
+  Swal.fire({ title: 'Push Notifications Sent', html: cdp_pushSummaryHtml(summary), icon: "success", allowOutsideClick: false, confirmButtonText: "OK" })
 }
 
 function cdp_showError(errors) {

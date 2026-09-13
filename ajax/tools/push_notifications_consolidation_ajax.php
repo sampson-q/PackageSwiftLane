@@ -1,35 +1,35 @@
 <?php
+// *************************************************************************
+// * Push Notifications for ONE consolidation — all package owners, or a    *
+// * chosen subset of them.                                                 *
+// *                                                                       *
+// * Delivery goes through helpers/push_notify.php (real per-channel        *
+// * outcome, every attempt logged to cdb_message_log).                     *
+// *************************************************************************
 
 require_once("../../loader.php");
-require_once("../../helpers/querys.php");
-require_once("../../helpers/phpmailer/class.phpmailer.php");
-require_once("../../helpers/phpmailer/class.smtp.php");
-require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 require_once("../../helpers/ajax_guard.php");
 require_login();
+require_permission('push_notifications');
+require_once("../../helpers/push_notify.php");
 
 $core = new Core;
 $db = new Conexion;
 $errors = array();
-$messages = array();
 
 $settings = cdp_getSettingsCourier();
 
-// Collect inputs
 $notification_type = isset($_POST['notification_type']) ? cdp_sanitize($_POST['notification_type']) : '';
-$cid = isset($_POST['consolidation_id']) ? intval($_POST['consolidation_id']) : 0;
+$cid = isset($_POST['consolidation_id']) ? (int) $_POST['consolidation_id'] : 0;
 
-// collect sender_ids[] if provided
 $sender_ids_post = array();
 if (isset($_POST['sender_ids']) && is_array($_POST['sender_ids'])) {
     foreach ($_POST['sender_ids'] as $u) {
-        $u_int = intval($u);
-        if ($u_int > 0) $sender_ids_post[] = $u_int;
+        if ((int) $u > 0) $sender_ids_post[] = (int) $u;
     }
 }
 
-// basic validation
-if (empty($notification_type)) {
+if ($notification_type === '') {
     $errors['notification_type'] = 'Notification type is required.';
 }
 if ($cid <= 0) {
@@ -41,17 +41,9 @@ if (empty($_POST['subject'])) {
 if (empty($_POST['message'])) {
     $errors['message'] = 'Message is required.';
 }
-
-// Validate allowed combinations:
-if ($notification_type === 'broadcast') {
-    if (!empty($sender_ids_post)) {
-        $errors['broadcast_user_forbidden'] = 'Do not include sender_ids for broadcast.';
-    }
-} elseif ($notification_type === 'selected_users') {
-    if (empty($sender_ids_post)) {
-        $errors['sender_ids'] = 'Please provide at least one user id.';
-    }
-} else {
+if ($notification_type === 'selected_users' && !$sender_ids_post) {
+    $errors['sender_ids'] = 'Choose at least one user from the consolidation.';
+} elseif (!in_array($notification_type, ['broadcast', 'selected_users'], true) && $notification_type !== '') {
     $errors['notification_type_unknown'] = 'Unknown notification type.';
 }
 
@@ -60,203 +52,71 @@ if (!empty($errors)) {
     exit;
 }
 
-// sanitize subject/message
-$subject = trim($_POST['subject']);
-$message = trim($_POST['message']);
+$subject = trim((string) $_POST['subject']);
+$message = trim((string) $_POST['message']);
 
-// Helper: send notifications (WhatsApp & Email)
-function pushNotification($user, $subject, $message, $settings) {
-    global $errors, $messages;
-    $app_url = $settings->site_url;
+$db->cdp_query("SELECT consolidate_id, c_prefix, c_no FROM cdb_consolidate WHERE consolidate_id = :cid LIMIT 1");
+$db->bind(':cid', $cid);
+$db->cdp_execute();
+$con = $db->cdp_registro();
+if (!$con) {
+    echo json_encode(['success' => false, 'errors' => ['Consolidation not found.']]);
+    exit;
+}
 
-    // WhatsApp
-    $whatsappTemplateId = 12;
-    $tpl = getTemplateWhatsApp($whatsappTemplateId);
-    if ($tpl) {
-        $body = str_replace(
-            ['[USERNAME]', '[SUBJECT]', '[SITE_NAME]', '[MESSAGE]', '[URL]'],
-            [ucfirst($user->fname . ' ' . $user->lname), $subject, $settings->site_name, $message, $app_url],
-            $tpl->body
-        );
-        sendNotificationWhatsApp_v2($user, $body);
-        $messages[] = "WhatsApp sent to {$user->email}";
-    } else {
-        $errors[] = 'WhatsApp template not found.';
-    }
+// Package owners inside this consolidation (customers, not staff).
+$ownerIds = cdp_pushConsolidationOwnerIds($cid, 'consolidate');
 
-    // Email
-    $email_template = cdp_getEmailTemplatesdg1i4(29);
-    $body = str_replace(
-        ['[USERNAME]', '[MESSAGE]', '[URL]', '[SITE_NAME]'],
-        [$user->fname . ' ' . $user->lname, $message, $app_url, $settings->site_name],
-        $email_template->body
-    );
-
-    $newbody = cdp_cleanOutx($body);
-
-    if ($settings->mailer == 'PHP') {
-        $to     = $user->email;
-        $from   = $settings->email_address;
-        $header = "MIME-Version: 1.0\r\n";
-        $header .= "Content-type: text/html; charset=UTF-8\r\n";
-        $header .= "From: {$from}\r\n";
-
-        if (mail($to, $subject, $newbody, $header)) {
-            $messages[] = "Email (PHP mail) sent to {$user->email}";
-        } else {
-            $errors[] = "PHP mail() failed for {$user->email}";
-        }
-    } elseif ($settings->mailer == 'SMTP') {
-        $destinatario = $user->email;
-
-        $mail = new PHPMailer(true);
-        $mail->isSMTP();
-        $mail->Host       = $settings->smtp_host;
-        $mail->SMTPAuth   = true;
-        $mail->Username   = $settings->smtp_user;
-        $mail->Password   = $settings->smtp_password;
-        $mail->SMTPSecure = 'tls';
-        $mail->Port       = 587;
-
-        $mail->setFrom($settings->email_address, $settings->smtp_names);
-        $mail->addAddress($destinatario);
-
-        $mail->isHTML(true);
-        $mail->CharSet = 'UTF-8';
-        $mail->Subject = $subject;
-        $mail->Body    = "<html><body><p>{$newbody}</p></body></html>";
-
-        $mail->SMTPOptions = [
-            'ssl' => [
-                'verify_peer'      => false,
-                'verify_peer_name' => false,
-                'allow_self_signed'=> true,
-            ]
-        ];
-
-        try {
-            $mail->send();
-            $messages[] = "Email (SMTP) sent to {$user->email}";
-        } catch (Exception $e) {
-            $errors[] = "SMTP send failed for {$user->email}: " . $e->getMessage();
-        }
+if ($notification_type === 'selected_users') {
+    // Only owners that really belong to this consolidation.
+    $ownerIds = array_values(array_intersect($ownerIds, array_unique($sender_ids_post)));
+    if (!$ownerIds) {
+        echo json_encode(['success' => false, 'errors' => ['None of the selected users owns a package in this consolidation.']]);
+        exit;
     }
 }
 
-// Utility: fetch user records by unique id array (returns array of user objects)
-function fetchUsersByIds($db, $ids) {
-    if (empty($ids)) return [];
-    $ids = array_values(array_unique(array_map('intval', $ids)));
-    $in_list = implode(',', $ids);
-    $db->cdp_query("SELECT * FROM cdb_users WHERE id IN ({$in_list}) AND active = 1");
-    $db->cdp_execute();
-    return $db->cdp_registros();
+if (!$ownerIds) {
+    echo json_encode(['success' => false, 'errors' => ['No packages with an owner were found in that consolidation.']]);
+    exit;
 }
 
-// ---------- main flows ----------
-
-$sent_user_ids = []; // to ensure each recipient is messaged only once
-
-if ($notification_type === 'broadcast') {
-    // find distinct sender_ids for the consolidation
-    $cid_int = intval($cid);
-    $db->cdp_query("
-        SELECT DISTINCT o.sender_id
-        FROM cdb_consolidate_detail d
-        INNER JOIN cdb_add_order o ON d.order_id = o.order_id
-        WHERE d.consolidate_id = :cid
-    ");
-    $db->bind(':cid', $cid_int);
-    $db->cdp_execute();
-    $rows = $db->cdp_registros();
-
-    $sender_ids = [];
-    if (!empty($rows)) {
-        foreach ($rows as $r) {
-            $sid = intval($r->sender_id);
-            if ($sid > 0) $sender_ids[$sid] = $sid;
-        }
-    }
-
-    if (empty($sender_ids)) {
-        $errors[] = 'No users found for that consolidation.';
-    } else {
-        $unique_ids = array_values($sender_ids);
-        $users = fetchUsersByIds($db, $unique_ids);
-
-        if (empty($users)) {
-            $errors[] = 'No active users found among consolidation members.';
-        } else {
-            // send once per unique user
-            foreach ($users as $user) {
-                $uid = intval($user->id);
-                if (in_array($uid, $sent_user_ids, true)) continue;
-                pushNotification($user, $subject, $message, $settings);
-                $sent_user_ids[] = $uid;
-            }
-        }
-    }
-
-} elseif ($notification_type === 'selected_users') {
-    // ensure provided sender_ids belong to consolidation
-    $cid_int = intval($cid);
-    $db->cdp_query("
-        SELECT DISTINCT o.sender_id
-        FROM cdb_consolidate_detail d
-        INNER JOIN cdb_add_order o ON d.order_id = o.order_id
-        WHERE d.consolidate_id = :cid
-    ");
-    $db->bind(':cid', $cid_int);
-    $db->cdp_execute();
-    $rows = $db->cdp_registros();
-
-    $valid_ids = [];
-    if (!empty($rows)) {
-        foreach ($rows as $r) {
-            $sid = intval($r->sender_id);
-            if ($sid > 0) $valid_ids[$sid] = $sid;
-        }
-    }
-    $valid_ids = array_values($valid_ids);
-
-    // sanitize and dedupe posted ids
-    $selected_post = array_values(array_unique(array_map('intval', $sender_ids_post)));
-
-    // intersect posted ids with valid_ids
-    $allowed = array_intersect($selected_post, $valid_ids);
-    $allowed = array_values(array_unique(array_map('intval', $allowed)));
-
-    if (empty($allowed)) {
-        $errors[] = 'No valid users selected from the consolidation.';
-    } else {
-        $users = fetchUsersByIds($db, $allowed);
-
-        if (empty($users)) {
-            $errors[] = 'No active users found among the selected users.';
-        } else {
-            foreach ($users as $user) {
-                $uid = intval($user->id);
-                if (in_array($uid, $sent_user_ids, true)) continue;
-                pushNotification($user, $subject, $message, $settings);
-                $sent_user_ids[] = $uid;
-            }
-        }
-    }
-
-} else {
-    $errors[] = 'Unknown notification type.';
+$users = cdp_pushFetchUsers($ownerIds);
+if (!$users) {
+    echo json_encode(['success' => false, 'errors' => ['None of the package owners has an active account.']]);
+    exit;
 }
 
-// response
-if (!empty($errors)) {
-    echo json_encode([
-        'success' => false,
-        'errors'  => $errors,
-        'messages'=> $messages
-    ]);
-} else {
-    echo json_encode([
-        'success' => true,
-        'messages'=> $messages
+$ctx = [
+    'source'       => 'push_notification_consolidation',
+    'subject'      => $subject,
+    'entity_type'  => 'consolidation',
+    'entity_id'    => (string) $cid,
+    'entity_label' => $con->c_prefix . $con->c_no,
+];
+$sum = cdp_pushNotifyUsers($users, $subject, $message, $settings, $ctx);
+
+if (function_exists('cdp_activityLog')) {
+    cdp_activityLog([
+        'module'       => 'notifications',
+        'verb'         => 'notify',
+        'action'       => 'notifications.push_consolidation',
+        'label'        => 'Notifications · Consolidation Push Sent',
+        'summary'      => sprintf('Push "%s" to %d owner(s) of %s — WhatsApp %d sent / %d failed / %d skipped; e-mail %d sent / %d failed / %d skipped',
+            $subject, $sum['recipients'], $ctx['entity_label'],
+            $sum['whatsapp']['sent'], $sum['whatsapp']['failed'], $sum['whatsapp']['skipped'],
+            $sum['email']['sent'], $sum['email']['failed'], $sum['email']['skipped']),
+        'entity_type'  => 'consolidation',
+        'entity_id'    => (string) $cid,
+        'entity_label' => $ctx['entity_label'],
+        'meta'         => ['batch_id' => $sum['batch_id'], 'type' => $notification_type],
     ]);
 }
+
+$delivered = $sum['whatsapp']['sent'] + $sum['email']['sent'];
+echo json_encode([
+    'success'  => $delivered > 0,
+    'summary'  => $sum,
+    'messages' => $sum['lines'],
+    'errors'   => $delivered > 0 ? [] : ['Nothing was delivered. See the per-recipient results and the Message Logs page.'],
+]);

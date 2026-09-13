@@ -5,6 +5,7 @@ require_once("../../helpers/querys.php");
 require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 require_once("../../helpers/ajax_guard.php");
 require_login();
+require_permission('push_notifications');
 
 $db = new Conexion;
 $errors = array();
@@ -249,8 +250,15 @@ if ($action === 'send_invoices') {
         $body = str_replace($placeholders, $replacements, $tpl->body);
 
         try {
-            sendNotificationWhatsApp_v2($userRow, $body);
-            $send_messages[] = "WhatsApp invoice sent to user_id {$uid} for orders: " . implode(',', $orderIdsSentForUser);
+            cdp_msgSetContext(['source' => 'push_notification_invoice', 'template_id' => (int) ($tpl->id ?? 14), 'entity_type' => 'invoice',
+                'entity_label' => implode(', ', $trackingCSV_all), 'subject' => 'Invoice notification', 'batch_id' => $msg_batch ?? ($msg_batch = cdp_msgNewBatchId('inv'))]);
+            $wa = sendNotificationWhatsApp_v2($userRow, $body);
+            cdp_msgClearContext();
+            if (!empty($wa['success'])) {
+                $send_messages[] = "WhatsApp invoice sent to user_id {$uid} for orders: " . implode(',', $orderIdsSentForUser);
+            } else {
+                $send_errors[] = "WhatsApp invoice NOT sent to user_id {$uid}: " . ($wa['message'] ?? 'unknown reason');
+            }
         } catch (Exception $e) {
             $send_errors[] = "Failed sending WhatsApp for user {$uid}: " . $e->getMessage();
         }

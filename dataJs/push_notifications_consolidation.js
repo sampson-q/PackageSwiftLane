@@ -133,7 +133,7 @@ $("#push_notification_form").on("submit", function (event) {
             $("#send_notification").attr("disabled", false);
 
             if (response.success === true) {
-                Swal.fire({ title: 'Notifications sent', html: 'Push notifications were sent successfully.', icon: "success", confirmButtonText: "OK" });
+                Swal.fire({ title: 'Notifications Sent', html: cdp_pushSummaryHtml(response.summary), icon: "success", confirmButtonText: "OK" });
             } else {
                 if (response.errors) {
                     var html = '<ul class="error">';
@@ -143,6 +143,7 @@ $("#push_notification_form").on("submit", function (event) {
                         for (var k in response.errors) { if (!response.errors.hasOwnProperty(k)) continue; html += '<li>' + response.errors[k] + '</li>'; }
                     }
                     html += '</ul>';
+                    if (response.summary) html += cdp_pushSummaryHtml(response.summary);
                     Swal.fire({ title: message_error, html: html, icon: "error", confirmButtonText: "OK" });
                 } else {
                     Swal.fire({ title: message_error, html: 'Unknown error', icon: "error", confirmButtonText: "OK" });
@@ -165,3 +166,21 @@ $("#push_notification_form").on("submit", function (event) {
         }
     });
 });
+
+
+function cdp_pushSummaryHtml(s) {
+    if (!s) return '';
+    var esc = function (t) { return $('<div>').text(t == null ? '' : t).html(); };
+    var line = function (label, c) { return '<b>' + label + ':</b> ' + c.sent + ' sent · ' + c.failed + ' failed · ' + c.skipped + ' skipped'; };
+    var html = '<div class="text-left" style="font-size:.9rem">' +
+        '<div><b>Recipients:</b> ' + s.recipients + '</div>' +
+        '<div>' + line('WhatsApp', s.whatsapp) + '</div>' +
+        '<div>' + line('E-mail', s.email) + '</div>';
+    if (s.lines && s.lines.length) {
+        html += '<details class="mt-2"><summary style="cursor:pointer">Per-recipient results</summary><ul class="pl-3 mt-2" style="max-height:220px;overflow:auto">';
+        s.lines.forEach(function (l) { html += '<li>' + esc(l) + '</li>'; });
+        html += '</ul></details>';
+    }
+    html += '<div class="mt-2 text-muted">Every attempt is recorded in Settings → Message Logs.</div></div>';
+    return html;
+}
