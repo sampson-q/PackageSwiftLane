@@ -114,7 +114,9 @@ if (empty($errors)) {
             't_date'         => $date,
             'status_courier' => cdp_sanitize(intval($status)),
             'comments'       => cdp_sanitize($_POST['comments'] ?? ''),
-            'office'         => cdp_sanitize(intval($_POST["office"]))
+            'office'         => cdp_sanitize(intval($_POST["office"])),
+            'flight_no'      => trim(cdp_sanitize($_POST['flight_no'] ?? '')),
+            'awb_no'         => trim(cdp_sanitize($_POST['awb_no'] ?? ''))
         );
 
         cdp_insertCourierShipmentTrack($dataTrack);

@@ -255,6 +255,22 @@ $statusrow = $core->cdp_getStatusByType(1);
                                             <label for="message-text" class="control-label"><?php echo $lang['status-ship8'] ?></label>
                                             <textarea rows="3" class="form-control" id="message-text" name="comments"></textarea>
                                         </div>
+
+                                        <!-- Air journey: optional flight / AWB captured on the tracking event and shown on the public tracking page -->
+                                        <div class="col-sm-12 col-md-6">
+                                            <label for="flight_no" class="control-label col-form-label">Flight Number <small class="text-muted">(optional)</small></label>
+                                            <div class="input-group mb-3">
+                                                <div class="input-group-prepend"><span class="input-group-text"><i class="mdi mdi-airplane"></i></span></div>
+                                                <input type="text" class="form-control" id="flight_no" name="flight_no" maxlength="30" placeholder="e.g. BA178" autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12 col-md-6">
+                                            <label for="awb_no" class="control-label col-form-label">AWB Number <small class="text-muted">(optional)</small></label>
+                                            <div class="input-group mb-3">
+                                                <div class="input-group-prepend"><span class="input-group-text"><i class="mdi mdi-barcode"></i></span></div>
+                                                <input type="text" class="form-control" id="awb_no" name="awb_no" maxlength="40" placeholder="e.g. 125-12345675" autocomplete="off">
+                                            </div>
+                                        </div>
                                         <?php
                                         if ($core->active_whatsapp == 1) {
                                         ?>

@@ -7494,33 +7494,53 @@ function cdp_getDefaultAgencyOrigin()
     ];
 }
 
+/**
+ * Whether cdb_courier_track carries the optional flight_no / awb_no columns
+ * (sql/air_journey_tracking.sql). Cached per request so writers include the
+ * columns only when they exist — the migration is optional.
+ */
+function cdp_courierTrackHasFlightColumns()
+{
+    static $has = null;
+    if ($has !== null) {
+        return $has;
+    }
+    $has = false;
+    try {
+        $db = new Conexion;
+        $db->cdp_query("SELECT COUNT(*) AS n FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cdb_courier_track'
+            AND COLUMN_NAME IN ('flight_no', 'awb_no')");
+        $r = $db->cdp_registro();
+        $has = $r && (int) $r->n === 2;
+    } catch (Throwable $e) {
+        $has = false;
+    }
+    return $has;
+}
+
+/**
+ * Insert a tracking-history event. Optional keys flight_no / awb_no (air
+ * journey) are written only when the columns exist.
+ */
 function cdp_insertCourierShipmentTrack($datos)
 {
 
+    $air_cols = cdp_courierTrackHasFlightColumns();
     $db = new Conexion;
     $db->cdp_query("
-        INSERT INTO cdb_courier_track 
-        (
-            order_id,
-            order_track, 
-            comments,                                  
-            t_date,
-            status_courier,
-            office_id,
-            user_id
-            )
+        INSERT INTO cdb_courier_track
+        (order_id, order_track, comments, t_date, status_courier, office_id, user_id" . ($air_cols ? ", flight_no, awb_no" : "") . ")
         VALUES
-            (
-            :order_id,    
-            :order_track, 
-            :comments,                                     
-            :t_date,
-            :status_courier,
-            :office,                   
-            :user_id
-            )
+        (:order_id, :order_track, :comments, :t_date, :status_courier, :office, :user_id" . ($air_cols ? ", :flight_no, :awb_no" : "") . ")
     ");
 
+    if ($air_cols) {
+        $fl = trim((string) ($datos['flight_no'] ?? ''));
+        $aw = trim((string) ($datos['awb_no'] ?? ''));
+        $db->bind(':flight_no', $fl !== '' ? $fl : null);
+        $db->bind(':awb_no', $aw !== '' ? $aw : null);
+    }
     $db->bind(':user_id',  $datos["user_id"]);
     $db->bind(':order_id', $datos["order_id"]);
     $db->bind(':order_track',  $datos["order_track"]);

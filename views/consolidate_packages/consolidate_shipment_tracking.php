@@ -120,30 +120,12 @@ if (isset($_POST['address'])) {
         $date = $date . ' ' . $time;
 
 
-        $db->cdp_query("
-                INSERT INTO cdb_courier_track 
-                (
-                    order_track,
-                    t_dest,
-                    t_city,
-                    comments,
-                    t_date,
-                    status_courier,
-                    office_id,
-                    user_id
-                    )
+        // flight_no / awb_no are optional columns (sql/air_journey_tracking.sql).
+        $air_cols = cdp_courierTrackHasFlightColumns();
+        $db->cdp_query("INSERT INTO cdb_courier_track
+                (order_track, t_dest, t_city, comments, t_date, status_courier, office_id, user_id" . ($air_cols ? ", flight_no, awb_no" : "") . ")
                 VALUES
-                    (
-                    :order_track,
-                    :country,
-                    :address,
-                    :comments,
-                    :t_date,
-                    :status_courier,
-                    :office,                   
-                    :user_id
-                    )
-            ");
+                (:order_track, :country, :address, :comments, :t_date, :status_courier, :office, :user_id" . ($air_cols ? ", :flight_no, :awb_no" : "") . ")");
 
 
 
@@ -155,6 +137,12 @@ if (isset($_POST['address'])) {
         $db->bind(':status_courier', cdp_sanitize($_POST['status_courier']));
         $db->bind(':office', cdp_sanitize($_POST['office']));
         $db->bind(':user_id',  $_SESSION['userid']);
+        if ($air_cols) {
+            $fl = trim(cdp_sanitize($_POST['flight_no'] ?? ''));
+            $aw = trim(cdp_sanitize($_POST['awb_no'] ?? ''));
+            $db->bind(':flight_no', $fl !== '' ? $fl : null);
+            $db->bind(':awb_no', $aw !== '' ? $aw : null);
+        }
 
         $db->cdp_execute();
 
@@ -625,6 +613,22 @@ if (isset($_POST['address'])) {
                                         <div class="col-sm-12 col-md-6">
                                             <label for="message-text" class="control-label"><?php echo $lang['status-ship8'] ?></label>
                                             <textarea rows="3" class="form-control" id="message-text" name="comments"></textarea>
+                                        </div>
+
+                                        <!-- Air journey: optional flight / AWB captured on the tracking event and shown on the public tracking page -->
+                                        <div class="col-sm-12 col-md-6">
+                                            <label for="flight_no" class="control-label col-form-label">Flight Number <small class="text-muted">(optional)</small></label>
+                                            <div class="input-group mb-3">
+                                                <div class="input-group-prepend"><span class="input-group-text"><i class="mdi mdi-airplane"></i></span></div>
+                                                <input type="text" class="form-control" id="flight_no" name="flight_no" maxlength="30" placeholder="e.g. BA178" autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12 col-md-6">
+                                            <label for="awb_no" class="control-label col-form-label">AWB Number <small class="text-muted">(optional)</small></label>
+                                            <div class="input-group mb-3">
+                                                <div class="input-group-prepend"><span class="input-group-text"><i class="mdi mdi-barcode"></i></span></div>
+                                                <input type="text" class="form-control" id="awb_no" name="awb_no" maxlength="40" placeholder="e.g. 125-12345675" autocomplete="off">
+                                            </div>
                                         </div>
 
                                     </div>
