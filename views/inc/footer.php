@@ -199,6 +199,11 @@ if (cdp_spBeaconWanted()) : ?>
 <?php /* Real-time "cleared, awaiting delivery" badge on the Warehouse nav item */ ?>
 <script src="<?= cdp_asset('dataJs/warehouse_nav_badge.js') ?>"></script>
 
+<?php /* The design system is linked again here, after every page-level stylesheet and inline
+         <style> block (about 80 views add their own after head_scripts.php), so its rules
+         are last in the cascade on every page. The browser does not fetch the file twice. */ ?>
+<link href="<?= cdp_asset('assets/css_main_swiftlane/css/swiftlane-tokens.css') ?>" rel="stylesheet" type="text/css" />
+<link href="<?= cdp_asset('assets/css_main_swiftlane/css/swiftlane-ds.css') ?>" rel="stylesheet" type="text/css" />
 <style>
     .swal2-container {
     z-index: 99999 !important;
