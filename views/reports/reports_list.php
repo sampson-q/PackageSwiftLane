@@ -116,53 +116,33 @@ $userData = $user->cdp_getUserData();
                         if ($user->cdp_hasPermission($perModule)) {
 
                     ?>
-                    <div class="col-sm-12 col-md-6 col-lg-4">
+                    <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
 
-                        <div class="card ">
+                        <div class="card h-100 mb-0">
                             <div class="card-body">
                                 <!-- title -->
-                                <div class="d-md-flex align-items-center">
-                                    <div>
-                                        <h4 class="card-title"><span class="display-7"><iconify-icon icon="glyphs:plane-departure-bold"  style="color:#9B9B8C"></iconify-icon></span> <?php echo 'Air Shipments' ?></h4>
-                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo 'Advanced Air Shipping Reports' ?></h5>
-                                    </div>
-
-                                </div>
+                                <div class="swl-panel__head"><span class="swl-metric__icon"><iconify-icon icon="glyphs:plane-departure-bold"></iconify-icon></span><div class="swl-panel__text"><span class="ds-title-md"><?php echo 'Air Shipments' ?></span><span class="swl-panel__note"><?php echo 'Advanced Air Shipping Reports' ?></span></div></div>
                                 <!-- title -->
-                                 <table class="tablesaw table-hover table no-border">
-                                    <tbody>
+                                 <div class="swl-kv">
                                         <?php if ($user->cdp_hasPermission('view_general_shipments')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_general.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general010'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_general.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general010'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_shipment_by_clients')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_customer.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general011'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_customer.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general011'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                          <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_shipment_by_employees')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_employees.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general012'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_employees.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general012'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                          <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_shipment_by_agencies')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_agency.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general013'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_agency.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general013'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                          <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_shipment_by_drivers')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_driver_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general014'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_driver_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general014'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_top_users_sea')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_top_users_sea.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo 'Top Users' ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_top_users_sea.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo 'Top Users' ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
-                                    </tbody>
-                                </table>
+                                    </div>
                             </div>
                         </div>
                     </div>
@@ -183,53 +163,33 @@ $userData = $user->cdp_getUserData();
                         if ($user->cdp_hasPermission($perModule)) {
 
                     ?>
-                    <div class="col-sm-12 col-md-6 col-lg-4">
+                    <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
 
-                        <div class="card ">
+                        <div class="card h-100 mb-0">
                             <div class="card-body">
                                 <!-- title -->
-                                <div class="d-md-flex align-items-center">
-                                    <div>
-                                        <h4 class="card-title"><span class="display-7"><iconify-icon icon="mingcute:ship-fill"  style="color:#9B9B8C"></iconify-icon></span> <?php echo 'Sea Shipments' ?></h4>
-                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo 'Advanced Sea Shipping Reports' ?></h5>
-                                    </div>
-
-                                </div>
+                                <div class="swl-panel__head"><span class="swl-metric__icon"><iconify-icon icon="mingcute:ship-fill"></iconify-icon></span><div class="swl-panel__text"><span class="ds-title-md"><?php echo 'Sea Shipments' ?></span><span class="swl-panel__note"><?php echo 'Advanced Sea Shipping Reports' ?></span></div></div>
                                 <!-- title -->
-                                <table class="tablesaw table-hover table no-border">
-                                    <tbody>
+                                <div class="swl-kv">
                                         <?php if ($user->cdp_hasPermission('view_general_package_records')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_packages_registered.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general03'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_packages_registered.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general03'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_package_by_employees')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_packages_registered_employee.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general04'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_packages_registered_employee.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general04'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_package_by_agencies')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_packages_registered_agency.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general05'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_packages_registered_agency.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general05'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_package_by_drivers')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_packages_registered_driver.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general06'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_packages_registered_driver.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general06'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_top_users_air')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_top_users_air.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo 'Top Users' ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_top_users_air.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo 'Top Users' ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_shipment_by_agencies')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="financial_sheet.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo 'Financial Sheet' ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="financial_sheet.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo 'Financial Sheet' ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
-                                    </tbody>
-                                </table>
+                                    </div>
                             </div>
                         </div>
                     </div>
@@ -250,48 +210,30 @@ $userData = $user->cdp_getUserData();
                         if ($user->cdp_hasPermission($perModule)) {
 
                     ?>
-                    <div class="col-sm-12 col-md-6 col-lg-4">
+                    <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
 
-                        <div class="card ">
+                        <div class="card h-100 mb-0">
                             <div class="card-body">
                                 <!-- title -->
-                                <div class="d-md-flex align-items-center">
-                                    <div>
-                                        <h4 class="card-title"><span class="display-7"><i class="mdi mdi-cube-send" style="color:#9B9B8C"></i></span> <?php echo $lang['report-general015'] ?></h4>
-                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo $lang['report-general016'] ?></h5>
-                                    </div>
-
-                                </div>
+                                <div class="swl-panel__head"><span class="swl-metric__icon"><i class="mdi mdi-cube-send"></i></span><div class="swl-panel__text"><span class="ds-title-md"><?php echo $lang['report-general015'] ?></span><span class="swl-panel__note"><?php echo $lang['report-general016'] ?></span></div></div>
                                 <!-- title -->
-                                <table class="tablesaw table-hover table no-border">
-                                    <tbody>
+                                <div class="swl-kv">
                                         <?php if ($user->cdp_hasPermission('view_general_pickups')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_pickup_general_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general017'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_pickup_general_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general017'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_pickups_by_clients')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_pickup_customers_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general018'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_pickup_customers_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general018'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_pickups_by_employees')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_pickup_employees_list.php"><i class="ti ti-arrow-rightmdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general019'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_pickup_employees_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general019'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_pickups_by_agencies')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_pickup_agency_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general020'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_pickup_agency_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general020'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_pickups_by_drivers')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_pickup_driver_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general021'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_pickup_driver_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general021'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
-                                    </tbody>
-                                </table>
+                                    </div>
 
                             </div>
                         </div>
@@ -314,52 +256,34 @@ $userData = $user->cdp_getUserData();
                         if ($user->cdp_hasPermission($perModule)) {
 
                     ?>
-                    <div class="col-sm-12 col-md-6 col-lg-4">
+                    <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
 
-                        <div class="card  ">
+                        <div class="card h-100 mb-0">
                             <div class="card-body">
                                 <!-- title -->
-                                <div class="d-md-flex align-items-center">
-                                    <div>
-                                        <h4 class="card-title"><span class="display-7"><i class="fas fas fa-boxes" style="color:#9B9B8C"></i></span> <?php echo $lang['left-menu-sidebar-87800334'] ?></h4>
-                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo $lang['report-general023'] ?></h5>
-                                    </div>
-
-                                </div>
+                                <div class="swl-panel__head"><span class="swl-metric__icon"><i class="fas fas fa-boxes"></i></span><div class="swl-panel__text"><span class="ds-title-md"><?php echo $lang['left-menu-sidebar-87800334'] ?></span><span class="swl-panel__note"><?php echo $lang['report-general023'] ?></span></div></div>
                                 <!-- title -->
-                                <table class="tablesaw table-hover table no-border">
-                                    <tbody>
+                                <div class="swl-kv">
                                         <?php if ($user->cdp_hasPermission('view_general_consolidated_shipments')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_consolidate_general_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general024'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_consolidate_general_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general024'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_consolidated_by_clients')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_consolidate_customers_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general025'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_consolidate_customers_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general025'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                          <?php if ($user->cdp_hasPermission('view_consolidated_by_employees')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_consolidate_employees_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general026'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_consolidate_employees_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general026'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                          <?php if ($user->cdp_hasPermission('view_consolidated_by_agencies')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_consolidate_agency_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general027'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_consolidate_agency_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general027'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                          <?php if ($user->cdp_hasPermission('view_consolidated_by_drivers')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_consolidate_driver_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general028'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_consolidate_driver_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general028'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <tr>
                                             <td class="title"></td>
                                         </tr>
 
-                                    </tbody>
-                                </table>
+                                    </div>
 
                             </div>
                         </div>
@@ -382,53 +306,35 @@ $userData = $user->cdp_getUserData();
                         if ($user->cdp_hasPermission($perModule)) {
 
                     ?>
-                    <div class="col-sm-12 col-md-6 col-lg-4">
+                    <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
 
-                        <div class="card  ">
+                        <div class="card h-100 mb-0">
                             <div class="card-body">
                                 <!-- title -->
-                                <div class="d-md-flex align-items-center">
-                                    <div>
-                                        <h4 class="card-title"><span class="display-7"><i class="fas fas fa-boxes" style="color:#9B9B8C"></i></span> <?php echo $lang['left-menu-sidebar-87800333'] ?></h4>
-                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo $lang['report-general023'] ?></h5>
-                                    </div>
-
-                                </div>
+                                <div class="swl-panel__head"><span class="swl-metric__icon"><i class="fas fas fa-boxes"></i></span><div class="swl-panel__text"><span class="ds-title-md"><?php echo $lang['left-menu-sidebar-87800333'] ?></span><span class="swl-panel__note"><?php echo $lang['report-general023'] ?></span></div></div>
                                 <!-- title -->
-                                <table class="tablesaw table-hover table no-border">
-                                    <tbody>
+                                <div class="swl-kv">
                                         <?php if ($user->cdp_hasPermission('view_general_consolidated_locker_packages')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_consolidate_packages_general_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general024'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_consolidate_packages_general_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general024'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_consolidated_locker_by_clients')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_consolidate_packages_customers_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general025'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_consolidate_packages_customers_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general025'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_consolidated_locker_by_employees')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_consolidate_packages_employees_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general026'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_consolidate_packages_employees_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general026'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_consolidated_locker_by_agencies')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_consolidate_packages_agency_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general027'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_consolidate_packages_agency_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general027'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_consolidated_locker_by_drivers')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_consolidate_packages_driver_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general028'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_consolidate_packages_driver_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general028'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
 
                                         <tr>
                                             <td class="title"></td>
                                         </tr>
 
-                                    </tbody>
-                                </table>
+                                    </div>
 
                             </div>
                         </div>
@@ -448,39 +354,25 @@ $userData = $user->cdp_getUserData();
                         if ($user->cdp_hasPermission($perModule)) {
 
                     ?>
-                    <div class="col-sm-12 col-md-6 col-lg-4">
+                    <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
 
-                        <div class="card ">
+                        <div class="card h-100 mb-0">
                             <div class="card-body">
                                 <!-- title -->
-                                <div class="d-md-flex align-items-center">
-                                    <div>
-                                        <h4 class="card-title"><span class="display-7"><i class="mdi mdi-chart-line" style="color:#9B9B8C"></i></span> <?php echo $lang['report-general029'] ?></h4>
-                                        <h5 class="card-subtitle"><span class=""><i class="mdi mdi-chevron-double-right"></i></span> <?php echo $lang['report-general030'] ?></h5>
-                                    </div>
-
-                                </div>
+                                <div class="swl-panel__head"><span class="swl-metric__icon"><i class="mdi mdi-chart-line"></i></span><div class="swl-panel__text"><span class="ds-title-md"><?php echo $lang['report-general029'] ?></span><span class="swl-panel__note"><?php echo $lang['report-general030'] ?></span></div></div>
                                 <!-- title -->
-                                <table class="tablesaw table-hover table no-border">
-                                    <tbody>
+                                <div class="swl-kv">
                                         <?php if ($user->cdp_hasPermission('view_client_balance')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_customers_balance_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general031'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_customers_balance_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general031'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_accounts_summary')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_summary_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general032'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_summary_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general032'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                         <?php if ($user->cdp_hasPermission('view_received_payments')) { ?>
-                                        <tr>
-                                            <td class="title"><a class="link" href="report_payments_received_list.php"><i class="mdi mdi-chevron-right" style="color:#00D900"></i> <?php echo $lang['report-general033'] ?></a></td>
-                                        </tr>
+                                        <a class="swl-kv__row" href="report_payments_received_list.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo $lang['report-general033'] ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
 
-                                    </tbody>
-                                </table>
+                                    </div>
 
                             </div>
                         </div>
