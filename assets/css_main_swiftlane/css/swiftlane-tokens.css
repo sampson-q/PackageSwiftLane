@@ -1,0 +1,179 @@
+/* ==========================================================================
+   Swift Lane — design tokens
+   Source: Claude Design "Swift Lane Ops" / Shipbox design system
+   (_ds/shipbox-design-system/tokens/*.css). Values are copied verbatim so
+   the app and the design file agree on every colour, size and radius.
+   Loaded first by swiftlane-ds.css (authenticated shell) and auth-pages.css
+   (login / register / OTP / tracking) via @import.
+   ========================================================================== */
+
+/* Archivo Black carries every headline figure and page title; Inter is the
+   shipped substitute for SF Pro Display (system-only). Apple devices pick the
+   real SF Pro up first through -apple-system in --font-ui. */
+@import url("https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+  /* ── Base palette ──────────────────────────────────────────────────────── */
+  --ink-900: #162536;
+  --ink-800: #192A3E;
+  --ink-700: #253E5B;
+  --slate-400: #9BA9BB;
+  --line-200: #E1E5EA;
+  --fill-100: #EDF0F3;
+  --page-050: #F6F7F9;
+  --white: #FFFFFF;
+  --black: #000000;
+
+  /* Data / plot colours */
+  --violet-600: #5548D1;
+  --blue-600: #0077B6;
+  --cyan-500: #00B4D8;
+  --teal-700: #0088A3;
+  --blue-900: #005785;
+
+  /* Semantic hues + their surfaces and hairlines */
+  --green-500: #1DBF73;
+  --green-surface: #F5FFFA;
+  --green-line: #8FE7BE;
+  --red-500: #FB3B52;
+  --red-surface: #FFF0F2;
+  --amber-500: #F39D37;
+  --amber-surface: #FEF9EC;
+  --sky-500: #37A4F3;
+  --sky-surface: #ECF6FE;
+  --purple-500: #7C3EE2;
+  --purple-surface: #F6F2FD;
+  --leaf-500: #86E23E;
+  --leaf-surface: #F7FDF2;
+
+  /* Courier brand colours */
+  --dhl-yellow: #FFCB01;
+  --dhl-red: #D80613;
+  --usps-blue: #02599E;
+  --ups-brown: #FFB500;
+
+  /* SWIFT brand (from the logo artwork) */
+  --swift-amber: #FFCB01;
+  --swift-red: #D80613;
+  /* Warm ramp bridging the logo's amber and red — the chart palette */
+  --warm-300: #F7B733;
+  --warm-500: #E8811A;
+  --warm-700: #C8410F;
+
+  /* ── Semantic aliases ──────────────────────────────────────────────────── */
+  --surface-page: var(--page-050);
+  --surface-card: var(--white);
+  --surface-card-inverse: var(--ink-800);
+  --surface-table-head: var(--page-050);
+  --surface-track: var(--fill-100);
+  --surface-avatar: var(--page-050);
+
+  --text-primary: var(--ink-800);
+  --text-muted: var(--slate-400);
+  --text-inverse: var(--white);
+  --text-accent: var(--ink-800);
+  --text-link: var(--violet-600);
+
+  --border-default: var(--line-200);
+  --border-inverse: rgba(225, 229, 234, .25);
+
+  --accent: var(--swift-amber);
+  --accent-ink: var(--ink-800);
+  --accent-secondary: var(--swift-red);
+  --accent-pattern: var(--warm-300);
+  --focus-ring: var(--violet-600);
+
+  --status-transit-fg: var(--sky-500);
+  --status-transit-bg: var(--sky-surface);
+  --status-onway-fg: var(--amber-500);
+  --status-onway-bg: var(--amber-surface);
+  --status-sorting-fg: var(--purple-500);
+  --status-sorting-bg: var(--purple-surface);
+  --status-delivered-fg: var(--leaf-500);
+  --status-delivered-bg: var(--leaf-surface);
+  --status-pending-fg: var(--red-500);
+  --status-pending-bg: var(--red-surface);
+
+  --delta-up-fg: var(--green-500);
+  --delta-up-bg: var(--green-surface);
+  --delta-up-line: var(--green-line);
+  --delta-down-fg: var(--red-500);
+  --delta-down-bg: var(--red-surface);
+  --delta-solid-bg: var(--green-500);
+
+  /* ── Type ──────────────────────────────────────────────────────────────── */
+  --font-display: "Archivo Black", "Arial Black", system-ui, sans-serif;
+  --font-ui: -apple-system, "SF Pro Display", "Inter", BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --display-lg-size: 32px; --display-lg-line: 40px;
+  --display-md-size: 24px; --display-md-line: 32px;
+  --display-track: -0.04em;
+
+  --text-xl-size: 20px; --text-xl-line: 28px;
+  --text-lg-size: 16px; --text-lg-line: 24px;
+  --text-md-size: 14px; --text-md-line: 20px;
+  --text-sm-size: 12px; --text-sm-line: 16px;
+  --text-xs-size: 10px; --text-xs-line: 100%;
+
+  --track-tight: -0.04em;
+  --track-normal: -0.02em;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── Spacing ───────────────────────────────────────────────────────────── */
+  --space-2: 2px;
+  --space-4: 4px;
+  --space-5: 5px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-40: 40px;
+
+  --rail-width: 92px;
+  --rail-item: 44px;
+  --card-pad: 24px;
+  --card-gap: 24px;
+  --metric-gap: 16px;
+  --table-row-h: 46px;
+  --table-head-h: 44px;
+  --control-lg: 56px;
+  --control-md: 48px;
+  --control-sm: 40px;
+  --control-xs: 32px;
+
+  /* ── Radii ─────────────────────────────────────────────────────────────── */
+  --radius-4: 4px;
+  --radius-8: 8px;
+  --radius-16: 16px;
+  --radius-24: 24px;
+  --radius-pill: 100px;
+  --radius-round: 50%;
+
+  /* ── Elevation & motion ────────────────────────────────────────────────── */
+  --shadow-control: 0px 16px 40px 0px rgba(0, 0, 0, .015);
+  --ring-default: inset 0 0 0 1px var(--border-default);
+  --ring-inverse: inset 0 0 0 1px rgba(225, 229, 234, .25);
+  --ring-status: inset 0 0 0 1.5px currentColor;
+  --ring-hair: inset 0 0 0 .5px var(--border-default);
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --ease-standard: cubic-bezier(.2, .6, .3, 1);
+
+  /* ── App shell measurements (not in the Figma source; from the Ops prototype) */
+  --swl-nav-w: 264px;
+  --swl-nav-mini: 84px;
+}
+
+/* ── Type classes (mirrors tokens/typography.css) ───────────────────────── */
+.ds-display-lg { font-family: var(--font-display); font-weight: 400; font-size: var(--display-lg-size); line-height: var(--display-lg-line); letter-spacing: var(--display-track); color: var(--text-primary); }
+.ds-display-md { font-family: var(--font-display); font-weight: 400; font-size: var(--display-md-size); line-height: var(--display-md-line); letter-spacing: var(--display-track); color: var(--text-primary); }
+.ds-title-lg   { font-family: var(--font-ui); font-weight: 700; font-size: var(--text-xl-size); line-height: var(--text-xl-line); letter-spacing: var(--track-normal); color: var(--text-primary); }
+.ds-title-md   { font-family: var(--font-ui); font-weight: 700; font-size: var(--text-lg-size); line-height: var(--text-lg-line); letter-spacing: var(--track-tight); color: var(--text-primary); }
+.ds-label      { font-family: var(--font-ui); font-weight: 700; font-size: var(--text-md-size); line-height: var(--text-md-line); letter-spacing: var(--track-normal); color: var(--text-primary); }
+.ds-body       { font-family: var(--font-ui); font-weight: 500; font-size: var(--text-md-size); line-height: var(--text-md-line); letter-spacing: var(--track-normal); color: var(--text-primary); }
+.ds-caption    { font-family: var(--font-ui); font-weight: 500; font-size: var(--text-sm-size); line-height: var(--text-sm-line); letter-spacing: var(--track-normal); color: var(--text-muted); }
+.ds-column-head{ font-family: var(--font-ui); font-weight: 700; font-size: var(--text-xs-size); line-height: 100%; letter-spacing: var(--track-normal); color: var(--text-muted); }
