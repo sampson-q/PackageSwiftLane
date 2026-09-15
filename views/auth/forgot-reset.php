@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+<?php if (!function_exists('cdp_asset')) { require_once __DIR__ . '/../../helpers/asset.php'; } ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -60,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Main Css -->
     <link href="assets/css_main_swiftlane/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
     <link href="assets/css_main_swiftlane/css/colors/default.css" rel="stylesheet" id="color-opt">
-    <link href="assets/css_main_swiftlane/css/auth-pages.css" rel="stylesheet" type="text/css" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/auth-pages.css') ?>" rel="stylesheet" type="text/css" />
 </head>
 
 <body class="auth-page">

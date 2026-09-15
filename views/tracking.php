@@ -23,7 +23,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
     <!-- Main Css -->
     <link href="assets/css_main_swiftlane/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
     <link href="assets/css_main_swiftlane/css/colors/default.css" rel="stylesheet" id="color-opt">
-    <link href="assets/css_main_swiftlane/css/auth-pages.css" rel="stylesheet" type="text/css" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/auth-pages.css') ?>" rel="stylesheet" type="text/css" />
 </head>
 
 <body class="auth-page">

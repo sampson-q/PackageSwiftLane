@@ -65,6 +65,7 @@ if (isset($_POST['login'])) {
 ?>
 
 
+<?php require_once __DIR__ . '/helpers/asset.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -86,7 +87,7 @@ if (isset($_POST['login'])) {
         <!-- Main Css -->
         <link href="assets/css_main_swiftlane/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
         <link href="assets/css_main_swiftlane/css/colors/default.css" rel="stylesheet" id="color-opt">
-        <link href="assets/css_main_swiftlane/css/auth-pages.css" rel="stylesheet" type="text/css" />
+        <link href="<?= cdp_asset('assets/css_main_swiftlane/css/auth-pages.css') ?>" rel="stylesheet" type="text/css" />
     </head>
 
     <body class="auth-page">
@@ -114,13 +115,13 @@ if (isset($_POST['login'])) {
                                 <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="100px" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
                             </a>
                             <div class="auth-visual-copy">
-                                <span class="auth-badge">SwiftLane access</span>
-                                <h1>Move shipments without friction.</h1>
-                                <p>Manage pickups, tracking and exceptions from a single workspace built for fast daily operations.</p>
+                                <span class="auth-badge">Swift Lane Logistics</span>
+                                <h1>Freight that moves the moment you do.</h1>
+                                <p>Air and sea freight between West Africa, the UK and the United States. Every parcel, consolidation and payment is tracked from one control panel.</p>
                                 <div class="auth-mini-list">
                                     <span>Tracking</span>
-                                    <span>Courier ops</span>
-                                    <span>Consolidation</span>
+                                    <span>Air &amp; Sea Freight</span>
+                                    <span>Consolidations</span>
                                 </div>
                             </div>
                             <img src="assets/images/Login.svg" alt="Login illustration" class="auth-visual__image img-fluid">
@@ -209,14 +210,17 @@ if (isset($_POST['login'])) {
 
                                         <div class="col-12 mt-2">
                                             <div class="d-grid">
-                                                <button class="btn btn-grad"><?php echo $lang['left121'] ?></button>
+                                                <button class="btn btn-grad"><i data-feather="chevrons-right" class="icons"></i><?php echo $lang['left121'] ?></button>
                                                 <input name="login" type="hidden" value="1" />
                                             </div>
                                         </div>
 
-                                        <div class="col-12 text-center auth-footer-links">
-                                            <a href="tracking.php" class="text-dark fw-bold me-3"><?php echo $lang['langs_06'] ?></a>
-                                            <a href="sign-up.php" class="text-dark fw-bold">Register</a>
+                                        <div class="col-12">
+                                            <div class="auth-divider">or</div>
+                                            <div class="auth-footer-links">
+                                                <a href="tracking.php" class="btn btn-swl-outline"><i data-feather="send" class="icons"></i>Track a Parcel</a>
+                                                <a href="sign-up.php" class="btn btn-swl-outline"><i data-feather="plus" class="icons"></i>Register</a>
+                                            </div>
                                         </div>
                                     </div>
                                 </form>
