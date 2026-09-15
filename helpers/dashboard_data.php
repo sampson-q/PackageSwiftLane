@@ -19,7 +19,7 @@ if (!function_exists('cdp_effectiveStatusSql')) {
 //     a new status appears on the charts without touching any panel.
 //
 // Presentation helpers render the shared KPI-tile / chart-card markup that
-// dashboard-swiftlane.css styles, and cdp_dashChartsRender() hands chart
+// swiftlane-ds.css styles, and cdp_dashChartsRender() hands chart
 // configs to dataJs/dashboard_charts.js (ApexCharts).
 // ============================================================================
 
@@ -213,42 +213,53 @@ if (!function_exists('cdp_dashKpi')) {
      */
     function cdp_dashKpi(array $opts)
     {
+        // Design-system MetricCard (see assets/css_main_swiftlane/css/swiftlane-ds.css
+        // §11): label + Archivo Black figure on the left, a ring icon circle on the
+        // right, an optional caption row underneath. `tone => 'inverse'` renders the
+        // ink card the design uses for one highlighted figure per row. The old
+        // `accent` option is accepted and ignored: icons are ink in this system.
         $icon   = $opts['icon']   ?? 'solar:box-minimalistic-linear';
         $label  = $opts['label']  ?? '';
         $value  = $opts['value']  ?? '0';
         $href   = $opts['href']   ?? '';
-        $accent = $opts['accent'] ?? '#f2b21b';
         $sub    = $opts['sub']    ?? '';
+        $tone   = ($opts['tone'] ?? 'light') === 'inverse' ? 'inverse' : 'light';
         $col    = $opts['col']    ?? 'col-6 col-md-4 col-xl-3';
-
-        // Soft icon-chip background precomputed here (no color-mix() in CSS).
-        $hex = ltrim($accent, '#');
-        if (strlen($hex) === 3) { $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2]; }
-        $r = hexdec(substr($hex, 0, 2)); $g = hexdec(substr($hex, 2, 2)); $b = hexdec(substr($hex, 4, 2));
-        $soft = "rgba($r,$g,$b,0.13)";
+        $delta  = $opts['delta']  ?? '';            // e.g. '12%'
+        $dir    = ($opts['direction'] ?? 'up') === 'down' ? 'down' : 'up';
 
         $tag  = $href !== '' ? 'a' : 'div';
         $attr = $href !== '' ? ' href="' . htmlspecialchars($href, ENT_QUOTES, 'UTF-8') . '"' : '';
+        $foot = '';
+        if ($delta !== '' || $sub !== '') {
+            $foot = '<span class="swl-metric__foot">'
+                  . ($delta !== '' ? '<span class="swl-delta swl-delta--' . $dir . '">' . ($dir === 'up' ? '&#9650;' : '&#9660;') . ' ' . htmlspecialchars((string) $delta, ENT_QUOTES, 'UTF-8') . '</span>' : '')
+                  . ($sub !== '' ? '<span>' . htmlspecialchars($sub, ENT_QUOTES, 'UTF-8') . '</span>' : '')
+                  . '</span>';
+        }
         echo '<div class="' . $col . ' mb-3">'
-           . '<' . $tag . $attr . ' class="sw-kpi card h-100 mb-0" style="--kpi:' . htmlspecialchars($accent, ENT_QUOTES, 'UTF-8') . ';--kpi-soft:' . $soft . ';">'
-           . '<div class="card-body d-flex align-items-center">'
-           . '<span class="sw-kpi-icon"><iconify-icon icon="' . htmlspecialchars($icon, ENT_QUOTES, 'UTF-8') . '"></iconify-icon></span>'
-           . '<span class="sw-kpi-meta">'
-           . '<span class="sw-kpi-value">' . $value . '</span>'
-           . '<span class="sw-kpi-label">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</span>'
-           . ($sub !== '' ? '<span class="sw-kpi-sub">' . htmlspecialchars($sub, ENT_QUOTES, 'UTF-8') . '</span>' : '')
-           . '</span></div></' . $tag . '></div>';
+           . '<' . $tag . $attr . ' class="swl-metric' . ($tone === 'inverse' ? ' swl-metric--inverse' : '') . '">'
+           . '<div class="swl-metric__head">'
+           . '<div class="swl-metric__text">'
+           . '<span class="swl-metric__label">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</span>'
+           . '<span class="swl-metric__value">' . $value . '</span>'
+           . '</div>'
+           . '<span class="swl-metric__icon"><iconify-icon icon="' . htmlspecialchars($icon, ENT_QUOTES, 'UTF-8') . '"></iconify-icon></span>'
+           . '</div>'
+           . $foot
+           . '</' . $tag . '></div>';
     }
 }
 
 if (!function_exists('cdp_dashSectionTitle')) {
     function cdp_dashSectionTitle($icon, $text, $note = '')
     {
-        echo '<div class="col-12 mb-2 sw-dash-sec">'
-           . '<h5 class="m-0"><iconify-icon icon="' . htmlspecialchars($icon, ENT_QUOTES, 'UTF-8') . '"></iconify-icon> '
-           . htmlspecialchars($text, ENT_QUOTES, 'UTF-8')
-           . ($note !== '' ? ' <small class="text-muted">&mdash; ' . htmlspecialchars($note, ENT_QUOTES, 'UTF-8') . '</small>' : '')
-           . '</h5></div>';
+        // Section heading between panel rows (design: ds-title-md, 16/700).
+        echo '<div class="col-12 swl-section">'
+           . '<iconify-icon icon="' . htmlspecialchars($icon, ENT_QUOTES, 'UTF-8') . '"></iconify-icon>'
+           . '<span>' . htmlspecialchars($text, ENT_QUOTES, 'UTF-8') . '</span>'
+           . ($note !== '' ? '<small>' . htmlspecialchars($note, ENT_QUOTES, 'UTF-8') . '</small>' : '')
+           . '</div>';
     }
 }
 
@@ -256,11 +267,12 @@ if (!function_exists('cdp_dashChartCard')) {
     /** Opens/closes a chart card. Call with 'open' then 'close'. */
     function cdp_dashChartCard($mode, $id = '', $title = '', $note = '', $col = 'col-12 col-lg-6')
     {
+        // Design-system Panel + PanelHeader wrapping an ApexCharts mount point.
         if ($mode === 'open') {
             echo '<div class="' . $col . ' mb-4"><div class="card sw-chart-card h-100 mb-0"><div class="card-body">'
-               . '<div class="d-flex justify-content-between align-items-start mb-2">'
-               . '<div><h5 class="card-title mb-0">' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h5>'
-               . ($note !== '' ? '<small class="text-muted">' . htmlspecialchars($note, ENT_QUOTES, 'UTF-8') . '</small>' : '')
+               . '<div class="swl-panel__head"><div class="swl-panel__text">'
+               . '<span class="swl-panel__title">' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</span>'
+               . ($note !== '' ? '<span class="swl-panel__note">' . htmlspecialchars($note, ENT_QUOTES, 'UTF-8') . '</span>' : '')
                . '</div></div>'
                . '<div id="' . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . '" class="sw-chart"></div>';
         } else {

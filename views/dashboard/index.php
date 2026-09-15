@@ -179,7 +179,7 @@ if ($canStats) {
                     <?php cdp_dashKpi(['icon' => 'solar:home-2-linear', 'label' => 'In Warehouse', 'value' => number_format($ct_warehouse), 'href' => 'warehouse.php', 'accent' => '#e0ce07']); ?>
                     <?php if (!$canMoney) { cdp_dashKpi(['icon' => 'solar:box-linear', 'label' => 'Cleared for Delivery', 'value' => (int) $ct_cleared, 'href' => 'warehouse_delivery.php', 'accent' => '#6c757d', 'sub' => 'Packages']); } ?>
                     <?php cdp_dashKpi(['icon' => 'solar:user-plus-linear', 'label' => 'Customers', 'value' => number_format($ct_customers), 'href' => 'customers_list.php', 'accent' => '#17a1e6']); ?>
-                    <?php if ($canMoney) { cdp_dashKpi(['icon' => 'solar:wallet-money-linear', 'label' => 'Financial Sheet', 'value' => 'Open', 'href' => 'financial_sheet.php', 'accent' => '#111111', 'sub' => 'Billing & Payments']); } ?>
+                    <?php if ($canMoney) { cdp_dashKpi(['icon' => 'solar:wallet-money-linear', 'label' => 'Financial Sheet', 'value' => 'Open', 'href' => 'financial_sheet.php', 'tone' => 'inverse', 'sub' => 'Billing & Payments']); } ?>
                 </div>
 
                 <!-- Charts -->
