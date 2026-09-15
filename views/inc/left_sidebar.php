@@ -1,4 +1,17 @@
 <aside class="left-sidebar">
+	<!-- Brand + collapse toggle. The logo lives here (not in the topbar) so the
+	     content column has no header bar, matching the Swift Lane Ops design.
+	     The toggle carries .sidebartoggler, which app.min.js binds on load. -->
+	<div class="swl-brand">
+		<a class="swl-brand__logo" href="index.php" title="<?php echo htmlspecialchars((string) $core->site_name, ENT_QUOTES, 'UTF-8'); ?>">
+			<?php echo ($core->logo)
+				? '<img src="assets/' . htmlspecialchars((string) $core->logo, ENT_QUOTES, 'UTF-8') . '" alt="' . htmlspecialchars((string) $core->site_name, ENT_QUOTES, 'UTF-8') . '" />'
+				: '<span class="swl-brand__name">' . htmlspecialchars((string) $core->site_name, ENT_QUOTES, 'UTF-8') . '</span>'; ?>
+		</a>
+		<a class="swl-brand__toggle sidebartoggler" href="javascript:void(0)" data-sidebartype="mini-sidebar" aria-label="Collapse menu" title="Collapse menu">
+			<iconify-icon icon="solar:hamburger-menu-linear"></iconify-icon>
+		</a>
+	</div>
 	<!-- Sidebar scroll-->
 	<div class="scroll-sidebar">
 		<!-- Sidebar navigation-->
