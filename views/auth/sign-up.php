@@ -27,7 +27,6 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
     <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <link rel="stylesheet" type="text/css" href="assets/template/assets/libs/select2/dist/css/select2.min.css">
 
-    <link href="assets/css_main_swiftlane/css/dashboard-swiftlane.css" rel="stylesheet" type="text/css" />
 
     <script type="text/javascript" src="<?= cdp_asset('assets/js/jquery.js') ?>"></script>
     <script type="text/javascript" src="<?= cdp_asset('assets/js/jquery-ui.js') ?>"></script>

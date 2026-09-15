@@ -336,7 +336,6 @@ if ($challengeId > 0) {
 
     <!-- Bootstrap -->
     <link href="assets/css_main_swiftlane/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <link href="assets/css_main_swiftlane/css/dashboard-swiftlane.css" rel="stylesheet" type="text/css" />
     <!-- Icons -->
     <link href="assets/css_main_swiftlane/css/materialdesignicons.min.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://unicons.iconscout.com/release/v3.0.6/css/line.css">

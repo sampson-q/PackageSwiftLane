@@ -10,24 +10,13 @@ cdp_activityPageView();
 <link href="<?= cdp_asset('assets/vendor/libs/sweetalert2/sweetalert2.css') ?>" rel="stylesheet">
 <meta name="csrf-param" content="<?php echo htmlspecialchars(cdp_csrf_param(), ENT_QUOTES, 'UTF-8'); ?>">
 <meta name="csrf-token" content="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-<!-- Fonts -->
+<!-- Fonts: Archivo Black (display) + Inter (UI) are pulled in by swiftlane-tokens.css -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link
-  href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&ampdisplay=swap"
-  rel="stylesheet" />
 <!-- Icons: Solar (Iconify) + legacy -->
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 <style>
 	iconify-icon{display:inline-flex;vertical-align:middle;line-height:1;}
-	/* Sidebar: iconos más grandes y espacio con el nombre */
-	.left-sidebar .sidebar-nav iconify-icon,
-	.left-sidebar .sidebar-link iconify-icon,
-	.left-sidebar .create-btn iconify-icon {
-		font-size: 1.4rem !important;
-		margin-right: 10px;
-		min-width: 1.4rem;
-	}
 </style>
 <link rel="stylesheet" href="<?= cdp_asset('assets/vendor/fonts/fontawesome.css') ?>" />
 <link rel="stylesheet" href="<?= cdp_asset('assets/vendor/fonts/tabler-icons.css') ?>" />
@@ -39,8 +28,9 @@ cdp_activityPageView();
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
 <link rel="stylesheet" type="text/css" href="<?= cdp_asset('assets/template/assets/libs/select2/dist/css/select2.min.css') ?>">
 <link rel="stylesheet" href="<?= cdp_asset('assets/template/assets/libs/intlTelInput/intlTelInput.css') ?>">
-<!-- SwiftLane design-system override — must load last so tokens cascade -->
-<link href="<?= cdp_asset('assets/css_main_swiftlane/css/dashboard-swiftlane.css') ?>" rel="stylesheet" type="text/css" />
+<!-- Swift Lane design system (tokens + shell override) — must load last so it cascades over the template -->
+<link href="<?= cdp_asset('assets/css_main_swiftlane/css/swiftlane-tokens.css') ?>" rel="stylesheet" type="text/css" />
+<link href="<?= cdp_asset('assets/css_main_swiftlane/css/swiftlane-ds.css') ?>" rel="stylesheet" type="text/css" />
 
 
 <?php
