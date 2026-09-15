@@ -1302,3 +1302,11 @@ body { overflow-x: clip; }
 .page-wrapper > :not(.container-fluid):not(.page-breadcrumb):not(.row) > .row > [class*="col-"] > .row { margin-left: -10px; margin-right: -10px; }
 /* A .row used as the body of a .table-responsive box has nowhere to put its gutters */
 .table-responsive > .row { margin-left: 0; margin-right: 0; }
+
+/* Deeper wrappers with the same leak (notifications: .page-wrapper > .email-app > .mail-list > .row) */
+.page-wrapper > .email-app > .mail-list > .row,
+.page-wrapper > .email-app > .row { margin-left: 14px; margin-right: 14px; }
+/* Totals boxes on the shipment forms nest a .row one level down inside .table-responsive */
+.table-responsive > * > .row { margin-left: 0; margin-right: 0; }
+/* Media never grows past its card (avatar / document previews on the customer pages) */
+.card-body img, .card-body video, .card-body canvas, .card-body iframe { max-width: 100%; height: auto; }
