@@ -6,6 +6,7 @@
    ink visual panel on the left and the form column on the right.
    ========================================================================== */
 @import url("swiftlane-tokens.css");
+@import url("https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap");
 
 body.auth-page {
   min-height: 100vh;

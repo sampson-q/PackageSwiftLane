@@ -10,9 +10,10 @@ cdp_activityPageView();
 <link href="<?= cdp_asset('assets/vendor/libs/sweetalert2/sweetalert2.css') ?>" rel="stylesheet">
 <meta name="csrf-param" content="<?php echo htmlspecialchars(cdp_csrf_param(), ENT_QUOTES, 'UTF-8'); ?>">
 <meta name="csrf-token" content="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-<!-- Fonts: Archivo Black (display) + Inter (UI) are pulled in by swiftlane-tokens.css -->
+<!-- Fonts: Archivo Black (display) + Inter (UI) for the design system -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <!-- Icons: Solar (Iconify) + legacy -->
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 <style>

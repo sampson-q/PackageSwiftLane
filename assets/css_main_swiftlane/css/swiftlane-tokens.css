@@ -10,7 +10,8 @@
 /* Archivo Black carries every headline figure and page title; Inter is the
    shipped substitute for SF Pro Display (system-only). Apple devices pick the
    real SF Pro up first through -apple-system in --font-ui. */
-@import url("https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap");
+/* The font files are linked from the page <head> (views/inc/head_scripts.php and the auth
+   pages): an @import here would hold back every rule in this sheet until Google Fonts answered. */
 
 :root {
   /* ── Base palette ──────────────────────────────────────────────────────── */
