@@ -6,6 +6,9 @@
 <!----Footer End--->
 
 <script src="<?= cdp_asset('assets/template/assets/libs/jquery/dist/jquery.min.js') ?>"></script>
+<!-- Design-system runtime adapter: turns inline-coloured status labels into tinted pills and
+     dresses list-page search inputs — re-runs on every AJAX re-render (MutationObserver). -->
+<script src="<?= cdp_asset('dataJs/swiftlane_ui.js') ?>"></script>
 <!-- Persistent multi-select for AJAX list tables (checked rows survive filter/search/pagination). -->
 <script src="<?= cdp_asset('dataJs/persist_selection.js') ?>"></script>
 <!-- Sender auto-fill: selecting a sender fills the first address/recipient/recipient-address on every form. -->
