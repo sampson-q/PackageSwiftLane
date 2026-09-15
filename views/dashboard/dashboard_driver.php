@@ -25,16 +25,10 @@ $charts = [
     [
         'el' => '#chart_drv_volume', 'type' => 'bar',
         'series' => [['name' => 'Assigned Orders', 'data' => cdp_dashMonthlySeries('cdb_add_order', 'order_date', 'COUNT(*)', "AND status_courier != 21 $own")]],
-        'labels' => cdp_dashMonthLabels(), 'colors' => ['#f2b21b'], 'height' => 280,
+        'labels' => cdp_dashMonthLabels(), 'colors' => ['#FFCB01'], 'height' => 260,
     ],
 ];
 $bd = cdp_dashStatusBreakdown('cdb_add_order', $own);
-if ($bd['totals']) {
-    $charts[] = [
-        'el' => '#chart_drv_status', 'type' => 'donut',
-        'series' => $bd['totals'], 'labels' => $bd['labels'], 'colors' => $bd['colors'], 'height' => 280,
-    ];
-}
 ?>
 <!DOCTYPE html>
 <html dir="<?php echo $direction_layout; ?>" lang="en">
@@ -73,17 +67,17 @@ if ($bd['totals']) {
 
             <div class="container-fluid">
                 <div class="row">
-                    <?php cdp_dashKpi(['icon' => 'solar:box-minimalistic-linear', 'label' => 'Assigned Shipments', 'value' => number_format($ct_ship), 'href' => 'courier_list.php', 'accent' => '#f2b21b']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:clock-circle-linear', 'label' => 'Assigned Pickups', 'value' => number_format($ct_pickups), 'href' => 'pickup_list.php', 'accent' => '#2962ff']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:map-point-wave-linear', 'label' => 'To Collect', 'value' => number_format($ct_collect), 'href' => 'pickup_list.php', 'accent' => '#7460ee', 'sub' => 'Pick Up Package']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:box-minimalistic-linear', 'label' => 'Assigned Shipments', 'value' => number_format($ct_ship), 'href' => 'courier_list.php', 'accent' => '#FFCB01']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:clock-circle-linear', 'label' => 'Assigned Pickups', 'value' => number_format($ct_pickups), 'href' => 'pickup_list.php', 'accent' => '#0077B6']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:map-point-wave-linear', 'label' => 'To Collect', 'value' => number_format($ct_collect), 'href' => 'pickup_list.php', 'accent' => '#7C3EE2', 'sub' => 'Pick Up Package']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:delivery-linear', 'label' => 'On Route', 'value' => number_format($ct_onroute), 'accent' => '#00adf2', 'sub' => 'Out For Delivery']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:check-circle-linear', 'label' => 'Delivered', 'value' => number_format($ct_delivered), 'accent' => '#1b8a5a', 'sub' => 'All Time']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:layers-minimalistic-linear', 'label' => 'My Consolidations', 'value' => number_format($ct_consol), 'href' => 'consolidate_list.php', 'accent' => '#ef2628']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:layers-minimalistic-linear', 'label' => 'My Consolidations', 'value' => number_format($ct_consol), 'href' => 'consolidate_list.php', 'accent' => '#D80613']); ?>
                 </div>
 
                 <div class="row">
                     <?php cdp_dashChartCard('open', 'chart_drv_volume', 'My Monthly Workload', 'Assigned Orders — ' . date('Y'), 'col-12 col-lg-7'); cdp_dashChartCard('close'); ?>
-                    <?php if ($bd['totals']) { cdp_dashChartCard('open', 'chart_drv_status', 'My Orders By Status', 'All Time', 'col-12 col-lg-5'); cdp_dashChartCard('close'); } ?>
+                    <?php cdp_dashRingsPanel('chart_drv_status', $bd, $charts, ['col' => 'col-12 col-lg-5', 'title' => 'My Orders By Status', 'note' => 'All time']); ?>
                 </div>
 
                 <!-- My assigned orders (AJAX, session-scoped server-side) -->

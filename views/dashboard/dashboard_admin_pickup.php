@@ -40,13 +40,18 @@ if ($user->cdp_hasPermission('view_dashboard_pick')) {
     $charts[] = [
         'el' => '#chart_pick_volume', 'type' => 'bar',
         'series' => [['name' => 'Pickup Requests', 'data' => cdp_dashMonthlySeries('cdb_add_order', 'order_date', 'COUNT(*)', "$pickBase AND status_courier != 21")]],
-        'labels' => cdp_dashMonthLabels(), 'colors' => ['#2962ff'], 'height' => 300,
+        'labels' => cdp_dashMonthLabels(), 'colors' => ['#0077B6'], 'height' => 260,
     ];
-    $bd = cdp_dashStatusBreakdown('cdb_add_order', "$pickBase AND YEAR(order_date)=YEAR(CURDATE())");
-    $charts[] = [
-        'el' => '#chart_pick_status', 'type' => 'donut',
-        'series' => $bd['totals'], 'labels' => $bd['labels'], 'colors' => $bd['colors'], 'height' => 300,
-    ];
+    $bd = cdp_dashStatusBreakdown('cdb_add_order', "$pickBase AND YEAR(order_date)=YEAR(CURDATE())", 4);
+    $ct_year = cdp_dashCount('cdb_add_order', "$pickBase AND status_courier != 21 AND YEAR(order_date)=YEAR(CURDATE())");
+    $pickAge = cdp_dashAgeBuckets('cdb_add_order', 'order_datetime', "$pickBase AND order_incomplete=0 AND status_courier NOT IN (8,12,15,21)", [24, 48, 168]);
+    $pickAgeMax = max(1, max($pickAge));
+    $pickAgeRows = [['0 - 24 hrs', number_format($pickAge[0]), cdp_dashPct($pickAge[0], $pickAgeMax), 'var(--leaf-500)'],
+                    ['24 - 48 hrs', number_format($pickAge[1]), cdp_dashPct($pickAge[1], $pickAgeMax), 'var(--amber-500)'],
+                    ['2 - 7 days', number_format($pickAge[2]), cdp_dashPct($pickAge[2], $pickAgeMax), 'var(--warm-500)'],
+                    ['7+ days', number_format($pickAge[3]), cdp_dashPct($pickAge[3], $pickAgeMax), 'var(--red-500)']];
+    $hourLabels = []; for ($h = 0; $h < 24; $h++) { $hourLabels[] = str_pad((string) $h, 2, '0', STR_PAD_LEFT); }
+    $charts[] = ['el' => '#chart_pick_hours', 'type' => 'heatmap', 'rows' => cdp_dashHourMatrix('cdb_add_order', 'order_datetime', "$pickBase AND status_courier != 21", 90), 'xLabels' => $hourLabels, 'colors' => ['#7C3EE2'], 'height' => 200];
 }
 ?>
 <!DOCTYPE html>
@@ -88,17 +93,25 @@ if ($user->cdp_hasPermission('view_dashboard_pick')) {
                 <?php if ($user->cdp_hasPermission('view_dashboard_pick')) { ?>
 
                 <div class="row">
-                    <?php cdp_dashKpi(['icon' => 'solar:clock-circle-linear', 'label' => 'Pickup Requests', 'value' => number_format($ct_total), 'href' => 'pickup_list.php', 'accent' => '#2962ff', 'sub' => 'Non-Cancelled']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:hourglass-line-linear', 'label' => 'Awaiting Acceptance', 'value' => number_format($ct_awaiting), 'href' => 'pickup_list.php', 'accent' => '#f2b21b']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:clipboard-check-linear', 'label' => 'Accepted', 'value' => number_format($ct_accepted), 'href' => 'pickup_list.php', 'accent' => '#7460ee', 'sub' => 'Converted To Orders']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:clock-circle-linear', 'label' => 'Pickup Requests', 'value' => number_format($ct_total), 'href' => 'pickup_list.php', 'accent' => '#0077B6', 'sub' => 'Non-Cancelled']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:hourglass-line-linear', 'label' => 'Awaiting Acceptance', 'value' => number_format($ct_awaiting), 'href' => 'pickup_list.php', 'accent' => '#FFCB01']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:clipboard-check-linear', 'label' => 'Accepted', 'value' => number_format($ct_accepted), 'href' => 'pickup_list.php', 'accent' => '#7C3EE2', 'sub' => 'Converted To Orders']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:check-circle-linear', 'label' => 'Delivered', 'value' => number_format($ct_delivered), 'accent' => '#1b8a5a']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:forbidden-circle-linear', 'label' => 'Rejected', 'value' => number_format($ct_rejected), 'accent' => '#fb8c00']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:close-circle-linear', 'label' => 'Cancelled', 'value' => number_format($ct_cancel), 'accent' => '#f62d51']); ?>
                 </div>
 
                 <div class="row">
-                    <?php cdp_dashChartCard('open', 'chart_pick_volume', 'Monthly Pickup Requests', date('Y'), 'col-12 col-lg-7'); cdp_dashChartCard('close'); ?>
-                    <?php cdp_dashChartCard('open', 'chart_pick_status', 'Status Breakdown', date('Y') . ' Requests By Current Status', 'col-12 col-lg-5'); cdp_dashChartCard('close'); ?>
+                    <?php cdp_dashChartCard('open', 'chart_pick_volume', 'Monthly Pickup Requests', date('Y'), 'col-12 col-lg-8'); cdp_dashChartCard('close'); ?>
+                    <?php cdp_dashRingsPanel('chart_pick_status', $bd, $charts, ['col' => 'col-12 col-lg-4', 'title' => 'Requests By Status', 'note' => 'Made this year', 'value' => number_format($ct_year)]); ?>
+                </div>
+                <div class="row">
+                    <?php cdp_dashPanel('open', ['col' => 'col-12 col-lg-4', 'title' => 'Awaiting Acceptance By Age', 'note' => 'Time since the request was made']); ?>
+                        <?php cdp_dashBars($pickAgeRows); ?>
+                    <?php cdp_dashPanel('close'); ?>
+                    <?php cdp_dashPanel('open', ['col' => 'col-12 col-lg-8', 'title' => 'Requests By Hour', 'note' => 'Pickup requests per weekday and hour, last 90 days']); ?>
+                        <div id="chart_pick_hours" class="sw-chart"></div>
+                    <?php cdp_dashPanel('close'); ?>
                 </div>
                 <?php } ?>
 

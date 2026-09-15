@@ -33,13 +33,15 @@ if ($user->cdp_hasPermission('view_dashboard_shipments')) {
     $charts[] = [
         'el' => '#chart_cons_volume', 'type' => 'bar',
         'series' => [['name' => 'Consolidations', 'data' => cdp_dashMonthlySeries('cdb_consolidate', 'c_date', 'COUNT(*)', "AND status_courier != 21" . $agency_where)]],
-        'labels' => cdp_dashMonthLabels(), 'colors' => ['#ef2628'], 'height' => 300,
+        'labels' => cdp_dashMonthLabels(), 'colors' => ['#D80613'], 'height' => 260,
     ];
-    $bd = cdp_dashStatusBreakdown('cdb_consolidate', "AND YEAR(c_date)=YEAR(CURDATE())" . $agency_where);
-    $charts[] = [
-        'el' => '#chart_cons_status', 'type' => 'donut',
-        'series' => $bd['totals'], 'labels' => $bd['labels'], 'colors' => $bd['colors'], 'height' => 300,
-    ];
+    $bd = cdp_dashStatusBreakdown('cdb_consolidate', "AND YEAR(c_date)=YEAR(CURDATE())" . $agency_where, 4);
+    $ct_year = cdp_dashCount('cdb_consolidate', "AND status_courier != 21 AND YEAR(c_date)=YEAR(CURDATE())" . $agency_where);
+    $consDetail = cdp_dashRows("SELECT COUNT(d.detail_id) n, COALESCE(SUM(CAST(NULLIF(TRIM(d.weight),'') AS DECIMAL(12,2))),0) w
+                                FROM cdb_consolidate_detail d JOIN cdb_consolidate c ON c.consolidate_id = d.consolidate_id
+                                WHERE c.status_courier NOT IN (8,15,21,27)" . str_replace(' AND agency', ' AND c.agency', $agency_where));
+    $cons_items = (int) ($consDetail[0]->n ?? 0); $cons_weight = (float) ($consDetail[0]->w ?? 0);
+    $cons_open_now = cdp_dashCount('cdb_consolidate', "AND status_courier NOT IN (8,15,21,27)" . $agency_where);
 }
 ?>
 <!DOCTYPE html>
@@ -86,17 +88,20 @@ if ($user->cdp_hasPermission('view_dashboard_shipments')) {
                 <?php if ($user->cdp_hasPermission('view_dashboard_shipments')) { ?>
 
                 <div class="row">
-                    <?php cdp_dashKpi(['icon' => 'solar:layers-minimalistic-linear', 'label' => 'Consolidations', 'value' => number_format($ct_total), 'href' => 'consolidate_list.php', 'accent' => '#ef2628', 'sub' => 'Non-Cancelled']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:routing-2-linear', 'label' => 'Open / In Progress', 'value' => number_format($ct_open), 'href' => 'consolidate_list.php', 'accent' => '#2962ff']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:layers-minimalistic-linear', 'label' => 'Consolidations', 'value' => number_format($ct_total), 'href' => 'consolidate_list.php', 'accent' => '#D80613', 'sub' => 'Non-Cancelled']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:routing-2-linear', 'label' => 'Open / In Progress', 'value' => number_format($ct_open), 'href' => 'consolidate_list.php', 'accent' => '#0077B6']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:ship-linear', 'label' => 'In Transit', 'value' => number_format($ct_transit), 'accent' => '#00b3a4']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:check-circle-linear', 'label' => 'Delivered', 'value' => number_format($ct_delivered), 'accent' => '#1b8a5a']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:calendar-linear', 'label' => 'New This Month', 'value' => number_format($ct_month), 'accent' => '#f2b21b', 'sub' => $monthName]); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:calendar-linear', 'label' => 'New This Month', 'value' => number_format($ct_month), 'accent' => '#FFCB01', 'sub' => $monthName]); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:close-circle-linear', 'label' => 'Cancelled', 'value' => number_format($ct_cancel), 'accent' => '#f62d51']); ?>
                 </div>
 
                 <div class="row">
-                    <?php cdp_dashChartCard('open', 'chart_cons_volume', 'Monthly Consolidations', date('Y'), 'col-12 col-lg-7'); cdp_dashChartCard('close'); ?>
-                    <?php cdp_dashChartCard('open', 'chart_cons_status', 'Status Breakdown', date('Y') . ' Consolidations By Current Status', 'col-12 col-lg-5'); cdp_dashChartCard('close'); ?>
+                    <?php cdp_dashChartCard('open', 'chart_cons_volume', 'Monthly Consolidations', date('Y'), 'col-12 col-lg-5'); cdp_dashChartCard('close'); ?>
+                    <?php cdp_dashPanel('open', ['col' => 'col-12 col-lg-3', 'title' => 'Open Consolidations', 'value' => number_format($cons_open_now), 'note' => 'Not yet delivered, collected or returned']); ?>
+                        <?php cdp_dashStats([[number_format($cons_items), 'Shipments inside'], [$cons_weight >= 1000 ? number_format($cons_weight / 1000, 1) . ' t' : number_format($cons_weight, 1) . ' kg', 'Consolidated weight']], 1); ?>
+                    <?php cdp_dashPanel('close'); ?>
+                    <?php cdp_dashRingsPanel('chart_cons_status', $bd, $charts, ['col' => 'col-12 col-lg-4', 'title' => 'Consolidations By Status', 'note' => 'Created this year', 'value' => number_format($ct_year)]); ?>
                 </div>
                 <?php } ?>
 

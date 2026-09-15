@@ -43,8 +43,8 @@ if ($canMoney) {
             ['name' => 'Billed (USD)',   'data' => $fsMonthly['billed']],
             ['name' => 'Received (USD)', 'data' => $fsMonthly['received']],
         ],
-        'labels' => cdp_dashMonthLabels(), 'colors' => ['#f2b21b', '#36bea6'],
-        'money' => true, 'height' => 300,
+        'labels' => cdp_dashMonthLabels(), 'colors' => ['#FFCB01', '#00B4D8'],
+        'money' => true, 'height' => 260,
     ];
 }
 
@@ -53,27 +53,27 @@ $tiles = [];
 if ($user->cdp_hasPermission('view_dashboard_ship')) {
     $tiles[] = ['solar:box-minimalistic-linear', 'Shipments',
         cdp_dashCount('cdb_add_order', "AND is_pickup=0 AND order_incomplete=1 AND status_courier != 21" . $agency_where),
-        'courier_list.php', '#f2b21b', 'Non-Cancelled'];
+        'courier_list.php', '#FFCB01', 'Non-Cancelled'];
 }
 if ($user->cdp_hasPermission('view_dashboard_pick')) {
     $tiles[] = ['solar:clock-circle-linear', 'Pickup Requests',
         cdp_dashCount('cdb_add_order', "AND is_pickup=1 AND status_courier != 21" . $agency_where),
-        'pickup_list.php', '#2962ff', ''];
+        'pickup_list.php', '#0077B6', ''];
 }
 if ($user->cdp_hasPermission('view_consolidate_list')) {
     $tiles[] = ['solar:layers-minimalistic-linear', 'Consolidations',
         cdp_dashCount('cdb_consolidate', "AND status_courier != 21" . $agency_where),
-        'consolidate_list.php', '#ef2628', ''];
+        'consolidate_list.php', '#D80613', ''];
 }
 if ($user->cdp_hasPermission('prealert_list')) {
     $tiles[] = ['solar:bell-linear', 'Pre-Alerts',
         cdp_dashCount('cdb_pre_alert', "AND is_package=0"),
-        'prealert_list.php', '#7460ee', ''];
+        'prealert_list.php', '#7C3EE2', ''];
 }
 if ($user->cdp_hasPermission('view_package_list')) {
     $tiles[] = ['solar:cart-large-2-linear', 'Registered Packages',
         cdp_dashCount('cdb_customers_packages', "AND status_courier != 21" . $agency_where),
-        'customer_packages_list.php', '#36bea6', ''];
+        'customer_packages_list.php', '#00B4D8', ''];
 }
 if ($user->cdp_hasPermission('view_receivable_accounts')) {
     $tiles[] = ['solar:wallet-money-linear', 'Credit Orders',
@@ -91,15 +91,9 @@ if ($user->cdp_hasPermission('view_dashboard_ship')) {
     $charts[] = [
         'el' => '#chart_volume', 'type' => 'bar',
         'series' => [['name' => 'Shipments', 'data' => cdp_dashMonthlySeries('cdb_add_order', 'order_date', 'COUNT(*)', "AND is_pickup=0 AND order_incomplete=1 AND status_courier != 21" . $agency_where)]],
-        'labels' => cdp_dashMonthLabels(), 'colors' => ['#f2b21b'], 'height' => 300,
+        'labels' => cdp_dashMonthLabels(), 'colors' => ['#FFCB01'], 'height' => 260,
     ];
     $bd = cdp_dashStatusBreakdown('cdb_add_order', "AND is_pickup=0 AND order_incomplete=1 AND YEAR(order_date)=YEAR(CURDATE())" . $agency_where);
-    if ($bd['totals']) {
-        $charts[] = [
-            'el' => '#chart_status', 'type' => 'donut',
-            'series' => $bd['totals'], 'labels' => $bd['labels'], 'colors' => $bd['colors'], 'height' => 300,
-        ];
-    }
 }
 
 // User registrations (flag-based so every active role is counted).
@@ -175,7 +169,7 @@ if ($canStats) {
                 <div class="row">
                     <?php if ($user->cdp_hasPermission('view_dashboard_ship')) { ?>
                     <?php cdp_dashChartCard('open', 'chart_volume', 'Monthly Shipments', date('Y'), 'col-12 col-lg-7'); cdp_dashChartCard('close'); ?>
-                    <?php if (!empty($bd['totals'])) { cdp_dashChartCard('open', 'chart_status', 'Status Breakdown', date('Y') . ' Shipments By Current Status', 'col-12 col-lg-5'); cdp_dashChartCard('close'); } ?>
+                    <?php cdp_dashRingsPanel('chart_status', $bd, $charts, ['col' => 'col-12 col-lg-5', 'title' => 'Shipments By Status', 'note' => date('Y')]); ?>
                     <?php } ?>
                 </div>
 

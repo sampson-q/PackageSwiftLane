@@ -33,13 +33,10 @@ if ($user->cdp_hasPermission('main_dashboard_package_locker')) {
     $charts[] = [
         'el' => '#chart_pkg_volume', 'type' => 'bar',
         'series' => [['name' => 'Registered Packages', 'data' => cdp_dashMonthlySeries('cdb_customers_packages', 'order_date', 'COUNT(*)', "AND status_courier != 21" . $agency_where)]],
-        'labels' => cdp_dashMonthLabels(), 'colors' => ['#36bea6'], 'height' => 300,
+        'labels' => cdp_dashMonthLabels(), 'colors' => ['#00B4D8'], 'height' => 260,
     ];
-    $bd = cdp_dashStatusBreakdown('cdb_customers_packages', "AND YEAR(order_date)=YEAR(CURDATE())" . $agency_where);
-    $charts[] = [
-        'el' => '#chart_pkg_status', 'type' => 'donut',
-        'series' => $bd['totals'], 'labels' => $bd['labels'], 'colors' => $bd['colors'], 'height' => 300,
-    ];
+    $bd = cdp_dashStatusBreakdown('cdb_customers_packages', "AND YEAR(order_date)=YEAR(CURDATE())" . $agency_where, 4);
+    $ct_year = cdp_dashCount('cdb_customers_packages', "AND status_courier != 21 AND YEAR(order_date)=YEAR(CURDATE())" . $agency_where);
 }
 ?>
 <!DOCTYPE html>
@@ -83,17 +80,17 @@ if ($user->cdp_hasPermission('main_dashboard_package_locker')) {
                 <?php if ($user->cdp_hasPermission('main_dashboard_package_locker')) { ?>
 
                 <div class="row">
-                    <?php cdp_dashKpi(['icon' => 'solar:cart-large-2-linear', 'label' => 'Registered Packages', 'value' => number_format($ct_total), 'href' => 'customer_packages_list.php', 'accent' => '#36bea6', 'sub' => 'Non-Cancelled']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:bell-linear', 'label' => 'From Pre-Alerts', 'value' => number_format($ct_prealerted), 'href' => 'prealert_list.php', 'accent' => '#7460ee']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:cart-large-2-linear', 'label' => 'Registered Packages', 'value' => number_format($ct_total), 'href' => 'customer_packages_list.php', 'accent' => '#00B4D8', 'sub' => 'Non-Cancelled']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:bell-linear', 'label' => 'From Pre-Alerts', 'value' => number_format($ct_prealerted), 'href' => 'prealert_list.php', 'accent' => '#7C3EE2']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:home-2-linear', 'label' => 'In Warehouse', 'value' => number_format($ct_warehouse), 'href' => 'warehouse.php', 'accent' => '#e0ce07']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:check-circle-linear', 'label' => 'Delivered', 'value' => number_format($ct_delivered), 'accent' => '#1b8a5a']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:calendar-linear', 'label' => 'New This Month', 'value' => number_format($ct_month), 'accent' => '#f2b21b', 'sub' => $monthName]); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:calendar-linear', 'label' => 'New This Month', 'value' => number_format($ct_month), 'accent' => '#FFCB01', 'sub' => $monthName]); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:close-circle-linear', 'label' => 'Cancelled', 'value' => number_format($ct_cancel), 'accent' => '#f62d51']); ?>
                 </div>
 
                 <div class="row">
                     <?php cdp_dashChartCard('open', 'chart_pkg_volume', 'Monthly Registered Packages', date('Y'), 'col-12 col-lg-7'); cdp_dashChartCard('close'); ?>
-                    <?php cdp_dashChartCard('open', 'chart_pkg_status', 'Status Breakdown', date('Y') . ' Packages By Current Status', 'col-12 col-lg-5'); cdp_dashChartCard('close'); ?>
+                    <?php cdp_dashRingsPanel('chart_pkg_status', $bd, $charts, ['col' => 'col-12 col-lg-5', 'title' => 'Packages By Status', 'note' => 'Registered this year', 'value' => number_format($ct_year)]); ?>
                 </div>
                 <?php } ?>
 

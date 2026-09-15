@@ -41,13 +41,24 @@ if ($user->cdp_hasPermission('view_dashboard_ship')) {
     $charts[] = [
         'el' => '#chart_ship_volume', 'type' => 'bar',
         'series' => [['name' => 'Registered Shipments', 'data' => cdp_dashMonthlySeries('cdb_add_order', 'order_date', 'COUNT(*)', "$shipBase AND status_courier != 21")]],
-        'labels' => cdp_dashMonthLabels(), 'colors' => ['#f2b21b'], 'height' => 300,
+        'labels' => cdp_dashMonthLabels(), 'colors' => ['#FFCB01'], 'height' => 260,
     ];
-    $bd = cdp_dashStatusBreakdown('cdb_add_order', "$shipBase AND YEAR(order_date)=YEAR(CURDATE())");
-    $charts[] = [
-        'el' => '#chart_ship_status', 'type' => 'donut',
-        'series' => $bd['totals'], 'labels' => $bd['labels'], 'colors' => $bd['colors'], 'height' => 300,
-    ];
+    $bd = cdp_dashStatusBreakdown('cdb_add_order', "$shipBase AND YEAR(order_date)=YEAR(CURDATE())", 4);
+    $ct_year = cdp_dashCount('cdb_add_order', "$shipBase AND status_courier != 21 AND YEAR(order_date)=YEAR(CURDATE())");
+    // Lanes, service mix and registrations by hour (this year / last 90 days)
+    $lanes = cdp_dashTopDestinations("AND o.is_pickup=0 AND o.order_incomplete=1 AND o.status_courier != 21 AND YEAR(o.order_date)=YEAR(CURDATE()) AND NULLIF(TRIM(a.recipient_country),'') IS NOT NULL" . str_replace(' AND ', ' AND o.', $agency_where), 6);
+    $laneMax = $lanes ? (int) $lanes[0]->t : 0; $laneRows = [];
+    $laneColors = ['var(--swift-amber)', 'var(--warm-500)', 'var(--blue-600)', 'var(--cyan-500)', 'var(--ink-700)', 'var(--purple-500)'];
+    foreach ($lanes as $i => $r) { $laneRows[] = [$r->lbl, number_format($r->t), cdp_dashPct((int) $r->t, $laneMax), $laneColors[$i % 6]]; }
+    $svc = cdp_dashRows("SELECT order_item_category cat, COUNT(*) t FROM cdb_add_order WHERE 1=1 $shipBase AND status_courier != 21 AND YEAR(order_date)=YEAR(CURDATE()) GROUP BY order_item_category");
+    $svcN = ['air' => 0, 'sea' => 0, 'other' => 0];
+    foreach ($svc as $r) { $k = (int) $r->cat === 26 ? 'air' : ((int) $r->cat === 27 ? 'sea' : 'other'); $svcN[$k] += (int) $r->t; }
+    $svcMax = max(1, $svcN['air'], $svcN['sea'], $svcN['other']);
+    $serviceRows = [['Air Shipments', number_format($svcN['air']), cdp_dashPct($svcN['air'], $svcMax), 'var(--swift-amber)'],
+                    ['Sea Shipments', number_format($svcN['sea']), cdp_dashPct($svcN['sea'], $svcMax), 'var(--blue-600)']];
+    if ($svcN['other'] > 0) { $serviceRows[] = ['Uncategorised', number_format($svcN['other']), cdp_dashPct($svcN['other'], $svcMax), 'var(--slate-400)']; }
+    $hourLabels = []; for ($h = 0; $h < 24; $h++) { $hourLabels[] = str_pad((string) $h, 2, '0', STR_PAD_LEFT); }
+    $charts[] = ['el' => '#chart_ship_hours', 'type' => 'heatmap', 'rows' => cdp_dashHourMatrix('cdb_add_order', 'order_datetime', "$shipBase AND status_courier != 21", 90), 'xLabels' => $hourLabels, 'colors' => ['#D80613'], 'height' => 200];
 }
 ?>
 <!DOCTYPE html>
@@ -91,19 +102,30 @@ if ($user->cdp_hasPermission('view_dashboard_ship')) {
                 <?php if ($user->cdp_hasPermission('view_dashboard_ship')) { ?>
 
                 <div class="row">
-                    <?php cdp_dashKpi(['icon' => 'solar:box-minimalistic-linear', 'label' => 'Registered Shipments', 'value' => number_format($ct_total), 'href' => 'courier_list.php', 'accent' => '#f2b21b', 'sub' => 'Non-Cancelled']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:routing-2-linear', 'label' => 'Open / In Progress', 'value' => number_format($ct_open), 'href' => 'courier_list.php', 'accent' => '#2962ff']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:box-minimalistic-linear', 'label' => 'Registered Shipments', 'value' => number_format($ct_total), 'href' => 'courier_list.php', 'accent' => '#FFCB01', 'sub' => 'Non-Cancelled']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:routing-2-linear', 'label' => 'Open / In Progress', 'value' => number_format($ct_open), 'href' => 'courier_list.php', 'accent' => '#0077B6']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:check-circle-linear', 'label' => 'Delivered', 'value' => number_format($ct_delivered), 'href' => 'courier_list.php', 'accent' => '#1b8a5a']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:user-check-rounded-linear', 'label' => 'Picked Up (Collected)', 'value' => number_format($ct_collected), 'href' => 'courier_list.php', 'accent' => '#00adf2']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:layers-minimalistic-linear', 'label' => 'In Consolidations', 'value' => number_format($ct_consol), 'href' => 'consolidate_list.php', 'accent' => '#7460ee']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:calendar-linear', 'label' => 'New This Month', 'value' => number_format($ct_month), 'accent' => '#36bea6', 'sub' => $monthName]); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:layers-minimalistic-linear', 'label' => 'In Consolidations', 'value' => number_format($ct_consol), 'href' => 'consolidate_list.php', 'accent' => '#7C3EE2']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:calendar-linear', 'label' => 'New This Month', 'value' => number_format($ct_month), 'accent' => '#00B4D8', 'sub' => $monthName]); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:danger-triangle-linear', 'label' => 'Dangerous Goods', 'value' => number_format($ct_hazmat), 'accent' => '#ff6d00']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:close-circle-linear', 'label' => 'Cancelled', 'value' => number_format($ct_cancel), 'accent' => '#f62d51']); ?>
                 </div>
 
                 <div class="row">
-                    <?php cdp_dashChartCard('open', 'chart_ship_volume', 'Monthly Shipments', 'Registered Shipments — ' . date('Y'), 'col-12 col-lg-7'); cdp_dashChartCard('close'); ?>
-                    <?php cdp_dashChartCard('open', 'chart_ship_status', 'Status Breakdown', date('Y') . ' Shipments By Current Status', 'col-12 col-lg-5'); cdp_dashChartCard('close'); ?>
+                    <?php cdp_dashChartCard('open', 'chart_ship_volume', 'Monthly Shipments', 'Registered Shipments — ' . date('Y'), 'col-12 col-lg-8'); cdp_dashChartCard('close'); ?>
+                    <?php cdp_dashRingsPanel('chart_ship_status', $bd, $charts, ['col' => 'col-12 col-lg-4', 'title' => 'Shipments By Status', 'note' => 'Registered this year', 'value' => number_format($ct_year)]); ?>
+                </div>
+                <div class="row">
+                    <?php cdp_dashPanel('open', ['col' => 'col-12 col-lg-4', 'title' => 'Shipments By Lane', 'note' => 'Top destinations on shipment addresses this year']); ?>
+                        <?php cdp_dashBars($laneRows); ?>
+                    <?php cdp_dashPanel('close'); ?>
+                    <?php cdp_dashPanel('open', ['col' => 'col-12 col-lg-3', 'title' => 'Shipments By Service', 'value' => number_format($ct_year), 'note' => 'Registered this year']); ?>
+                        <?php cdp_dashBars($serviceRows); ?>
+                    <?php cdp_dashPanel('close'); ?>
+                    <?php cdp_dashPanel('open', ['col' => 'col-12 col-lg-5', 'title' => 'Dispatch Activity By Hour', 'note' => 'Shipments registered per weekday and hour, last 90 days']); ?>
+                        <div id="chart_ship_hours" class="sw-chart"></div>
+                    <?php cdp_dashPanel('close'); ?>
                 </div>
                 <?php } ?>
 

@@ -54,18 +54,25 @@ try {
 } catch (Throwable $e) { /* aging ledger absent */ }
 
 // Warehouse-pipeline donut: only the statuses that live in the warehouse flow.
-$bd = cdp_dashStatusBreakdown('cdb_add_order', "AND status_courier IN (4,33,6,32,1,16,35)" . $agency_where);
+$bd = cdp_dashStatusBreakdown('cdb_add_order', "AND status_courier IN (4,33,6,32,1,16,35)" . $agency_where, 4);
+$ct_pipeline = array_sum($bd['totals']);
+$agMax = max(1, max($aging));
+$agingRows = [['Ready', number_format($aging['ready']), cdp_dashPct($aging['ready'], $agMax), 'var(--leaf-500)'],
+              ['Pending Collection', number_format($aging['notified']), cdp_dashPct($aging['notified'], $agMax), 'var(--amber-500)'],
+              ['Not Picked Up', number_format($aging['not_picked']), cdp_dashPct($aging['not_picked'], $agMax), 'var(--red-500)'],
+              ['Auction', number_format($aging['auction']), cdp_dashPct($aging['auction'], $agMax), 'var(--ink-700)']];
+$stageMax = max(1, $ct_wh_ship, $ct_sorting, $ct_ready, $ct_cleared, $ct_uncollect, $ct_auction);
+$stageRows = [['In Warehouse', number_format($ct_wh_ship), cdp_dashPct($ct_wh_ship, $stageMax), 'var(--swift-amber)'],
+              ['Sorting At Accra Office', number_format($ct_sorting), cdp_dashPct($ct_sorting, $stageMax), 'var(--warm-500)'],
+              ['Available / Ready For Pickup', number_format($ct_ready), cdp_dashPct($ct_ready, $stageMax), 'var(--leaf-500)'],
+              ['Cleared For Delivery', number_format($ct_cleared), cdp_dashPct($ct_cleared, $stageMax), 'var(--blue-600)'],
+              ['Awaiting Collection', number_format($ct_uncollect), cdp_dashPct($ct_uncollect, $stageMax), 'var(--amber-500)'],
+              ['Moved To Auction', number_format($ct_auction), cdp_dashPct($ct_auction, $stageMax), 'var(--red-500)']];
 $charts = [];
-if ($bd['totals']) {
-    $charts[] = [
-        'el' => '#chart_wh_status', 'type' => 'donut',
-        'series' => $bd['totals'], 'labels' => $bd['labels'], 'colors' => $bd['colors'], 'height' => 300,
-    ];
-}
 $charts[] = [
     'el' => '#chart_wh_arrivals', 'type' => 'bar',
     'series' => [['name' => 'Registered Shipments', 'data' => cdp_dashMonthlySeries('cdb_add_order', 'order_date', 'COUNT(*)', "AND is_pickup=0 AND order_incomplete=1 AND status_courier != 21" . $agency_where)]],
-    'labels' => cdp_dashMonthLabels(), 'colors' => ['#f2b21b'], 'height' => 300,
+    'labels' => cdp_dashMonthLabels(), 'colors' => ['#FFCB01'], 'height' => 260,
 ];
 ?>
 <!DOCTYPE html>
@@ -114,7 +121,7 @@ $charts[] = [
                 <div class="row">
                     <?php cdp_dashSectionTitle('mdi:warehouse', 'Stock On Hand', 'Live Counts'); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:home-2-linear', 'label' => 'Shipments In Warehouse', 'value' => number_format($ct_wh_ship), 'href' => 'warehouse.php', 'accent' => '#e0ce07']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:cart-large-2-linear', 'label' => 'Packages In Warehouse', 'value' => number_format($ct_wh_pkg), 'href' => 'customer_packages_list.php', 'accent' => '#36bea6']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:cart-large-2-linear', 'label' => 'Packages In Warehouse', 'value' => number_format($ct_wh_pkg), 'href' => 'customer_packages_list.php', 'accent' => '#00B4D8']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:sort-by-time-linear', 'label' => 'Sorting At Accra Office', 'value' => number_format($ct_sorting), 'accent' => '#4fa82f']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:box-linear', 'label' => 'Cleared For Delivery', 'value' => number_format($ct_cleared), 'href' => 'warehouse_delivery.php', 'accent' => '#536dfe', 'sub' => 'Financial Sheet Cleared']); ?>
                 </div>
@@ -122,26 +129,21 @@ $charts[] = [
                 <div class="row">
                     <?php cdp_dashSectionTitle('solar:user-check-rounded-linear', 'Customer Collection', 'Pickup Pipeline'); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:check-read-linear', 'label' => 'Available / Ready For Pickup', 'value' => number_format($ct_ready), 'accent' => '#0ae4ff']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:hourglass-line-linear', 'label' => 'Awaiting Collection', 'value' => number_format($ct_uncollect), 'href' => 'pickup_aging.php', 'accent' => '#f2b21b', 'sub' => 'Pending / Not Picked Up']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:hourglass-line-linear', 'label' => 'Awaiting Collection', 'value' => number_format($ct_uncollect), 'href' => 'pickup_aging.php', 'accent' => '#FFCB01', 'sub' => 'Pending / Not Picked Up']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:danger-triangle-linear', 'label' => 'Moved To Auction', 'value' => number_format($ct_auction), 'href' => 'pickup_aging.php', 'accent' => '#7a1f1f']); ?>
-                    <div class="col-6 col-md-4 col-xl-3 mb-3">
-                        <div class="card h-100 mb-0">
-                            <div class="card-body py-3">
-                                <h6 class="text-muted mb-2" style="font-size:.78rem;">Collection Aging Ledger</h6>
-                                <ul class="p-0 m-0" style="list-style:none;font-size:.8rem;">
-                                    <li class="d-flex justify-content-between"><span>Ready</span><b><?php echo number_format($aging['ready']); ?></b></li>
-                                    <li class="d-flex justify-content-between"><span>Pending Collection</span><b><?php echo number_format($aging['notified']); ?></b></li>
-                                    <li class="d-flex justify-content-between"><span>Not Picked Up</span><b><?php echo number_format($aging['not_picked']); ?></b></li>
-                                    <li class="d-flex justify-content-between"><span>Auction</span><b><?php echo number_format($aging['auction']); ?></b></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="row">
-                    <?php if ($bd['totals']) { cdp_dashChartCard('open', 'chart_wh_status', 'Warehouse Pipeline', 'Shipments Currently In The Warehouse Flow', 'col-12 col-lg-5'); cdp_dashChartCard('close'); } ?>
-                    <?php cdp_dashChartCard('open', 'chart_wh_arrivals', 'Monthly Shipment Volume', 'Registered Shipments — ' . date('Y'), 'col-12 col-lg-7'); cdp_dashChartCard('close'); ?>
+                    <?php cdp_dashRingsPanel('chart_wh_status', $bd, $charts, ['col' => 'col-12 col-lg-4', 'title' => 'Warehouse Pipeline', 'value' => number_format($ct_pipeline), 'note' => 'Shipments currently in the warehouse flow']); ?>
+                    <?php cdp_dashPanel('open', ['col' => 'col-12 col-lg-4', 'title' => 'Warehouse Stages', 'note' => 'Shipments by stage, all time']); ?>
+                        <?php cdp_dashBars($stageRows); ?>
+                    <?php cdp_dashPanel('close'); ?>
+                    <?php cdp_dashPanel('open', ['col' => 'col-12 col-lg-4', 'title' => 'Collection Ageing Ledger', 'note' => 'Packages by collection milestone', 'aside' => '<a href="pickup_aging.php" class="btn btn-sm btn-outline-dark">Open</a>']); ?>
+                        <?php cdp_dashBars($agingRows); ?>
+                    <?php cdp_dashPanel('close'); ?>
+                </div>
+                <div class="row">
+                    <?php cdp_dashChartCard('open', 'chart_wh_arrivals', 'Monthly Shipment Volume', 'Registered Shipments — ' . date('Y'), 'col-12'); cdp_dashChartCard('close'); ?>
                 </div>
             </div>
             <?php include 'views/inc/footer.php'; ?>

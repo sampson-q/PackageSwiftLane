@@ -27,6 +27,22 @@ $ct_payments_month = cdp_dashCount(
 );
 
 $fsMonthly = cdp_dashFsMonthly($fs_sender);
+// Payment methods this year + receivables ageing (Financial Sheet, USD)
+$fsOwn = $fs_sender !== null ? " AND sender_id = $fs_sender" : '';
+$modes = cdp_dashRows("SELECT LOWER(COALESCE(mode,'cash')) m, COUNT(*) n, COALESCE(SUM(" . cdp_fsMoneyExpr() . "/NULLIF(exchange_rate,0)),0) usd
+                       FROM cdb_fs_payments WHERE YEAR(recorded_at)=YEAR(CURDATE()) AND " . cdp_fsMoneySqlFilter() . $fsOwn . " GROUP BY m ORDER BY usd DESC");
+$modeBd = ['labels' => [], 'colors' => [], 'totals' => []];
+$modeColors = ['cash' => '#FFCB01', 'paystack' => '#0077B6', 'hubtel' => '#00B4D8', 'paypal' => '#7C3EE2'];
+foreach ($modes as $i => $m) { $modeBd['labels'][] = ucwords($m->m); $modeBd['colors'][] = $modeColors[$m->m] ?? '#9BA9BB'; $modeBd['totals'][] = round((float) $m->usd, 2); }
+$bal = "GREATEST(0, COALESCE(amount_ghs,0)-COALESCE(discount_ghs,0)-COALESCE(paid_ghs,0))/NULLIF(exchange_rate,0)"; $age = "DATEDIFF(NOW(), billed_at)";
+$r = cdp_dashRows("SELECT COALESCE(SUM(CASE WHEN $age <= 30 THEN $bal END),0) a0, COALESCE(SUM(CASE WHEN $age > 30 AND $age <= 60 THEN $bal END),0) a1, COALESCE(SUM(CASE WHEN $age > 60 THEN $bal END),0) a2
+                   FROM cdb_consolidate_customer_billing WHERE $bal > 0" . $fsOwn);
+$a0 = (float) ($r[0]->a0 ?? 0); $a1 = (float) ($r[0]->a1 ?? 0); $a2 = (float) ($r[0]->a2 ?? 0); $aMax = max(1, $a0, $a1, $a2);
+$recvRows = [['0 - 30 days', cdb_money_format($a0), cdp_dashPct($a0, $aMax), 'var(--leaf-500)'], ['31 - 60 days', cdb_money_format($a1), cdp_dashPct($a1, $aMax), 'var(--amber-500)'], ['61+ days', cdb_money_format($a2), cdp_dashPct($a2, $aMax), 'var(--red-500)']];
+$owing = cdp_dashRows("SELECT b.sender_id, COALESCE(NULLIF(TRIM(u.company),''), TRIM(CONCAT(COALESCE(u.fname,''),' ',COALESCE(u.lname,'')))) lbl, COUNT(*) n, MAX($age) oldest, SUM($bal) usd
+                       FROM cdb_consolidate_customer_billing b JOIN cdb_users u ON u.id = b.sender_id WHERE $bal > 0" . str_replace(' AND sender_id', ' AND b.sender_id', $fsOwn) . " GROUP BY b.sender_id, lbl ORDER BY usd DESC LIMIT 5");
+$owingRows = [];
+foreach ($owing as $o) { $owingRows[] = [$o->lbl, (int) $o->n . ' bill' . ((int) $o->n === 1 ? '' : 's') . ' · oldest ' . (int) $o->oldest . ' days', cdb_money_format((float) $o->usd), (int) $o->oldest > 60 ? 'var(--red-500)' : ((int) $o->oldest > 30 ? 'var(--amber-500)' : 'var(--leaf-500)'), 'accounts_receivable.php']; }
 $charts = [
     [
         'el' => '#chart_fs_money', 'type' => 'area',
@@ -34,8 +50,8 @@ $charts = [
             ['name' => 'Billed (USD)',   'data' => $fsMonthly['billed']],
             ['name' => 'Received (USD)', 'data' => $fsMonthly['received']],
         ],
-        'labels' => cdp_dashMonthLabels(), 'colors' => ['#f2b21b', '#36bea6'],
-        'money' => true, 'height' => 330,
+        'labels' => cdp_dashMonthLabels(), 'colors' => ['#FFCB01', '#00B4D8'],
+        'money' => true, 'height' => 260,
     ],
 ];
 ?>
@@ -86,7 +102,16 @@ $charts = [
                 </div>
 
                 <div class="row">
-                    <?php cdp_dashChartCard('open', 'chart_fs_money', 'Billed vs Received', 'Financial Sheet Ledger (USD) — ' . date('Y'), 'col-12'); cdp_dashChartCard('close'); ?>
+                    <?php cdp_dashChartCard('open', 'chart_fs_money', 'Billed vs Received', 'Financial Sheet Ledger (USD) — ' . date('Y'), 'col-12 col-lg-8'); cdp_dashChartCard('close'); ?>
+                    <?php cdp_dashRingsPanel('chart_fs_modes', $modeBd, $charts, ['col' => 'col-12 col-lg-4', 'title' => 'Payment Methods', 'note' => 'Received this year, by mode (USD)']); ?>
+                </div>
+                <div class="row">
+                    <?php cdp_dashPanel('open', ['col' => 'col-12 col-lg-5', 'title' => 'Receivables Ageing', 'note' => 'Balance still owed, by age of the bill']); ?>
+                        <?php cdp_dashBars($recvRows); ?>
+                    <?php cdp_dashPanel('close'); ?>
+                    <?php cdp_dashPanel('open', ['col' => 'col-12 col-lg-7', 'title' => 'Top Outstanding Accounts', 'note' => 'Customers with the largest balance owed']); ?>
+                        <?php cdp_dashKv($owingRows); ?>
+                    <?php cdp_dashPanel('close'); ?>
                 </div>
 
                 <div class="row">

@@ -36,16 +36,10 @@ $charts = [
             ['name' => 'Shipments', 'data' => cdp_dashMonthlySeries('cdb_add_order', 'order_date', 'COUNT(*)', "AND is_pickup=0 AND order_incomplete=1 AND status_courier != 21 $own")],
             ['name' => 'Packages',  'data' => cdp_dashMonthlySeries('cdb_customers_packages', 'order_date', 'COUNT(*)', "AND status_courier != 21 $own")],
         ],
-        'labels' => cdp_dashMonthLabels(), 'colors' => ['#f2b21b', '#111111'], 'height' => 280,
+        'labels' => cdp_dashMonthLabels(), 'colors' => ['#FFCB01', '#192A3E'], 'height' => 260,
     ],
 ];
 $bd = cdp_dashStatusBreakdown('cdb_add_order', "AND order_incomplete=1 $own");
-if ($bd['totals']) {
-    $charts[] = [
-        'el' => '#chart_my_status', 'type' => 'donut',
-        'series' => $bd['totals'], 'labels' => $bd['labels'], 'colors' => $bd['colors'], 'height' => 280,
-    ];
-}
 ?>
 <!DOCTYPE html>
 <html dir="<?php echo $direction_layout; ?>" lang="en">
@@ -87,13 +81,13 @@ if ($bd['totals']) {
                 <!-- My balance + activity -->
                 <div class="row">
                     <?php cdp_dashKpi(['icon' => 'solar:bill-list-linear', 'label' => 'Outstanding Balance', 'value' => cdb_money_format($fs['outstanding']), 'href' => 'my_bills.php', 'accent' => ($fs['outstanding'] > 0 ? '#e67e22' : '#1b8a5a'), 'sub' => 'Matches My Bills']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:box-minimalistic-linear', 'label' => 'My Shipments', 'value' => number_format($ct_ship), 'href' => 'courier_list.php', 'accent' => '#f2b21b']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:clock-circle-linear', 'label' => 'My Pickup Requests', 'value' => number_format($ct_pickups), 'href' => 'pickup_list.php', 'accent' => '#2962ff']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:cart-large-2-linear', 'label' => 'My Packages', 'value' => number_format($ct_packages), 'href' => 'customer_packages_list.php', 'accent' => '#36bea6']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:bell-linear', 'label' => 'My Pre-Alerts', 'value' => number_format($ct_prealerts), 'href' => 'prealert_list.php', 'accent' => '#7460ee']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:box-minimalistic-linear', 'label' => 'My Shipments', 'value' => number_format($ct_ship), 'href' => 'courier_list.php', 'accent' => '#FFCB01']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:clock-circle-linear', 'label' => 'My Pickup Requests', 'value' => number_format($ct_pickups), 'href' => 'pickup_list.php', 'accent' => '#0077B6']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:cart-large-2-linear', 'label' => 'My Packages', 'value' => number_format($ct_packages), 'href' => 'customer_packages_list.php', 'accent' => '#00B4D8']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:bell-linear', 'label' => 'My Pre-Alerts', 'value' => number_format($ct_prealerts), 'href' => 'prealert_list.php', 'accent' => '#7C3EE2']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:box-linear', 'label' => 'Ready For Collection', 'value' => number_format($ct_ready), 'accent' => '#0ae4ff', 'sub' => 'Available At Office']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:check-circle-linear', 'label' => 'Delivered / Collected', 'value' => number_format($ct_delivered), 'accent' => '#1b8a5a', 'sub' => 'All Time']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:card-linear', 'label' => 'My Bills', 'value' => 'Pay Online', 'href' => 'my_bills.php', 'accent' => '#111111', 'sub' => 'Mobile Money']); ?>
+                    <?php cdp_dashKpi(['icon' => 'solar:card-linear', 'label' => 'My Bills', 'value' => 'Pay Online', 'href' => 'my_bills.php', 'accent' => '#192A3E', 'sub' => 'Mobile Money']); ?>
                 </div>
 
                 <!-- Virtual mailbox addresses -->
@@ -127,7 +121,7 @@ if ($bd['totals']) {
                 <!-- My activity charts -->
                 <div class="row">
                     <?php cdp_dashChartCard('open', 'chart_my_volume', 'My Monthly Activity', 'Shipments & Packages — ' . date('Y'), 'col-12 col-lg-7'); cdp_dashChartCard('close'); ?>
-                    <?php if ($bd['totals']) { cdp_dashChartCard('open', 'chart_my_status', 'My Orders By Status', 'All Time', 'col-12 col-lg-5'); cdp_dashChartCard('close'); } ?>
+                    <?php cdp_dashRingsPanel('chart_my_status', $bd, $charts, ['col' => 'col-12 col-lg-5', 'title' => 'My Orders By Status', 'note' => 'All time']); ?>
                 </div>
 
                 <!-- My recent shipments (AJAX, session-scoped server-side) -->
