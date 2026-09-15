@@ -1276,11 +1276,12 @@ a.swl-kv__row:hover .swl-kv__label { text-decoration: underline; }
 /* Buttons that live inside a field label (e.g. the discount %/$ toggle on the shipment form)
    must stay label-sized, or the label grows and pushes its input out of line with its neighbours. */
 label .btn, label .btn-group > .btn, .col-form-label .btn {
-  height: 24px;
+  height: 20px;
   padding: 0 8px;
   font-size: 11px;
-  line-height: 16px;
+  line-height: 14px;
 }
+label.d-flex { min-height: 20px; }
 label .btn-group { gap: 2px; }
 label .btn-group .btn + .btn { margin-left: 0; }
 
@@ -1295,3 +1296,9 @@ label .btn-group .btn + .btn { margin-left: 0; }
 .page-wrapper > .row { margin-left: 14px; margin-right: 14px; }
 .page-wrapper > .row > [class*="col-"] > .row { margin-left: -10px; margin-right: -10px; }
 body { overflow-x: clip; }
+
+/* Same leak through an intermediate wrapper (e.g. .page-wrapper > .bg-light > .row.justify-content-center) */
+.page-wrapper > :not(.container-fluid):not(.page-breadcrumb):not(.row) > .row { margin-left: 14px; margin-right: 14px; }
+.page-wrapper > :not(.container-fluid):not(.page-breadcrumb):not(.row) > .row > [class*="col-"] > .row { margin-left: -10px; margin-right: -10px; }
+/* A .row used as the body of a .table-responsive box has nowhere to put its gutters */
+.table-responsive > .row { margin-left: 0; margin-right: 0; }
