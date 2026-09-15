@@ -63,18 +63,7 @@ $row_off = $data['data'];
 	<!-- Favicon icon -->
 	<link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
 	<title><?php echo $lang['tools-config61'] ?> | <?php echo $core->site_name ?></title>
-	<!-- This Page CSS -->
-	<!-- Custom CSS -->
-	<link href="<?= cdp_asset('assets/css/style.min.css') ?>" rel="stylesheet">
-
-	<link href="<?= cdp_asset('assets/css/front.css') ?>" rel="stylesheet" type="text/css">
-	<script type="text/javascript" src="<?= cdp_asset('assets/js/jquery.js') ?>"></script>
-	<script type="text/javascript" src="<?= cdp_asset('assets/js/jquery-ui.js') ?>"></script>
-	<script src="<?= cdp_asset('assets/js/jquery.ui.touch-punch.js') ?>"></script>
-	<script src="<?= cdp_asset('assets/js/jquery.wysiwyg.js') ?>"></script>
-	<script src="<?= cdp_asset('assets/js/global.js') ?>"></script>
-	<script src="<?= cdp_asset('assets/js/custom.js') ?>"></script>
-	<link href="assets/customClassPagination.css" rel="stylesheet">
+	<?php include 'views/inc/head_scripts.php'; ?>
 
 
 
@@ -199,8 +188,7 @@ $row_off = $data['data'];
 				</div>
 
 			</div>
-			<!-- ============================================================== -->
-			<!-- End Page wrapper  -->
+			<?php include 'views/inc/footer.php'; ?>
 			<!-- ============================================================== -->
 		</div>
 		<!-- ============================================================== -->
@@ -208,26 +196,6 @@ $row_off = $data['data'];
 		<!-- ============================================================== -->
 
 
-		<!-- ============================================================== -->
-		<!-- All Jquery -->
-		<!-- ============================================================== -->
-		<!-- Bootstrap tether Core JavaScript -->
-		<script src="assets/custom_dependencies/jquery-3.6.0.min.js"></script>
-		<script src="assets/libs/popper.js/dist/umd/popper.min.js"></script>
-		<script src="assets/custom_dependencies/bootstrap.min.js"></script>
-		<!-- apps -->
-		<script src="<?= cdp_asset('assets/js/app.min.js') ?>"></script>
-		<script src="<?= cdp_asset('assets/js/app.init.js') ?>"></script>
-		<script src="assets/template/dist/js/app-style-switcher.js"></script>
-		<!-- slimscrollbar scrollbar JavaScript -->
-		<script src="assets/libs/perfect-scrollbar/dist/perfect-scrollbar.jquery.min.js"></script>
-		<script src="<?= cdp_asset('assets/js/sparkline/sparkline.js') ?>"></script>
-		<!--Wave Effects -->
-		<script src="<?= cdp_asset('assets/js/waves.js') ?>"></script>
-		<!--Menu sidebar -->
-		<script src="<?= cdp_asset('assets/js/sidebarmenu.js') ?>"></script>
-		<!--Custom JavaScript -->
-		<script src="<?= cdp_asset('assets/js/custom.min.js') ?>"></script>
 
 		<script src="<?= cdp_asset('dataJs/shipline.js') ?>"></script>
 </body>
