@@ -1036,6 +1036,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ink-800); }
   flex-direction: column;
   gap: 16px;
   height: 100%;
+  min-height: 148px;
   padding: var(--card-pad);
   border-radius: var(--radius-24);
   background: var(--surface-card);
@@ -1110,7 +1111,8 @@ a.swl-metric:hover { transform: translateY(-2px); color: var(--ink-800); }
 }
 .swl-section iconify-icon { font-size: 18px; color: var(--slate-400); }
 .swl-section small { font-family: var(--font-ui); font-weight: 500; font-size: 12px; line-height: 16px; letter-spacing: var(--track-normal); color: var(--slate-400); }
-.swl-panel__head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.swl-panel__head { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.swl-panel__text { flex: 1 1 160px; }
 .swl-panel__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .swl-panel__title { font-family: var(--font-ui); font-weight: 700; font-size: 14px; line-height: 20px; letter-spacing: var(--track-normal); color: var(--ink-800); margin: 0; }
 .swl-panel__note { font-family: var(--font-ui); font-weight: 500; font-size: 12px; line-height: 16px; letter-spacing: var(--track-normal); color: var(--slate-400); }
@@ -1177,3 +1179,119 @@ a.swl-metric:hover { transform: translateY(-2px); color: var(--ink-800); }
   .table thead th { padding: 0 12px !important; }
   .table tbody td { padding: 10px 12px !important; }
 }
+
+/* ── 13. Control-panel components (helpers/dashboard_data.php renderers) ───── */
+.swl-panel .card-body { display: flex; flex-direction: column; gap: 16px; }
+.swl-panel .swl-panel__head { margin-bottom: 0; }
+.swl-panel__value { font-family: var(--font-display); font-weight: 400; font-size: var(--display-lg-size); line-height: var(--display-lg-line); letter-spacing: var(--display-track); color: var(--ink-800); }
+.swl-panel--inverse, .card.swl-panel--inverse { background: var(--surface-card-inverse) !important; color: var(--white); }
+.swl-panel--inverse .swl-panel__title, .swl-panel--inverse .swl-panel__value, .swl-panel--inverse .swl-kv__label, .swl-panel--inverse .swl-kv__value,
+.swl-panel--inverse .swl-bar__value, .swl-panel--inverse .swl-stat__value, .swl-panel--inverse .swl-legend__label, .swl-panel--inverse .swl-legend__value,
+.swl-panel--inverse .swl-feed__text { color: var(--white); }
+.swl-panel--inverse .swl-panel__note, .swl-panel--inverse .swl-kv__detail, .swl-panel--inverse .swl-bar__label, .swl-panel--inverse .swl-stat__label,
+.swl-panel--inverse .swl-feed__time { color: rgba(255, 255, 255, .7); }
+.swl-panel--inverse .swl-kv__row, .swl-panel--inverse .swl-feed__row { border-color: rgba(225, 229, 234, .25); }
+.swl-panel--inverse .swl-bar__track { background: rgba(255, 255, 255, .10); }
+.swl-panel--inverse .swl-stat { background: rgba(255, 255, 255, .06); }
+.swl-panel--inverse .swl-metric__icon { box-shadow: var(--ring-inverse); color: var(--white); }
+.swl-empty { font-family: var(--font-ui); font-size: 12px; font-weight: 500; color: var(--slate-400); padding: 12px 0; }
+
+.swl-bars { display: flex; flex-direction: column; gap: 10px; }
+.swl-bar { display: flex; flex-direction: column; gap: 4px; }
+.swl-bar__row { display: flex; justify-content: space-between; gap: 12px; }
+.swl-bar__label { font-family: var(--font-ui); font-weight: 500; font-size: 12px; line-height: 16px; color: var(--slate-400); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.swl-bar__value { font-family: var(--font-ui); font-weight: 700; font-size: 12px; line-height: 16px; color: var(--ink-800); white-space: nowrap; }
+.swl-bar__track { height: 8px; border-radius: var(--radius-4); background: var(--surface-track); overflow: hidden; }
+.swl-bars--thick .swl-bar__track { height: 14px; }
+.swl-bar__fill { height: 100%; border-radius: var(--radius-4); background: var(--accent); transition: width var(--motion-base) var(--ease-standard); }
+
+.swl-kv { display: flex; flex-direction: column; }
+.swl-kv__row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border-default); text-decoration: none !important; color: inherit; }
+.swl-kv__row:last-child { border-bottom: 0; }
+a.swl-kv__row:hover .swl-kv__label { text-decoration: underline; }
+.swl-kv__dot { width: 8px; height: 8px; border-radius: var(--radius-round); flex-shrink: 0; }
+.swl-kv__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.swl-kv__label { font-family: var(--font-ui); font-weight: 500; font-size: 14px; line-height: 20px; color: var(--ink-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.swl-kv__detail { font-family: var(--font-ui); font-weight: 500; font-size: 12px; line-height: 16px; color: var(--slate-400); }
+.swl-kv__value { font-family: var(--font-ui); font-weight: 700; font-size: 12px; line-height: 16px; color: var(--ink-800); flex-shrink: 0; white-space: nowrap; }
+.swl-kv__value .label { margin-left: 0; }
+
+.swl-feed { display: flex; flex-direction: column; }
+.swl-feed__row { display: flex; align-items: flex-start; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--border-default); }
+.swl-feed__row:last-child { border-bottom: 0; }
+.swl-feed__time { width: 52px; flex-shrink: 0; font-family: var(--font-ui); font-weight: 500; font-size: 12px; line-height: 20px; color: var(--slate-400); }
+.swl-feed__text { flex: 1; min-width: 0; font-family: var(--font-ui); font-weight: 500; font-size: 13px; line-height: 20px; color: var(--ink-800); }
+.swl-feed__amount { font-family: var(--font-ui); font-weight: 700; font-size: 12px; line-height: 20px; color: var(--ink-800); flex-shrink: 0; }
+
+.swl-stats { display: grid; gap: 12px; }
+.swl-stats--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.swl-stats--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.swl-stats--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.swl-stat { display: flex; flex-direction: column; gap: 2px; padding: 12px; border-radius: var(--radius-16); background: var(--page-050); min-width: 0; }
+.swl-stat__value { font-family: var(--font-ui); font-weight: 700; font-size: 16px; line-height: 24px; letter-spacing: var(--track-normal); color: var(--ink-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.swl-stat__label { font-family: var(--font-ui); font-weight: 500; font-size: 11px; line-height: 16px; color: var(--slate-400); }
+
+.swl-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.swl-legend__item { display: flex; align-items: center; gap: 6px; font-family: var(--font-ui); font-size: 12px; line-height: 16px; }
+.swl-legend__swatch { width: 10px; height: 10px; border-radius: var(--radius-round); flex-shrink: 0; }
+.swl-legend__label { font-weight: 500; color: var(--slate-400); }
+.swl-legend__value { font-weight: 700; color: var(--ink-800); }
+
+.swl-toggle { display: inline-flex; gap: 4px; padding: 4px; border-radius: var(--radius-pill); background: var(--page-050); flex-shrink: 0; }
+.swl-toggle__btn { height: 30px; padding: 0 14px; border: 0; border-radius: var(--radius-pill); background: transparent; cursor: pointer; font-family: var(--font-ui); font-weight: 700; font-size: 12px; color: var(--ink-800); transition: background var(--motion-fast) var(--ease-standard); }
+.swl-toggle__btn.is-active { background: var(--accent); }
+.swl-panel--inverse .swl-toggle { background: rgba(255, 255, 255, .08); }
+.swl-panel--inverse .swl-toggle__btn { color: var(--white); }
+.swl-panel--inverse .swl-toggle__btn.is-active { color: var(--ink-800); }
+
+.swl-tag { display: inline-flex; align-items: center; align-self: flex-start; height: 24px; padding: 4px 10px; border-radius: var(--radius-pill); font-family: var(--font-ui); font-weight: 500; font-size: 12px; line-height: 16px; }
+.swl-tag--dark { background: var(--ink-800); color: var(--white); }
+.swl-tag--amber { background: var(--accent); color: var(--ink-800); }
+
+.swl-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; padding: 24px; border-radius: var(--radius-24); background: var(--accent); }
+.swl-banner__copy { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.swl-banner__title { font-family: var(--font-ui); font-weight: 700; font-size: 24px; line-height: 32px; letter-spacing: var(--track-tight); color: var(--ink-800); }
+.swl-banner__note { font-family: var(--font-ui); font-weight: 500; font-size: 12px; line-height: 16px; color: var(--ink-800); }
+.swl-banner__stats { display: flex; flex-wrap: wrap; gap: 12px; }
+.swl-banner__stat { display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: var(--radius-16); background: var(--white); min-width: 190px; }
+.swl-banner__stat > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.swl-banner__stat .swl-stat__value { font-size: 18px; }
+.swl-banner .btn-dark { flex-shrink: 0; }
+
+.swl-panel .sw-chart { min-height: 0; }
+.swl-panel .apexcharts-canvas { margin: 0 auto; }
+@media (max-width: 575.98px) {
+  .swl-stats--3, .swl-stats--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .swl-banner { padding: 20px; }
+  .swl-banner__stat { min-width: 100%; }
+}
+
+/* Metric cards on phones: one per row, slightly smaller figure so it never clips */
+@media (max-width: 575.98px) {
+  .row > [class*="col-"]:has(> .swl-metric) { flex: 0 0 100%; max-width: 100%; }
+  .swl-metric { min-height: 0; }
+  .swl-metric__value { font-size: 28px; line-height: 36px; }
+}
+
+/* Buttons that live inside a field label (e.g. the discount %/$ toggle on the shipment form)
+   must stay label-sized, or the label grows and pushes its input out of line with its neighbours. */
+label .btn, label .btn-group > .btn, .col-form-label .btn {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 11px;
+  line-height: 16px;
+}
+label .btn-group { gap: 2px; }
+label .btn-group .btn + .btn { margin-left: 0; }
+
+/* Phones: list rows may wrap their label instead of truncating it */
+@media (max-width: 575.98px) {
+  .swl-kv__label { white-space: normal; }
+}
+
+/* Some views put a .row straight under .page-wrapper (no .container-fluid). Its
+   -10px gutters then leak past the viewport and every such page gets a
+   horizontal scrollbar. Give those rows the same 24px inset as the container. */
+.page-wrapper > .row { margin-left: 14px; margin-right: 14px; }
+.page-wrapper > .row > [class*="col-"] > .row { margin-left: -10px; margin-right: -10px; }
+body { overflow-x: clip; }
