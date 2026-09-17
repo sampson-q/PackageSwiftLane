@@ -501,9 +501,12 @@ body.auth-page .form-check-input[type="radio"]:checked { background: var(--white
   body.auth-page .auth-shell__grid,
   body.auth-page .cover-user .row { min-height: 0; }
   body.auth-page .auth-shell__panel--visual { min-height: 0; padding: 24px 24px 28px; }
-  body.auth-page .auth-visual { gap: 20px; justify-content: flex-start !important; }
-  body.auth-page .auth-visual__image { flex: 0 0 auto; max-height: 160px; max-width: 60%; margin: 4px 0; }
-  body.auth-page .auth-visual-copy { max-width: 100%; gap: 10px; }
+  /* Compact header: brand and artwork share the first row, headline below */
+  /* !important: the markup carries Bootstrap's .flex-column */
+  body.auth-page .auth-visual { flex-direction: row !important; flex-wrap: wrap; align-items: center; gap: 16px 20px; justify-content: flex-start !important; height: auto !important; }
+  body.auth-page .auth-visual > .auth-mobile-logo, body.auth-page .auth-visual > .auth-brand { flex: 0 0 auto; }
+  body.auth-page .auth-visual__image { flex: 0 0 auto; align-self: center; max-height: 96px; max-width: 40%; margin: 0 0 0 auto; }
+  body.auth-page .auth-visual-copy { flex: 1 1 100%; max-width: 100%; gap: 8px; }
   body.auth-page .auth-visual-copy h1 { font-size: 24px; line-height: 32px; }
   body.auth-page .auth-visual-copy p { font-size: 13px; }
   body.auth-page .auth-mini-list { display: none; }
