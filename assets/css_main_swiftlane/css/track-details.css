@@ -19,25 +19,30 @@ body:has(.trk) {
 }
 
 .trk {
-    /* palette */
-    --ink: #0d1b2a;
-    --ink-2: #16293d;
-    --line: #e3e8ef;
-    --line-2: #eef1f6;
-    --canvas: #f5f7fa;
+    /* palette — Swift Lane design tokens (this sheet loads without swiftlane-tokens.css) */
+    --ink: #192A3E;
+    --ink-2: #22374F;
+    --line: #E1E5EA;
+    --line-2: #EEF1F5;
+    --canvas: #F6F7F9;
     --surface: #ffffff;
-    --text: #16202b;
-    --muted: #6b7788;
-    --faint: #96a1b0;
-    --accent: #0f9d76;
-    --accent-soft: #e6f6f1;
-    --warn: #b4770d;
-    --warn-soft: #fdf3e0;
+    --text: #192A3E;
+    --muted: #9BA9BB;
+    --faint: #B7C1CC;
+    --accent: #FFCB01;          /* fills: buttons, done markers */
+    --accent-text: #F39D37;     /* amber that stays readable as text */
+    --accent-soft: #FEF9EC;
+    --warn: #B4770D;
+    --warn-soft: #FDF3E0;
+    --live: #86E23E;
 
-    --radius: 10px;
-    --shadow: 0 1px 2px rgba(16, 27, 41, .05);
+    --font-display: "Archivo Black", "Arial Black", Impact, sans-serif;
+    --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 
-    font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --radius: 16px;
+    --shadow: none;
+
+    font-family: var(--font-ui);
     color: var(--text);
     background: var(--canvas);
     min-height: 100vh;
@@ -80,9 +85,9 @@ body:has(.trk) {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    height: 38px;
-    padding: 0 16px;
-    border-radius: 8px;
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 100px;
     border: 1px solid transparent;
     font-size: .85rem;
     font-weight: 600;
@@ -100,13 +105,15 @@ body:has(.trk) {
 }
 .trk-btn--ghost:hover { background: rgba(255, 255, 255, .1); color: #fff; }
 
-.trk-btn--dark,
-.trk-btn--grad {
+/* `.trk .trk-btn` outranks `.trk a { color: inherit }`, which otherwise keeps
+   the nav button's text white on the amber fill. */
+.trk .trk-btn--dark,
+.trk .trk-btn--grad {
     background: var(--accent);
-    color: #fff;
+    color: var(--ink);
 }
-.trk-btn--dark:hover,
-.trk-btn--grad:hover { background: #0b8464; color: #fff; }
+.trk .trk-btn--dark:hover,
+.trk .trk-btn--grad:hover { background: #F0BF00; color: var(--ink); }
 
 /* On the light canvas the ghost button needs dark ink, not white. */
 .trk-main .trk-btn--ghost,
@@ -146,7 +153,8 @@ body:has(.trk) {
 
 .trk-code {
     font-size: clamp(1.7rem, 4vw, 2.5rem);
-    font-weight: 800;
+    font-family: var(--font-display);
+    font-weight: 400;
     letter-spacing: -.02em;
     line-height: 1.1;
     margin-top: 6px;
@@ -228,7 +236,7 @@ body:has(.trk) {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #35d6a4;
+    background: var(--live);
     animation: trkPulse 1.8s ease-in-out infinite;
 }
 
@@ -273,7 +281,7 @@ body:has(.trk) {
     color: var(--muted);
 }
 
-.trk-card__head .ico { font-size: 1.05rem; color: var(--accent); line-height: 1; }
+.trk-card__head .ico { font-size: 1.05rem; color: var(--accent-text); line-height: 1; }
 .trk-card__body { padding: 20px; }
 
 .trk-two {
@@ -324,13 +332,13 @@ body:has(.trk) {
 .trk-stage.is-done .trk-stage__dot {
     background: var(--accent);
     border-color: var(--accent);
-    color: #fff;
+    color: var(--ink);
 }
 
 .trk-stage.is-current .trk-stage__dot {
     background: var(--surface);
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--accent-text);
     box-shadow: 0 0 0 5px var(--accent-soft);
 }
 
@@ -357,7 +365,7 @@ body:has(.trk) {
     font-weight: 800;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: var(--accent-text);
     background: var(--accent-soft);
     border-radius: 5px;
     padding: 3px 8px;
@@ -403,7 +411,7 @@ body:has(.trk) {
 }
 .trk-stage__time { color: var(--muted); }
 .trk-stage__time.is-missing { color: var(--faint); font-weight: 500; font-style: italic; }
-.trk-stage.is-current .trk-stage__time { color: var(--accent); }
+.trk-stage.is-current .trk-stage__time { color: var(--accent-text); }
 .trk-stage__flight {
     color: var(--ink);
     background: var(--line-2);
@@ -423,7 +431,7 @@ body:has(.trk) {
     border-radius: var(--radius);
 }
 .trk-route__pt { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; }
-.trk-route__code { font-weight: 800; font-size: 1.15rem; color: var(--ink); letter-spacing: .02em; }
+.trk-route__code { font-family: var(--font-display); font-weight: 400; font-size: 1.15rem; color: var(--ink); letter-spacing: .02em; }
 .trk-route__city { font-size: .78rem; color: var(--muted); }
 .trk-route__role {
     font-size: .62rem;
@@ -433,7 +441,7 @@ body:has(.trk) {
     color: var(--faint);
     margin-top: 3px;
 }
-.trk-route__arrow { flex: 1; text-align: center; color: var(--accent); font-size: 1rem; position: relative; }
+.trk-route__arrow { flex: 1; text-align: center; color: var(--accent-text); font-size: 1rem; position: relative; }
 .trk-route__arrow::before {
     content: "";
     position: absolute;
@@ -465,7 +473,7 @@ body:has(.trk) {
 }
 
 .trk-avatar--a { background: var(--ink); }
-.trk-avatar--b { background: var(--accent); }
+.trk-avatar--b { background: var(--accent); color: var(--ink); }
 
 .trk-partyhead h4 {
     font-size: .7rem;
@@ -507,7 +515,8 @@ body:has(.trk) {
 
 .trk-metric__v {
     font-size: 1.5rem;
-    font-weight: 800;
+    font-family: var(--font-display);
+    font-weight: 400;
     letter-spacing: -.02em;
     color: var(--ink);
     line-height: 1.15;
@@ -549,7 +558,7 @@ body:has(.trk) {
 }
 
 .trk-file:hover { border-color: var(--accent); background: var(--accent-soft); }
-.trk-file__ico { color: var(--accent); font-size: 1rem; }
+.trk-file__ico { color: var(--accent-text); font-size: 1rem; }
 
 /* ── History timeline ────────────────────────────────────────────────────── */
 .trk-timeline { position: relative; padding-left: 20px; }
@@ -605,7 +614,7 @@ body:has(.trk) {
     color: var(--faint);
 }
 
-.trk-foot a { color: var(--accent); font-weight: 600; }
+.trk-foot a { color: var(--accent-text); font-weight: 600; }
 
 /* ── Empty / not-found state (also used by error403.php) ─────────────────── */
 .trk-empty {
@@ -627,7 +636,8 @@ body:has(.trk) {
 
 .trk-empty__box h1 {
     font-size: 1.5rem;
-    font-weight: 800;
+    font-family: var(--font-display);
+    font-weight: 400;
     letter-spacing: -.02em;
     margin-bottom: 10px;
 }

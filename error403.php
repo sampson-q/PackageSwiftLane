@@ -27,7 +27,7 @@ $e = function ($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $e($core->favicon); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css_main_swiftlane/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="<?= cdp_asset('assets/css_main_swiftlane/css/track-details.css') ?>">
     <style>
