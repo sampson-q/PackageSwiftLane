@@ -1300,7 +1300,7 @@ label .btn-group .btn + .btn { margin-left: 0; }
    form groups (no help text underneath), align the columns at the bottom so the
    controls stay on one line whatever their labels do. */
 @media (max-width: 1199.98px) {
-  .row:has(> [class*="col-"] > .form-group:first-child):not(:has(> [class*="col-"] > :not(.form-group):not([type=hidden]))):not(:has(> [class*="col-"] > .form-group > .form-text)):not(:has(> [class*="col-"] > .form-group > .help-block)) { align-items: flex-end; }
+  .row:has(> [class*="col-"] > .form-group:first-child):not(:has(> [class*="col-"] > :not(.form-group):not([type=hidden]))):not(:has(> [class*="col-"] > .form-group > .form-text)):not(:has(> [class*="col-"] > .form-group > .help-block)):not(:has(> [class*="col-"] > .form-group > small)) { align-items: flex-end; }
 }
 
 /* Customers list stat tiles: the page ships its own (purple) tile styles; give them
