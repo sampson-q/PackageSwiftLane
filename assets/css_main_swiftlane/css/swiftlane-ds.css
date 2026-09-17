@@ -1134,8 +1134,10 @@ a.swl-metric:hover { transform: translateY(-2px); color: var(--ink-800); }
   #main-wrapper[data-layout=vertical] .left-sidebar,
   #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar { width: var(--swl-nav-w) !important; left: calc(-1 * var(--swl-nav-w) - 16px) !important; }
   #main-wrapper[data-layout=vertical].show-sidebar .left-sidebar { left: 0 !important; box-shadow: 0 24px 64px rgba(22, 37, 54, .35) !important; }
-  #main-wrapper[data-layout=vertical] .page-wrapper,
-  #main-wrapper[data-layout=vertical] .topbar { margin-left: 0 !important; }
+  /* [data-sidebartype] keeps the specificity level with the desktop margin rules
+     above, so this later declaration wins on phones. */
+  #main-wrapper[data-layout=vertical][data-sidebartype] .page-wrapper,
+  #main-wrapper[data-layout=vertical][data-sidebartype] .topbar { margin-left: 0 !important; }
   #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar:not(:hover) .swl-brand__logo,
   #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar:not(:hover) .user-content,
   #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar:not(:hover) .nav-small-cap,
@@ -1266,13 +1268,6 @@ a.swl-kv__row:hover .swl-kv__label { text-decoration: underline; }
   .swl-banner__stat { min-width: 100%; }
 }
 
-/* Metric cards on phones: one per row, slightly smaller figure so it never clips */
-@media (max-width: 575.98px) {
-  .row > [class*="col-"]:has(> .swl-metric) { flex: 0 0 100%; max-width: 100%; }
-  .swl-metric { min-height: 0; }
-  .swl-metric__value { font-size: 28px; line-height: 36px; }
-}
-
 /* Buttons that live inside a field label (e.g. the discount %/$ toggle on the shipment form)
    must stay label-sized, or the label grows and pushes its input out of line with its neighbours. */
 label .btn, label .btn-group > .btn, .col-form-label .btn {
@@ -1285,9 +1280,49 @@ label.d-flex { min-height: 26px; align-items: center; }
 label .btn-group { gap: 2px; }
 label .btn-group .btn + .btn { margin-left: 0; }
 
-/* Phones: list rows may wrap their label instead of truncating it */
-@media (max-width: 575.98px) {
+/* Below 1200px the key-value columns get narrow: wrap the label instead of truncating it */
+@media (max-width: 1199.98px) {
   .swl-kv__label { white-space: normal; }
+}
+
+/* Tablets: KPI cards two per row, so the figure never runs into its icon */
+@media (max-width: 991.98px) {
+  .row > [class*="col-"]:has(> .swl-metric) { flex: 0 0 50%; max-width: 50%; }
+}
+/* Phones: one per row (after the tablet rule so it wins there), slightly smaller figure */
+@media (max-width: 575.98px) {
+  .row > [class*="col-"]:has(> .swl-metric) { flex: 0 0 100%; max-width: 100%; }
+  .swl-metric { min-height: 0; }
+  .swl-metric__value { font-size: 28px; line-height: 36px; }
+}
+
+/* Below 1200px field labels start wrapping onto two lines. In rows made only of
+   form groups (no help text underneath), align the columns at the bottom so the
+   controls stay on one line whatever their labels do. */
+@media (max-width: 1199.98px) {
+  .row:has(> [class*="col-"] > .form-group:first-child):not(:has(> [class*="col-"] > :not(.form-group):not([type=hidden]))):not(:has(> [class*="col-"] > .form-group > .form-text)):not(:has(> [class*="col-"] > .form-group > .help-block)) { align-items: flex-end; }
+}
+
+/* Customers list stat tiles: the page ships its own (purple) tile styles; give them
+   the metric-card look, and three per row below the 1600px xl breakpoint where
+   six abreast no longer fits the icon. */
+.customers-stats-card .card-body { padding: var(--card-pad) !important; }
+.customers-stats-card .stat-top { align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+.customers-stats-card .stat-title { font-family: var(--font-ui); font-weight: 700; font-size: 14px; line-height: 20px; color: var(--ink-800); min-width: 0; }
+.customers-stats-card .stat-icon-module { width: 48px; height: 48px; border-radius: var(--radius-pill) !important; background: var(--white) !important; box-shadow: var(--ring-default); color: var(--ink-800) !important; }
+.customers-stats-card .stat-icon-module iconify-icon { font-size: 24px !important; }
+.customers-stats-card .stat-value { font-family: var(--font-display); font-weight: 400; font-size: var(--display-lg-size); line-height: var(--display-lg-line); letter-spacing: var(--display-track); color: var(--ink-800); margin: 0; }
+.customers-stats-card .stat-label { font-family: var(--font-ui); font-weight: 500; font-size: 12px; line-height: 16px; color: var(--slate-400); }
+.customers-stats-card .stat-badge { font-size: 12px; font-weight: 600; }
+.customers-stats-card .stat-card-hint { color: var(--slate-400); }
+.stat-card-clickable:hover { box-shadow: var(--ring-default) !important; }
+#main-wrapper .customers-stats-card.filter-active { border: 0 !important; box-shadow: 0 0 0 2px var(--swift-amber) !important; }
+#main-wrapper .customers-stats-card.filter-active .stat-icon-module { background: var(--swift-amber) !important; box-shadow: none; }
+@media (max-width: 1599.98px) {
+  .row > .col-lg-2:has(> .customers-stats-card) { flex: 0 0 33.333%; max-width: 33.333%; margin-bottom: 20px !important; }
+}
+@media (max-width: 575.98px) {
+  .row > .col-lg-2:has(> .customers-stats-card) { flex: 0 0 100%; max-width: 100%; }
 }
 
 /* Some views put a .row straight under .page-wrapper (no .container-fluid). Its
