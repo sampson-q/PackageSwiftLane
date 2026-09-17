@@ -1285,6 +1285,18 @@ label .btn-group .btn + .btn { margin-left: 0; }
   .swl-kv__label { white-space: normal; }
 }
 
+/* Below 1200px a pill button that is the only thing in a narrow column (e.g. the
+   "Add Shipping Fee" link in a col-md-2 on the pickup form) may wrap its label
+   instead of running past the column and forcing a horizontal scrollbar. */
+@media (max-width: 1199.98px) {
+  [class*="col-"] > .btn:not(.btn-block), [class*="col-"] > a > .btn:not(.btn-block),
+  [class*="col-"] > .form-group > .btn:not(.btn-block), [class*="col-"] > .form-group > a > .btn:not(.btn-block) {
+    /* inline-block so the label wraps as running text next to its icon; as a flex
+       container the text node would shrink to one word per line */
+    display: inline-block; max-width: 100%; white-space: normal; height: auto; min-height: var(--control-md); padding: 12px 20px; text-align: center;
+  }
+}
+
 /* Tablets: KPI cards two per row, so the figure never runs into its icon */
 @media (max-width: 991.98px) {
   .row > [class*="col-"]:has(> .swl-metric) { flex: 0 0 50%; max-width: 50%; }
