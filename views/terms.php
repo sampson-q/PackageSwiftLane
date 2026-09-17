@@ -21,136 +21,97 @@
     <link href="<?= cdp_asset('assets/css_main_swiftlane/css/auth-pages.css') ?>" rel="stylesheet" type="text/css" />
 
     <style>
-        /* ── Terms-specific layout ──────────────────────────────── */
+        /* ── Terms page: design-system tokens (auth-pages.css supplies them) ── */
+        body.auth-page { background: var(--surface-page); }
         .terms-topbar {
             position: sticky;
             top: 0;
             z-index: 50;
-            background: rgba(255,255,255,0.9);
-            backdrop-filter: blur(14px);
-            border-bottom: 1px solid rgba(226,160,39,0.14);
-            box-shadow: 0 2px 14px rgba(15,23,42,0.05);
+            background: var(--white);
+            border-bottom: 1px solid var(--border-default);
         }
-
         .terms-topbar-inner {
             max-width: 880px;
             margin: 0 auto;
-            padding: 0.85rem 1.5rem;
+            padding: 16px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 1rem;
+            gap: 16px;
         }
-
-        .terms-topbar .logo img { max-height: 48px; width: auto; }
-
+        .terms-topbar .logo img { max-height: 44px; width: auto; }
         .terms-topbar .btn-back {
             width: 40px;
             height: 40px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 999px;
-            background: linear-gradient(135deg, #f2b21b, #ef2628);
-            border: 0;
-            box-shadow: 0 8px 22px rgba(239,38,40,0.18);
-            color: #ffffff;
-            transition: transform 0.15s;
+            border-radius: var(--radius-pill);
+            background: var(--white);
+            box-shadow: var(--ring-default);
+            color: var(--ink-800);
             flex-shrink: 0;
+            transition: background var(--motion-fast) var(--ease-standard);
         }
-
-        .terms-topbar .btn-back:hover { transform: translateY(-1px); }
-
-        .terms-main {
-            max-width: 880px;
-            margin: 0 auto;
-            padding: 3rem 1.5rem 4rem;
-        }
-
-        .terms-hero {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
-
-        .terms-hero .auth-badge { margin-bottom: 1rem; }
-
+        .terms-topbar .btn-back:hover { background: var(--swift-amber); color: var(--ink-800); }
+        .terms-main { max-width: 880px; margin: 0 auto; padding: 48px 24px 64px; }
+        .terms-hero { text-align: center; margin-bottom: 32px; }
+        .terms-hero .auth-badge { margin-bottom: 16px; }
         .terms-hero h1 {
-            font-size: clamp(1.8rem, 3vw, 2.4rem);
-            font-weight: 800;
-            color: #0f172a;
-            letter-spacing: -0.03em;
-            margin: 0 0 0.6rem;
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-size: clamp(28px, 3vw, 36px);
+            line-height: 1.2;
+            letter-spacing: var(--display-track);
+            text-transform: uppercase;
+            color: var(--ink-800);
+            margin: 0 0 8px;
         }
-
-        .terms-hero p {
-            color: #64748b;
-            font-size: 1rem;
-            margin: 0;
-        }
-
+        .terms-hero p { font-family: var(--font-ui); color: var(--slate-400); font-size: 16px; line-height: 24px; margin: 0; }
         .terms-card {
-            background: rgba(255,255,255,0.92);
-            border: 1px solid rgba(226,160,39,0.14);
-            border-radius: 20px;
-            box-shadow: 0 12px 48px rgba(15,23,42,0.08);
-            backdrop-filter: blur(14px);
-            padding: 2.5rem 2.5rem 2rem;
+            background: var(--white);
+            border-radius: var(--radius-24);
+            padding: 40px;
         }
-
         .terms-card h4 {
-            font-weight: 800;
-            color: #0f172a;
-            letter-spacing: -0.02em;
-            font-size: 1.05rem;
-            margin: 1.75rem 0 0.55rem;
+            font-family: var(--font-ui);
+            font-weight: 700;
+            font-size: 16px;
+            line-height: 24px;
+            color: var(--ink-800);
+            margin: 28px 0 8px;
             display: flex;
             align-items: center;
-            gap: 0.6rem;
+            gap: 10px;
         }
-
         .terms-card h4::before {
             content: "";
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #f2b21b, #ef2628);
+            background: var(--swift-amber);
             flex-shrink: 0;
-            box-shadow: 0 0 0 3px rgba(242,178,27,0.14);
         }
-
         .terms-card h4:first-of-type { margin-top: 0; }
-
-        .terms-card p {
-            color: #334155;
-            line-height: 1.78;
-            margin: 0 0 0.5rem;
-            font-size: 0.95rem;
-        }
-
+        .terms-card p { font-family: var(--font-ui); color: var(--ink-800); line-height: 24px; margin: 0 0 8px; font-size: 14px; }
         .terms-card .terms-contact {
-            margin-top: 2rem;
-            padding: 1rem 1.25rem;
-            border-radius: 12px;
-            background: rgba(242,178,27,0.07);
-            border: 1px solid rgba(242,178,27,0.18);
-            font-size: 0.9rem;
-            color: #0f172a;
+            margin-top: 32px;
+            padding: 16px 20px;
+            border-radius: var(--radius-16);
+            background: var(--surface-page);
+            font-family: var(--font-ui);
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--ink-800);
         }
-
-        .terms-footer {
-            text-align: center;
-            margin-top: 2.5rem;
-            color: #94a3b8;
-            font-size: 0.875rem;
-        }
-
-        .terms-footer a { color: #ef2628; font-weight: 700; text-decoration: none; }
+        .terms-footer { text-align: center; margin-top: 32px; font-family: var(--font-ui); color: var(--slate-400); font-size: 14px; line-height: 20px; }
+        .terms-footer a { color: var(--ink-800); font-weight: 700; text-decoration: none; }
         .terms-footer a:hover { text-decoration: underline; }
 
         @media (max-width: 575.98px) {
-            .terms-topbar-inner { padding: 0.7rem 1rem; }
-            .terms-main { padding: 2rem 0.75rem 3rem; }
-            .terms-card { padding: 1.5rem 1.25rem; }
+            .terms-topbar-inner { padding: 12px 16px; }
+            .terms-main { padding: 32px 16px 48px; }
+            .terms-card { padding: 24px 20px; }
         }
     </style>
 </head>
