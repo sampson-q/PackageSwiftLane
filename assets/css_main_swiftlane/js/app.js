@@ -28,12 +28,7 @@ window.addEventListener('load',   fn , false )
 //  window.onload = function loader() {
 function fn() {
     // Preloader
-    if(document.getElementById('preloader')){
-        setTimeout(() => {
-            document.getElementById('preloader').style.visibility = 'hidden';
-            document.getElementById('preloader').style.opacity = '0';
-        }, 350);
-    }
+    hidePreloader();
     // Menus
     activateMenu();
 }
@@ -269,4 +264,16 @@ try {
     }
 } catch (err) {
 
+}
+// The preloader used to stay up until window 'load' (every image, font and
+// third-party stylesheet) plus a fixed 350ms. The page is usable as soon as
+// the DOM is parsed, so it is dismissed there; 'load' remains a fallback.
+function hidePreloader() {
+    var el = document.getElementById('preloader');
+    if (el) { el.style.visibility = 'hidden'; el.style.opacity = '0'; }
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', hidePreloader, false);
+} else {
+    hidePreloader();
 }
