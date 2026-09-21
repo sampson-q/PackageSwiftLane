@@ -413,7 +413,11 @@ h1, h2, h3, h4, h5, h6 { color: var(--ink-800); letter-spacing: var(--track-norm
   .page-wrapper > .page-breadcrumb:first-child > * { pointer-events: auto; }
   .page-wrapper > .page-breadcrumb:first-child > .row { min-height: var(--control-md); }
 }
-.page-breadcrumb [class*="col-"] { flex: 1 1 auto; max-width: 100%; }
+/* Title column takes the room, action columns are as wide as their buttons, so
+   "Warehouse" + [Print] share one line instead of the button wrapping under the
+   title (Bootstrap gives every col width: 100%). */
+.page-breadcrumb .row > [class*="col-"] { flex: 0 1 auto; width: auto; max-width: 100%; }
+.page-breadcrumb .row > [class*="col-"]:first-child { flex: 1 1 auto; min-width: 0; }
 .page-breadcrumb .page-title {
   font-family: var(--font-display);
   font-weight: 400;
