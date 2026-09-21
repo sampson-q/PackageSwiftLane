@@ -24,6 +24,17 @@ require_once $projectRoot . '/helpers/vendor/autoload.php';
  * @return array ['success' => bool, 'skipped' => bool, 'message' => string]
  */
 function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryHint = null) {
+    // Respond first, deliver after (helpers/after_response.php). The number
+    // check and the send are two API calls; a request that opted into queued
+    // notifications gets an optimistic result and the message log records the
+    // real one.
+    if (function_exists('cdp_notifyDeferred') && cdp_notifyDeferred()) {
+        cdp_afterResponse(function () use ($sender, $template_whatsapp_body, $countryHint) {
+            sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryHint);
+        });
+        return ['success' => true, 'queued' => true, 'message' => 'Queued for delivery.'];
+    }
+
     // Fetch your API credentials & endpoint
     $settings = cdp_getSettingsCourier();
 
@@ -78,7 +89,8 @@ function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryH
         CURLOPT_RETURNTRANSFER    => true,
         CURLOPT_POST              => true,
         CURLOPT_POSTFIELDS        => http_build_query($params),
-        CURLOPT_TIMEOUT           => 30,
+        CURLOPT_CONNECTTIMEOUT    => 5,
+        CURLOPT_TIMEOUT           => 15,
         CURLOPT_SSL_VERIFYHOST    => 0,
         CURLOPT_SSL_VERIFYPEER    => 0,
         CURLOPT_HTTPHEADER        => ["Content-Type: application/x-www-form-urlencoded"],

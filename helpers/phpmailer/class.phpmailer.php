@@ -312,7 +312,7 @@ class PHPMailer
      * Default of 5 minutes (300sec) is from RFC2821 section 4.5.3.2
      * @var integer
      */
-    public $Timeout = 300;
+    public $Timeout = 15; // was 300: an unreachable SMTP host must not hold a request for five minutes
 
     /**
      * SMTP class debug output mode.
@@ -1211,6 +1211,21 @@ class PHPMailer
      */
     public function send()
     {
+        // Respond first, deliver after (helpers/after_response.php): when the
+        // request opted into queued notifications, a snapshot of this message
+        // is sent once the response is out. The clone keeps later
+        // clearAddresses()/reuse by the caller from touching the queued copy.
+        if (function_exists('cdp_notifyDeferred') && cdp_notifyDeferred()) {
+            $queued = clone $this;
+            cdp_afterResponse(function () use ($queued) {
+                try {
+                    $queued->send();
+                } catch (\Exception $e) {
+                    error_log('[after_response] mail: ' . $e->getMessage());
+                }
+            });
+            return true;
+        }
         try {
             if (!$this->preSend()) {
                 return false;

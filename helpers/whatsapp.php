@@ -239,7 +239,8 @@ if (!function_exists('cdp_isWhatsAppNumber')) {
         $ch = curl_init($url);
         curl_setopt_array($ch, array(
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_CONNECTTIMEOUT => 4,
+            CURLOPT_TIMEOUT        => 8,
             CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_SSL_VERIFYPEER => 0,
         ));
