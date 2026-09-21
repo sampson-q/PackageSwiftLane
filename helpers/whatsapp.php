@@ -486,37 +486,54 @@ if (!function_exists('cdp_sendStatusUpdateWhatsApp')) {
 
 if (!function_exists('cdp_notifyConsolidationPackageSenders')) {
     /**
-     * Fan-out: tell the sender of every package inside a consolidation that the
-     * consolidation's status changed. The consolidation status has display
-     * priority over the package's own status, so this IS the package update —
-     * except for packages that already left the consolidation.
+     * Fan-out: every new status of a consolidation is sent to the owner of every
+     * package inside it, by WhatsApp AND e-mail. The consolidation status has
+     * display priority over the package's own status, so this IS the package
+     * update — except for packages that already left the consolidation.
      *
-     * Skip rules (per product decision):
-     *   - package pulled out: is_consolidate = 0
-     *   - own status says it's out: 8 Delivered, 15 Picked up, 16 Not Picked Up,
-     *     21 Cancelled, 27 Returned to Vendor, 32 Ready for PickUp
+     * The customer is told about THEIR PACKAGE only. Nothing that identifies the
+     * consolidation goes out: no consolidation number, no air waybill, no flight,
+     * no other customer's package. ($consolidationTracking is used for the
+     * message log, which staff read, and nowhere else.) No money either.
+     *
+     * One message per owner per channel: an owner with several packages in the
+     * consolidation gets them listed together instead of one message each.
+     *
+     * Who is left out:
+     *   - a package whose newest consolidation is a different one (the detail
+     *     table keeps old rows; is_consolidate is not trusted, it drifts);
+     *   - a package that was handed over on its own: 8 Delivered, 15 Picked up,
+     *     16 Not Picked Up, 21 Cancelled, 27 Returned to Vendor, 32 Ready for
+     *     PickUp, 35 Auction (cdp_statusLeavesConsolidation) — UNLESS that own
+     *     status is the very status being announced. Sorting / Ready for PickUp
+     *     are copied onto the packages before this runs, and treating that copy
+     *     as "already left" meant nobody was ever told their package was ready.
      * NOTE: the per-order notify_whatsapp_sender flag is intentionally NOT a
      * blocker here — every existing row carries the column default (0), so it
      * has never represented a real opt-out decision.
      *
      * Callers are responsible for the actual-change guard (only call when the
      * consolidation's status really changed) and must never call this for
-     * money/invoice-only events.
+     * money/invoice-only events. As a backstop against the same update arriving
+     * twice (double-bound handlers, double clicks), a package that already got
+     * this status announced in the last 10 minutes is left out.
+     *
+     * The sends run after the response (helpers/after_response.php): a
+     * consolidation holds well over a hundred packages and the staff member who
+     * changed the status must not wait for that many round trips. The outcome
+     * of each send is in the message log (source "consolidation_update").
      *
      * @param string     $module                'consolidate' (air) | 'consolidate_packages' (sea)
      * @param int        $consolidate_id
-     * @param string     $consolidationTracking c_prefix . c_no
+     * @param string     $consolidationTracking c_prefix . c_no — message log only
      * @param string     $statusLabel           e.g. "Consolidated", "In_Transit", "Delivered"
      * @param array|null $onlyOrderIds          restrict to these package order_ids (e.g. newly added)
      * @param bool       $applySkipRules        false when the caller already filtered $onlyOrderIds
-     *                                          by PRIOR package state (needed when the same request
-     *                                          just flipped packages out, e.g. the status-32 carve-out)
-     * @return array ['sent' => int, 'skipped' => int]
+     *                                          by PRIOR package state
+     * @return array ['sent' => int owners queued, 'skipped' => int packages left out]
      */
     function cdp_notifyConsolidationPackageSenders($module, $consolidate_id, $consolidationTracking, $statusLabel, $onlyOrderIds = null, $applySkipRules = true)
     {
-        cdp_wa_requireV2();
-
         $tables = array(
             'consolidate'          => array('detail' => 'cdb_consolidate_detail',          'orders' => 'cdb_add_order'),
             'consolidate_packages' => array('detail' => 'cdb_consolidate_packages_detail', 'orders' => 'cdb_customers_packages'),
@@ -527,99 +544,268 @@ if (!function_exists('cdp_notifyConsolidationPackageSenders')) {
         }
         $detailTable = $tables[$module]['detail'];
         $ordersTable = $tables[$module]['orders'];
-        $outOfConsolidationStatuses = array(8, 15, 16, 21, 27, 32);
-
-        // Per-package detail enrichment (items / weight / carrier tracking)
-        // reads from the air or sea order tables via the shared notify helper.
-        $phModule = ($module === 'consolidate_packages') ? 'sea' : 'air';
-        require_once __DIR__ . '/notify_placeholders.php';
-
-        $settings = cdp_getSettingsCourier();
+        $isPackage   = ($module === 'consolidate_packages');
+        $statusLabel = (string) $statusLabel;
+        $statusKey   = strtolower(trim($statusLabel));
 
         $db = new Conexion;
-        $db->cdp_query("SELECT d.order_id, o.order_prefix, o.order_no, o.sender_id, o.status_courier, o.is_consolidate
+        $db->cdp_query("SELECT d.order_id, o.order_prefix, o.order_no, o.sender_id, o.status_courier, s.mod_style AS own_status
             FROM {$detailTable} d
             INNER JOIN {$ordersTable} o ON o.order_id = d.order_id
-            WHERE d.consolidate_id = :cid");
+            LEFT JOIN cdb_styles s ON s.id = o.status_courier
+            WHERE d.consolidate_id = :cid
+            ORDER BY o.order_id");
         $db->bind(':cid', (int) $consolidate_id);
-        $packages = $db->cdp_registros();
+        $db->cdp_execute();
+        $packages = (array) $db->cdp_registros();
 
-        $sent = 0;
+        if ($applySkipRules && function_exists('cdp_prefetchConsolidations')) {
+            $nos = array();
+            foreach ($packages as $pkg) {
+                $nos[] = $pkg->order_no;
+            }
+            cdp_prefetchConsolidations($nos, $isPackage);   // one query, not one per package
+        }
+
+        $only    = ($onlyOrderIds === null) ? null : array_map('intval', (array) $onlyOrderIds);
         $skipped = 0;
-        $only = ($onlyOrderIds === null) ? null : array_map('intval', (array) $onlyOrderIds);
-        $msgBatch = function_exists('cdp_msgNewBatchId') ? cdp_msgNewBatchId('con') : '';
+        $byOwner = array();
 
         foreach ($packages as $pkg) {
-            try {
-                if ($only !== null && !in_array((int) $pkg->order_id, $only, true)) {
-                    continue;
-                }
-                if ($applySkipRules
-                    && ((int) $pkg->is_consolidate === 0
-                        || in_array((int) $pkg->status_courier, $outOfConsolidationStatuses, true))) {
-                    $skipped++;
-                    continue;
-                }
-                $sender = cdp_getSenderCourier((int) $pkg->sender_id);
-                if (!$sender || empty($sender->phone)) {
-                    $skipped++;
-                    continue;
-                }
-
-                $tracking = $pkg->order_prefix . $pkg->order_no;
-                $body = cdp_renderWhatsAppTemplate(17, array(
-                    '[CUSTOMER_FULLNAME]'      => cdp_nameWithLocker($sender),
-                    '[TRACKING_NUMBER]'        => $tracking,
-                    '[CONSOLIDATION_TRACKING]' => (string) $consolidationTracking,
-                    '[CURR_STATUS]'            => (string) $statusLabel,
-                    '[APP_URL]'                => rtrim((string) ($settings->site_url ?? ''), '/') . '/track.php?order_track=' . rawurlencode($tracking),
-                    '[COMPANY_NAME]'           => !empty($settings->site_name) ? $settings->site_name : 'Our Company',
-                ));
-                if ($body === null) {
-                    // Template missing: nothing will render for any package — stop.
-                    return array('sent' => $sent, 'skipped' => $skipped + 1);
-                }
-
-                // Append this package's own details (no money): carrier tracking,
-                // weight, items. Template 17 has no [EXTRA_DETAILS] slot.
-                if (function_exists('cdp_buildPackageNotifyPlaceholders')) {
-                    $pkg_ph = cdp_buildPackageNotifyPlaceholders((int) $pkg->order_id, $phModule);
-                    $detail_lines = array();
-                    if ($pkg_ph['[WEIGHT]'] !== 'N/A') {
-                        $detail_lines[] = '• Total Weight: ' . $pkg_ph['[WEIGHT]'];
-                    }
-                    if ($pkg_ph['[ITEMS]'] !== 'N/A') {
-                        $detail_lines[] = '• Items:';
-                        foreach (explode("\n", $pkg_ph['[ITEMS]']) as $il) {
-                            $detail_lines[] = '   - ' . $il;
-                        }
-                    }
-                    if ($pkg_ph['[POSTAL_TRACKING]'] !== 'N/A') {
-                        $detail_lines[] = '• Carrier Tracking #: *' . $pkg_ph['[POSTAL_TRACKING]'] . '*';
-                    }
-                    if ($detail_lines) {
-                        $body .= "\n\n" . implode("\n", $detail_lines);
-                    }
-                }
-
-                cdp_msgSetContext(['source' => 'consolidation_update', 'template_id' => 17, 'batch_id' => $msgBatch,
-                    'entity_type' => 'shipment', 'entity_id' => (string) $pkg->order_id, 'entity_label' => $tracking,
-                    'subject' => 'Consolidation ' . $consolidationTracking . ': ' . $statusLabel]);
-                $res = sendNotificationWhatsApp_v2($sender, $body);
-                if (!empty($res['success'])) {
-                    $sent++;
-                } else {
-                    $skipped++;
-                    cdp_wa_log("fan-out skip/fail for {$tracking}: " . ($res['message'] ?? ''));
-                }
-                cdp_msgClearContext(['source', 'template_id', 'batch_id', 'entity_type', 'entity_id', 'entity_label', 'subject']);
-            } catch (Exception $e) {
+            if ($only !== null && !in_array((int) $pkg->order_id, $only, true)) {
+                continue;
+            }
+            if ((int) $pkg->sender_id <= 0) {
                 $skipped++;
-                cdp_wa_log('fan-out error for order_id ' . $pkg->order_id . ': ' . $e->getMessage());
+                continue;
+            }
+            if ($applySkipRules) {
+                $current = function_exists('cdp_getConsolidationOf') ? cdp_getConsolidationOf($pkg->order_no, $isPackage) : null;
+                if ($current && isset($current->consolidate_id) && (int) $current->consolidate_id !== (int) $consolidate_id) {
+                    $skipped++;   // lives in a newer consolidation now
+                    continue;
+                }
+                // Only Sorting (33) / Ready for PickUp (32) are copied onto the
+                // packages (cdp_propagateConsolidationStatusToPackages). A package
+                // delivered on its own earlier is not told "Delivered" again.
+                $announcedIsOwn = in_array((int) $pkg->status_courier, array(32, 33), true)
+                    && strtolower(trim((string) $pkg->own_status)) === $statusKey;
+                $left = function_exists('cdp_statusLeavesConsolidation')
+                    ? cdp_statusLeavesConsolidation($pkg->status_courier, $pkg->order_no, $isPackage)
+                    : in_array((int) $pkg->status_courier, array(8, 15, 16, 21, 27, 32, 35), true);
+                if ($left && !$announcedIsOwn) {
+                    $skipped++;
+                    continue;
+                }
+            }
+            if (cdp_consolidationUpdateAlreadySent((int) $pkg->order_id, $statusLabel)) {
+                $skipped++;
+                continue;
+            }
+            $byOwner[(int) $pkg->sender_id][] = $pkg;
+        }
+
+        if (!$byOwner) {
+            return array('sent' => 0, 'skipped' => $skipped);
+        }
+
+        $phModule = $isPackage ? 'sea' : 'air';
+        $msgBatch = function_exists('cdp_msgNewBatchId') ? cdp_msgNewBatchId('con') : '';
+        $logLabel = (string) $consolidationTracking;
+
+        $deliver = function () use ($byOwner, $statusLabel, $phModule, $msgBatch, $logLabel, $consolidate_id) {
+            @set_time_limit(0);
+            foreach ($byOwner as $ownerId => $pkgs) {
+                try {
+                    cdp_notifyOwnerOfConsolidationUpdate((int) $ownerId, $pkgs, $statusLabel, $phModule, $msgBatch, (int) $consolidate_id, $logLabel);
+                } catch (\Throwable $e) {
+                    cdp_wa_log('fan-out error for owner ' . $ownerId . ': ' . $e->getMessage());
+                }
+            }
+        };
+
+        require_once __DIR__ . '/after_response.php';
+        cdp_afterResponse($deliver);
+
+        return array('sent' => count($byOwner), 'skipped' => $skipped);
+    }
+}
+
+if (!function_exists('cdp_consolidationUpdateAlreadySent')) {
+    /**
+     * Was this status already announced for this package in the last 10 minutes?
+     * Reads the message log; without the log table there is no backstop.
+     */
+    function cdp_consolidationUpdateAlreadySent($order_id, $statusLabel)
+    {
+        if (!function_exists('cdp_msgTableReady') || !cdp_msgTableReady()) {
+            return false;
+        }
+        $db = new Conexion;
+        $db->cdp_query("SELECT 1 AS x FROM cdb_message_log
+            WHERE source = 'consolidation_update' AND entity_type = 'shipment'
+              AND FIND_IN_SET(:oid, entity_id) > 0 AND subject = :subj
+              AND created_at >= :since LIMIT 1");
+        $db->bind(':oid', (string) (int) $order_id);
+        $db->bind(':subj', cdp_consolidationUpdateSubject($statusLabel));
+        $db->bind(':since', date('Y-m-d H:i:s', strtotime(cdp_msgNow()) - 600));
+        $db->cdp_execute();
+        return (bool) $db->cdp_registro();
+    }
+
+    /** Subject of the e-mail and of both message-log rows. Carries no consolidation info. */
+    function cdp_consolidationUpdateSubject($statusLabel)
+    {
+        return 'Shipment Update: ' . str_replace('_', ' ', (string) $statusLabel);
+    }
+}
+
+if (!function_exists('cdp_notifyOwnerOfConsolidationUpdate')) {
+    /**
+     * One owner, all of their packages in the consolidation: WhatsApp
+     * (template 11 "Package Status") and e-mail (template 36 "Shipment Update").
+     * Both templates speak about the shipment only.
+     *
+     * @param object[] $pkgs rows with order_id, order_prefix, order_no
+     */
+    function cdp_notifyOwnerOfConsolidationUpdate($ownerId, array $pkgs, $statusLabel, $phModule, $msgBatch, $consolidate_id, $logLabel)
+    {
+        $owner = cdp_getSenderCourier((int) $ownerId);
+        if (!$owner) {
+            return;
+        }
+        require_once __DIR__ . '/notify_placeholders.php';
+        $settings   = cdp_getSettingsCourier();
+        $siteUrl    = rtrim((string) ($settings->site_url ?? ''), '/');
+        $siteName   = !empty($settings->site_name) ? (string) $settings->site_name : 'Our Company';
+        $statusText = str_replace('_', ' ', (string) $statusLabel);
+        $subject    = cdp_consolidationUpdateSubject($statusLabel);
+
+        $trackings = array();
+        $orderIds  = array();
+        $waBlocks  = array();
+        $htmlBlocks = '';
+        foreach ($pkgs as $pkg) {
+            $tracking    = $pkg->order_prefix . $pkg->order_no;
+            $trackings[] = $tracking;
+            $orderIds[]  = (int) $pkg->order_id;
+            $ph = cdp_buildPackageNotifyPlaceholders((int) $pkg->order_id, $phModule);
+
+            // This package's own details (no money): weight, items, carrier tracking, ETA.
+            $lines = array();
+            if (count($pkgs) > 1) {
+                $lines[] = '*' . $tracking . '*';
+            }
+            if ($ph['[WEIGHT]'] !== 'N/A') {
+                $lines[] = '• Total Weight: ' . $ph['[WEIGHT]'];
+            }
+            if ($ph['[ITEMS]'] !== 'N/A') {
+                $lines[] = '• Items:';
+                foreach (explode("\n", $ph['[ITEMS]']) as $il) {
+                    $lines[] = '   - ' . $il;
+                }
+            }
+            if ($ph['[POSTAL_TRACKING]'] !== 'N/A') {
+                $lines[] = '• Carrier Tracking #: *' . $ph['[POSTAL_TRACKING]'] . '*';
+            }
+            if ($ph['[ETA]'] !== 'N/A') {
+                $lines[] = '• Estimated Arrival: ' . $ph['[ETA]'];
+            }
+            if (count($pkgs) > 1) {
+                $lines[] = '• Track: ' . $siteUrl . '/track.php?order_track=' . rawurlencode($tracking);
+            }
+            if ($lines) {
+                $waBlocks[] = implode("\n", $lines);
+            }
+
+            if (count($pkgs) > 1) {
+                $htmlBlocks .= '<p style="margin:16px 0 8px 0;font-size:14px;font-weight:700;color:#1a1a1a;font-family:Roboto,Arial,Helvetica,sans-serif;">'
+                    . htmlspecialchars($tracking, ENT_QUOTES, 'UTF-8') . '</p>';
+            }
+            $htmlBlocks .= $ph['[SHIPMENT_DETAILS]'];
+        }
+        $trackingList = implode(', ', $trackings);
+        $trackUrl     = $siteUrl . '/track.php?order_track=' . rawurlencode($trackings[0]);
+
+        $ctx = array(
+            'source'            => 'consolidation_update',
+            // Staff-only: lets Message Logs show which consolidation caused the send.
+            'source_label'      => 'Consolidation Update (Package Owners) · ' . $logLabel,
+            'batch_id'          => $msgBatch,
+            'entity_type'       => 'shipment',
+            'entity_id'         => implode(',', $orderIds),
+            'entity_label'      => $trackingList,
+            'subject'           => $subject,
+            'recipient_user_id' => (int) $ownerId,
+            'recipient_name'    => trim((string) ($owner->fname ?? '') . ' ' . (string) ($owner->lname ?? '')),
+        );
+        $ctxKeys = array_merge(array_keys($ctx), array('template_id'));
+
+        // ── WhatsApp ────────────────────────────────────────────────────────
+        cdp_msgSetContext($ctx + array('template_id' => 11));
+        try {
+            cdp_wa_requireV2();
+            $body = cdp_renderWhatsAppTemplate(11, array(
+                '[CUSTOMER_FULLNAME]' => cdp_nameWithLocker($owner),
+                '[TRACKING_NUMBER]'   => $trackingList,
+                '[CURR_STATUS]'       => $statusText,
+                '[APP_URL]'           => $trackUrl,
+                '[COMPANY_NAME]'      => $siteName,
+            ));
+            if ($body === null) {
+                cdp_msgLog(array('channel' => 'whatsapp', 'status' => 'failed', 'status_detail' => 'WhatsApp template 11 not found.',
+                    'recipient_to' => (string) ($owner->phone ?? ''), 'body' => ''));
+            } else {
+                if ($waBlocks) {
+                    $body .= "\n\n" . implode("\n\n", $waBlocks);
+                }
+                $res = sendNotificationWhatsApp_v2($owner, $body);   // logs sent / failed / skipped itself
+                if (empty($res['success'])) {
+                    cdp_wa_log("fan-out skip/fail for {$trackingList}: " . ($res['message'] ?? ''));
+                }
+            }
+        } catch (\Throwable $e) {
+            cdp_wa_log('fan-out WhatsApp error for ' . $trackingList . ': ' . $e->getMessage());
+        }
+
+        // ── E-mail ──────────────────────────────────────────────────────────
+        cdp_msgSetContext(array('template_id' => 36));
+        $to = trim((string) ($owner->email ?? ''));
+        if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            cdp_msgLog(array('channel' => 'email', 'status' => 'skipped', 'status_detail' => 'No valid e-mail address.',
+                'recipient_to' => $to, 'body' => ''));
+        } else {
+            try {
+                require_once __DIR__ . '/phpmailer/class.phpmailer.php';
+                require_once __DIR__ . '/phpmailer/class.smtp.php';
+                $statusRow = '<tr><td width="35%" style="font-size:13px;color:#888888;font-family:Roboto,Arial,Helvetica,sans-serif;padding:8px;">Current Status</td>'
+                    . '<td style="font-size:13px;font-family:Roboto,Arial,Helvetica,sans-serif;padding:8px;"><strong style="color:#1a1a1a;">'
+                    . htmlspecialchars($statusText, ENT_QUOTES, 'UTF-8') . '</strong></td></tr>';
+                $res = cdp_sendTemplateEmail(36, $to, array(
+                    '[NAME]'             => htmlspecialchars($ctx['recipient_name'], ENT_QUOTES, 'UTF-8'),
+                    '[TRACKING]'         => htmlspecialchars($trackingList, ENT_QUOTES, 'UTF-8'),
+                    '[CHANGED_FIELDS]'   => $statusRow,
+                    '[PACKAGES_SECTION]' => $htmlBlocks,
+                    '[TOTAL_AMOUNT]'     => '',   // no monetary values in customer notifications
+                    '[URL_SHIP]'         => $trackUrl,
+                ), $subject);
+                if (empty($res['ok'])) {
+                    cdp_wa_log("fan-out e-mail failed for {$trackingList}: " . ($res['error'] ?? ''));
+                    if (strpos((string) ($res['error'] ?? ''), 'SMTP send error') !== 0) {
+                        // PHPMailer logs its own failures; PHP mail() and template errors do not.
+                        cdp_msgLog(array('channel' => 'email', 'status' => 'failed', 'status_detail' => (string) ($res['error'] ?? 'Send failed'),
+                            'recipient_to' => $to, 'body' => ''));
+                    }
+                } elseif (($settings->mailer ?? '') === 'PHP') {
+                    cdp_msgLog(array('channel' => 'email', 'status' => 'sent', 'status_detail' => 'Accepted by PHP mail()',
+                        'recipient_to' => $to, 'body' => ''));
+                }
+            } catch (\Throwable $e) {
+                cdp_wa_log('fan-out e-mail error for ' . $trackingList . ': ' . $e->getMessage());
             }
         }
 
-        return array('sent' => $sent, 'skipped' => $skipped);
+        cdp_msgClearContext($ctxKeys);
     }
 }
 
