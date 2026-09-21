@@ -1227,6 +1227,7 @@ class PHPMailer
             return true;
         }
         try {
+            unset($GLOBALS['cdp_msg_mail_fail_logged']);   // per send, see the catch below
             if (!$this->preSend()) {
                 return false;
             }
@@ -1236,7 +1237,12 @@ class PHPMailer
             $this->setError($exc->getMessage());
             // Message log (helpers/message_log.php): the send died before any
             // per-recipient callback ran (connection, auth, no address...).
-            if (function_exists('cdp_msgMailFailed')) {
+            // postSend() logs its own transport failures and rethrows here;
+            // only what it has not logged yet is logged now.
+            $cdpLogged = isset($GLOBALS['cdp_msg_mail_fail_logged'])
+                && $GLOBALS['cdp_msg_mail_fail_logged'] === spl_object_id($this);
+            unset($GLOBALS['cdp_msg_mail_fail_logged']);
+            if (!$cdpLogged && function_exists('cdp_msgMailFailed')) {
                 cdp_msgMailFailed($this, $exc->getMessage());
             }
             if ($this->exceptions) {
@@ -1375,6 +1381,7 @@ class PHPMailer
             // per-recipient callback ran (SMTP connect/auth/data errors).
             if (function_exists('cdp_msgMailFailed')) {
                 cdp_msgMailFailed($this, $exc->getMessage());
+                $GLOBALS['cdp_msg_mail_fail_logged'] = spl_object_id($this);
             }
             if ($this->exceptions) {
                 throw $exc;
