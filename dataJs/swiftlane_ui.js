@@ -126,6 +126,30 @@
         window.addEventListener('resize', enforce);
         enforce();
 
+        // About a third of the views have no header row: their title is a
+        // .card-title inside the first card, which left an empty strip holding
+        // only the tray. Promote that title into a standard header so every
+        // page has the same title row. The document title is the fallback, and a
+        // card title that carries controls is left where it is.
+        (function promoteTitle() {
+            var pw = wrap.querySelector('.page-wrapper');
+            if (!pw || pw.querySelector('.page-breadcrumb')) return;
+            var src = pw.querySelector('.card-title'), text = '';
+            if (src && !src.querySelector('a, button, input, select, textarea')) {
+                text = (src.textContent || '').replace(/\s+/g, ' ').trim();
+            } else {
+                src = null;
+            }
+            if (!text) text = (document.title || '').split('|')[0].trim();
+            if (!text || text.length > 80) return;
+            var head = document.createElement('div');
+            head.className = 'page-breadcrumb swl-page-head--auto';
+            head.innerHTML = '<div class="row"><div class="col-12 align-self-center"><h4 class="page-title"></h4></div></div>';
+            head.querySelector('.page-title').textContent = text;
+            pw.insertBefore(head, pw.firstElementChild);
+            if (src) src.classList.add('swl-promoted');
+        })();
+
         // Title row and tray share one line: tell the CSS how wide the tray is so
         // the page title and its actions stop short of it.
         var tray = document.querySelector('.topbar .navbar-nav.float-right');

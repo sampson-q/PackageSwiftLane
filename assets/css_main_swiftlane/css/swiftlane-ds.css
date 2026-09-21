@@ -383,6 +383,10 @@ h1, h2, h3, h4, h5, h6 { color: var(--ink-800); letter-spacing: var(--track-norm
   box-sizing: border-box;
 }
 .topbar .badge-notify.is-zero { display: none; }
+/* .waves-effect clips its box (overflow: hidden), which cut the count badge in half */
+.topbar .navbar-nav .nav-link.waves-effect,
+.topbar .navbar-nav a.sidebar-link.waves-effect { overflow: visible !important; }
+.topbar .navbar-nav .waves-ripple { display: none !important; }
 .topbar .dropdown-menu { margin-top: 8px; }
 .topbar .dropdown-menu.mailbox { width: 340px; max-width: 90vw; }
 .topbar .user-dd .with-arrow { display: none; }
@@ -428,6 +432,8 @@ h1, h2, h3, h4, h5, h6 { color: var(--ink-800); letter-spacing: var(--track-norm
 .page-breadcrumb .page-title small { font-family: var(--font-ui); font-size: 12px; font-weight: 500; text-transform: none; letter-spacing: var(--track-normal); color: var(--slate-400); }
 .page-breadcrumb .breadcrumb { padding: 0; margin: 4px 0 0; background: transparent; font-size: 12px; font-weight: 500; color: var(--slate-400); }
 .page-breadcrumb .breadcrumb a { color: var(--ink-800); }
+/* A card title that swiftlane_ui.js promoted into the header row */
+.card-title.swl-promoted, .card-title.swl-promoted + hr { display: none !important; }
 .sw-dash-hello { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
 .sw-dash-hello .sw-hello-sub { font-family: var(--font-ui); font-size: 12px; font-weight: 500; line-height: 16px; color: var(--slate-400); margin-top: 4px; }
 .sw-quick-actions { display: flex; gap: 12px; flex-wrap: wrap; }
