@@ -32,6 +32,7 @@ require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 require_once("../notify_sms/api_sms_service.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
+notify_after_response(); // email + WhatsApp go out after the response (helpers/after_response.php)
 require_permission('add_full_pickup');
 
 $user = new User;

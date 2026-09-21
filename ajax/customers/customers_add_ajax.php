@@ -11,6 +11,7 @@ require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
+notify_after_response(); // email + WhatsApp go out after the response (helpers/after_response.php)
 require_permission('view_client_list');
 
 header('Content-Type: application/json; charset=UTF-8');

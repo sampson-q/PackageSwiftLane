@@ -5,6 +5,7 @@
     require_once("../../helpers/phpmailer/class.smtp.php");
     require_once("../../helpers/ajax_guard.php");
     require_login();
+    notify_after_response(); // email + WhatsApp go out after the response (helpers/after_response.php)
     require_permission('approve_client'); // approve/activate/deactivate a client — was login-only
 
 

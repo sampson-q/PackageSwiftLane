@@ -39,6 +39,23 @@ function require_login() {
 }
 
 /**
+ * Opt this request into queued notifications: email and WhatsApp sends made
+ * after this call are delivered once the response has been sent, so saving a
+ * shipment no longer waits for an SMTP conversation and two API calls. Only
+ * for endpoints that do not report the send result back to the user; the
+ * outcome is recorded by the message log. See helpers/after_response.php.
+ */
+function notify_after_response() {
+    require_once __DIR__ . '/after_response.php';
+    cdp_notifyDeferred(true);
+    // Buffer from here so the response length is known and the connection can
+    // be closed before the queue runs (needed under Apache mod_php).
+    if (!headers_sent() && ob_get_level() === 0) {
+        ob_start();
+    }
+}
+
+/**
  * Asegura que el usuario tenga al menos uno de los permisos. Si no, envía 403 JSON y termina.
  * @param string|string[] $permission Nombre del permiso (o array de nombres, cualquiera)
  */

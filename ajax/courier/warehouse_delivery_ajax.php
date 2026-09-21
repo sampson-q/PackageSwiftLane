@@ -32,6 +32,7 @@ require_once(__DIR__ . '/../../helpers/phpmailer/class.phpmailer.php');
 require_once(__DIR__ . '/../../helpers/phpmailer/class.smtp.php');
 require_once(__DIR__ . '/../notify_whatsapp/api_whatsapp_service_v2.php');
 require_login();
+notify_after_response(); // email + WhatsApp go out after the response (helpers/after_response.php)
 require_permission('view_warehouse_delivery');
 
 if (session_status() === PHP_SESSION_ACTIVE) {
