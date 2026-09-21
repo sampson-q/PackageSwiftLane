@@ -15,7 +15,9 @@ cdp_activityPageView();
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <!-- Icons: Solar (Iconify) + legacy -->
-<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+<?php /* defer: a web component, it upgrades the icons whenever it arrives; without it a
+   slow CDN answer held up the first paint of every page. */ ?>
+<script defer src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 <style>
 	iconify-icon{display:inline-flex;vertical-align:middle;line-height:1;}
 </style>
@@ -26,7 +28,7 @@ cdp_activityPageView();
 <link href="<?= cdp_asset('assets/template/dist/css/style.min.css') ?>" rel="stylesheet">
 <link href="<?= cdp_asset('assets/customClassPagination.css') ?>" rel="stylesheet">
 <link href="<?= cdp_asset('assets/css/scroll-menu.css') ?>" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
+<link rel="stylesheet" href="<?= cdp_asset('assets/css/jquery.dataTables.css') ?>" />
 <link rel="stylesheet" type="text/css" href="<?= cdp_asset('assets/template/assets/libs/select2/dist/css/select2.min.css') ?>">
 <link rel="stylesheet" href="<?= cdp_asset('assets/template/assets/libs/intlTelInput/intlTelInput.css') ?>">
 <!-- Swift Lane design system (tokens + shell override) — must load last so it cascades over the template -->

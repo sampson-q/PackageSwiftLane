@@ -144,7 +144,9 @@ if (cdp_spBeaconWanted()) : ?>
 <script src="<?= cdp_asset('assets/template/dist/js/app-style-switcher.js') ?>"></script>
 <!-- slimscrollbar scrollbar JavaScript -->
 <script src="<?= cdp_asset('assets/template/assets/libs/perfect-scrollbar/dist/perfect-scrollbar.jquery.min.js') ?>"></script>
-<script src="<?= cdp_asset('assets/template/assets/extra-libs/sparkline/sparkline.js') ?>"></script>
+<?php /* custom.min.js calls $('.lastmonth').sparkline() on every page although no view
+         has such an element; a no-op stub stands in for the 43KB plugin. */ ?>
+<script>if (window.jQuery && !jQuery.fn.sparkline) { jQuery.fn.sparkline = function () { return this; }; }</script>
 <!--Wave Effects -->
 <script src="<?= cdp_asset('assets/template/dist/js/waves.js') ?>"></script>
 <!--Menu sidebar -->
@@ -153,14 +155,16 @@ if (cdp_spBeaconWanted()) : ?>
 <script src="<?= cdp_asset('assets/template/dist/js/feather.min.js') ?>"></script>
 <script src="<?= cdp_asset('assets/template/dist/js/custom.min.js') ?>"></script>
 
-<script src="<?= cdp_asset('assets/template/assets/extra-libs/chart.js-2.8/Chart.min.js') ?>"></script>
+<?php /* Chart.js 2.8 (157KB) was loaded on every page; the dashboards draw with
+         ApexCharts and nothing calls new Chart(). */ ?>
 <script src="<?= cdp_asset('dataJs/load_notifications_all.js') ?>"> </script>
 <script src="<?= cdp_asset('assets/template/dist/js/global.js') ?>"></script>
 
 <!-- start - This is for export functionality only -->
 <!-- solar icons -->
-<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
+<?php /* iconify-icon is already loaded (deferred) by head_scripts.php. The un-minified
+         DataTables build from cdn.datatables.net was fetched on every page and no
+         view or script ever calls .DataTable(). */ ?>
 <?php /* SweetAlert2 v11 (assets/vendor) replaces the template's v7 bundle: the
          codebase widely uses v10+ APIs (result.isConfirmed, didOpen,
          Swal.showValidationMessage) that silently no-op'd under v7. */ ?>
