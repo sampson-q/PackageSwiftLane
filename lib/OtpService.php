@@ -6,6 +6,7 @@ require_once $projectRoot . '/helpers/functions.php';
 require_once $projectRoot . '/helpers/phpmailer/class.phpmailer.php';
 require_once $projectRoot . '/helpers/phpmailer/class.smtp.php';
 require_once $projectRoot . '/ajax/notify_whatsapp/api_whatsapp_service_v2.php';
+require_once $projectRoot . '/helpers/after_response.php';
 
 class OtpService {
     private $db;
@@ -20,6 +21,19 @@ class OtpService {
     }
 
     private function ensureTables() {
+        // Three CREATE TABLE IF NOT EXISTS statements are DDL (metadata locks) and
+        // this constructor runs on every login, OTP page load and OTP AJAX call.
+        // Once they have succeeded for this install + database, a marker file
+        // makes every later construction skip them.
+        $marker = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . '/cdp_otp_tables_' . md5(__DIR__ . '|' . (defined('CDP_DB_NAME') ? CDP_DB_NAME : '')) . '.ok';
+        if (@is_file($marker)) {
+            return;
+        }
+        $this->createTables();
+        @file_put_contents($marker, date('c'));
+    }
+
+    private function createTables() {
         $this->db->cdp_query("CREATE TABLE IF NOT EXISTS cdb_auth_otp_challenges (
             id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
@@ -244,7 +258,31 @@ class OtpService {
         return $templateMap[$purpose] ?? 30;
     }
 
+    /**
+     * Run a send with the request's notifications in queued mode
+     * (helpers/after_response.php): the message is built and validated now, the
+     * SMTP conversation / WhatsApp API calls happen after the response is out,
+     * so the login redirect and the "resend" page no longer wait for them.
+     * Configuration problems (missing template, unknown mailer) are still
+     * reported immediately; a transport failure lands in the message log.
+     */
+    private function queued(callable $send) {
+        $previous = cdp_notifyDeferred();
+        cdp_notifyDeferred(true);
+        try {
+            return $send();
+        } finally {
+            cdp_notifyDeferred($previous);
+        }
+    }
+
     public function sendOtpEmail($email, $name, $code, $purpose) {
+        return $this->queued(function () use ($email, $name, $code, $purpose) {
+            return $this->sendOtpEmailNow($email, $name, $code, $purpose);
+        });
+    }
+
+    private function sendOtpEmailNow($email, $name, $code, $purpose) {
         $emailTplId = $this->getEmailTemplateId($purpose);
         $emailTpl   = cdp_getEmailTemplatesdg1i4($emailTplId);
 
@@ -311,6 +349,12 @@ class OtpService {
     }
 
     public function sendOtpWhatsApp($email, $name, $code, $purpose) {
+        return $this->queued(function () use ($email, $name, $code, $purpose) {
+            return $this->sendOtpWhatsAppNow($email, $name, $code, $purpose);
+        });
+    }
+
+    private function sendOtpWhatsAppNow($email, $name, $code, $purpose) {
         $userInfo = $this->user->cdp_getUserInfo($email);
 
         $whatsappTemplateId = ($purpose === 'password reset') ? 9 : 10;
