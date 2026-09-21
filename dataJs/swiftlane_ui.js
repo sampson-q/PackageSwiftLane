@@ -82,3 +82,80 @@
     // Exposed for pages that build markup outside the DOM before inserting it.
     window.cdpSwiftLaneUi = { refresh: function (root) { run(root || document); } };
 })();
+
+/* ── App shell: sidebar collapse state, top bar tray ───────────────────────────
+   The template decides the sidebar type again on EVERY window resize event, and
+   plenty of widgets fire one (`$("body").trigger("resize")`), so a collapsed
+   sidebar used to snap open by itself, and nothing remembered the choice on the
+   next page. The choice now lives in localStorage and is enforced whenever the
+   template changes the wrapper, on screens wide enough to have a choice
+   (>= 1170px; below that the template's automatic mini mode stays in charge). */
+(function () {
+    'use strict';
+    var KEY = 'swl.nav', MIN_WIDTH = 1170;
+
+    function readPref() { try { return window.localStorage.getItem(KEY); } catch (e) { return null; } }
+    function savePref(v) { try { window.localStorage.setItem(KEY, v); } catch (e) { /* private mode */ } }
+
+    function shell() {
+        var wrap = document.getElementById('main-wrapper');
+        if (!wrap || !wrap.querySelector('.left-sidebar')) return;
+
+        function enforce() {
+            if (window.innerWidth < MIN_WIDTH) return;
+            var pref = readPref();
+            if (pref !== 'mini' && pref !== 'full') return;
+            var mini = pref === 'mini', type = mini ? 'mini-sidebar' : 'full';
+            if (wrap.classList.contains('mini-sidebar') !== mini) wrap.classList.toggle('mini-sidebar', mini);
+            if (wrap.getAttribute('data-sidebartype') !== type) wrap.setAttribute('data-sidebartype', type);
+        }
+
+        // Capture phase: the preference is stored before the template's own click
+        // handler flips the wrapper, so the observer below agrees with the click.
+        document.addEventListener('click', function (e) {
+            var t = e.target && e.target.closest ? e.target.closest('.sidebartoggler') : null;
+            if (!t || window.innerWidth < MIN_WIDTH) return;
+            var next = wrap.classList.contains('mini-sidebar') ? 'full' : 'mini';
+            savePref(next);
+            t.setAttribute('aria-expanded', next === 'full' ? 'true' : 'false');
+        }, true);
+
+        if ('MutationObserver' in window) {
+            new MutationObserver(enforce).observe(wrap, { attributes: true, attributeFilter: ['class', 'data-sidebartype'] });
+        }
+        window.addEventListener('resize', enforce);
+        enforce();
+
+        // Title row and tray share one line: tell the CSS how wide the tray is so
+        // the page title and its actions stop short of it.
+        var tray = document.querySelector('.topbar .navbar-nav.float-right');
+        function measureTray() {
+            if (!tray) return;
+            var w = Math.ceil(tray.getBoundingClientRect().width);
+            if (w > 0) wrap.style.setProperty('--swl-tray-w', w + 'px');
+        }
+        measureTray();
+        window.addEventListener('resize', measureTray);
+        window.addEventListener('load', measureTray);
+
+        // A badge showing 0 is noise: hide it until there is something to count.
+        function syncBadges() {
+            var badges = document.querySelectorAll('.topbar .badge-notify');
+            for (var i = 0; i < badges.length; i++) {
+                var n = parseInt((badges[i].textContent || '').trim(), 10);
+                badges[i].classList.toggle('is-zero', !(n > 0));
+            }
+            measureTray();
+        }
+        syncBadges();
+        if (tray && 'MutationObserver' in window) {
+            new MutationObserver(syncBadges).observe(tray, { childList: true, subtree: true, characterData: true });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', shell);
+    } else {
+        shell();
+    }
+})();

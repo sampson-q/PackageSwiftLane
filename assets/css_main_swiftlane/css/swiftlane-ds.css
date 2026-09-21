@@ -50,6 +50,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--ink-800); letter-spacing: var(--track-norm
 }
 #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar { width: var(--swl-nav-mini) !important; }
 #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar:hover { width: var(--swl-nav-w) !important; }
+@media (min-width: 768px) { #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar:hover { box-shadow: 0 24px 64px rgba(22, 37, 54, .35) !important; } }
 
 #main-wrapper[data-layout=vertical][data-sidebartype=full] .page-wrapper,
 #main-wrapper[data-layout=vertical][data-sidebartype=full] .topbar { margin-left: var(--swl-nav-w) !important; }
@@ -284,7 +285,13 @@ h1, h2, h3, h4, h5, h6 { color: var(--ink-800); letter-spacing: var(--track-norm
 #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar:not(:hover) .sidebar-nav ul .sidebar-item .sidebar-link { justify-content: center; padding: 0 !important; margin: 1px 20px; }
 #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar:not(:hover) .sidebar-nav ul .sidebar-item .first-level { display: none; }
 
-/* ── 3. Topbar → in-flow utility strip on the page ground ────────────────── */
+/* ── 3. Topbar → utility tray that shares one row with the page title ────────
+   The design has no separate top bar: the title sits on the left and the
+   controls on the right of the same row. The template's <header> is kept (its
+   dropdowns and mobile menu live there) but it is a click-through strip; only
+   the tray on the right takes pointer events. The page header (section 4) is
+   pulled up into the strip and stops short of the tray (--swl-tray-w, measured
+   by dataJs/swiftlane_ui.js). */
 #main-wrapper[data-layout=vertical] .topbar {
   position: relative !important;
   width: auto !important;
@@ -294,6 +301,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--ink-800); letter-spacing: var(--track-norm
   box-shadow: none !important;
   border: 0 !important;
   z-index: 40;
+  pointer-events: none;
 }
 #main-wrapper[data-layout=vertical] .topbar .top-navbar {
   min-height: 0 !important;
@@ -310,13 +318,13 @@ h1, h2, h3, h4, h5, h6 { color: var(--ink-800); letter-spacing: var(--track-norm
   background: transparent !important;
 }
 .topbar .navbar-nav.float-left { display: none !important; }
-.topbar .navbar-nav.float-right { display: flex; align-items: center; gap: 8px; margin: 0; }
+.topbar .navbar-nav.float-right { display: flex; align-items: center; gap: 8px; margin: 0; height: var(--control-md); pointer-events: auto; }
 .topbar .navbar-nav .nav-item { display: flex; align-items: center; gap: 8px; }
 .topbar .navbar-nav .nav-link,
 .topbar .navbar-nav a.sidebar-link {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: var(--control-md);
+  height: var(--control-md);
   padding: 0 !important;
   margin: 0 !important;
   border-radius: var(--radius-round);
@@ -326,35 +334,56 @@ h1, h2, h3, h4, h5, h6 { color: var(--ink-800); letter-spacing: var(--track-norm
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  transition: background var(--motion-fast) var(--ease-standard);
+  font-size: 22px;
+  line-height: 1;
+  transition: background var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard);
+}
+/* The template sizes these by line-height (64px) with a longer selector, which
+   stretched the rings into ovals; pin the box to the control size. */
+#main-wrapper .topbar .top-navbar .navbar-nav > .nav-item > .nav-link,
+#main-wrapper .topbar .top-navbar .navbar-nav > .nav-item > a.sidebar-link {
+  height: var(--control-md) !important;
+  min-height: 0 !important;
+  line-height: 1 !important;
 }
 .topbar .navbar-nav .nav-link:hover,
-.topbar .navbar-nav a.sidebar-link:hover { background: var(--page-050); }
+.topbar .navbar-nav a.sidebar-link:hover,
+.topbar .navbar-nav .show > .nav-link { background: var(--page-050); box-shadow: inset 0 0 0 1px var(--slate-400); }
+.topbar .navbar-nav .nav-link:focus-visible,
+.topbar .navbar-nav a.sidebar-link:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--focus-ring); }
+.topbar .navbar-nav .nav-link iconify-icon,
+.topbar .navbar-nav a.sidebar-link iconify-icon { font-size: 22px !important; width: 22px; height: 22px !important; color: var(--ink-800) !important; }
 .topbar .navbar-nav .nav-link img { width: 20px; height: auto; }
-.topbar .navbar-nav a.sidebar-link iconify-icon { font-size: 20px !important; height: auto !important; color: var(--ink-800) !important; }
-.topbar .navbar-nav .nav-link.pro-pic { width: auto; padding: 0 12px 0 4px !important; border-radius: var(--radius-pill); gap: 6px; }
-.topbar .navbar-nav .nav-link.pro-pic img { width: 36px; height: 36px; border-radius: var(--radius-round); object-fit: cover; }
-.topbar .navbar-nav .nav-link.pro-pic iconify-icon { font-size: 16px; color: var(--slate-400); }
+.topbar .navbar-nav .nav-link img.swl-tray__flag { width: 24px; height: 24px; border-radius: var(--radius-round); object-fit: cover; box-shadow: var(--ring-default); }
+/* Profile: avatar + first name + chevron in one pill */
+.topbar .navbar-nav .nav-link.pro-pic { width: auto; max-width: 220px; padding: 0 14px 0 6px !important; border-radius: var(--radius-pill); gap: 10px; }
+.topbar .navbar-nav .nav-link.pro-pic img { width: 36px; height: 36px; border-radius: var(--radius-round); object-fit: cover; flex: none; }
+.topbar .navbar-nav .nav-link.pro-pic .swl-tray__name { font-family: var(--font-ui); font-weight: 700; font-size: 14px; line-height: 20px; letter-spacing: var(--track-normal); color: var(--ink-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar .navbar-nav .nav-link.pro-pic .swl-tray__name:empty { display: none; }
+.topbar .navbar-nav .nav-link.pro-pic iconify-icon { font-size: 16px !important; width: 16px; height: 16px !important; color: var(--slate-400) !important; flex: none; }
 .topbar .navbar-nav .dropdown-toggle::after { display: none; }
 .topbar .badge-notify {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  min-width: 18px;
-  height: 18px;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
   padding: 0 5px;
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--swift-red) !important;
   color: #fff !important;
-  font-size: 10px;
+  font-family: var(--font-ui);
+  font-size: 11px;
   font-weight: 700;
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 2px solid var(--surface-page);
+  box-sizing: border-box;
 }
+.topbar .badge-notify.is-zero { display: none; }
+.topbar .dropdown-menu { margin-top: 8px; }
 .topbar .dropdown-menu.mailbox { width: 340px; max-width: 90vw; }
 .topbar .user-dd .with-arrow { display: none; }
 .topbar .user-dd .bg-primary { background: var(--ink-800) !important; border-radius: var(--radius-16); }
@@ -364,6 +393,22 @@ h1, h2, h3, h4, h5, h6 { color: var(--ink-800); letter-spacing: var(--track-norm
 /* ── 4. Page header ──────────────────────────────────────────────────────── */
 .page-breadcrumb { padding: 12px 24px 0 !important; }
 .page-breadcrumb .row { align-items: center; }
+/* From tablets up the header shares the tray's row: pulled up by the tray's
+   height and kept clear of it on the right. Click-through like the strip, with
+   its own content taking the clicks. */
+@media (min-width: 768px) {
+  .page-wrapper > .page-breadcrumb:first-child {
+    margin-top: calc(-1 * var(--control-md));
+    padding-top: 0 !important;
+    padding-bottom: 12px !important;
+    padding-right: calc(24px + var(--swl-tray-w, 300px) + 16px) !important;
+    position: relative;
+    z-index: 41;
+    pointer-events: none;
+  }
+  .page-wrapper > .page-breadcrumb:first-child > * { pointer-events: auto; }
+  .page-wrapper > .page-breadcrumb:first-child > .row { min-height: var(--control-md); }
+}
 .page-breadcrumb [class*="col-"] { flex: 1 1 auto; max-width: 100%; }
 .page-breadcrumb .page-title {
   font-family: var(--font-display);
@@ -1170,7 +1215,25 @@ a.swl-metric:hover { transform: translateY(-2px); color: var(--ink-800); }
     justify-content: center;
     font-size: 20px;
   }
-  #main-wrapper[data-layout=vertical] .topbar .top-navbar .navbar-collapse { display: none !important; padding: 12px 16px !important; justify-content: flex-start; }
+  /* Phones keep a real header bar: it takes taps again (the desktop strip is
+     click-through) and the opened tray sits in the flow under it, pushing the
+     page down instead of floating over the title. */
+  #main-wrapper[data-layout=vertical] .topbar { pointer-events: auto; }
+  #main-wrapper[data-layout=vertical] .topbar .top-navbar { flex-wrap: wrap; }
+  #main-wrapper[data-layout=vertical] .topbar .top-navbar .navbar-collapse {
+    display: none !important;
+    position: static !important;
+    flex: 0 0 100%;
+    width: 100% !important;
+    padding: 12px 16px !important;
+    justify-content: flex-start;
+    background: var(--white) !important;
+    border-bottom: 1px solid var(--border-default);
+    transition: none !important;
+    height: auto !important;
+  }
+  .topbar .navbar-nav.float-right { flex-wrap: wrap; height: auto; }
+  .topbar .dropdown-menu { position: absolute !important; max-width: calc(100vw - 32px); }
   #main-wrapper[data-layout=vertical] .topbar .top-navbar .navbar-collapse.show { display: flex !important; }
   .page-breadcrumb { padding: 16px 16px 0 !important; }
   .page-breadcrumb .page-title { font-size: 20px; line-height: 28px; }

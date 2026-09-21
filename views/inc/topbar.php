@@ -34,6 +34,10 @@
 	</div>
 	<?php unset($_SESSION['view_as_error']); endif; ?>
 	<header class="topbar <?php echo isset($show_dashboard_new_header) && $show_dashboard_new_header ? 'topbar-new-variant' : ''; ?>">
+		<?php /* Collapse choice is remembered per browser (dataJs/swiftlane_ui.js). Applying
+		   it here, before the sidebar is parsed, keeps the page from painting
+		   expanded and then snapping shut. */ ?>
+		<script>(function(){try{if(window.innerWidth>=1170&&localStorage.getItem('swl.nav')==='mini'){var m=document.getElementById('main-wrapper');if(m){m.classList.add('mini-sidebar');m.setAttribute('data-sidebartype','mini-sidebar');}}}catch(e){}})();</script>
 		<nav class="navbar top-navbar navbar-expand-md <?php echo isset($show_dashboard_new_header) && $show_dashboard_new_header ? 'navbar-light' : 'navbar-dark'; ?>">
 				<!-- This is for the sidebar toggle which is visible on mobile only -->
 			<div class="navbar-header">
@@ -78,17 +82,17 @@
 					<li class="nav-item d-none d-md-block"><a class="nav-link waves-effect waves-dark text-body" href="javascript:void(0)"><iconify-icon icon="solar:widget-4-linear" class="font-22"></iconify-icon></a></li>
 					<?php } ?>
 					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Language" aria-label="Language">
 							<?php if ($core->language == "en") { ?>
-								<img src="assets/template/assets/icon-flag/us.png" width="34" />
+								<img class="swl-tray__flag" src="assets/template/assets/icon-flag/us.png" alt="EN" />
 							<?php } else if ($core->language == "es") { ?>
-								<img src="assets/template/assets/icon-flag/es.png" width="34" />
+								<img class="swl-tray__flag" src="assets/template/assets/icon-flag/es.png" alt="ES" />
 							<?php } else if ($core->language == "ar") { ?>
-								<img src="assets/template/assets/icon-flag/ar.png" width="34" />
+								<img class="swl-tray__flag" src="assets/template/assets/icon-flag/ar.png" alt="AR" />
 							<?php } else if ($core->language == "he") { ?>
-								<img src="assets/template/assets/icon-flag/he.png" width="34" />
+								<img class="swl-tray__flag" src="assets/template/assets/icon-flag/he.png" alt="HE" />
 							<?php } else if ($core->language == "fr") { ?>
-								<img src="assets/template/assets/icon-flag/fr.png" width="34" />
+								<img class="swl-tray__flag" src="assets/template/assets/icon-flag/fr.png" alt="FR" />
 							<?php } ?>
 						</a>
 					</li>
@@ -97,14 +101,14 @@
 					<!-- ============================================================== -->
 
 					<li class="nav-item dropdown">
-						<a id="clickme" class="nav-link dropdown-toggle waves-effect waves-dark" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							<img src="assets/images/alert/bell.png" width="26" />
+						<a id="clickme" class="nav-link dropdown-toggle waves-effect waves-dark" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Notifications" aria-label="Notifications">
+							<iconify-icon icon="solar:bell-linear"></iconify-icon>
 							<span class="badge badge-notify badge-sm up badge-light pull-top-xs" id="countNotifications">0</span>
 						</a>
 
                         <?php if (($userData->userlevel != 1)) { ?>
-                            <a class="sidebar-link waves-effect waves-dark" href="customers_list.php" aria-expanded="false">
-                                <iconify-icon icon="gridicons:multiple-users" height="32" class="text-success"></iconify-icon>
+                            <a class="sidebar-link waves-effect waves-dark" href="customers_list.php" aria-expanded="false" title="New Customers" aria-label="New Customers">
+                                <iconify-icon icon="solar:users-group-rounded-linear"></iconify-icon>
                                 <span class="badge badge-notify badge-sm up badge-light pull-top-xs" id=""><?php echo $core->cdp_getNewUsers(); ?></span>
                             </a>
                         <?php } ?>
@@ -117,7 +121,7 @@
 					<li class="nav-item d-none d-md-block"><a class="nav-link waves-effect waves-dark text-body" href="javascript:void(0)"><iconify-icon icon="solar:settings-outline" class="font-22"></iconify-icon></a></li>
 					<?php } ?>
 					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle text-muted waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="<?php echo cdp_avatarUrl($userData->avatar); ?>" class="rounded-circle" width="36" height="36" />&nbsp;<?php if (empty($show_dashboard_new_header)) { ?><iconify-icon icon="solar:alt-arrow-down-outline"></iconify-icon><?php } ?></a>
+						<a class="nav-link dropdown-toggle text-muted waves-effect waves-dark pro-pic" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="<?php echo cdp_avatarUrl($userData->avatar); ?>" class="rounded-circle" width="36" height="36" alt="" /><span class="swl-tray__name"><?php echo htmlspecialchars(trim((string) ($userData->fname ?? '')), ENT_QUOTES, 'UTF-8'); ?></span><iconify-icon icon="solar:alt-arrow-down-linear"></iconify-icon></a>
 						<div class="dropdown-menu dropdown-menu-right user-dd animated flipInY">
 							<span class="with-arrow"><span class="bg-primary"></span></span>
 							<div class="d-flex no-block align-items-center p-15 bg-primary text-white m-b-10">
