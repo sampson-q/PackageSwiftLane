@@ -261,6 +261,38 @@ function cdp_msgUserByEmail($email)
     return $cache[$email];
 }
 
+/**
+ * Who an e-mail address belongs to, for the log. Several accounts can share
+ * one address, so when the caller named the recipient (context
+ * recipient_user_id) and the address is that account's, the named account wins
+ * over "the first account with this address". Any other address of the same
+ * mail (a CC to the office, say) still resolves by address.
+ */
+function cdp_msgMailRecipient($addr, array $ctx)
+{
+    static $emails = [];
+    $uid = (int) ($ctx['recipient_user_id'] ?? 0);
+    if ($uid > 0) {
+        if (!array_key_exists($uid, $emails)) {
+            $emails[$uid] = '';
+            try {
+                $db = new Conexion;
+                $db->cdp_query("SELECT email FROM cdb_users WHERE id = :id LIMIT 1");
+                $db->bind(':id', $uid);
+                $db->cdp_execute();
+                $row = $db->cdp_registro();
+                $emails[$uid] = $row ? strtolower(trim((string) $row->email)) : '';
+            } catch (Throwable $e) {
+                // fall back to the address lookup
+            }
+        }
+        if ($emails[$uid] !== '' && $emails[$uid] === strtolower(trim((string) $addr))) {
+            return ['id' => $uid, 'name' => (string) ($ctx['recipient_name'] ?? '')];
+        }
+    }
+    return cdp_msgUserByEmail($addr);
+}
+
 /** Name + id from whatever object the send primitive was handed. */
 function cdp_msgRecipientFromEntity($entity)
 {
@@ -412,7 +444,7 @@ function cdp_msgMailCallback($isSent, $to, $cc, $bcc, $subject, $body, $from)
                 continue;
             }
             $ctx = cdp_msgContext();
-            $u = cdp_msgUserByEmail($addr);
+            $u = cdp_msgMailRecipient($addr, $ctx);
             cdp_msgLog([
                 'channel'           => 'email',
                 'status'            => $isSent ? 'sent' : 'failed',
@@ -448,7 +480,7 @@ function cdp_msgMailFailed($mailer, $error = '')
         $error = $error !== '' ? $error : (is_object($mailer) ? (string) ($mailer->ErrorInfo ?? '') : '');
         foreach ($tos as $addr) {
             $ctx = cdp_msgContext();
-            $u = $addr !== '' ? cdp_msgUserByEmail($addr) : null;
+            $u = $addr !== '' ? cdp_msgMailRecipient($addr, $ctx) : null;
             cdp_msgLog([
                 'channel'           => 'email',
                 'status'            => 'failed',
