@@ -19,6 +19,7 @@ $(function() {
     // Combined radio change handler — listens for any radio with name="notification_type"
     $(document).on('change', 'input[name="notification_type"]', function () {
         var val = $(this).val();
+        $('#channels-row').show();
 
         if (val === 'single_user') {
             $('#single-user-container').show();
@@ -47,6 +48,7 @@ $(function() {
             $('#subject').closest('.form-group').hide();
             $('#message').closest('.form-group').hide();
             $('#send_notification').hide();
+            $('#channels-row').hide();
 
         } else { // broadcast
             $('#single-user-container').hide();
@@ -133,81 +135,51 @@ $("#push_notification_form").on("submit", function (event) {
         return;
     }
 
-    var data = new FormData();
-    data.append('notification_type', notifType);
-    data.append('subject', subject);
-    data.append('message', message);
+    var channels = $('input[name="channels"]:checked').val() || 'both';
+    var selectedUser = '', selectedCon = '';
 
     if (notifType === 'single_user') {
-        var selectedUser = $('#user_id').val() || $('#uid').val();
+        selectedUser = $('#user_id').val() || $('#uid').val();
         if (!selectedUser) {
             Swal.fire({ title: message_error || 'Error', html: 'Please choose a user for "Single user" notifications.', icon: "error", confirmButtonText: "OK" });
             return;
         }
-        data.append('user_id', selectedUser);
     } else if (notifType === 'consolidation') {
-        var selectedCon = $('#consolidation_id').val() || $('#cid').val();
+        selectedCon = $('#consolidation_id').val() || $('#cid').val();
         if (!selectedCon) {
             Swal.fire({ title: message_error || 'Error', html: 'Please choose a consolidation for "Consolidation" notifications.', icon: "error", confirmButtonText: "OK" });
             return;
         }
-        data.append('consolidation_id', selectedCon);
     }
 
-    $.ajax({
-        type: "POST",
-        url: "ajax/tools/push_notifications_ajax.php",
-        data: data,
-        contentType: false,
-        dataType: "json",
-        cache: false,
-        processData: false,
-        beforeSend: function () {
-            $("#send_notification").attr("disabled", true);
-            // Swal.fire({ title: message_loading || 'Loading...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-        },
-        success: function (response) {
-            $("#send_notification").attr("disabled", false);
-            if (response.success === true) cdp_showSuccess(response.summary);
-            else {
-                var errs = response.errors || { general: 'Unknown error' };
-                if (response.summary) errs = (Array.isArray(errs) ? errs : Object.values(errs)).concat([cdp_pushSummaryHtml(response.summary)]);
-                cdp_showError(errs);
-            }
+    // Read once: the form is reset only when the whole push has finished, and
+    // every chunk must carry exactly the same message.
+    var buildData = function () {
+        var data = new FormData();
+        data.append('notification_type', notifType);
+        data.append('channels', channels);
+        data.append('subject', subject);
+        data.append('message', message);
+        if (selectedUser) data.append('user_id', selectedUser);
+        if (selectedCon) data.append('consolidation_id', selectedCon);
+        return data;
+    };
 
-            $('#push_notification_form')[0].reset();
-            $('#single-user-container').hide();
-            $('#consolidation-container').hide();
+    $("#send_notification").attr("disabled", true);
+    cdp_pushRun("ajax/tools/push_notifications_ajax.php", buildData, function () {
+        $("#send_notification").attr("disabled", false);
 
-            if ($('#user_id').length) $('#user_id').val(null).trigger('change');
-            if ($('#consolidation_id').length) $('#consolidation_id').val(null).trigger('change');
+        $('#push_notification_form')[0].reset();
+        $('#single-user-container').hide();
+        $('#consolidation-container').hide();
 
-            $("#uid").val('');
-            $("#cid").val('');
-        },
-        error: function (xhr, status, err) {
-            $("#send_notification").attr("disabled", false);
-            Swal.fire({ title: message_error || 'Error', html: 'AJAX error: ' + status, icon: "error", confirmButtonText: "OK" });
-        }
+        if ($('#user_id').length) $('#user_id').val(null).trigger('change');
+        if ($('#consolidation_id').length) $('#consolidation_id').val(null).trigger('change');
+
+        $("#uid").val('');
+        $("#cid").val('');
     });
 });
-
-function cdp_pushSummaryHtml(s) {
-  if (!s) return '';
-  var esc = function (t) { return $('<div>').text(t == null ? '' : t).html(); };
-  var line = function (label, c) { return '<b>' + label + ':</b> ' + c.sent + ' sent · ' + c.failed + ' failed · ' + c.skipped + ' skipped'; };
-  var html = '<div class="text-left" style="font-size:.9rem">' +
-    '<div><b>Recipients:</b> ' + s.recipients + '</div>' +
-    '<div>' + line('WhatsApp', s.whatsapp) + '</div>' +
-    '<div>' + line('E-mail', s.email) + '</div>';
-  if (s.lines && s.lines.length) {
-    html += '<details class="mt-2"><summary style="cursor:pointer">Per-recipient results</summary><ul class="pl-3 mt-2" style="max-height:220px;overflow:auto">';
-    s.lines.forEach(function (l) { html += '<li>' + esc(l) + '</li>'; });
-    html += '</ul></details>';
-  }
-  html += '<div class="mt-2 text-muted">Every attempt is recorded in Settings → Message Logs.</div></div>';
-  return html;
-}
 
 function cdp_showSuccess(summary) {
   Swal.fire({ title: 'Push Notifications Sent', html: cdp_pushSummaryHtml(summary), icon: "success", allowOutsideClick: false, confirmButtonText: "OK" })

@@ -85,6 +85,25 @@ $userData = $user->cdp_getUserData();
                                             </div>
                                         </div>
 
+                                        <!-- delivery channel: WhatsApp, e-mail or both -->
+                                        <div class="row form-group" id="channels-row">
+                                            <label class="col-1 text-center">Send By:</label>
+                                            <div class="col-11 row">
+                                                <div class="col-3 custom-control custom-radio">
+                                                    <input type="radio" id="channels_both" name="channels" class="custom-control-input" value="both" checked>
+                                                    <label class="custom-control-label" for="channels_both">WhatsApp + E-mail</label>
+                                                </div>
+                                                <div class="col-3 custom-control custom-radio">
+                                                    <input type="radio" id="channels_whatsapp" name="channels" class="custom-control-input" value="whatsapp">
+                                                    <label class="custom-control-label" for="channels_whatsapp">WhatsApp Only</label>
+                                                </div>
+                                                <div class="col-3 custom-control custom-radio">
+                                                    <input type="radio" id="channels_email" name="channels" class="custom-control-input" value="email">
+                                                    <label class="custom-control-label" for="channels_email">E-mail Only</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <!-- default subject/message form -->
                                         <div class="row default-message-row">
                                             <div class="col-md-12">
@@ -201,6 +220,7 @@ $userData = $user->cdp_getUserData();
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
 
     <!-- our JS -->
+    <script src="<?= cdp_asset('dataJs/push_send.js') ?>"></script>
     <script src="<?= cdp_asset('dataJs/push_notifications.js') ?>"></script>
 </body>
 </html>

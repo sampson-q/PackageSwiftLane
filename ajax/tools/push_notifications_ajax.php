@@ -9,6 +9,13 @@
 // * .sender_id). The previous version collected cdb_add_order.user_id —   *
 // * the staff account that registered each order — so customers never     *
 // * received consolidation pushes.                                         *
+// *                                                                       *
+// * One request delivers to CDP_PUSH_CHUNK recipients only. The page calls *
+// * this endpoint repeatedly (after_id = last recipient done, batch_id =   *
+// * the id returned by the first call) until `done` comes back true. The   *
+// * broadcast used to loop over every active customer inside one request - *
+// * thousands of SMTP + WhatsApp round trips - and the web server cut the  *
+// * request off long before it finished.                                   *
 // *************************************************************************
 
 require_once("../../loader.php");
@@ -26,6 +33,8 @@ $settings = cdp_getSettingsCourier();
 $notification_type = isset($_POST['notification_type']) ? cdp_sanitize($_POST['notification_type']) : '';
 $uid = isset($_POST['user_id']) ? (int) $_POST['user_id'] : 0;
 $cid = isset($_POST['consolidation_id']) ? (int) $_POST['consolidation_id'] : 0;
+$channels = cdp_pushChannels($_POST['channels'] ?? 'both');
+$after_id = isset($_POST['after_id']) ? max(0, (int) $_POST['after_id']) : 0;
 
 if ($notification_type === '') {
     $errors['notification_type'] = $lang['validate_notification_type'] ?? 'Notification type is required.';
@@ -54,16 +63,22 @@ if (!empty($errors)) {
 $subject = trim((string) $_POST['subject']);
 $message = trim((string) $_POST['message']);
 
-$users = [];
-$ctx   = ['source' => 'push_notification', 'subject' => $subject];
+$recipientIds = [];
+$ctx = [
+    'source'   => 'push_notification',
+    'subject'  => $subject,
+    'batch_id' => cdp_pushBatchIdFromRequest($_POST['batch_id'] ?? ''),
+];
 
 if ($notification_type === 'broadcast') {
     // Every active customer. Staff and admins are not the audience of a
     // customer broadcast.
-    $db->cdp_query("SELECT * FROM cdb_users WHERE active = 1 AND userlevel = 1");
+    $db->cdp_query("SELECT id FROM cdb_users WHERE active = 1 AND userlevel = 1");
     $db->cdp_execute();
-    $users = (array) $db->cdp_registros();
-    if (!$users) {
+    foreach ((array) $db->cdp_registros() as $row) {
+        $recipientIds[] = (int) $row->id;
+    }
+    if (!$recipientIds) {
         $errors[] = 'No active customers found for the broadcast.';
     }
     $ctx['entity_type']  = 'broadcast';
@@ -77,7 +92,7 @@ if ($notification_type === 'broadcast') {
     if (!$one) {
         $errors[] = 'User not found or not active.';
     } else {
-        $users = [$one];
+        $recipientIds = [(int) $one->id];
         $ctx['entity_type'] = 'user';
         $ctx['entity_id']   = (string) $uid;
         $ctx['entity_label'] = trim($one->fname . ' ' . $one->lname);
@@ -96,8 +111,10 @@ if ($notification_type === 'broadcast') {
         if (!$ownerIds) {
             $errors[] = 'No packages with an owner were found in that consolidation.';
         } else {
-            $users = cdp_pushFetchUsers($ownerIds);
-            if (!$users) {
+            foreach (cdp_pushFetchUsers($ownerIds) as $owner) {
+                $recipientIds[] = (int) $owner->id;
+            }
+            if (!$recipientIds) {
                 $errors[] = 'None of the package owners in that consolidation has an active account.';
             }
         }
@@ -112,29 +129,30 @@ if (!empty($errors)) {
     exit;
 }
 
-$sum = cdp_pushNotifyUsers($users, $subject, $message, $settings, $ctx);
+$sum = cdp_pushNotifyChunk($recipientIds, $after_id, $subject, $message, $settings, $ctx, $channels);
 
-if (function_exists('cdp_activityLog')) {
+// Logged once per push, on its first chunk; the per-recipient outcome of the
+// whole push is in the Message Logs under the batch id.
+if ($after_id === 0 && function_exists('cdp_activityLog')) {
     cdp_activityLog([
         'module'       => 'notifications',
         'verb'         => 'notify',
         'action'       => 'notifications.push',
         'label'        => 'Notifications · Push Notification Sent',
-        'summary'      => sprintf('Push notification "%s" to %d recipient(s) [%s] — WhatsApp %d sent / %d failed / %d skipped; e-mail %d sent / %d failed / %d skipped',
-            $subject, $sum['recipients'], $notification_type,
-            $sum['whatsapp']['sent'], $sum['whatsapp']['failed'], $sum['whatsapp']['skipped'],
-            $sum['email']['sent'], $sum['email']['failed'], $sum['email']['skipped']),
+        'summary'      => sprintf('Push notification "%s" started to %d recipient(s) [%s] by %s — batch %s',
+            $subject, $sum['total'], $notification_type, $sum['channels_label'], $sum['batch_id']),
         'entity_type'  => $ctx['entity_type'] ?? '',
         'entity_id'    => $ctx['entity_id'] ?? '',
         'entity_label' => $ctx['entity_label'] ?? '',
-        'meta'         => ['batch_id' => $sum['batch_id'], 'type' => $notification_type],
+        'meta'         => ['batch_id' => $sum['batch_id'], 'type' => $notification_type, 'channels' => $channels, 'recipients' => $sum['total']],
     ]);
 }
 
-$delivered = $sum['whatsapp']['sent'] + $sum['email']['sent'];
+// success = this chunk was processed; whether anything was DELIVERED is judged
+// by the page over the whole push, from the summaries it adds up.
 echo json_encode([
-    'success'  => $delivered > 0,
+    'success'  => true,
     'summary'  => $sum,
     'messages' => $sum['lines'],
-    'errors'   => $delivered > 0 ? [] : ['Nothing was delivered. See the per-recipient results and the Message Logs page.'],
+    'errors'   => [],
 ]);

@@ -114,13 +114,32 @@ $row_order = $data['data'];
                                                     </div>
                                                 </div>
 
-                                                <input type="hidden" id="consolidation_id" name="consolidation_id" value="<?php echo $_GET['id']; ?>" />
+                                                <input type="hidden" id="consolidation_id" name="consolidation_id" value="<?php echo (int) ($_GET['id'] ?? 0); ?>" />
                                                 <!-- user multi-select (hidden until 'selected_users' chosen) -->
                                                 <div class="col-11 custom-control mt-3" id="user-container">
                                                     <label class="small mb-1"><?php echo $lang['select_users_label']; ?></label>
                                                     <select class="select2 form-control custom-select" style="width: 100%;" id="user_id" name="sender_ids[]" multiple="multiple"></select>
                                                 </div>
 
+                                            </div>
+                                        </div>
+
+                                        <!-- delivery channel: WhatsApp, e-mail or both -->
+                                        <div class="row form-group" id="channels-row">
+                                            <label class="col-1 text-center">Send By:</label>
+                                            <div class="col-11 row">
+                                                <div class="col-3 custom-control custom-radio">
+                                                    <input type="radio" id="channels_both" name="channels" class="custom-control-input" value="both" checked>
+                                                    <label class="custom-control-label" for="channels_both">WhatsApp + E-mail</label>
+                                                </div>
+                                                <div class="col-3 custom-control custom-radio">
+                                                    <input type="radio" id="channels_whatsapp" name="channels" class="custom-control-input" value="whatsapp">
+                                                    <label class="custom-control-label" for="channels_whatsapp">WhatsApp Only</label>
+                                                </div>
+                                                <div class="col-3 custom-control custom-radio">
+                                                    <input type="radio" id="channels_email" name="channels" class="custom-control-input" value="email">
+                                                    <label class="custom-control-label" for="channels_email">E-mail Only</label>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -172,6 +191,7 @@ $row_order = $data['data'];
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
 
     <!-- include custom JS -->
+    <script src="<?= cdp_asset('dataJs/push_send.js') ?>"></script>
     <script src="<?= cdp_asset('dataJs/push_notifications_consolidation.js') ?>"></script>
 
 </body>
