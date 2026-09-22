@@ -1,0 +1,56 @@
+# ---------------------------------------------------------------------------
+# Static assets: compress them and let browsers keep them.
+#
+# Without this every CSS/JS/font/image was re-validated on every page view and
+# SVG/fonts left the server uncompressed (the 265 KB login illustration went
+# out as-is; gzipped it is ~60 KB). Every block is guarded so a host without
+# the module simply ignores it. PHP responses are untouched: the app sets its
+# own no-store headers on pages, and mod_deflate already compressed text/html.
+#
+# Local assets referenced through cdp_asset() carry ?v=<mtime>, so a changed
+# file gets a new URL; those may be cached for a year and marked immutable.
+# Anything without a version tag gets one day, revalidated with ETag /
+# Last-Modified after that, so a deploy still reaches browsers within a day.
+# ---------------------------------------------------------------------------
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/css text/javascript application/javascript application/x-javascript application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
+    AddOutputFilterByType DEFLATE font/ttf font/otf application/x-font-ttf application/vnd.ms-fontobject
+</IfModule>
+
+<IfModule mod_mime.c>
+    AddType font/woff2 .woff2
+    AddType font/woff .woff
+    AddType image/svg+xml .svg
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Mark requests whose URL carries a version tag (cdp_asset adds ?v=mtime).
+    RewriteCond %{QUERY_STRING} (^|&)v=[0-9]+
+    RewriteRule ^ - [E=CDP_VERSIONED:1]
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|mjs|woff2?|ttf|otf|eot|svg|png|jpe?g|gif|webp|ico|mp3)$">
+        Header set Cache-Control "public, max-age=86400"
+        Header set Cache-Control "public, max-age=31536000, immutable" env=CDP_VERSIONED
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 day"
+    ExpiresByType application/javascript "access plus 1 day"
+    ExpiresByType text/javascript "access plus 1 day"
+    ExpiresByType image/svg+xml "access plus 1 day"
+    ExpiresByType image/png "access plus 1 day"
+    ExpiresByType image/jpeg "access plus 1 day"
+    ExpiresByType image/gif "access plus 1 day"
+    ExpiresByType image/webp "access plus 1 day"
+    ExpiresByType image/x-icon "access plus 1 day"
+    ExpiresByType font/woff2 "access plus 1 day"
+    ExpiresByType font/woff "access plus 1 day"
+    ExpiresByType font/ttf "access plus 1 day"
+</IfModule>
