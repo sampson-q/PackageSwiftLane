@@ -8,7 +8,10 @@ if (!defined('SWIFTLANE_LOADER_LOADED')) {
 }
 require_once(__DIR__ . "/../../helpers/querys.php");
 require_once(__DIR__ . "/../../helpers/whatsapp.php");
-require_once __DIR__ . '/../../helpers/vendor/autoload.php';
+// helpers/vendor/autoload.php is NOT loaded here: this file talks to UltraMsg
+// with cURL and uses nothing from that vendor tree (ClickSend SDK, Guzzle,
+// Symfony polyfills). Loading it cost 50-170 ms on every page that sends a
+// WhatsApp message, the login page included. The SMS services load it themselves.
 
 use Spipu\Html2Pdf\Html2Pdf;
 use Spipu\Html2Pdf\Exception\Html2PdfException;

@@ -4,7 +4,10 @@ $projectRoot = dirname(__DIR__, 2);
 require_once $projectRoot . '/helpers/querys.php';
 require_once $projectRoot . '/helpers/whatsapp.php';
 require_once $projectRoot . '/helpers/message_log.php';
-require_once $projectRoot . '/helpers/vendor/autoload.php';
+// helpers/vendor/autoload.php is NOT loaded here: this file talks to UltraMsg
+// with cURL and uses nothing from that vendor tree (ClickSend SDK, Guzzle,
+// Symfony polyfills). Loading it cost 50-170 ms on every page that sends a
+// WhatsApp message, the login page included. The SMS services load it themselves.
 
 /**
  * Send a WhatsApp message via the UltraMsg API.
