@@ -97,6 +97,7 @@ $address_order = $db->cdp_registro();
     <link href="assets/template/dist/css/custom_swicth.css" rel="stylesheet">
 
 
+    <?php $cdp_needs_tabler = true; // ti ti-briefcase on this page ?>
     <?php include 'views/inc/head_scripts.php'; ?>
     <style>
         .select2-selection__rendered {

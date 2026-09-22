@@ -13,7 +13,13 @@ cdp_activityPageView();
 <!-- Fonts: Archivo Black (display) + Inter (UI) for the design system -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<?php /* Loaded without blocking the first paint: the sheet is fetched as a preload
+   and switched to a stylesheet when it arrives; the fonts carry display=swap,
+   so text shows in the fallback face until then. A render-blocking link here
+   held every page's first paint on Google's answer (0.4 s here, seconds on
+   a slow link). */ ?>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
 <!-- Icons: Solar (Iconify) + legacy -->
 <?php /* defer: a web component, it upgrades the icons whenever it arrives; without it a
    slow CDN answer held up the first paint of every page. */ ?>
@@ -22,7 +28,11 @@ cdp_activityPageView();
 	iconify-icon{display:inline-flex;vertical-align:middle;line-height:1;}
 </style>
 <link rel="stylesheet" href="<?= cdp_asset('assets/vendor/fonts/fontawesome.css') ?>" />
-<link rel="stylesheet" href="<?= cdp_asset('assets/vendor/fonts/tabler-icons.css') ?>" />
+<?php /* Tabler icons: four views use one glyph (ti ti-briefcase). They set
+   $cdp_needs_tabler before including this file; everyone else skips the
+   235 KB sheet. */ ?>
+<?php if (!empty($cdp_needs_tabler)) { ?><link rel="stylesheet" href="<?= cdp_asset('assets/vendor/fonts/tabler-icons.css') ?>" />
+<?php } ?>
 <link rel="stylesheet" href="<?= cdp_asset('assets/vendor/fonts/flag-icons.css') ?>" />
 <link rel="stylesheet" type="text/css" href="<?= cdp_asset('assets/template/dist/css/uicons-regular-rounded.css') ?>" />
 <link href="<?= cdp_asset('assets/template/dist/css/style.min.css') ?>" rel="stylesheet">

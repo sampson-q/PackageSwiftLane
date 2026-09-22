@@ -102,6 +102,7 @@ $order_prefix = $settings->prefix;
     <link rel="stylesheet" type="text/css" href="assets/template/assets/libs/select2/dist/css/select2.min.css">
     <link href="assets/template/assets/libs/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css" rel="stylesheet">
     <link href="assets/template/dist/css/custom_swicth.css" rel="stylesheet">
+    <?php $cdp_needs_tabler = true; // ti ti-briefcase on this page ?>
     <?php include 'views/inc/head_scripts.php'; ?>
 </head>
 
