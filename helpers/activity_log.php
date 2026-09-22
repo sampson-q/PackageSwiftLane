@@ -748,7 +748,7 @@ function cdp_activityPageView()
         $c = cdp_activityClassify($endpoint);
         $page = basename($endpoint, '.php');
 
-        cdp_activityLog([
+        $row = [
             'auto'    => true,
             'module'  => $c['module'],
             'verb'    => 'view',
@@ -756,7 +756,14 @@ function cdp_activityPageView()
             'label'   => cdp_activityModuleLabel($c['module']) . ' · Page View',
             'summary' => 'Opened ' . cdp_activityHumanPage($page),
             'meta'    => ['page' => $page, 'query' => cdp_activityClip((string) ($_SERVER['QUERY_STRING'] ?? ''), 200), 'source' => 'page'],
-        ]);
+        ];
+        // The row is written after the response: an INSERT the reader never
+        // waits for (10-50 ms on the dashboard). Everything it reads - session,
+        // request - is still there at shutdown.
+        require_once __DIR__ . '/after_response.php';
+        cdp_afterResponse(function () use ($row) {
+            cdp_activityLog($row);
+        });
     } catch (Throwable $e) {
         error_log('ACTIVITY_LOG_VIEW_FAIL ' . $e->getMessage());
     }
