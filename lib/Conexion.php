@@ -30,9 +30,22 @@ class Conexion
     public $dbh;
     private $stmt;
     private $error;
+    // Has the current statement been executed and its rows not yet fetched?
+    // The codebase's usual pattern is cdp_query(); cdp_execute(); cdp_registros();
+    // and the fetch methods execute too, so without this flag every read query
+    // reached MySQL twice (130 -> 65 queries on the dashboard alone).
+    private $executed = false;
+    // One PDO handle per request. `new Conexion` is written per query all over
+    // the app; each one used to open (or re-take) the persistent connection and
+    // send SET NAMES again.
+    private static $sharedDbh = null;
 
     public function __construct()
     {
+        if (self::$sharedDbh instanceof PDO) {
+            $this->dbh = self::$sharedDbh;
+            return;
+        }
         $dsn = 'mysql:host=' . $this->db_host . ';dbname=' . $this->db_name;
         $options = array(
             PDO::ATTR_PERSISTENT => true,
@@ -44,6 +57,7 @@ class Conexion
             $this->dbh = new PDO($dsn, $this->db_user, $this->db_pass, $options);
             // utf8mb4 so 4-byte characters (emoji in WhatsApp templates) round-trip intact.
             $this->dbh->exec('SET NAMES utf8mb4');
+            self::$sharedDbh = $this->dbh;
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
             // Puedes considerar registrar el error en lugar de mostrarlo
@@ -55,6 +69,7 @@ class Conexion
     public function cdp_query($sql)
     {
         $this->stmt = $this->dbh->prepare($sql);
+        $this->executed = false;
     }
 
     // Vincula un valor a un parámetro
@@ -83,11 +98,24 @@ class Conexion
     public function cdp_execute()
     {
         try {
-            return $this->stmt->execute();
+            $ok = $this->stmt->execute();
+            $this->executed = (bool) $ok;
+            return $ok;
         } catch (PDOException $e) {
             echo 'Error: ' . $e->getMessage();
             return false;
         }
+    }
+
+    // Execute only if the caller has not already done so. Fetching consumes
+    // the result, so the flag is cleared: a second fetch call re-executes, as
+    // it always did.
+    private function cdp_executeOnce()
+    {
+        if (!$this->executed) {
+            $this->cdp_execute();
+        }
+        $this->executed = false;
     }
 
     // Obtener el último error de la consulta
@@ -103,21 +131,21 @@ class Conexion
     // Obtener los datos de la consulta
     public function cdp_registros()
     {
-        $this->cdp_execute();
+        $this->cdp_executeOnce();
         return $this->stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
     // Obtener dato de la consulta
     public function cdp_registro()
     {
-        $this->cdp_execute();
+        $this->cdp_executeOnce();
         return $this->stmt->fetch(PDO::FETCH_OBJ);
     }
 
     // Obtener dato de la consulta
     public function cdp_fetch_assoc()
     {
-        $this->cdp_execute();
+        $this->cdp_executeOnce();
         return $this->stmt->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -129,13 +157,15 @@ class Conexion
 
     public function cdp_fetch_all()
     {
-        $this->cdp_execute();
+        $this->cdp_executeOnce();
         return $this->stmt->fetchAll();
     }
 
     // Cierra la conexión
     public function cdp_cerrarConexion()
     {
+        // Drops this instance's references only; the request-wide handle stays
+        // open for the next `new Conexion`.
         $this->stmt = null;
         $this->dbh = null;
     }
