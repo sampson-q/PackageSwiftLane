@@ -1475,3 +1475,17 @@ body { overflow-x: clip; }
 .table-responsive > * > .row { margin-left: 0; margin-right: 0; }
 /* Media never grows past its card (avatar / document previews on the customer pages) */
 .card-body img, .card-body video, .card-body canvas, .card-body iframe { max-width: 100%; height: auto; }
+
+/* ── 14. Consolidation reference: air waybill first, system code after ─────── */
+.swl-awbref { display: inline; white-space: nowrap; }
+.swl-awbref--stack { display: inline-flex; flex-direction: column; align-items: flex-start; }
+.swl-awbref--stack .swl-awbref__sep { display: none; }
+.swl-awbref__awb { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.swl-awbref__tag {
+  display: inline-block; padding: 0 .4em; border-radius: var(--radius-4, 4px);
+  background: color-mix(in srgb, var(--ink-800, #192A3E) 8%, transparent);
+  font-size: .68em; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; vertical-align: .12em;
+}
+.swl-awbref__code { font-weight: 500; font-size: .86em; opacity: .62; letter-spacing: .01em; }
+a .swl-awbref__code, .swl-awbref--stack .swl-awbref__code { opacity: .7; }
+td .swl-awbref, .table .swl-awbref { white-space: normal; }

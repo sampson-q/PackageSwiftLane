@@ -161,12 +161,16 @@ if (isset($_POST["create_invoice"])) {
 
 
 
+    // Air waybill (sql/consolidation_awb.sql); the column is optional until migrated.
+    $awb_col = cdp_awbColumnReady();
+    $awb_no  = $awb_col ? cdp_awbNormalize($_POST['awb_no'] ?? '') : '';
+
     $db->cdp_query("
-                INSERT INTO cdb_consolidate 
+                INSERT INTO cdb_consolidate
                 (
                     user_id,
                     c_prefix,
-                    c_no, 
+                    c_no, " . ($awb_col ? "awb_no," : "") . "
                     c_date,                    
                     sender_id,
                     sender_address_id,
@@ -207,7 +211,7 @@ if (isset($_POST["create_invoice"])) {
                     (
                     :user_id,
                     :order_prefix,
-                    :order_no,
+                    :order_no, " . ($awb_col ? ":awb_no," : "") . "
                     :order_date,
                     :sender_id,
                     :sender_address_id,
@@ -251,6 +255,9 @@ if (isset($_POST["create_invoice"])) {
     $db->bind(':user_id',  $_SESSION['userid']);
     $db->bind(':order_prefix',  $code_prefix);
     $db->bind(':order_no',  $_POST["order_no"]);
+    if ($awb_col) {
+        $db->bind(':awb_no', $awb_no);
+    }
     $db->bind(':order_datetime',  trim($date));
     $db->bind(':sender_id',  101);
     $db->bind(':receiver_id',  102);
@@ -419,6 +426,8 @@ if (isset($_POST["create_invoice"])) {
 
 
     $fullshipment = $code_prefix . $_POST["order_no"];
+    // Waybill first, then the code — for what people read (the waybill was just posted, so it is used directly).
+    $fullshipment_ref = cdp_consolidationRef((object) array('c_prefix' => $code_prefix, 'c_no' => $_POST["order_no"], 'awb_no' => $awb_no), 'consolidate');
     $status_consolidated = $_POST["status_courier"];
     // Obtener el ID del estado del mensajero desde el POST
     $name_status = cdp_getCourierstatusApi(intval($_POST["status_courier"]));
@@ -426,7 +435,7 @@ if (isset($_POST["create_invoice"])) {
     $date_ship   = date("Y-m-d H:i:s a");
     $app_url = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
 
-    $subject = $lang['notification_shipment-22'] . $lang['notification_shipment6'] .  $fullshipment;
+    $subject = $lang['notification_shipment-22'] . $lang['notification_shipment6'] .  $fullshipment_ref;
 
     $email_template = cdp_getEmailTemplatesdg1i4(1);
 
@@ -459,7 +468,7 @@ if (isset($_POST["create_invoice"])) {
         ),
         array(
             cdp_nameWithLocker($sender_data),
-            $fullshipment,
+            $fullshipment_ref,
             $date_ship,
             $consol_details,
             $msite_url,
@@ -555,7 +564,7 @@ if (isset($_POST["create_invoice"])) {
 
     // Generar cuerpo del SMS para el remitente
     try {
-        $newbodyS_sender = generateSMSBody($sender_data, $fullshipment, $add_status, $app_url, $templatessender);
+        $newbodyS_sender = generateSMSBody($sender_data, $fullshipment_ref, $add_status, $app_url, $templatessender);
         // Llamar a la función para enviar la notificación SMS al remitente
         sendNotificationSMS($sender_data, $newbodyS_sender, $notify_sms_sender);
     } catch (Exception $e) {
@@ -565,7 +574,7 @@ if (isset($_POST["create_invoice"])) {
 
     // Generar cuerpo del SMS para el receptor
     try {
-        $newbodyS_receiver = generateSMSBody($receiver_data, $fullshipment, $add_status, $app_url, $templatesreceiver);
+        $newbodyS_receiver = generateSMSBody($receiver_data, $fullshipment_ref, $add_status, $app_url, $templatesreceiver);
         // Llamar a la función para enviar la notificación SMS al receptor
         sendNotificationSMS($receiver_data, $newbodyS_receiver, $notify_sms_receiver);
     } catch (Exception $e) {
@@ -1019,6 +1028,14 @@ if (isset($_POST["create_invoice"])) {
                                                     <input type="hidden" name="order_no_main" id="order_no_main" value="<?php echo $track; ?>">
                                                 </div>
                                             </div>
+                                        <?php } ?>
+
+                                        <!-- Air waybill: the airline's number, shown before the system code everywhere. -->
+                                        <?php if (cdp_awbColumnReady()) { ?>
+                                        <div class="form-group col-md-4">
+                                            <label for="awb_no" class="control-label col-form-label">Air Waybill (AWB)</label>
+                                            <input type="text" name="awb_no" id="awb_no" class="form-control" maxlength="40" placeholder="e.g. 006-12345678" autocomplete="off" value="">
+                                        </div>
                                         <?php } ?>
 
                                         <div class="form-group col-md-4">

@@ -115,14 +115,21 @@ if (isset($_POST["total_item"])) {
 
     $db = new Conexion;
 
+    // Air waybill (sql/consolidation_awb.sql); the column is optional until migrated.
+    $awb_col = cdp_awbColumnReady();
+
     $db->cdp_query("
         UPDATE cdb_consolidate_packages SET
             order_pay_mode = :order_pay_mode,
             status_courier = :status_courier,
             driver_id = :driver_id,
-            seals_package = :seals_package
+            seals_package = :seals_package" . ($awb_col ? ",
+            awb_no = :awb_no" : "") . "
         WHERE consolidate_id = :consolidate_id
     ");
+    if ($awb_col) {
+        $db->bind(':awb_no', cdp_awbNormalize($_POST['awb_no'] ?? ''));
+    }
 
     $db->bind(':consolidate_id',  $_GET['id']);
 
@@ -225,7 +232,13 @@ if (isset($_POST["total_item"])) {
                     </tr>';
                 }
     
-                $consolidate_number2 = $row_order->c_prefix . $row_order->c_no;
+                // Name the consolidation by waybill + code; the waybill just posted (if the form carries one) wins over the stored row.
+                $consolidate_number2 = cdp_consolidationRef((object) array(
+                    'consolidate_id' => (int) $row_order->consolidate_id,
+                    'c_prefix'       => $row_order->c_prefix,
+                    'c_no'           => $row_order->c_no,
+                    'awb_no'         => isset($_POST['awb_no']) ? cdp_awbNormalize($_POST['awb_no']) : cdp_consolidationAwb($row_order, 'consolidate_packages'),
+                ), 'consolidate_packages');
 
                 // Re-send the full current consolidation details (status + the
                 // shipments folded into it — no money), not just the diff.
@@ -604,8 +617,14 @@ if (isset($_POST["total_item"])) {
 
     if ($db->cdp_execute()) {
         // Éxito al actualizar en la base de datos
-        $consolidate_number = $row_order->c_prefix . $row_order->c_no;
-        $message = "Consolidation #" . $consolidate_number . " has been updated successfully";
+        cdp_awbForget();
+        $consolidate_number = cdp_consolidationRef((object) array(
+            'consolidate_id' => (int) $row_order->consolidate_id,
+            'c_prefix'       => $row_order->c_prefix,
+            'c_no'           => $row_order->c_no,
+            'awb_no'         => isset($_POST['awb_no']) ? cdp_awbNormalize($_POST['awb_no']) : cdp_consolidationAwb($row_order, 'consolidate_packages'),
+        ), 'consolidate_packages');
+        $message = "Consolidation " . addslashes($consolidate_number) . " has been updated successfully";
         $success_script = 'swal("Success", "' . $message . '", "success").then(function() { window.location.href = "consolidate_package_view.php?id=' . $row_order->consolidate_id . '"; });';
     } else {
         // Error al actualizar en la base de datos
@@ -730,6 +749,14 @@ if (isset($_POST["total_item"])) {
                                             </div>
 
                                         </div>
+
+                                        <!-- Air waybill: the airline's number, shown before the system code everywhere. -->
+                                        <?php if (cdp_awbColumnReady()) { ?>
+                                        <div class="form-group col-md-3">
+                                            <label for="awb_no" class="control-label col-form-label">Air Waybill (AWB)</label>
+                                            <input type="text" name="awb_no" id="awb_no" class="form-control" maxlength="40" placeholder="e.g. 006-12345678" autocomplete="off" value="<?php echo htmlspecialchars((string) ($row_order->awb_no ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
+                                        </div>
+                                        <?php } ?>
 
                                         <div class="col-md-3">
                                             <div class="form-group">
