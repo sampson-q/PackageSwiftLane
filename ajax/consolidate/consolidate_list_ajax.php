@@ -208,7 +208,7 @@ if ($numrows > 0) { ?>
 									<?php } ?>
 								</td>
 							<?php } ?>
-							<td><b><a href="consolidate_view.php?id=<?php echo $row->consolidate_id; ?>"><?php echo $row->c_prefix . $row->c_no; ?></a></b><br>
+							<td><b><a href="consolidate_view.php?id=<?php echo $row->consolidate_id; ?>"><?php echo cdp_consolidationRefHtml($row, 'consolidate'); ?></a></b><br>
 								<?php echo $lang['ddate'] ?>: <b><?php echo $row->c_date; ?></b>
 							</td>
 
@@ -323,7 +323,7 @@ if ($numrows > 0) { ?>
 							            <?php } ?>
 
 							            <?php if ($user->cdp_hasPermission('send_consolidate_email')) { ?>
-							                <a class="dropdown-item" href="#" data-toggle="modal" data-id="<?php echo $row->consolidate_id; ?>" data-email="<?php echo $sender_data->email; ?>" data-order="<?php echo $row->c_prefix . $row->c_no; ?>" data-target="#myModal">
+							                <a class="dropdown-item" href="#" data-toggle="modal" data-id="<?php echo $row->consolidate_id; ?>" data-email="<?php echo $sender_data->email; ?>" data-order="<?php echo htmlspecialchars(cdp_consolidationRef($row, 'consolidate'), ENT_QUOTES, 'UTF-8'); ?>" data-target="#myModal">
 							                    <i class="fas fa-envelope"></i>&nbsp;<?php echo $lang['leftorder36']; ?>
 							                </a>
 							            <?php } ?>

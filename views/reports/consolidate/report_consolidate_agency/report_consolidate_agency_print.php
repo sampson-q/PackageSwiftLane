@@ -224,7 +224,7 @@ $fecha = str_replace('-', '/', $fecha);
 
                     <tr>
                         <td><b><?php echo $count; ?> </b></td>
-                        <td><?php echo $row->c_prefix . $row->c_no; ?></td>
+                        <td><?php echo cdp_consolidationRefHtml($row, 'consolidate'); ?></td>
                         <td><?php echo $row->c_date; ?></td>
                         <td><?php echo $sender_data->fname . ' ' . $sender_data->lname; ?></td>
                         <td><?php echo $address_order->sender_country . ' ' . $address_order->sender_city; ?></td>

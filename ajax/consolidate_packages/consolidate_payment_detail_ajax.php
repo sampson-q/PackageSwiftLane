@@ -68,7 +68,7 @@ $met_payment = $db->cdp_registro();
 
 
     <div class="col-md-6">
-        <h3 class=" pull-left"><b class="text-danger"> <?php echo $lang['billing'] ?></b> <span><?php echo $data->c_prefix . $data->c_no; ?></span></h3>
+        <h3 class=" pull-left"><b class="text-danger"> <?php echo $lang['billing'] ?></b> <span><?php echo cdp_consolidationRefHtml($data, 'consolidate_packages'); ?></span></h3>
 
     </div>
 

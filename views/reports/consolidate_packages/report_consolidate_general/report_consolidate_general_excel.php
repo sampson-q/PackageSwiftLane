@@ -188,7 +188,7 @@ if ($numrows > 0) {
 
 		$html .= '<tr>';
 		$html .= '<td ><b>' . $count . '</b></td>';
-		$html .= '<td>' . $row->c_prefix . $row->c_no . '</td>';
+		$html .= '<td>' . cdp_consolidationRef($row, 'consolidate_packages') . '</td>';
 		$html .= '<td>' . $row->c_date . '</td>';
 		$html .= '<td>' . $sender_data->fname . ' ' . $sender_data->lname . '</td>';
 		$html .= '<td>' . $address_order->sender_country . '-' . $address_order->sender_city . '</td>';

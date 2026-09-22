@@ -54,8 +54,10 @@ foreach ($rows as $row) {
     $no     = trim((string)$row->c_no);
 
     if ($prefix !== '' && $no !== '') {
-        // common display form: PREFIX-123 (you can change formatting if needed)
-        $label = $prefix . $no;
+        // Waybill first, then the code ("AWB 006-12345678 · CONSGL000140"), or the code alone.
+        $label = cdp_consolidationRef($row, 'consolidate');
+    } else {
+        $label = '#' . $row->consolidate_id;
     }
     // elseif ($no !== '') {
     //     $label = $no . ' - #' . $row->consolidate_id;

@@ -170,7 +170,7 @@ if ($numrows > 0) { ?>
 
 						<tr class="card-hover">
 
-							<td><b><a href="consolidate_view.php?id=<?php echo $row->consolidate_id; ?>"><?php echo $row->c_prefix . $row->c_no; ?></a></b></td>
+							<td><b><a href="consolidate_view.php?id=<?php echo $row->consolidate_id; ?>"><?php echo cdp_consolidationRefHtml($row, 'consolidate'); ?></a></b></td>
 							<td class="text-center">
 								<?php echo $row->c_date; ?>
 							</td>

@@ -222,7 +222,7 @@ $fecha = str_replace('-', '/', $fecha);
 
                     <tr>
                         <td><b><?php echo $count; ?> </b></td>
-                        <td><?php echo $row->c_prefix . $row->c_no; ?></td>
+                        <td><?php echo cdp_consolidationRefHtml($row, 'consolidate'); ?></td>
                         <td><?php echo $row->c_date; ?></td>
                         <td><?php echo $offices->name_off; ?></td>
                         <td><?php echo $branchoffices->name_branch; ?></td>

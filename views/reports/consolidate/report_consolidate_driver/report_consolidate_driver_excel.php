@@ -164,7 +164,7 @@ if ($numrows > 0) {
 
 		$html .= '<tr>';
 		$html .= '<td ><b>' . $count . '</b></td>';
-		$html .= '<td>' . $row->c_prefix . $row->c_no . '</td>';
+		$html .= '<td>' . cdp_consolidationRef($row, 'consolidate') . '</td>';
 		$html .= '<td>' . $row->c_date . '</td>';
 		$html .= '<td>' . $branchoffices->name_branch . '</td>';
 		$html .= '<td>' . $offices->name_off . '</td>';
