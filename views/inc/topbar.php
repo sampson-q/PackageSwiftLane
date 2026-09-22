@@ -82,7 +82,8 @@
 					<li class="nav-item d-none d-md-block"><a class="nav-link waves-effect waves-dark text-body" href="javascript:void(0)"><iconify-icon icon="solar:widget-4-linear" class="font-22"></iconify-icon></a></li>
 					<?php } ?>
 					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Language" aria-label="Language">
+						<?php /* Language indicator only: the site language is set in Settings, there is no menu to open. */ ?>
+						<span class="nav-link swl-tray__lang" title="Language" aria-label="Language">
 							<?php if ($core->language == "en") { ?>
 								<img class="swl-tray__flag" src="assets/template/assets/icon-flag/us.png" alt="EN" />
 							<?php } else if ($core->language == "es") { ?>
@@ -94,7 +95,7 @@
 							<?php } else if ($core->language == "fr") { ?>
 								<img class="swl-tray__flag" src="assets/template/assets/icon-flag/fr.png" alt="FR" />
 							<?php } ?>
-						</a>
+						</span>
 					</li>
 					<!-- ============================================================== -->
 					<!-- Comment -->

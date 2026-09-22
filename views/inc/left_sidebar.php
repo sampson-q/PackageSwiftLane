@@ -46,10 +46,10 @@
 							?>
 
 							<div class="user-content hide-menu m-l-10">
-								<a href="javascript:void(0)" class="" id="Userdd" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<div class="swl-side-greeting">
 									<h5 class="m-b-0 user-name font-medium"><?php echo $mensaje; ?>,&nbsp;&nbsp;</h5>
 									<span class="op-5 user-email"><?php echo $userData->fname; ?></span>
-								</a>
+								</div>
 							</div>
 						</div>
 					</li>
@@ -1061,11 +1061,11 @@
 							?>
 
 							<div class="user-content hide-menu m-l-10">
-								<a href="javascript:void(0)" class="" id="Userdd" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<div class="swl-side-greeting">
 									<h5 class="m-b-0 user-name font-medium"><?php echo $mensaje; ?>,&nbsp;&nbsp;</h5>
 									<span class="op-5 user-email"><?php echo $userData->fname; ?></span>
 									<br><?php echo $lang['left-menu-sidebar-00'] ?> <b><?php echo $userData->locker; ?></b>
-								</a>
+								</div>
 							</div>
 						</div>
 						<!-- End User Profile-->
@@ -1380,10 +1380,10 @@
 
 							<div class="user-content hide-menu m-l-10">
 
-								<a href="javascript:void(0)" class="" id="Userdd" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<div class="swl-side-greeting">
 									<h5 class="m-b-0 user-name font-medium"><?php echo $mensaje; ?>,&nbsp;&nbsp;</h5>
 									<span class="op-5 user-email"><?php echo $userData->fname; ?></span>
-								</a>
+								</div>
 							</div>
 						</div>
 						<!-- End User Profile-->
