@@ -156,7 +156,15 @@
         (function promoteTitle() {
             var pw = wrap.querySelector('.page-wrapper');
             if (!pw || pw.querySelector('.page-breadcrumb')) return;
-            var src = pw.querySelector('.card-title'), text = '';
+            // Only the FIRST card's own title qualifies, and only when it is that
+            // card's first heading: the detail views open with an h4 header card
+            // and their first .card-title is a later section ("User Action
+            // History"), which used to be promoted as the page title.
+            var card = pw.querySelector('.card'), src = null, text = '';
+            if (card) {
+                var firstHeading = card.querySelector('h1, h2, h3, h4, h5, .card-title');
+                if (firstHeading && firstHeading.classList.contains('card-title')) src = firstHeading;
+            }
             if (src && !src.querySelector('a, button, input, select, textarea')) {
                 text = (src.textContent || '').replace(/\s+/g, ' ').trim();
             } else {
