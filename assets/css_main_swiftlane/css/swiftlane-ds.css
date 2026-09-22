@@ -1210,8 +1210,8 @@ a.swl-metric:hover { transform: translateY(-2px); color: var(--ink-800); }
 /* Stat cards used by customers_list / customer panels */
 .customers-stats-card, .stat-card { border: 0 !important; border-radius: var(--radius-24) !important; box-shadow: none !important; background: var(--white) !important; }
 .stat-icon-module { border-radius: var(--radius-pill) !important; box-shadow: var(--ring-default); background: var(--white) !important; color: var(--ink-800) !important; }
-.sw-mailbox-strip { display: flex; flex-wrap: nowrap; gap: 16px; overflow-x: auto; padding-bottom: 4px; }
-.sw-mailbox-card { flex: 0 0 300px; border-radius: var(--radius-16); padding: 16px; background: var(--page-050); box-shadow: var(--ring-default); }
+.sw-mailbox-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.sw-mailbox-card { min-width: 0; border-radius: var(--radius-16); padding: 16px; background: var(--page-050); box-shadow: var(--ring-default); }
 .sw-mailbox-card h6 { font-weight: 700; margin-bottom: 4px; }
 .sw-mailbox-card .sw-locker { color: var(--swift-red); font-weight: 700; }
 
@@ -1407,6 +1407,17 @@ label .btn-group .btn + .btn { margin-left: 0; }
 /* Tablets: KPI cards two per row, so the figure never runs into its icon */
 @media (max-width: 991.98px) {
   .row > [class*="col-"]:has(> .swl-metric) { flex: 0 0 50%; max-width: 50%; }
+}
+/* A narrow KPI card (three-up on a tablet, 227px) left ~120px for the figure:
+   "$681.37" and "Pay Online" were cut to "$68…" / "Pay …". Size the figure and
+   the icon to the card itself, not the viewport. */
+.swl-metric { container-type: inline-size; }
+@container (max-width: 300px) {
+  .swl-metric__value { font-size: 24px; line-height: 32px; }
+  .swl-metric__icon { width: 40px; height: 40px; }
+}
+@container (max-width: 240px) {
+  .swl-metric__value { font-size: 20px; line-height: 28px; }
 }
 /* Phones: one per row (after the tablet rule so it wins there), slightly smaller figure */
 @media (max-width: 575.98px) {
