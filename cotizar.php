@@ -1,5 +1,6 @@
 <?php
 require_once("loader.php");
+require_once __DIR__ . '/helpers/asset.php';
 require_once("helpers/querys.php");
 
 $core = new Core();
@@ -48,8 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rate Calculator | <?php echo htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8'); ?></title>
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo htmlspecialchars($core->favicon, ENT_QUOTES, 'UTF-8'); ?>">
-    <link href="assets/css_main_swiftlane/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <link href="assets/css_main_swiftlane/css/style.css" rel="stylesheet" type="text/css" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/bootstrap.min.css') ?>" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,600,700&display=swap" rel="stylesheet" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/style.css') ?>" rel="stylesheet" type="text/css" />
 </head>
 <body class="bg-light">
     <div class="container py-5">

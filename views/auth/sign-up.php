@@ -15,13 +15,13 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
     <!-- favicon -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
     <!-- Bootstrap -->
-    <link href="assets/css_main_swiftlane/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/bootstrap.min.css') ?>" rel="stylesheet" type="text/css" />
     <!-- Icons -->
-    <link href="assets/css_main_swiftlane/css/materialdesignicons.min.css" rel="stylesheet" type="text/css" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/materialdesignicons.min.css') ?>" rel="stylesheet" type="text/css" />
     <!-- Main Css -->
-    <link href="assets/css_main_swiftlane/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
-    <link href="assets/css_main_swiftlane/css/colors/default.css" rel="stylesheet" id="color-opt">
-    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/auth-pages.css') ?>" rel="stylesheet" type="text/css" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/style.css') ?>" rel="stylesheet" type="text/css" id="theme-opt" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/colors/default.css') ?>" rel="stylesheet" id="color-opt">
+    <?php include 'views/inc/auth_head.php'; ?>
 
     <link rel="stylesheet" href="assets/template/assets/libs/intlTelInput/intlTelInput.css">
     <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
@@ -342,14 +342,14 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
     <!-- javascript -->
-    <script src="assets/css_main_swiftlane/main_swiftlane/js/jquery.min.js"></script>
-    <script src="assets/css_main_swiftlane/js/bootstrap.bundle.min.js"></script>
+    <script src="<?= cdp_asset('assets/css_main_swiftlane/main_swiftlane/js/jquery.min.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/css_main_swiftlane/js/bootstrap.bundle.min.js') ?>"></script>
     <!-- Icons -->
-    <script src="assets/css_main_swiftlane/js/feather.min.js"></script>
+    <script src="<?= cdp_asset('assets/css_main_swiftlane/js/feather.min.js') ?>"></script>
     <!-- Main Js -->
-    <script src="assets/css_main_swiftlane/js/plugins.init.js"></script>
+    <script src="<?= cdp_asset('assets/css_main_swiftlane/js/plugins.init.js') ?>"></script>
     <!--Note: All init js like tiny slider, counter, countdown, maintenance, lightbox, gallery, swiper slider, aos animation etc.-->
-    <script src="assets/css_main_swiftlane/js/app.js"></script>
+    <script src="<?= cdp_asset('assets/css_main_swiftlane/js/app.js') ?>"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
 
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>

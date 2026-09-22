@@ -336,13 +336,13 @@ if ($challengeId > 0) {
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
 
     <!-- Bootstrap -->
-    <link href="assets/css_main_swiftlane/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/bootstrap.min.css') ?>" rel="stylesheet" type="text/css" />
     <!-- Icons -->
-    <link href="assets/css_main_swiftlane/css/materialdesignicons.min.css" rel="stylesheet" type="text/css" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/materialdesignicons.min.css') ?>" rel="stylesheet" type="text/css" />
     <!-- Main Css -->
-    <link href="assets/css_main_swiftlane/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
-    <link href="assets/css_main_swiftlane/css/colors/default.css" rel="stylesheet" id="color-opt">
-    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/auth-pages.css') ?>" rel="stylesheet" type="text/css" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/style.css') ?>" rel="stylesheet" type="text/css" id="theme-opt" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/colors/default.css') ?>" rel="stylesheet" id="color-opt">
+    <?php include 'views/inc/auth_head.php'; ?>
     <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <style>
         /* Keep all OTP boxes on a single row, even on small phones. */
@@ -510,10 +510,10 @@ if ($challengeId > 0) {
     </section>
 
     <script src="assets/custom_dependencies/jquery-3.6.0.min.js"></script>
-    <script src="assets/css_main_swiftlane/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/css_main_swiftlane/js/feather.min.js"></script>
-    <script src="assets/css_main_swiftlane/js/plugins.init.js"></script>
-    <script src="assets/css_main_swiftlane/js/app.js"></script>
+    <script src="<?= cdp_asset('assets/css_main_swiftlane/js/bootstrap.bundle.min.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/css_main_swiftlane/js/feather.min.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/css_main_swiftlane/js/plugins.init.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/css_main_swiftlane/js/app.js') ?>"></script>
     <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
     <script>

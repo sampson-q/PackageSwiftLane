@@ -5,8 +5,8 @@
    views/terms.php — every one of them wraps its content in .auth-shell with an
    ink visual panel on the left and the form column on the right.
    ========================================================================== */
-@import url("swiftlane-tokens.css");
-@import url("https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap");
+/* Tokens and fonts are linked from the page head (views/inc/auth_head.php) rather
+   than imported here: an @import is fetched only after this sheet arrives. */
 
 body.auth-page {
   min-height: 100vh;

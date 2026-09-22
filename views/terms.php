@@ -12,13 +12,13 @@
     <meta name="description" content="">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
     <!-- Bootstrap -->
-    <link href="assets/css_main_swiftlane/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/bootstrap.min.css') ?>" rel="stylesheet" type="text/css" />
     <!-- Icons -->
-    <link href="assets/css_main_swiftlane/css/materialdesignicons.min.css" rel="stylesheet" type="text/css" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/materialdesignicons.min.css') ?>" rel="stylesheet" type="text/css" />
     <!-- Main Css -->
-    <link href="assets/css_main_swiftlane/css/style.css" rel="stylesheet" type="text/css" id="theme-opt" />
-    <link href="assets/css_main_swiftlane/css/colors/default.css" rel="stylesheet" id="color-opt">
-    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/auth-pages.css') ?>" rel="stylesheet" type="text/css" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/style.css') ?>" rel="stylesheet" type="text/css" id="theme-opt" />
+    <link href="<?= cdp_asset('assets/css_main_swiftlane/css/colors/default.css') ?>" rel="stylesheet" id="color-opt">
+    <?php include 'views/inc/auth_head.php'; ?>
 
     <style>
         /* ── Terms page: design-system tokens (auth-pages.css supplies them) ── */
@@ -186,10 +186,10 @@
     </main>
 
     <script src="assets/custom_dependencies/jquery-3.6.0.min.js"></script>
-    <script src="assets/css_main_swiftlane/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/css_main_swiftlane/js/feather.min.js"></script>
-    <script src="assets/css_main_swiftlane/js/plugins.init.js"></script>
-    <script src="assets/css_main_swiftlane/js/app.js"></script>
+    <script src="<?= cdp_asset('assets/css_main_swiftlane/js/bootstrap.bundle.min.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/css_main_swiftlane/js/feather.min.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/css_main_swiftlane/js/plugins.init.js') ?>"></script>
+    <script src="<?= cdp_asset('assets/css_main_swiftlane/js/app.js') ?>"></script>
 </body>
 
 </html>

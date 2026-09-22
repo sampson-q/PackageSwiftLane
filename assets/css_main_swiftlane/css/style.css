@@ -31,7 +31,8 @@
 /*********************************/
 /*         Variables             */
 /*===============================*/
-@import url("https://fonts.googleapis.com/css?family=Nunito:300,400,600,700&display=swap");
+/* Nunito is linked by the one page that still uses it (cotizar.php); every other
+   page loading this sheet overrides the font, and the @import blocked them all. */
 /*********************************/
 /*         Bootstrap-custom      */
 /*===============================*/
