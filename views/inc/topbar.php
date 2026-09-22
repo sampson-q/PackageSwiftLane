@@ -37,7 +37,7 @@
 		<?php /* Collapse choice is remembered per browser (dataJs/swiftlane_ui.js). Applying
 		   it here, before the sidebar is parsed, keeps the page from painting
 		   expanded and then snapping shut. */ ?>
-		<script>(function(){try{if(window.innerWidth>=1170&&localStorage.getItem('swl.nav')==='mini'){var m=document.getElementById('main-wrapper');if(m){m.classList.add('mini-sidebar');m.setAttribute('data-sidebartype','mini-sidebar');}}}catch(e){}})();</script>
+		<script>(function(){try{if(window.innerWidth>=768&&localStorage.getItem('swl.nav')==='mini'){var m=document.getElementById('main-wrapper');if(m){m.classList.add('mini-sidebar');m.setAttribute('data-sidebartype','mini-sidebar');}}}catch(e){}})();</script>
 		<nav class="navbar top-navbar navbar-expand-md <?php echo isset($show_dashboard_new_header) && $show_dashboard_new_header ? 'navbar-light' : 'navbar-dark'; ?>">
 				<!-- This is for the sidebar toggle which is visible on mobile only -->
 			<div class="navbar-header">

@@ -49,8 +49,13 @@ h1, h2, h3, h4, h5, h6 { color: var(--ink-800); letter-spacing: var(--track-norm
   transition: width var(--motion-base) var(--ease-standard), left var(--motion-base) var(--ease-standard);
 }
 #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar { width: var(--swl-nav-mini) !important; }
-#main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar:hover { width: var(--swl-nav-w) !important; }
-@media (min-width: 768px) { #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar:hover { box-shadow: 0 24px 64px rgba(22, 37, 54, .35) !important; } }
+/* A mini sidebar expands over the page while the pointer is on it — but not
+   right after its own toggle was clicked: the pointer is still on it then, and
+   the page would slide under a sidebar that looks like it never collapsed.
+   swiftlane_ui.js sets .swl-nav-settling on the click and clears it when the
+   pointer leaves the sidebar. */
+#main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar]:not(.swl-nav-settling) .left-sidebar:hover { width: var(--swl-nav-w) !important; }
+@media (min-width: 768px) { #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar]:not(.swl-nav-settling) .left-sidebar:hover { box-shadow: 0 24px 64px rgba(22, 37, 54, .35) !important; } }
 
 #main-wrapper[data-layout=vertical][data-sidebartype=full] .page-wrapper,
 #main-wrapper[data-layout=vertical][data-sidebartype=full] .topbar { margin-left: var(--swl-nav-w) !important; }

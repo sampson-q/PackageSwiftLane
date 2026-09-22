@@ -92,7 +92,13 @@
    (>= 1170px; below that the template's automatic mini mode stays in charge). */
 (function () {
     'use strict';
-    var KEY = 'swl.nav', MIN_WIDTH = 1170;
+    // The collapse choice is honoured from tablet width up. Below 1170px the
+    // template's own resize handler forces mini-sidebar on every resize event and
+    // (in app.min.js) sets the attribute without the class, so its click handler
+    // toggles the class out of step with the attribute and the first click does
+    // nothing. From here on the class and the attribute are kept in step and the
+    // stored preference wins.
+    var KEY = 'swl.nav', MIN_WIDTH = 768;
 
     function readPref() { try { return window.localStorage.getItem(KEY); } catch (e) { return null; } }
     function savePref(v) { try { window.localStorage.setItem(KEY, v); } catch (e) { /* private mode */ } }
@@ -100,6 +106,8 @@
     function shell() {
         var wrap = document.getElementById('main-wrapper');
         if (!wrap || !wrap.querySelector('.left-sidebar')) return;
+
+        function isMini() { return wrap.getAttribute('data-sidebartype') === 'mini-sidebar'; }
 
         function enforce() {
             if (window.innerWidth < MIN_WIDTH) return;
@@ -110,15 +118,29 @@
             if (wrap.getAttribute('data-sidebartype') !== type) wrap.setAttribute('data-sidebartype', type);
         }
 
-        // Capture phase: the preference is stored before the template's own click
-        // handler flips the wrapper, so the observer below agrees with the click.
+        // Capture phase: runs before the template's own click handler, which
+        // toggles the class and then copies it to the attribute. The class is
+        // first brought in step with the attribute (the two drift below 1170px),
+        // so that toggle lands on the opposite of what is on screen; the
+        // preference is stored so the observer below agrees with the click.
         document.addEventListener('click', function (e) {
             var t = e.target && e.target.closest ? e.target.closest('.sidebartoggler') : null;
             if (!t || window.innerWidth < MIN_WIDTH) return;
-            var next = wrap.classList.contains('mini-sidebar') ? 'full' : 'mini';
+            wrap.classList.toggle('mini-sidebar', isMini());
+            var next = isMini() ? 'full' : 'mini';
             savePref(next);
             t.setAttribute('aria-expanded', next === 'full' ? 'true' : 'false');
+            // The toggle sits inside the sidebar, so the pointer is still on it:
+            // hold off the hover-expansion until it leaves (swiftlane-ds.css).
+            wrap.classList.add('swl-nav-settling');
         }, true);
+
+        var aside = wrap.querySelector('.left-sidebar');
+        function settled() { wrap.classList.remove('swl-nav-settling'); }
+        aside.addEventListener('mouseleave', settled);
+        document.addEventListener('pointermove', function (e) {
+            if (wrap.classList.contains('swl-nav-settling') && !aside.contains(e.target)) settled();
+        }, { passive: true });
 
         if ('MutationObserver' in window) {
             new MutationObserver(enforce).observe(wrap, { attributes: true, attributeFilter: ['class', 'data-sidebartype'] });
