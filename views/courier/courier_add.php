@@ -392,8 +392,8 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                 2) <?php echo $lang['left212'] ?>
                                             </h4>
                                         </div>
-                                        <div class="col-1 text-right text-muted">
-                                            <h5>Notes:</h5>
+                                        <div class="col-auto text-right text-muted pr-0">
+                                            <h5 class="text-nowrap">Notes:</h5>
                                         </div>
                                         <div class="col-6">
                                             <input class="form-control" type="text" id="courier_notes" name="courier_notes" placeholder=". . . . . . . . . . . . . . . . . . . . . . . ." value="<?php echo $row_order->courier_notes ;?>" />
