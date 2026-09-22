@@ -149,7 +149,7 @@ $payrow = $core->cdp_getPayment();
                                 <!-- For demo purpose -->
                                 <div class="row mb-4">
                                     <div class="col-lg-12 mx-auto text-center">
-                                        <h3 class="display-7"><b class="text-danger"><?php echo $lang['payment-gateway-text2']; ?></b> <span><?php echo $row_order->c_prefix . $row_order->c_no; ?></span></h3>
+                                        <h3 class="display-7"><b class="text-danger"><?php echo $lang['payment-gateway-text2']; ?></b> <span><?php echo cdp_consolidationRefHtml($row_order, 'consolidate'); ?></span></h3>
                                     </div>
 
                                     <div class="col-lg-12 mx-auto text-center mt-4">

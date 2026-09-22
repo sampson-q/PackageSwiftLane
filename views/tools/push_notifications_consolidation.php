@@ -58,7 +58,7 @@ $row_order = $data['data'];
     <meta name="description" content="">
     <meta name="author" content="">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
-    <title><?php echo $lang['left-menu-sidebar-66'] . ' for ' . $row_order->c_prefix . $row_order->c_no;?> | <?php echo $core->site_name ?></title>
+    <title><?php echo $lang['left-menu-sidebar-66'] . ' for ' . htmlspecialchars(cdp_consolidationRef($row_order, 'consolidate'), ENT_QUOTES, 'UTF-8');?> | <?php echo $core->site_name ?></title>
 
     <link rel="stylesheet" href="assets/template/assets/libs/intlTelInput/intlTelInput.css">
     <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
@@ -83,7 +83,7 @@ $row_order = $data['data'];
                             <div class="card-body">
                                 <div class="d-md-flex align-items-center">
                                     <div>
-                                        <h3 class="card-title"><span><?php echo $lang['left-menu-sidebar-66'] . ' for ' ?><span class="text-danger"><?php echo $row_order->c_prefix . $row_order->c_no; ?></span></h3>
+                                        <h3 class="card-title"><span><?php echo $lang['left-menu-sidebar-66'] . ' for ' ?><span class="text-danger"><?php echo cdp_consolidationRefHtml($row_order, 'consolidate'); ?></span></h3>
                                     </div>
                                 </div>
                                 <div><hr><br></div>
@@ -101,7 +101,7 @@ $row_order = $data['data'];
                                                     <input type="radio" id="broadcast" name="notification_type" class="custom-control-input" value="broadcast" checked>
                                                     <label class="custom-control-label" for="broadcast"><?php echo $lang['push_notifications_type_broadcast']; ?></label>
                                                     <div class="small text-muted mt-1">
-                                                        <?php echo $lang['push_notifications_hint_broadcast']; ?><span class="text-danger"><?php echo $row_order->c_prefix . $row_order->c_no; ?></span>
+                                                        <?php echo $lang['push_notifications_hint_broadcast']; ?><span class="text-danger"><?php echo cdp_consolidationRefHtml($row_order, 'consolidate'); ?></span>
                                                     </div>
                                                 </div>
 
@@ -110,7 +110,7 @@ $row_order = $data['data'];
                                                     <input type="radio" id="selected_users" name="notification_type" class="custom-control-input" value="selected_users">
                                                     <label class="custom-control-label" for="selected_users"><?php echo $lang['push_notifications_type_users']; ?></label>
                                                     <div class="small text-muted mt-1">
-                                                        <?php echo $lang['push_notifications_hint_users']; ?><span class="text-danger"><?php echo $row_order->c_prefix . $row_order->c_no; ?></span>
+                                                        <?php echo $lang['push_notifications_hint_users']; ?><span class="text-danger"><?php echo cdp_consolidationRefHtml($row_order, 'consolidate'); ?></span>
                                                     </div>
                                                 </div>
 

@@ -120,7 +120,7 @@ if ($notification_type === 'broadcast') {
         }
         $ctx['entity_type']  = 'consolidation';
         $ctx['entity_id']    = (string) $cid;
-        $ctx['entity_label'] = $con->c_prefix . $con->c_no;
+        $ctx['entity_label'] = cdp_consolidationRef($con, 'consolidate');
     }
 }
 

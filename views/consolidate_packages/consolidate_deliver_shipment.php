@@ -291,10 +291,11 @@ if (isset($_POST['person_receives'])) {
 
 
         $fullshipment = $row->c_prefix . $row->c_no;
+        $fullshipment_ref = cdp_consolidationRef($row, 'consolidate_packages'); // waybill first, then the code — for what people read
         $date_ship   = date("Y-m-d H:i:s a");
 
         $app_url = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
-        $subject = $lang['notification_shipment14'] . $lang['notification_shipment3'] . $fullshipment;
+        $subject = $lang['notification_shipment14'] . $lang['notification_shipment3'] . $fullshipment_ref;
         $status_courier_deliver =  $lang['filter73'];
 
         $email_template = cdp_getEmailTemplatesdg1i4(14);
@@ -312,7 +313,7 @@ if (isset($_POST['person_receives'])) {
             ),
             array(
                 cdp_nameWithLocker($sender_data),
-                $fullshipment,
+                $fullshipment_ref,
                 $date_ship,
                 $status_courier_deliver,
                 $msite_url,
@@ -395,7 +396,7 @@ if (isset($_POST['person_receives'])) {
                     $settings_wa = cdp_getSettingsCourier();
                     $whatsapp_body = cdp_renderWhatsAppTemplate(3, array(
                         '[CUSTOMER_FULLNAME]' => cdp_nameWithLocker($sender_data),
-                        '[TRACKING_NUMBER]'   => $fullshipment,
+                        '[TRACKING_NUMBER]'   => $fullshipment_ref,
                         '[COMPANY_NAME]'      => !empty($settings_wa->site_name) ? $settings_wa->site_name : 'Our team',
                     ));
                     if ($whatsapp_body !== null) {
@@ -416,7 +417,7 @@ if (isset($_POST['person_receives'])) {
 
         // Generar cuerpo del SMS para el remitente
         try {
-            $newbodyS_sender = generateSMSBody($sender_data, $fullshipment, $status_courier_deliver, $app_url, $templatessender);
+            $newbodyS_sender = generateSMSBody($sender_data, $fullshipment_ref, $status_courier_deliver, $app_url, $templatessender);
             // Llamar a la función para enviar la notificación SMS al remitente
             sendNotificationSMS($sender_data, $newbodyS_sender, $notify_sms_sender);
         } catch (Exception $e) {
@@ -426,7 +427,7 @@ if (isset($_POST['person_receives'])) {
 
         // Generar cuerpo del SMS para el receptor
         try {
-            $newbodyS_receiver = generateSMSBody($receiver_data, $fullshipment, $status_courier_deliver, $app_url, $templatesreceiver);
+            $newbodyS_receiver = generateSMSBody($receiver_data, $fullshipment_ref, $status_courier_deliver, $app_url, $templatesreceiver);
             // Llamar a la función para enviar la notificación SMS al receptor
             sendNotificationSMS($receiver_data, $newbodyS_receiver, $notify_sms_receiver);
         } catch (Exception $e) {
@@ -552,7 +553,7 @@ if (isset($_POST['person_receives'])) {
                                 </div>
                                 <form name="myForm" class="xform" enctype="multipart/form-data" id="deliver_form" method="POST">
                                     <header>
-                                        <h4 class="modal-title"> <b class="text-danger"><?php echo $lang['deliver-ship1'] ?> </b> <b>| <?php echo $row->c_prefix . $row->c_no; ?></b>
+                                        <h4 class="modal-title"> <b class="text-danger"><?php echo $lang['deliver-ship1'] ?> </b> <b>| <?php echo cdp_consolidationRefHtml($row, 'consolidate_packages'); ?></b>
                                         </h4><!--  <?php echo $lang['status-ship3'] ?> <?php echo $receiver_data->country; ?> | <?php echo $receiver_data->city; ?> -->
                                         <hr>
                                     </header>

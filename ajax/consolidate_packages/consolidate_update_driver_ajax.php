@@ -54,6 +54,7 @@ if (empty($errors)) {
     $driver_data = cdp_getSenderCourier(cdp_sanitize($_POST['driver_id']));
 
     $tracking_code = $customer_packages->c_prefix . $customer_packages->c_no;
+    $tracking_ref  = cdp_consolidationRef($customer_packages, 'consolidate_packages'); // waybill first, then the code
 
     // The consolidation's ETA — every package inside it inherits this.
     $eta_value = cdp_getConsolidationEtaById(cdp_sanitize($_POST['id_shipment']), true);
@@ -115,7 +116,7 @@ if (empty($errors)) {
             if ($sender_data && !empty($sender_data->phone)) {
                 $whatsapp_body = "Dear {$sender_data->fname } {$sender_data->lname },\n\n
                 Your shipment has been updated with a new driver assignment. Here are the details:\n
-                *Tracking Number:* {$tracking_code}\n
+                *Tracking Number:* {$tracking_ref}\n
                 *Courier:* {$driver_data->fname}\n
                 $eta
                 

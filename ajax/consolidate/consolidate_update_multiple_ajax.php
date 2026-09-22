@@ -61,7 +61,7 @@ foreach ($data as $key) {
         }
 
         // Agregar comentario
-        $comment = $comments = $lang['multiple_updated3'] . ' ' . $tracking;
+        $comment = $comments = $lang['multiple_updated3'] . ' ' . cdp_consolidationRef($courier, 'consolidate');
 
         // Insertar en cdb_courier_track
         $user = $_SESSION['userid'];

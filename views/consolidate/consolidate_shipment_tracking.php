@@ -146,6 +146,19 @@ if (isset($_POST['address'])) {
 
         $db->cdp_execute();
 
+        // A consolidation with no waybill on record adopts the one typed on this tracking event.
+        if (cdp_awbColumnReady() && cdp_consolidationAwb($row, 'consolidate') === '') {
+            $aw_c = cdp_awbNormalize($_POST['awb_no'] ?? '');
+            if ($aw_c !== '') {
+                $db->cdp_query('UPDATE cdb_consolidate SET awb_no = :awb_no WHERE consolidate_id = :id AND (awb_no IS NULL OR awb_no = \'\')');
+                $db->bind(':awb_no', $aw_c);
+                $db->bind(':id', $id);
+                $db->cdp_execute();
+                $row->awb_no = $aw_c;
+                cdp_awbForget();
+            }
+        }
+
         //INSERT HISTORY USER
         $date = date("Y-m-d H:i:s");
         $db->cdp_query("
@@ -258,10 +271,11 @@ if (isset($_POST['address'])) {
 
 
         $fullshipment = $row->c_prefix . $row->c_no;
+        $fullshipment_ref = cdp_consolidationRef($row, 'consolidate'); // waybill first, then the code — for what people read
         $date_ship   = date("Y-m-d H:i:s a");
 
         $app_url = rtrim((string) $settings->site_url, '/') . '/track.php?order_track=' . $fullshipment;
-        $subject = $lang['notification_shipment9'] . ' ' . $lang['notification_shipment6'] .  $fullshipment;
+        $subject = $lang['notification_shipment9'] . ' ' . $lang['notification_shipment6'] .  $fullshipment_ref;
         $status_courier_deliver = "" . $_POST['status_courier'] . "";
 
 
@@ -283,7 +297,7 @@ if (isset($_POST['address'])) {
             ),
             array(
                 cdp_nameWithLocker($sender_data),
-                $fullshipment,
+                $fullshipment_ref,
                 $date_ship,
                 $status_courier_deliver,
                 $_POST['country'] . ' | ' . $_POST['address'],
@@ -379,7 +393,7 @@ if (isset($_POST['address'])) {
         
                 $whatsapp_body_sender =
                     "Hello " . cdp_nameWithLocker($sender_data) . ",\n\n" .
-                    "There is a new tracking update on your consolidation *{$fullshipment}*.\n\n" .
+                    "There is a new tracking update on your consolidation *{$fullshipment_ref}*.\n\n" .
                     "*Status:* {$wa_status_label}\n" .
                     "*Location:* {$wa_location}\n" .
                     "*Date:* {$date_ship}\n" .
@@ -522,7 +536,7 @@ if (isset($_POST['address'])) {
                                 </div>
                                 <form class="xform" id="form" name="form" method="post">
                                     <header>
-                                        <h4 class="modal-title"> <b class="text-danger"><?php echo $lang['status-ship1011'] ?> </b> <b>| #<?php echo $row->c_prefix . $row->c_no; ?></b>
+                                        <h4 class="modal-title"> <b class="text-danger"><?php echo $lang['status-ship1011'] ?> </b> <b>| <?php echo cdp_consolidationRefHtml($row, 'consolidate'); ?></b>
                                         </h4><!--  <?php echo $lang['status-ship3'] ?> <?php echo $receiver_data->country; ?> | <?php echo $receiver_data->city; ?> -->
                                         <hr>
                                     </header>
@@ -627,7 +641,7 @@ if (isset($_POST['address'])) {
                                             <label for="awb_no" class="control-label col-form-label">AWB Number <small class="text-muted">(optional)</small></label>
                                             <div class="input-group mb-3">
                                                 <div class="input-group-prepend"><span class="input-group-text"><i class="mdi mdi-barcode"></i></span></div>
-                                                <input type="text" class="form-control" id="awb_no" name="awb_no" maxlength="40" placeholder="e.g. 125-12345675" autocomplete="off">
+                                                <input type="text" class="form-control" id="awb_no" name="awb_no" maxlength="40" placeholder="e.g. 125-12345675" autocomplete="off" value="<?php echo htmlspecialchars(cdp_consolidationAwb($row, 'consolidate'), ENT_QUOTES, 'UTF-8'); ?>">
                                             </div>
                                         </div>
 

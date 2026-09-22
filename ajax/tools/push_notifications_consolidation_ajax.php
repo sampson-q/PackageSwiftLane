@@ -101,7 +101,7 @@ $ctx = [
     'subject'      => $subject,
     'entity_type'  => 'consolidation',
     'entity_id'    => (string) $cid,
-    'entity_label' => $con->c_prefix . $con->c_no,
+    'entity_label' => cdp_consolidationRef($con, 'consolidate'),
     'batch_id'     => cdp_pushBatchIdFromRequest($_POST['batch_id'] ?? ''),
 ];
 $sum = cdp_pushNotifyChunk($recipientIds, $after_id, $subject, $message, $settings, $ctx, $channels);
