@@ -156,7 +156,7 @@ if ($packages) {
 
 $isDg = ((int) ($consol->is_dangerous_good ?? 0) === 1);
 
-$h .= '<h2>Financial Sheet &mdash; Consolidation ' . $cNo
+$h .= '<h2>Financial Sheet &mdash; Consolidation ' . htmlspecialchars(cdp_consolidationRef($consol))
     . ($isDg ? ' <span style="background:#ff6d00;color:#fff;font-size:8px;padding:2px 6px;border-radius:8px;">&#9888; DANGEROUS GOODS</span>' : '')
     . '</h2>';
 

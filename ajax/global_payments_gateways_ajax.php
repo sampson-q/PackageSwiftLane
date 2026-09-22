@@ -102,7 +102,7 @@ function cdp_gwStatusLabel($status)
             <tr>
                 <td><?php echo date('Y-m-d H:i', strtotime((string) $row->recorded_at)); ?></td>
                 <td><?php echo htmlspecialchars($row->customer); ?><?php if ($row->locker) { ?><br><small class="text-muted"><?php echo htmlspecialchars($row->locker); ?></small><?php } ?></td>
-                <td class="text-center"><small><?php echo $cno !== '' ? htmlspecialchars($cno) : '<span class="text-muted">—</span>'; ?></small></td>
+                <td class="text-center"><small><?php echo $cno !== '' ? cdp_consolidationRefHtml($cno) : '<span class="text-muted">—</span>'; ?></small></td>
                 <td class="text-center"><?php echo htmlspecialchars(ucfirst((string) $row->mode)); ?></td>
                 <td class="text-center"><small><?php echo $row->reference ? htmlspecialchars((string) $row->reference) : '<span class="text-muted">—</span>'; ?></small></td>
                 <td class="text-center"><b>&#8373;<?php echo cdb_money_format($row->amount_ghs); ?></b></td>

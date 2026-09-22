@@ -1211,6 +1211,7 @@ if ($action === 'bill_customer') {
     $db->cdp_execute();
     $cRow = $db->cdp_registro();
     $consolNo = $cRow ? ($cRow->c_prefix . $cRow->c_no) : ('#' . $cid);
+    $consolRef = cdp_consolidationRef($consolNo); // "AWB … · code" for the customer
 
     $custName  = $sender ? trim((string) $sender->fname . ' ' . (string) $sender->lname) : 'Customer';
     $locker    = $sender ? trim((string) $sender->locker) : '';
@@ -1242,7 +1243,7 @@ if ($action === 'bill_customer') {
         : '';
 
     $intro = $isRebill
-        ? 'Please note: the bill for your package' . ($plural ? 's' : '') . ' in consolidation ' . $consolNo
+        ? 'Please note: the bill for your package' . ($plural ? 's' : '') . ' in consolidation ' . $consolRef
           . ' has been updated. Here are the latest details.'
         : 'Great news! Your ' . ($plural ? $pkgCount . ' packages have' : 'package has')
           . ' arrived, been sorted, and ' . ($plural ? 'are' : 'is') . ' now ready for pickup at our office. 🎉';
@@ -1252,7 +1253,7 @@ if ($action === 'bill_customer') {
 
     $msgWa = $intro . "\n\n"
         . "*Pickup Details*\n"
-        . 'Consolidation: ' . $consolNo . "\n"
+        . 'Consolidation: ' . $consolRef . "\n"
         . 'Package' . ($plural ? 's' : '') . ' (' . $pkgCount . "):\n"
         . '• ' . implode("\n• ", $pkgLines) . "\n"
         . ($amountLine !== '' ? "\n" . $amountLine . "\n" : '')
@@ -1260,7 +1261,7 @@ if ($action === 'bill_customer') {
 
     $msgEmail = '<p>' . htmlspecialchars($intro) . '</p>'
         . '<p><b>Pickup Details</b><br>'
-        . 'Consolidation: ' . htmlspecialchars($consolNo) . '<br>'
+        . 'Consolidation: ' . htmlspecialchars($consolRef) . '<br>'
         . 'Package' . ($plural ? 's' : '') . ' (' . $pkgCount . '):</p>'
         . '<ul><li>' . implode('</li><li>', array_map('htmlspecialchars', $pkgLines)) . '</li></ul>'
         . ($amountLine !== '' ? '<p><b>' . nl2br(htmlspecialchars($amountLine)) . '</b></p>' : '')
@@ -1688,7 +1689,7 @@ if ($action === 'record_payment') {
     $db->bind(':cid', $cid);
     $db->cdp_execute();
     $cRow = $db->cdp_registro();
-    $consolNo = $cRow ? ($cRow->c_prefix . $cRow->c_no) : ('#' . $cid);
+    $consolNo = cdp_consolidationRef($cRow ? ($cRow->c_prefix . $cRow->c_no) : ('#' . $cid));
 
     $custName = $sender ? trim((string) $sender->fname . ' ' . (string) $sender->lname) : 'Customer';
     $subject  = 'Payment Received — Thank You!';
@@ -2997,7 +2998,7 @@ function fs_render_search_consolidations(array $byCid)
         if (!$c) {
             continue;
         }
-        $cNo = htmlspecialchars(($c->c_prefix ?? '') . ($c->c_no ?? ''));
+        $cNo = cdp_consolidationRefHtml($c); // already escaped
 
         $groups  = fs_customer_groups($cid);
         $billing = fs_billing_map($cid);
@@ -3199,7 +3200,7 @@ $dgColor = ($dgStyle && !empty($dgStyle->color)) ? $dgStyle->color : '#ff6d00';
 <div class="accordion" id="fsAccordion">
     <?php foreach ($consolidations as $c):
         $cid = (int) $c->consolidate_id;
-        $cNo = htmlspecialchars(($c->c_prefix ?? '') . ($c->c_no ?? ''));
+        $cNo = cdp_consolidationRefHtml($c); // already escaped
         ?>
         <div class="card mb-2 fs-consol-card">
             <div class="card-header fs-consol-header"

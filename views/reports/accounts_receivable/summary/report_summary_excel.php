@@ -128,7 +128,7 @@ if ($numrows > 0) {
 
         $html .= '<tr>';
         $html .= '<td >' . $count . '</td>';
-        $html .= '<td >' . $row->consol_no . '</td>';
+        $html .= '<td >' . htmlspecialchars(cdp_consolidationRef($row->consol_no)) . '</td>';
         $html .= '<td>' . $row->customer . '</td>';
         $html .= '<td >' . date('Y-m-d', strtotime($row->billed_at)) . '</td>';
         $html .= '<td >' . ($row->discount_ghs > 0 ? "GHS " . number_format($row->discount_ghs, 2) : "-") . '</td>';

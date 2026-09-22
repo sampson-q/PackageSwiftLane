@@ -133,7 +133,7 @@ $data = $db->cdp_registros();
         ?>
             <tr>
                 <td><b><?php echo htmlspecialchars($row->customer); ?></b><?php if ($row->locker) { ?><br><small class="text-muted"><?php echo htmlspecialchars($row->locker); ?></small><?php } ?></td>
-                <td class="text-center"><?php echo $row->cno !== '' ? htmlspecialchars($row->cno) : '<span class="text-muted">—</span>'; ?></td>
+                <td class="text-center"><?php echo $row->cno !== '' ? cdp_consolidationRefHtml($row->cno) : '<span class="text-muted">—</span>'; ?></td>
                 <td class="text-center"><small><?php echo $row->billed_at ? date('Y-m-d', strtotime((string) $row->billed_at)) : '—'; ?></small></td>
                 <td class="text-center">&#8373;<?php echo number_format((float)($billed), 2); ?><?php if ($disc > 0) { ?><br><small class="text-muted">− &#8373;<?php echo number_format((float)($disc), 2); ?> disc</small><?php } ?></td>
                 <td class="text-center text-success">&#8373;<?php echo number_format((float)($paid), 2); ?></td>

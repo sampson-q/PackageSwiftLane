@@ -220,7 +220,7 @@ $fecha_fin = str_replace('-', '/', $fecha_fin);
                                         ?>
                                         <tr class="card-hover">
 
-                                            <td><b><a href="financial_sheet_consolidation.php?id=<?php echo (int) $row->consolidate_id; ?>"><?php echo htmlspecialchars($row->consol_no); ?></a></b></td>
+                                            <td><b><a href="financial_sheet_consolidation.php?id=<?php echo (int) $row->consolidate_id; ?>"><?php echo cdp_consolidationRefHtml($row->consol_no); ?></a></b></td>
 
                                             <td class="text-center">
                                                 <?php echo htmlspecialchars(date('Y-m-d', strtotime($row->billed_at))); ?>

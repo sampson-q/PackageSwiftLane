@@ -115,7 +115,7 @@ $fs_dg_color = ($fs_dg_style && !empty($fs_dg_style->color)) ? $fs_dg_style->col
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
-    <title><?php echo htmlspecialchars($fs_no); ?> — Financial Sheet | <?php echo $core->site_name ?></title>
+    <title><?php echo htmlspecialchars(cdp_consolidationRef($fs_consol)); ?> — Financial Sheet | <?php echo $core->site_name ?></title>
     <?php include 'views/inc/head_scripts.php'; ?>
     <?php include 'views/reports/financial_sheet/fs_styles.php'; ?>
 </head>
@@ -146,7 +146,7 @@ $fs_dg_color = ($fs_dg_style && !empty($fs_dg_style->color)) ? $fs_dg_style->col
                                 <div class="card mb-2 fs-consol-card fs-active">
                                     <div class="card-header fs-consol-header" style="cursor:default;">
                                         <i class="fas fa-boxes"></i>
-                                        <b><?php echo htmlspecialchars($fs_no); ?></b>
+                                        <b><?php echo cdp_consolidationRefHtml($fs_consol); ?></b>
                                         <span class="fs-dim ml-3"><i class="mdi mdi-calendar-blank"></i> <?php echo htmlspecialchars((string) $fs_consol->c_date); ?></span>
                                         <span class="fs-dim ml-3" title="Sum of package weights">
                                             <i class="mdi mdi-weight"></i> <?php echo round($fs_weight, 2); ?> lb

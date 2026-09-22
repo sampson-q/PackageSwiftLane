@@ -109,7 +109,7 @@ function mbRender() {
         if (mbFilter === 'owing' && b.settled) return false;
         if (mbFilter === 'settled' && !b.settled) return false;
         if (mbSearch) {
-            var hay = ((b.consol_no || '') + ' #' + b.cid).toLowerCase();
+            var hay = ((b.consol_ref || '') + ' ' + (b.consol_no || '') + ' #' + b.cid).toLowerCase();
             if (hay.indexOf(mbSearch) === -1) return false;
         }
         return true;
@@ -150,7 +150,7 @@ function mbBillCard(b) {
         '<div class="mb-bill" id="mb_bill_' + b.cid + '">' +
             '<div class="mb-bill__head" onclick="mbToggle(' + b.cid + ')">' +
                 '<div>' +
-                    '<div class="mb-bill__no">Consolidation ' + mbEsc(b.consol_no || ('#' + b.cid)) + ' ' + badge + '</div>' +
+                    '<div class="mb-bill__no">Consolidation ' + mbEsc(b.consol_ref || b.consol_no || ('#' + b.cid)) + ' ' + badge + '</div>' +
                     '<div class="mb-bill__meta">' +
                         (b.billed_at ? 'Billed ' + mbEsc(mbDate(b.billed_at)) : 'Billed') +
                         (b.discount > 0 ? ' &middot; Discount ' + mbMoney(b.discount) : '') +

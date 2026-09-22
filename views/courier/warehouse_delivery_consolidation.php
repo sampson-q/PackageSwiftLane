@@ -57,7 +57,7 @@ $wd_progCls = ($wd_delivered >= $wd_total && $wd_total > 0) ? 'badge-success' : 
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
-    <title><?php echo htmlspecialchars($wd_no); ?> — Warehouse Delivery | <?php echo $core->site_name ?></title>
+    <title><?php echo htmlspecialchars(cdp_consolidationRef($wd_consol)); ?> — Warehouse Delivery | <?php echo $core->site_name ?></title>
     <?php include 'views/inc/head_scripts.php'; ?>
     <?php include 'views/courier/wd_styles.php'; ?>
 </head>
@@ -90,7 +90,7 @@ $wd_progCls = ($wd_delivered >= $wd_total && $wd_total > 0) ? 'badge-success' : 
                     <div class="card mb-2 wd-consol-card">
                         <div class="card-header wd-consol-header p-2" style="cursor:default;">
                             <i class="mdi mdi-package-variant-closed wd-consol-ico"></i>
-                            <b class="wd-mono"><?php echo htmlspecialchars($wd_no); ?></b>
+                            <b class="wd-mono"><?php echo cdp_consolidationRefHtml($wd_consol); ?></b>
                             <span class="wd-dim ml-2"><i class="mdi mdi-calendar-blank"></i> <?php echo htmlspecialchars((string) $wd_consol->c_date); ?></span>
                             <span class="wd-dim ml-2" title="Sum of package weights"><i class="mdi mdi-weight"></i> <?php echo round($wd_weight, 2); ?> lb</span>
                             <span id="wd-hdr-prog"><span class="badge <?php echo $wd_progCls; ?> ml-2" title="Packages delivered"><?php echo $wd_delivered; ?>/<?php echo $wd_total; ?> Delivered</span></span>

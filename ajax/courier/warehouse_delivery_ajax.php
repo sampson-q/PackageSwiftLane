@@ -289,7 +289,7 @@ if ($action === 'list') {
 
     foreach ($consols as $c) {
         $cid  = (int) $c->consolidate_id;
-        $no   = htmlspecialchars(($c->c_prefix ?? '') . ($c->c_no ?? ''));
+        $no   = cdp_consolidationRefHtml($c); // already escaped
         $pkgs = wd_consolidation_packages($db, $cid, $ownOnly);
 
         $total = count($pkgs);
@@ -478,7 +478,7 @@ function wd_render_search_consolidations(Conexion $db, array $byCid, $canDeliver
         $db->cdp_execute();
         $c = $db->cdp_registro();
         if (!$c) { continue; }
-        $no   = htmlspecialchars(($c->c_prefix ?? '') . ($c->c_no ?? ''));
+        $no   = cdp_consolidationRefHtml($c); // already escaped
         $pkgs = wd_consolidation_packages($db, $cid, $ownOnly);
         $custHtml = wd_render_customers($cid, $pkgs, $canDeliverUser, $terminal, array_values(array_unique($sids)));
         if (trim($custHtml) === '') { continue; }

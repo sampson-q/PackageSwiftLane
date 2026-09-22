@@ -163,7 +163,7 @@ $fecha = str_replace('-', '/', $fecha);
                     <tr class="card-hovera">
                         <td><?php echo $count; ?></td>
 
-                        <td><b><a data-toggle="modal" data-target="#charges_list" data-id="<?php echo $row->order_id; ?>"><?php echo $row->consol_no; ?></a></b></td>
+                        <td><b><a data-toggle="modal" data-target="#charges_list" data-id="<?php echo $row->order_id; ?>"><?php echo cdp_consolidationRefHtml($row->consol_no); ?></a></b></td>
 
                         <td class="text-center">
                             <?php echo htmlspecialchars($row->customer); ?>

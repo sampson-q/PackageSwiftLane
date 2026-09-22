@@ -72,6 +72,7 @@ function mb_bills($sid)
         $out[] = [
             'cid'        => (int) $r->consolidate_id,
             'consol_no'  => trim((string) ($r->c_prefix ?? '') . (string) ($r->c_no ?? '')),
+            'consol_ref' => cdp_consolidationRef($r), // "AWB … · code" for display
             'billed'     => $billed,
             'discount'   => $discount,
             'paid'       => $paid,
@@ -276,7 +277,7 @@ switch ($action) {
         $res = cdp_fsCreateIntent($cid, $sid, 'paystack', $amount, $payable, [
             'email'          => $email,
             'callback_url'   => $base . '/payment_return.php',
-            'description'    => 'SwiftLane bill ' . ($bill['consol_no'] ?: $cid),
+            'description'    => 'SwiftLane bill ' . ($bill['consol_ref'] ?: $cid),
             'exchange_rate'  => $bill['rate'] ?? (float) $core->exchange_rate,
         ], $sid);
 

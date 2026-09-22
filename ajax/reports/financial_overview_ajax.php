@@ -356,7 +356,7 @@ function fo_txStatus($mode, $st)
                 $pu = $rate > 0 ? (float) $c->paid_g / $rate : 0;
                 $ou = $rate > 0 ? (float) $c->out_g / $rate : 0; ?>
                 <tr>
-                    <td><b><?php echo htmlspecialchars($c->cno); ?></b></td>
+                    <td><b><?php echo cdp_consolidationRefHtml($c->cno); ?></b></td>
                     <td class="text-right"><?php echo fo_money($c->billed_g, $bu); ?></td>
                     <td class="text-right text-success"><?php echo fo_money($c->paid_g, $pu); ?></td>
                     <td class="text-right text-danger"><?php echo fo_money($c->out_g, $ou); ?></td>

@@ -75,7 +75,7 @@ $isDg = ((int) ($consol->is_dangerous_good ?? 0) === 1);
     <thead>
         <tr>
             <th colspan="6" style="font-size:14px;font-weight:bold;text-align:center;">
-                Financial Sheet &mdash; Consolidation <?php echo htmlspecialchars($cNo); ?><?php echo $isDg ? ' (DANGEROUS GOODS)' : ''; ?>
+                Financial Sheet &mdash; Consolidation <?php echo htmlspecialchars(cdp_consolidationRef($consol)); ?><?php echo $isDg ? ' (DANGEROUS GOODS)' : ''; ?>
             </th>
         </tr>
         <tr style="background:#3e5569;color:#ffffff;font-weight:bold;">

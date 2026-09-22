@@ -147,7 +147,7 @@ if ($numrows > 0) { ?>
 					?>
 						<tr class="card-hovera">
 
-							<td><b><a href="financial_sheet_consolidation.php?id=<?php echo (int) $row->consolidate_id; ?>"><?php echo htmlspecialchars($row->consol_no); ?></a></b></td>
+							<td><b><a href="financial_sheet_consolidation.php?id=<?php echo (int) $row->consolidate_id; ?>"><?php echo cdp_consolidationRefHtml($row->consol_no); ?></a></b></td>
 
 							<td class="text-center">
 								<?php echo htmlspecialchars($row->customer);
