@@ -247,11 +247,19 @@
             </td>
             <td style="border: 2px"><?php echo $fecha; ?></td>
         </tr>
+        <?php if (cdp_consolidationAwb($row, 'consolidate') !== '') : ?>
+        <tr>
+            <td style="border-bottom:  2px;" class="meta-head">
+                <p style="color:white;">Air Waybill</p>
+            </td>
+            <td style="border: 2px"><b><?php echo htmlspecialchars(cdp_consolidationAwb($row, 'consolidate')); ?></b></td>
+        </tr>
+        <?php endif; ?>
         <tr>
             <td style="border-bottom:  2px;" class="meta-head">
                 <p style="color:white;"><?php echo $lang['inv-shipping9'] ?>.</p>
             </td>
-            <td style="border: 2px"><b><?php echo $row->c_prefix . $row->c_no; ?></b></td>
+            <td style="border: 2px"><b><?php echo htmlspecialchars($row->c_prefix . $row->c_no, ENT_QUOTES, 'UTF-8'); ?></b></td>
         </tr>
     </table>
 

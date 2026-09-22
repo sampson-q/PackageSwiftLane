@@ -50,6 +50,8 @@ if (!function_exists('cdp_labelModelFromConsolidate')) {
 
         return [
             'sys_tracking'  => $row->c_prefix . $row->c_no,
+            // Air waybill (shown above the tracking number; '' when none on record).
+            'awb'           => cdp_consolidationAwb($row, $detail_table === 'cdb_consolidate_packages_detail' ? 'consolidate_packages' : 'consolidate'),
             'courier_track' => null,
             'courier_name'  => $courier_com->name_com ?? 'N/A',
             'item_count'    => $item_count,

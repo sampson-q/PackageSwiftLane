@@ -123,6 +123,8 @@ if (!function_exists('cdp_invModelFromConsolidate')) {
 
         return [
             'sys_tracking'     => $row->c_prefix . $row->c_no,
+            // Air waybill (shown above the tracking number; '' when none on record).
+            'awb'              => cdp_consolidationAwb($row, $detail_table === 'cdb_consolidate_packages_detail' ? 'consolidate_packages' : 'consolidate'),
             'sender_name'      => trim(($sender_data->fname ?? '') . ' ' . ($sender_data->lname ?? '')),
             'sender_address'   => $address_order ? ($address_order->sender_address ?? 'N/A') : 'N/A',
             'sender_location'  => $address_order ? trim(($address_order->sender_city ?? '') . ', ' . ($address_order->sender_country ?? ''), ', ') : 'N/A',

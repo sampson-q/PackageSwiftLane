@@ -6,6 +6,7 @@
  *
  * Expected $L keys (all strings unless noted):
  *   sys_tracking   system / package tracking (e.g. order_prefix.order_no)   [required]
+ *   awb            air waybill (consolidations only), shown above the tracking [optional]
  *   courier_track  carrier / postal tracking number, or '' / null           [optional]
  *   courier_name   courier company name                                     [optional]
  *   item_count     number of items (int)                                    [optional]
@@ -26,6 +27,7 @@
 $label_size = (isset($label_size) && $label_size === 'small') ? 'small' : 'normal';
 
 $sys_tracking  = (string) ($L['sys_tracking'] ?? '');
+$awb           = trim((string) ($L['awb'] ?? ''));
 $courier_track = trim((string) ($L['courier_track'] ?? ''));
 $courier_name  = (string) ($L['courier_name'] ?? 'N/A');
 $item_count    = $L['item_count'] ?? '';
@@ -66,6 +68,13 @@ $courier_barcode_url = $courier_track !== ''
                 <div class="s-brand"><?php echo h($core->site_name); ?></div>
             </div>
 
+            <?php if ($awb !== '') : ?>
+                <div class="s-sys">
+                    <span class="s-cap">AWB</span>
+                    <span class="s-sval"><?php echo h($awb); ?></span>
+                </div>
+            <?php endif; ?>
+
             <div class="s-barwrap">
                 <img class="s-barcode" src="<?php echo h($small_barcode); ?>" alt="Tracking barcode">
                 <div class="s-code"><?php echo h($small_num); ?></div>
@@ -103,6 +112,9 @@ $courier_barcode_url = $courier_track !== ''
             <!-- Title band: system / package tracking -->
             <div class="title">
                 <div class="k">Package Tracking</div>
+                <?php if ($awb !== '') : ?>
+                    <div class="v" style="font-size:9pt;letter-spacing:.3px;">AWB <?php echo h($awb); ?></div>
+                <?php endif; ?>
                 <div class="v"><?php echo h($sys_tracking); ?></div>
             </div>
 

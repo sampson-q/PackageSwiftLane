@@ -6,6 +6,7 @@
  *
  * $INV keys:
  *   sys_tracking     order/consolidation tracking (order_prefix.order_no)   [req]
+ *   awb              air waybill (consolidations only) — a row above Tracking #
  *   barcode_data     value for the top barcode (defaults to sys_tracking)
  *   phones           brand phone line       (defaults to reference literal)
  *   address          brand address line     (defaults to reference literal)
@@ -28,6 +29,7 @@
  * @var array $lang  (global)
  */
 $sys_tracking     = (string) ($INV['sys_tracking'] ?? '');
+$awb              = trim((string) ($INV['awb'] ?? ''));
 $barcode_data     = (string) ($INV['barcode_data'] ?? $sys_tracking);
 $brand_phones     = (string) ($INV['phones'] ?? cdp_printBrandPhones());
 $brand_address    = (string) ($INV['address'] ?? cdp_printBrandAddress());
@@ -93,6 +95,12 @@ $show_total       = !empty($INV['show_total']);
         <div class="panel">
             <div class="panel-title">Shipment Details</div>
 
+            <?php if ($awb !== '') : ?>
+                <div class="kv">
+                    <div class="k">Air Waybill:</div>
+                    <div class="v">&nbsp;&nbsp;&nbsp;&nbsp;<strong><?php echo h($awb); ?></strong></div>
+                </div>
+            <?php endif; ?>
             <div class="kv">
                 <div class="k">Tracking #:</div>
                 <div class="v">&nbsp;&nbsp;&nbsp;&nbsp;<strong><?php echo h($carrier_tracking !== '' ? $carrier_tracking : 'N/A'); ?></strong></div>
