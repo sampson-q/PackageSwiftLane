@@ -22,6 +22,8 @@
  
 
 require_once('helpers/querys.php');
+require_once('helpers/video_files.php');
+cdp_purgeDeliveredVideosLater();   // videos of delivered packages are deleted after the response
 require_once("helpers/phpmailer/class.phpmailer.php");
 require_once("helpers/phpmailer/class.smtp.php");
 require_once("ajax/notify_sms/api_sms_consolidate_service.php");

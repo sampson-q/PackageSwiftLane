@@ -27,6 +27,8 @@ require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 notify_after_response(); // email + WhatsApp go out after the response (helpers/after_response.php)
 require_permission('view_client_list');
+require_once(__DIR__ . '/../../helpers/video_files.php');
+cdp_purgeDeliveredVideosLater();   // videos of delivered packages are deleted after the response
 
 require_once("../../helpers/querys.php");
 require_once("../../helpers/functions.php");

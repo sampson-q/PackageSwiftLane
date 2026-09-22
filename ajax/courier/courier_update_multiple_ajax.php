@@ -25,6 +25,8 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
+require_once(__DIR__ . '/../../helpers/video_files.php');
+cdp_purgeDeliveredVideosLater();   // videos of delivered packages are deleted after the response
 
 require_once("../../helpers/querys.php");
 require_once("../notify_whatsapp/api_whatsapp_service_v2.php");

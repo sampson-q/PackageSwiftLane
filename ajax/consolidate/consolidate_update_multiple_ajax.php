@@ -28,6 +28,8 @@ require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 
 require_login();
 require_permission('view_consolidate_list');
+require_once(__DIR__ . '/../../helpers/video_files.php');
+cdp_purgeDeliveredVideosLater();   // videos of delivered packages are deleted after the response
 
 session_start();
 
