@@ -867,6 +867,7 @@ components:
         status_color:               { type: string, nullable: true }
         in_consolidation:           { type: boolean, description: "The shipment belongs to a consolidation" }
         consolidation:              { type: string, nullable: true, description: "That consolidation's tracking number, null when there is none" }
+        consolidation_awb:          { type: string, nullable: true, description: "That consolidation's air waybill number (e.g. 006-12345678), null when there is none or no waybill is on record" }
         eta:                        { type: string, description: "Effective ETA: the consolidation's while the shipment is travelling inside one, its own otherwise. Falls back to the delivery-time label, then 'N/A'" }
         status_invoice:             { type: integer }
         is_pickup:                  { type: boolean }
@@ -1074,6 +1075,8 @@ components:
         status_color:    { type: string }
         in_consolidation: { type: boolean, description: "The item belongs to a consolidation" }
         consolidation:   { type: string, nullable: true, description: "That consolidation's tracking number, null when there is none" }
+        consolidation_awb: { type: string, nullable: true, description: "That consolidation's air waybill number (e.g. 006-12345678), null when there is none or no waybill is on record. Shipments and packages only" }
+        awb:             { type: string, nullable: true, description: "Consolidations only: the consolidation's own air waybill number, null when none is on record" }
         eta:             { type: string, description: "Effective ETA, or 'N/A'" }
         order_date:      { type: string, format: date-time, nullable: true }
         due_date:        { type: string, format: date-time, nullable: true, description: "Shipments only" }

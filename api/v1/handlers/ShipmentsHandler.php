@@ -398,6 +398,7 @@ class ShipmentsHandler
             'status_color'         => $eff->color,
             'in_consolidation'     => $eff->in_consolidation,
             'consolidation'        => $eff->in_consolidation ? $eff->consolidate_code : null,
+            'consolidation_awb'    => $eff->in_consolidation ? (cdp_consolidationAwb($eff->consolidate_code) ?: null) : null,
             'eta'                  => cdp_getEffectiveEta(
                                           (int)$row->order_id,
                                           $row->order_no ?? '',

@@ -79,6 +79,7 @@ class TrackingHandler
             'status_color'    => $eff->color,
             'in_consolidation' => $eff->in_consolidation,
             'consolidation'   => $eff->in_consolidation ? $eff->consolidate_code : null,
+            'consolidation_awb' => $eff->in_consolidation ? (cdp_consolidationAwb($eff->consolidate_code) ?: null) : null,
             'eta'             => cdp_getEffectiveEta((int)$row->order_id, $row->order_no, $row->order_deli_time ?? null, $row->is_consolidate ?? null),
             'order_date'      => $row->order_date ?? null,
             'due_date'        => $row->due_date ?? null,
@@ -127,6 +128,7 @@ class TrackingHandler
             'status_color'    => $eff->color,
             'in_consolidation' => $eff->in_consolidation,
             'consolidation'   => $eff->in_consolidation ? $eff->consolidate_code : null,
+            'consolidation_awb' => $eff->in_consolidation ? (cdp_consolidationAwb($eff->consolidate_code) ?: null) : null,
             'eta'             => cdp_getEffectiveEta((int)$row->order_id, $row->order_no, $row->order_deli_time ?? null, $row->is_consolidate ?? null, true),
             'order_date'      => $row->order_date ?? null,
             'total_order'     => (float)($row->total_order ?? 0),
@@ -164,6 +166,7 @@ class TrackingHandler
         return [
             'type'            => 'consolidation',
             'tracking_number' => $orderNo,
+            'awb'             => cdp_consolidationAwb($row) ?: null,
             'status'          => (int)$row->status_courier,
             'status_label'    => $row->status_label,
             'status_color'    => $row->status_color,
