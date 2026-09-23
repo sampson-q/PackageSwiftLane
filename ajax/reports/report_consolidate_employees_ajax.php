@@ -22,6 +22,9 @@
 
 
 require_once("../../loader.php");
+// The consolidation reference helper (waybill first, code after) lives in
+// helpers/querys.php, which nothing on this page's include chain loads.
+require_once(__DIR__ . '/../../helpers/querys.php');
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_general_reports');

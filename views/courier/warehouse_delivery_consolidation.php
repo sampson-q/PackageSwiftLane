@@ -1,4 +1,7 @@
 <?php
+// The consolidation reference helper (waybill first, code after) lives in
+// helpers/querys.php, which nothing on this page's include chain loads.
+require_once('helpers/querys.php');
 // ============================================================================
 // Warehouse Delivery — single consolidation page (mirrors
 // financial_sheet_consolidation.php). Header summarises the consolidation's

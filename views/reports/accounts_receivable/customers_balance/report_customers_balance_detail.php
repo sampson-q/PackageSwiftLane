@@ -1,4 +1,8 @@
 <?php
+// Nothing on this page's include chain loads the query helpers or the
+// financial-sheet report helpers it calls (cdp_fsBillingSummary, cdp_consolidationRef).
+require_once('helpers/querys.php');
+require_once('helpers/fs_reports.php');
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *

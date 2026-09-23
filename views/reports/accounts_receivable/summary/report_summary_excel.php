@@ -1,4 +1,7 @@
 <?php
+// The consolidation reference helper (waybill first, code after) lives in
+// helpers/querys.php, which nothing on this page's include chain loads.
+require_once('helpers/querys.php');
 require_once(dirname(__DIR__, 4) . '/helpers/fs_reports.php');
 
 // *************************************************************************
