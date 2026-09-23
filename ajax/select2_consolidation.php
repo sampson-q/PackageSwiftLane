@@ -2,6 +2,10 @@
 // ajax/select2_consolidation.php
 // Search consolidations by c_no, c_prefix, or combined prefix+no (handles "PREFIX123", "PREFIX 123", "PREFIX-123", "PREFIX.123")
 require_once("../loader.php");
+// cdp_consolidationRef() lives here. loader.php does not pull the helpers in,
+// so without this the label line below is a fatal error and Select2 shows
+// "The results could not be loaded."
+require_once(__DIR__ . "/../helpers/consolidation_ref.php");
 
 $db = new Conexion();
 
