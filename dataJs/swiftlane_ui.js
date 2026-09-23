@@ -49,9 +49,21 @@
         }
     }
 
+    // Row-action dropdown toggles inside tables: the stylesheet draws a 32px
+    // circle for an icon-only button ("•••") and a worded pill for "Actions".
+    // Only the DOM knows whether there is text, so the class is set here.
+    function upgradeRowActions(root) {
+        var toggles = root.querySelectorAll('.table .btn-group .btn.dropdown-toggle');
+        for (var i = 0; i < toggles.length; i++) {
+            var t = toggles[i];
+            t.classList.toggle('swl-icon-only', (t.textContent || '').trim() === '');
+        }
+    }
+
     function run(root) {
         upgradeStatusLabels(root);
         upgradeSearchFields(root);
+        upgradeRowActions(root);
     }
 
     var pending = null;

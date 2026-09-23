@@ -589,17 +589,26 @@ hr { border: 0; height: 1px; background: var(--border-default); margin: 16px 0; 
 }
 .btn-group .btn + .btn { margin-left: 4px; }
 .btn-group > .btn:not(:first-child), .btn-group > .btn:not(:last-child) { border-radius: var(--radius-pill) !important; }
-/* Row-actions "•••" button inside tables */
+/* Row-actions button inside tables: a small white ring pill. When the button is
+   an icon alone ("•••") it is a 32px circle; a worded button ("Actions") keeps
+   its label and caret — the circle used to cut the word off. */
 .table .btn-group .btn.dropdown-toggle {
-  width: 32px;
   height: 32px;
-  padding: 0;
-  border-radius: var(--radius-round) !important;
+  padding: 0 12px;
+  border-radius: var(--radius-pill) !important;
   background: var(--white) !important;
   box-shadow: var(--ring-default) !important;
   color: var(--ink-800) !important;
+  font-size: 12px;
 }
-.table .btn-group .btn.dropdown-toggle::after { display: none; }
+/* .swl-icon-only is set by dataJs/swiftlane_ui.js on toggles with no text of
+   their own (CSS cannot tell an icon-only button from icon + "Actions"). */
+.table .btn-group .btn.dropdown-toggle.swl-icon-only {
+  width: 32px;
+  padding: 0;
+  border-radius: var(--radius-round) !important;
+}
+.table .btn-group .btn.dropdown-toggle.swl-icon-only::after { display: none; }
 .table .btn-group .btn.dropdown-toggle i { font-size: 14px; }
 .table .btn-sm { height: 32px; padding: 0 12px; }
 .waves-effect .waves-ripple { background: rgba(255, 255, 255, .25); }
@@ -779,7 +788,21 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ink-800); }
   box-shadow: var(--ring-default), var(--shadow-control) !important;
 }
 .swl-search > .form-control:focus { box-shadow: 0 0 0 2px var(--focus-ring) !important; }
-.swl-search + .input-group-append { display: none; }
+/* The search button next to the field stays (staff know it): a round ring button
+   after the pill field. The wrapper takes the field's place in the input group. */
+.input-group > .swl-search { flex: 1 1 auto; width: 1%; min-width: 0; }
+.swl-search + .input-group-append { margin-left: 8px; }
+.swl-search + .input-group-append .btn {
+  height: var(--control-md);
+  width: var(--control-md);
+  padding: 0;
+  border-radius: var(--radius-round) !important;
+  background: var(--white) !important;
+  color: var(--ink-800) !important;
+  box-shadow: var(--ring-default) !important;
+}
+.swl-search + .input-group-append .btn:hover { background: var(--page-050) !important; }
+.swl-search + .input-group-append:empty { display: none; }
 
 /* ── 8. Tables & pagination ──────────────────────────────────────────────── */
 .table-responsive {
@@ -792,7 +815,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ink-800); }
 .table { margin-bottom: 0; font-family: var(--font-ui); color: var(--ink-800); }
 .table thead th, .table thead td {
   height: var(--table-head-h);
-  padding: 0 16px !important;
+  padding: 0 10px !important;
   background: var(--surface-table-head) !important;
   border: 0 !important;
   border-bottom: 1px solid var(--border-default) !important;
@@ -810,7 +833,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ink-800); }
 .table thead th b, .table thead th strong { font-weight: 700; }
 .table thead th a { color: var(--slate-400); }
 .table tbody td, .table tbody th {
-  padding: 12px 16px !important;
+  padding: 10px !important;
   border: 0 !important;
   border-bottom: 1px solid var(--border-default) !important;
   border-left: 1px solid var(--border-default) !important;
@@ -826,7 +849,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ink-800); }
 .table tbody tr:last-child td { border-bottom: 0 !important; }
 .table-striped tbody tr:nth-of-type(odd) td { background: var(--white) !important; }
 .table-hover tbody tr:hover td, .table tbody tr.card-hovera:hover td { background: var(--page-050) !important; }
-.table tfoot td, .table tfoot th { background: var(--surface-table-head) !important; border-top: 1px solid var(--border-default) !important; font-weight: 700; padding: 12px 16px !important; }
+.table tfoot td, .table tfoot th { background: var(--surface-table-head) !important; border-top: 1px solid var(--border-default) !important; font-weight: 700; padding: 10px 12px !important; }
 .table td.chb, .table th.chb { width: 46px; text-align: center; }
 .table td .custom-control, .table th .custom-control { display: inline-flex; padding-left: 16px; min-height: 16px; }
 .table td .custom-control-label::before, .table td .custom-control-label::after,
@@ -847,9 +870,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ink-800); }
   border-radius: 0;
 }
 .pagination .page-item .page-link {
-  width: 32px;
+  min-width: 32px;
   height: 32px;
-  padding: 0 !important;
+  padding: 0 8px !important;
   margin: 0 !important;
   border: 0 !important;
   border-radius: var(--radius-pill) !important;
@@ -979,9 +1002,13 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ink-800); }
   border: 0 !important;
   border-radius: var(--radius-24) !important;
   box-shadow: 0 24px 64px rgba(22, 37, 54, .18) !important;
-  overflow: hidden;
   background: var(--white);
 }
+/* The corners are rounded on the header and footer themselves, not by clipping
+   the box: a date picker or dropdown that opens past the bottom edge of a modal
+   must stay visible. */
+.modal-header { border-radius: var(--radius-24) var(--radius-24) 0 0; }
+.modal-footer { border-radius: 0 0 var(--radius-24) var(--radius-24); }
 .modal-header {
   background: var(--white) !important;
   border-bottom: 1px solid var(--border-default) !important;
@@ -1489,3 +1516,40 @@ body { overflow-x: clip; }
 .swl-awbref__code { font-weight: 500; font-size: .86em; opacity: .62; letter-spacing: .01em; }
 a .swl-awbref__code, .swl-awbref--stack .swl-awbref__code { opacity: .7; }
 td .swl-awbref, .table .swl-awbref { white-space: normal; }
+
+/* ── 15. Controls inside tables ──────────────────────────────────────────────
+   The 48px / 16px-padding field is for forms. Inside a table cell (shipment
+   items, package rows, price tables) the column is only as wide as the table
+   gives it: the quantity field on the shipment form ended up 32px wide with
+   32px of padding, no room for a single digit, and staff could not enter a
+   quantity. Table controls are compact and keep a minimum width. */
+.table td .form-control, .table th .form-control,
+.table td .custom-select, .table th .custom-select,
+.table td select.form-control, .table th select.form-control {
+  height: 36px !important;
+  min-height: 36px;
+  min-width: 64px;
+  padding: 0 10px !important;
+  border-radius: var(--radius-8) !important;
+  font-size: 13px;
+}
+.table td textarea.form-control, .table th textarea.form-control { height: auto !important; min-height: 60px; padding: 8px 10px !important; }
+.table td .custom-select, .table th .custom-select { padding-right: 30px !important; background-position: right 8px center !important; }
+.table td .input-group, .table th .input-group { flex-wrap: nowrap; min-width: 120px; }
+.table td .input-group > .form-control, .table th .input-group > .form-control { min-width: 56px; }
+.table td .input-group-append .btn, .table td .input-group-append .input-group-text,
+.table td .input-group-prepend .input-group-text, .table th .input-group-append .btn {
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 0 var(--radius-8) var(--radius-8) 0 !important;
+}
+.table td .input-group > .form-control:not(:last-child) { border-radius: var(--radius-8) 0 0 var(--radius-8) !important; }
+.table tbody td:has(> .form-control), .table tbody td:has(> .input-group), .table tbody td:has(> .btn-group),
+.table tbody td:has(> .custom-select) { padding: 8px 10px !important; }
+.table td .btn-group .btn, .table th .btn-group .btn { height: 32px; padding: 0 10px; white-space: nowrap; }
+.table td input[type="checkbox"], .table td input[type="radio"] { width: 16px; height: 16px; min-width: 0; }
+/* Small form fields keep their small height when the markup asks for it inside
+   a row of other small fields (input-group-sm, form-control-sm in .row-sm) */
+.input-group-sm > .form-control, .input-group-sm > .custom-select { height: 36px !important; min-height: 36px; padding: 0 10px !important; }
+.input-group-sm > .input-group-append > .btn, .input-group-sm > .input-group-append > .input-group-text,
+.input-group-sm > .input-group-prepend > .input-group-text { height: 36px; padding: 0 10px; }
