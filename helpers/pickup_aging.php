@@ -15,6 +15,8 @@
 // Requires loader.php (Conexion, Core) to be included by the caller.
 // ============================================================================
 
+require_once __DIR__ . '/finance_switch.php'; // cdp_fsClearedSql(): clearance only counts while the finance module is on
+
 if (!defined('CDP_PA_READY'))        define('CDP_PA_READY', 32);     // Ready for PickUp
 if (!defined('CDP_PA_SORTING'))      define('CDP_PA_SORTING', 33);   // Sorting at Accra Office
 if (!defined('CDP_PA_PENDING'))      define('CDP_PA_PENDING', 1);    // Pending_Collection
@@ -111,10 +113,13 @@ if (!function_exists('cdp_propagateConsolidationStatusToPackages')) {
                 // Only start the pickup clock for packages already cleared for
                 // delivery; the clock starts at clearance time. Uncleared
                 // packages join later (via discovery) once Accounts clears them.
+                // With the financial module off every package counts as cleared
+                // and the clock starts now (helpers/finance_switch.php).
+                $readyExpr = cdp_financeEnabled() ? 'a.fs_cleared_at' : 'NOW()';
                 $db->cdp_query("INSERT INTO cdb_package_pickup_aging (order_id, order_track, sender_id, ready_at)
-                                SELECT a.order_id, :trk, a.sender_id, a.fs_cleared_at
+                                SELECT a.order_id, :trk, a.sender_id, " . $readyExpr . "
                                 FROM cdb_add_order a
-                                WHERE a.order_id = :oid AND a.fs_cleared_for_delivery = 1
+                                WHERE a.order_id = :oid AND " . cdp_fsClearedSql('a') . "
                                 ON DUPLICATE KEY UPDATE order_track = VALUES(order_track)");
                 $db->bind(':oid', (int) $p->oid);
                 $db->bind(':trk', $track);
@@ -141,7 +146,7 @@ if (!function_exists('cdp_pickupAgingPending')) {
             JOIN cdb_add_order a ON a.order_id = p.order_id
             WHERE p.notified_at IS NULL
               AND a.status_courier = " . CDP_PA_READY . "
-              AND a.fs_cleared_for_delivery = 1
+              AND " . cdp_fsClearedSql('a') . "
               AND p.ready_at <= (NOW() - INTERVAL " . (int) CDP_PA_READY_DAYS . " DAY)
             ORDER BY p.ready_at ASC");
         $db->cdp_execute();
@@ -171,12 +176,12 @@ if (!function_exists('cdp_processPickupAging')) {
             FROM cdb_add_order a
             LEFT JOIN cdb_package_pickup_aging p ON p.order_id = a.order_id
             WHERE a.status_courier = " . CDP_PA_READY . "
-              AND a.fs_cleared_for_delivery = 1
+              AND " . cdp_fsClearedSql('a') . "
               AND p.order_id IS NULL");
         $db->cdp_execute();
         foreach ($db->cdp_registros() as $row) {
             $track = $row->order_prefix . $row->order_no;
-            $readyAt = !empty($row->fs_cleared_at) ? $row->fs_cleared_at : date('Y-m-d H:i:s');
+            $readyAt = (cdp_financeEnabled() && !empty($row->fs_cleared_at)) ? $row->fs_cleared_at : date('Y-m-d H:i:s');
 
             $t = new Conexion;
             $t->cdp_query("INSERT INTO cdb_package_pickup_aging (order_id, order_track, sender_id, ready_at)
@@ -195,7 +200,7 @@ if (!function_exists('cdp_processPickupAging')) {
         $db->cdp_query("
             DELETE p FROM cdb_package_pickup_aging p
             JOIN cdb_add_order a ON a.order_id = p.order_id
-            WHERE a.fs_cleared_for_delivery <> 1
+            WHERE NOT (" . cdp_fsClearedSql('a') . ")
                OR a.status_courier NOT IN (" . CDP_PA_READY . ", " . CDP_PA_PENDING . ", " . CDP_PA_NOTPICKED . ", " . (int) $auctionId . ")");
         $db->cdp_execute();
         $summary['dropped'] = (int) $db->cdp_rowCount();
