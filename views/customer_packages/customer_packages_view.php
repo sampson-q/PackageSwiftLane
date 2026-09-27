@@ -1015,6 +1015,29 @@ if ($row_order->status_invoice == 1) {
                 } ?>
 
 
+                <?php if ((int) $userData->userlevel === 1 && !$user->cdp_hasPermission('view_details_packages')) {
+                    // Customers do not get the priced item table below, but they do see
+                    // what their package weighs (no rates or money).
+                    $cpv_unit   = htmlspecialchars((string) ($core->weight_p ?? ''), ENT_QUOTES, 'UTF-8');
+                    $cpv_itemWt = 0.0;
+                    foreach ((array) $order_items as $cpv_it) {
+                        $cpv_itemWt += (float) ($cpv_it->order_item_weight ?? 0) * max(1, (float) ($cpv_it->order_item_quantity ?? 1));
+                    }
+                    $cpv_pkgWt = (float) ($row_order->total_weight ?? 0);
+                    $cpv_wt    = $cpv_pkgWt > 0 ? $cpv_pkgWt : $cpv_itemWt;
+                ?>
+                <div class="row">
+                    <div class="col-lg-12 col-xl-12 col-md-12">
+                        <div class="card">
+                            <div class="card-body d-flex align-items-center justify-content-between flex-wrap">
+                                <h3 class="card-title mb-0"><span>Package Weight</span></h3>
+                                <b class="h4 mb-0"><?php echo $cpv_wt > 0 ? number_format($cpv_wt, 2) . ' ' . $cpv_unit : '—'; ?></b>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php } ?>
+
                 <!-- DETAILS TAX PERMISSION  -->
                 <?php if ($user->cdp_hasPermission('view_details_packages')) { ?>
                 <!-- Row -->
