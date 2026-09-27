@@ -87,7 +87,7 @@ if (isset($_POST['login'])) {
         <!-- Main Css -->
         <link href="<?= cdp_asset('assets/css_main_swiftlane/css/style.css') ?>" rel="stylesheet" type="text/css" id="theme-opt" />
         <link href="<?= cdp_asset('assets/css_main_swiftlane/css/colors/default.css') ?>" rel="stylesheet" id="color-opt">
-        <?php include 'views/inc/auth_head.php'; ?>
+        <?php $cdpAuthPhoto = 'login'; include 'views/inc/auth_head.php'; ?>
     </head>
 
     <body class="auth-page">
@@ -102,134 +102,111 @@ if (isset($_POST['login'])) {
         </div>
         <!-- Loader -->
 
-        <div class="back-to-home">
-            <a href="index.php" class="back-button btn btn-icon btn-primary" aria-label="Back to home"><i data-feather="arrow-left" class="icons"></i></a>
+    <?php cdp_authFrameOpen($core, [
+        'photo' => 'login',
+        'badge' => 'Swift Lane Logistics',
+        'title' => 'Freight that moves the moment you do.',
+    ]); ?>
+
+        <div class="auth-card auth-card--compact card login-page border-0">
+            <div class="auth-card__top text-center">
+                <a class="logo" href="index.php">
+                    <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
+                </a>
+            </div>
+
+            <div class="card-body">
+                <div class="text-center">
+                    <h4 class="auth-heading mb-2"><?php echo $lang['message_title_login0'] ?></h4>
+                    <p class="auth-subtitle">Use your account to continue.</p>
+                </div>
+
+                <div id="msgholder2" class="mt-4">
+                    <?php
+                    if (isset($_GET['notice']) && $_GET['notice'] === 'otp_expired') {
+                    ?>
+                        <div class="alert alert-warning">
+                            <p class="mb-0">Your verification session expired. Please log in again to receive a new code.</p>
+                        </div>
+                    <?php } ?>
+                    <?php
+                    if (isset($_GET['notice']) && $_GET['notice'] === 'registration_complete') {
+                    ?>
+                        <div class="alert alert-success">
+                            <p class="mb-0">Your email is verified and your registration is complete. Your account is now awaiting approval — you'll get an email once it's activated.</p>
+                        </div>
+                    <?php } ?>
+                    <?php
+                    if (isset($login) && $login->errors) {
+                    ?>
+                        <div class="alert alert-danger" id="success-alert">
+                            <p class="mb-0"><span class="icon-minus-sign"></span>
+                                <i class="close icon-remove-circle"></i>
+                                <span>Error!</span>
+                                <?php
+                                foreach ($login->errors as $error) {
+                                    echo $error;
+                                }
+                                ?>
+                            </p>
+                        </div>
+                    <?php } ?>
+                </div>
+
+                <div id="loader" style="display:none"></div>
+
+                <form class="login-form mt-4" method="post" name="login_form" id="login-form">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label"><?php echo 'Swift ' . $lang['left115'] . ' / Email' ?> <span class="text-danger">*</span></label>
+                                <div class="form-icon position-relative">
+                                    <i data-feather="mail" class="fea icon-sm icons"></i>
+                                    <input type="text" class="form-control ps-5" placeholder="<?php echo $lang['left116'] . ' / Email' ?>" name="username" id="username" required="" autocomplete="username">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label"><?php echo $lang['left117'] ?> <span class="text-danger">*</span></label>
+                                <div class="form-icon position-relative">
+                                    <i data-feather="shield" class="fea icon-sm icons"></i>
+                                    <input type="password" class="form-control ps-5" placeholder="<?php echo $lang['left118'] ?>" name="password" id="password" required="" autocomplete="current-password">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input" type="checkbox" name="remember_me" value="1" id="flexCheckDefault">
+                                    <label class="form-check-label" for="flexCheckDefault"><?php echo $lang['left120'] ?></label>
+                                </div>
+                                <p class="forgot-pass mb-0"><a href="forgot-password.php" class="text-dark fw-bold"><?php echo $lang['left119'] ?></a></p>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-2">
+                            <div class="d-grid">
+                                <button class="btn btn-grad"><i data-feather="chevrons-right" class="icons"></i><?php echo $lang['left121'] ?></button>
+                                <input name="login" type="hidden" value="1" />
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="auth-divider">or</div>
+                            <div class="auth-footer-links">
+                                <a href="tracking.php" class="btn btn-swl-outline"><i data-feather="send" class="icons"></i>Track a Parcel</a>
+                                <a href="sign-up.php" class="btn btn-swl-outline"><i data-feather="plus" class="icons"></i>Register</a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <section class="auth-shell">
-            <div class="container-fluid px-0">
-                <div class="row g-0 auth-shell__grid">
-                    <div class="col-lg-6 auth-shell__panel auth-shell__panel--visual order-1 order-lg-1">
-                        <div class="auth-visual d-flex flex-column justify-content-center h-100">
-                            <a class="auth-mobile-logo auth-brand" href="index.php">
-                                <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="100px" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
-                            </a>
-                            <div class="auth-visual-copy">
-                                <span class="auth-badge">Swift Lane Logistics</span>
-                                <h1>Freight that moves the moment you do.</h1>
-                                <p>Air and sea freight between West Africa, the UK and the United States. Every parcel, consolidation and payment is tracked from one control panel.</p>
-                                <div class="auth-mini-list">
-                                    <span>Tracking</span>
-                                    <span>Air &amp; Sea Freight</span>
-                                    <span>Consolidations</span>
-                                </div>
-                            </div>
-                            <img src="assets/images/Login.svg" alt="Login illustration" class="auth-visual__image img-fluid">
-                        </div>
-                    </div>
-
-                    <div class="col-lg-6 auth-shell__panel auth-shell__panel--form order-2 order-lg-2">
-                        <div class="auth-card auth-card--compact card login-page border-0">
-                            <div class="auth-card__top text-center">
-                                <a class="logo" href="index.php">
-                                    <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
-                                </a>
-                            </div>
-
-                            <div class="card-body">
-                                <div class="text-center">
-                                    <h4 class="auth-heading mb-2"><?php echo $lang['message_title_login0'] ?></h4>
-                                    <p class="auth-subtitle">Use your account to continue.</p>
-                                </div>
-
-                                <div id="msgholder2" class="mt-4">
-                                    <?php
-                                    if (isset($_GET['notice']) && $_GET['notice'] === 'otp_expired') {
-                                    ?>
-                                        <div class="alert alert-warning">
-                                            <p class="mb-0">Your verification session expired. Please log in again to receive a new code.</p>
-                                        </div>
-                                    <?php } ?>
-                                    <?php
-                                    if (isset($_GET['notice']) && $_GET['notice'] === 'registration_complete') {
-                                    ?>
-                                        <div class="alert alert-success">
-                                            <p class="mb-0">Your email is verified and your registration is complete. Your account is now awaiting approval — you'll get an email once it's activated.</p>
-                                        </div>
-                                    <?php } ?>
-                                    <?php
-                                    if (isset($login) && $login->errors) {
-                                    ?>
-                                        <div class="alert alert-danger" id="success-alert">
-                                            <p class="mb-0"><span class="icon-minus-sign"></span>
-                                                <i class="close icon-remove-circle"></i>
-                                                <span>Error!</span>
-                                                <?php
-                                                foreach ($login->errors as $error) {
-                                                    echo $error;
-                                                }
-                                                ?>
-                                            </p>
-                                        </div>
-                                    <?php } ?>
-                                </div>
-
-                                <div id="loader" style="display:none"></div>
-
-                                <form class="login-form mt-4" method="post" name="login_form" id="login-form">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="mb-3">
-                                                <label class="form-label"><?php echo 'Swift ' . $lang['left115'] . ' / Email' ?> <span class="text-danger">*</span></label>
-                                                <div class="form-icon position-relative">
-                                                    <i data-feather="mail" class="fea icon-sm icons"></i>
-                                                    <input type="text" class="form-control ps-5" placeholder="<?php echo $lang['left116'] . ' / Email' ?>" name="username" id="username" required="" autocomplete="username">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-12">
-                                            <div class="mb-3">
-                                                <label class="form-label"><?php echo $lang['left117'] ?> <span class="text-danger">*</span></label>
-                                                <div class="form-icon position-relative">
-                                                    <i data-feather="shield" class="fea icon-sm icons"></i>
-                                                    <input type="password" class="form-control ps-5" placeholder="<?php echo $lang['left118'] ?>" name="password" id="password" required="" autocomplete="current-password">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-12">
-                                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                                                <div class="form-check mb-0">
-                                                    <input class="form-check-input" type="checkbox" name="remember_me" value="1" id="flexCheckDefault">
-                                                    <label class="form-check-label" for="flexCheckDefault"><?php echo $lang['left120'] ?></label>
-                                                </div>
-                                                <p class="forgot-pass mb-0"><a href="forgot-password.php" class="text-dark fw-bold"><?php echo $lang['left119'] ?></a></p>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-12 mt-2">
-                                            <div class="d-grid">
-                                                <button class="btn btn-grad"><i data-feather="chevrons-right" class="icons"></i><?php echo $lang['left121'] ?></button>
-                                                <input name="login" type="hidden" value="1" />
-                                            </div>
-                                        </div>
-
-                                        <div class="col-12">
-                                            <div class="auth-divider">or</div>
-                                            <div class="auth-footer-links">
-                                                <a href="tracking.php" class="btn btn-swl-outline"><i data-feather="send" class="icons"></i>Track a Parcel</a>
-                                                <a href="sign-up.php" class="btn btn-swl-outline"><i data-feather="plus" class="icons"></i>Register</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <?php cdp_authFrameClose($core); ?>
 
         <!-- javascript -->
         <script src="assets/custom_dependencies/jquery-3.6.0.min.js"></script>
