@@ -27,8 +27,13 @@
  * fields were mandatory — customers saw a generic error for every failure.
  *
  * Rules (per product decision):
- *   - Name, last name, email, gender and at least one complete address are
- *     mandatory. Password is optional (blank = unchanged).
+ *   - Partial updates are allowed: a customer who only wants to change their
+ *     name saves just that. A field left blank keeps what is stored (it never
+ *     wipes a value); a field that IS filled in must be valid.
+ *   - Addresses are optional. An empty new address block is ignored; a new
+ *     block that is only partly filled is rejected (so half an address is never
+ *     saved); an existing address keeps its stored value for any field left
+ *     blank. Password is optional (blank = unchanged).
  *   - The ID document is optional and is handled by its own endpoint.
  *   - The WhatsApp phone number is never changed here: it goes through the
  *     confirm-then-OTP flow (send/verify_profile_phone_otp_ajax.php).
@@ -79,30 +84,47 @@ $fname  = trim((string) ($_POST['fname'] ?? ''));
 $lname  = trim((string) ($_POST['lname'] ?? ''));
 $email  = trim((string) ($_POST['email'] ?? ''));
 $gender = trim((string) ($_POST['gender'] ?? ''));
-$notes  = trim((string) ($_POST['notes'] ?? ''));
+$notes  = array_key_exists('notes', $_POST) ? trim((string) $_POST['notes']) : (string) $row->notes;
 $pass   = (string) ($_POST['password'] ?? '');
 
-if ($fname === '' || mb_strlen($fname) < 2) {
-    $errors['fname'] = $lang['validate_field_ajax122'] ?? 'First name is required.';
+// Blank = keep the stored value. Only what the customer actually filled in is
+// checked, so an untouched field can never block a save.
+if ($fname === '') {
+    $fname = (string) $row->fname;
+} elseif (mb_strlen($fname) < 2) {
+    $errors['fname'] = 'First name must be at least 2 characters.';
 }
-if ($lname === '' || mb_strlen($lname) < 2) {
-    $errors['lname'] = $lang['validate_field_ajax123'] ?? 'Last name is required.';
+if ($lname === '') {
+    $lname = (string) $row->lname;
+} elseif (mb_strlen($lname) < 2) {
+    $errors['lname'] = 'Last name must be at least 2 characters.';
 }
 if ($email === '') {
-    $errors['email'] = $lang['validate_field_ajax125'] ?? 'Email is required.';
-} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || !$user->cdp_isValidEmail($email)) {
-    $errors['email'] = $lang['validate_field_ajax127'] ?? 'Invalid email address.';
-} elseif ($user->cdp_emailExists($email, $targetId)) {
-    $errors['email'] = $lang['validate_field_ajax126'] ?? 'This email is already in use by another account.';
+    $email = (string) $row->email;
+} elseif (strcasecmp($email, (string) $row->email) !== 0) {
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || !$user->cdp_isValidEmail($email)) {
+        $errors['email'] = $lang['validate_field_ajax127'] ?? 'Invalid email address.';
+    } elseif ($user->cdp_emailExists($email, $targetId)) {
+        $errors['email'] = $lang['validate_field_ajax126'] ?? 'This email is already in use by another account.';
+    }
 }
-if (!in_array($gender, ['Male', 'Female', 'Other'], true)) {
-    $errors['gender'] = 'Please select your gender.';
+if ($gender === '') {
+    $gender = (string) $row->gender;
+} elseif (!in_array($gender, ['Male', 'Female', 'Other'], true)) {
+    $errors['gender'] = 'Please choose a gender from the list.';
 }
 if ($pass !== '' && strlen($pass) < 6) {
     $errors['password'] = 'Password must be at least 6 characters.';
 }
 
-// Addresses: at least one, every field filled, ids must belong to this account.
+// Addresses (optional). Stored rows of this account, for the keep-blank merge.
+$db->cdp_query("SELECT * FROM cdb_senders_addresses WHERE user_id = :uid");
+$db->bind(':uid', $targetId);
+$storedAddr = [];
+foreach ((array) $db->cdp_registros() as $sa) {
+    $storedAddr[(int) $sa->id_addresses] = $sa;
+}
+
 $total     = (int) ($_POST['total_address'] ?? 0);
 $addresses = [];
 $posted    = 0;
@@ -119,13 +141,35 @@ for ($i = 0; $i < $total; $i++) {
         'city'       => (int) ($_POST['city'][$i] ?? 0),
         'postal'     => trim((string) ($_POST['postal'][$i] ?? '')),
     ];
-    if ($a['address'] === '' || $a['country'] <= 0 || $a['state'] <= 0 || $a['city'] <= 0 || $a['postal'] === '') {
-        $errors['address_' . ($posted)] = 'Address ' . $posted . ': country, state, city, zip code and address are all required.';
+    $filled = ($a['address'] !== '' || $a['country'] > 0 || $a['state'] > 0 || $a['city'] > 0 || $a['postal'] !== '');
+
+    if ($a['address_id'] > 0 && isset($storedAddr[$a['address_id']])) {
+        // Existing address: a blank field keeps what is stored.
+        $sa = $storedAddr[$a['address_id']];
+        if ($a['address'] === '') $a['address'] = (string) $sa->address;
+        if ($a['country'] <= 0)   $a['country'] = (int) $sa->country;
+        if ($a['state'] <= 0)     $a['state']   = (int) $sa->state;
+        if ($a['city'] <= 0)      $a['city']    = (int) $sa->city;
+        if ($a['postal'] === '')  $a['postal']  = (string) $sa->zip_code;
+        $addresses[] = $a;
+        continue;
+    }
+
+    $a['address_id'] = 0;
+    if (!$filled) {
+        continue; // an empty new block is simply ignored
+    }
+    $missing = [];
+    if ($a['country'] <= 0)   $missing[] = 'country';
+    if ($a['state'] <= 0)     $missing[] = 'state';
+    if ($a['city'] <= 0)      $missing[] = 'city';
+    if ($a['postal'] === '')  $missing[] = 'zip code';
+    if ($a['address'] === '') $missing[] = 'address';
+    if ($missing) {
+        $errors['address_' . $posted] = 'Address ' . $posted . ' is incomplete: add the ' . implode(', ', $missing) . ', or clear the block to skip it.';
+        continue;
     }
     $addresses[] = $a;
-}
-if ($posted === 0) {
-    $errors['address'] = $lang['validate_field_ajax134'] ?? 'At least one address is required.';
 }
 
 if (!empty($errors)) {
@@ -178,7 +222,13 @@ foreach ($addresses as $a) {
         'postal'  => cdp_sanitize($a['postal']),
     ]);
 }
-cdp_profileMarkStep($targetId, 'update_address');
+// The onboarding "address" step only counts once a complete address exists.
+$db->cdp_query("SELECT 1 FROM cdb_senders_addresses WHERE user_id = :uid AND country > 0 AND state > 0 AND city > 0
+                AND TRIM(COALESCE(address, '')) <> '' AND TRIM(COALESCE(zip_code, '')) <> '' LIMIT 1");
+$db->bind(':uid', $targetId);
+if ($db->cdp_registro()) {
+    cdp_profileMarkStep($targetId, 'update_address');
+}
 
 $changed = [];
 foreach (['fname' => $fname, 'lname' => $lname, 'email' => $email, 'gender' => $gender, 'notes' => $notes] as $k => $v) {

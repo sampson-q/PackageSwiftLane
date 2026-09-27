@@ -218,42 +218,49 @@ $("#edit_user").on("submit", function (event) {
     var gender = $("#gender").val();
     var password = $("#password").val();
 
-    if (fname.length < 2) {
-        cdpProfileFieldError($("#fname"), "Your name is required.");
+    // Partial updates are fine: a blank field keeps what is stored, so only the
+    // fields the customer actually filled in are checked.
+    if (fname && fname.length < 2) {
+        cdpProfileFieldError($("#fname"), "At least 2 characters (or leave it empty to keep the current one).");
         problems.push(cdpProfileT("message_error_form9", "Name"));
     }
-    if (lname.length < 2) {
-        cdpProfileFieldError($("#lname"), "Your last name is required.");
+    if (lname && lname.length < 2) {
+        cdpProfileFieldError($("#lname"), "At least 2 characters (or leave it empty to keep the current one).");
         problems.push(cdpProfileT("message_error_form10", "Last Name"));
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-        cdpProfileFieldError($("#email"), "A valid email address is required.");
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+        cdpProfileFieldError($("#email"), "This does not look like a valid email address.");
         problems.push(cdpProfileT("message_error_form8", "Email"));
-    }
-    if (!gender) {
-        cdpProfileFieldError($("#gender"), "Please select your gender.");
-        problems.push("Gender");
     }
     if (password && password.length < 6) {
         cdpProfileFieldError($("#password"), "Password must be at least 6 characters (leave empty to keep the current one).");
         problems.push("Password");
     }
 
-    // Addresses: at least one block, every field of every block filled.
+    // Addresses are optional. A saved address keeps its stored value for any
+    // field left blank; a new block is either left empty (skipped) or complete.
     var blocks = $('[id^="div_parent_"]');
-    if (blocks.length === 0) {
-        problems.push("At least one address");
-    }
+    var sendBlocks = [];
     blocks.each(function () {
         var n = this.id.replace("div_parent_", "");
-        var ok = true;
-        $.each(["country", "state", "city"], function (i, k) {
-            if (!$("#" + k + n).val()) { cdpProfileFieldError($("#" + k + n), "Required."); ok = false; }
-        });
-        $.each(["postal", "address"], function (i, k) {
-            if (!$.trim($("#" + k + n).val())) { cdpProfileFieldError($("#" + k + n), "Required."); ok = false; }
-        });
-        if (!ok) { problems.push("Address " + n + " (all fields)"); }
+        var isSaved = parseInt($("#address_id" + n).val() || "0", 10) > 0;
+        var vals = {
+            country: $("#country" + n).val(),
+            state: $("#state" + n).val(),
+            city: $("#city" + n).val(),
+            postal: $.trim($("#postal" + n).val() || ""),
+            address: $.trim($("#address" + n).val() || "")
+        };
+        var filled = !!(vals.country || vals.state || vals.city || vals.postal || vals.address);
+        if (!isSaved && !filled) { return; }
+        if (!isSaved) {
+            var ok = true;
+            $.each(["country", "state", "city", "postal", "address"], function (i, k) {
+                if (!vals[k]) { cdpProfileFieldError($("#" + k + n), "Required for a new address."); ok = false; }
+            });
+            if (!ok) { problems.push("Address " + n + " is incomplete — finish it or clear it to skip"); return; }
+        }
+        sendBlocks.push(n);
     });
 
     if (problems.length) {
@@ -278,8 +285,7 @@ $("#edit_user").on("submit", function (event) {
 
     // Address blocks are posted by index so removed rows never shift the others.
     var idx = 0;
-    blocks.each(function () {
-        var n = this.id.replace("div_parent_", "");
+    $.each(sendBlocks, function (i, n) {
         data.append("address_id[" + idx + "]", $("#address_id" + n).val() || "");
         data.append("country[" + idx + "]", $("#country" + n).val());
         data.append("state[" + idx + "]", $("#state" + n).val());

@@ -28,8 +28,10 @@
  *   - WhatsApp number: confirm the number on file, or enter a new one; a
  *     one-time code is sent over WhatsApp unless OTP is switched off
  *     system-wide                                  -> send/verify_profile_phone_otp_ajax.php
- *   - name, email, gender, password (optional), addresses (at least one,
- *     every field required), notes                -> customers_profile_edit_ajax.php
+ *   - name, email, gender, password, addresses, notes -> customers_profile_edit_ajax.php
+ *     Partial saves are allowed: a blank field keeps its stored value, so a
+ *     customer can change only their name. Addresses are optional; a new
+ *     address block is either left empty or filled in completely.
  */
 
 $userData = $user->cdp_getUserData();
@@ -116,7 +118,10 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
         .required-mark { color: #dc3545; }
         .field-error-message { display: block; font-size: .875rem; margin-top: 5px; }
         .form-group.has-error .form-control, .form-group.has-error .select2-selection { border-color: #dc3545 !important; }
-        .profile-phone-status { font-size: .75rem; }
+        .profile-phone-status { font-size: .75rem; vertical-align: middle; }
+        .profile-phone-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .profile-phone-row .form-control { flex: 1 1 220px; min-width: 0; }
+        .profile-phone-row .btn { flex: 0 0 auto; white-space: nowrap; }
         .address-block { border: 1px dashed #dcdcdc; border-radius: 10px; padding: 14px 14px 0; margin-bottom: 14px; }
     </style>
 </head>
@@ -169,27 +174,6 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
                                 </center>
                             </div>
                             <div><hr></div>
-                            <div class="card-body">
-                                <small class="text-muted"><?php echo $lang['user-account4'] ?></small>
-                                <h6 id="profile_email_display"><?php echo $h($row->email); ?></h6>
-
-                                <small class="text-muted p-t-30 db">WhatsApp <?php echo $lang['user-account8'] ?></small>
-                                <h6 class="mb-1">
-                                    <span id="profile_phone_display"><?php echo $row->phone !== '' ? $h($row->phone) : '<span class="text-muted">Not set</span>'; ?></span>
-                                    <?php if ($phoneStatus === 'verified') { ?>
-                                        <span class="badge badge-success profile-phone-status ml-1">Confirmed</span>
-                                    <?php } elseif ($phoneStatus === 'pending') { ?>
-                                        <span class="badge badge-warning profile-phone-status ml-1">Not Confirmed</span>
-                                    <?php } ?>
-                                </h6>
-                                <?php if ($isOwn) { ?>
-                                    <button type="button" class="btn btn-sm btn-outline-success mt-1" id="btn_change_whatsapp">
-                                        <i class="fab fa-whatsapp"></i>
-                                        <?php echo $row->phone !== '' ? 'Confirm Or Change WhatsApp Number' : 'Add WhatsApp Number'; ?>
-                                    </button>
-                                    <small class="text-muted d-block mt-2">We will first ask whether the number on file is the one you use on WhatsApp, then send a code to confirm it.</small>
-                                <?php } ?>
-                            </div>
                             <div class="card-body row text-center">
                                 <div class="col-6 border-right">
                                     <h6><?php echo $h($row->created); ?></h6>
@@ -260,7 +244,7 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
                             <div class="tab-content" id="pills-tabContent">
                                 <div class="tab-pane fade show active" id="profile-details" role="tabpanel">
                                     <div class="card-body">
-                                        <p class="text-muted small">Fields marked <span class="required-mark">*</span> are required. Your ID document (left) is optional.</p>
+                                        <p class="text-muted small">Change only what you need and save. A field left empty keeps its current value. Your ID document (left) is optional.</p>
 
                                         <form class="form-horizontal form-material" id="edit_user" name="edit_user" method="post" autocomplete="off">
                                             <input type="hidden" name="_csrf_token" value="<?php echo $h(cdp_csrf_token()); ?>">
@@ -283,13 +267,13 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
                                                 <div class="row">
                                                     <div class="col-md-6">
                                                         <div class="form-group">
-                                                            <label for="fname"><?php echo $lang['user_manage6'] ?> <span class="required-mark">*</span></label>
+                                                            <label for="fname"><?php echo $lang['user_manage6'] ?></label>
                                                             <input type="text" class="form-control" name="fname" id="fname" value="<?php echo $h($row->fname); ?>" placeholder="<?php echo $lang['user_manage6'] ?>">
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <div class="form-group">
-                                                            <label for="lname"><?php echo $lang['user_manage7'] ?> <span class="required-mark">*</span></label>
+                                                            <label for="lname"><?php echo $lang['user_manage7'] ?></label>
                                                             <input type="text" class="form-control" name="lname" id="lname" value="<?php echo $h($row->lname); ?>" placeholder="<?php echo $lang['user_manage7'] ?>">
                                                         </div>
                                                     </div>
@@ -298,13 +282,13 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
                                                 <div class="row">
                                                     <div class="col-md-6">
                                                         <div class="form-group">
-                                                            <label for="email"><?php echo $lang['user_manage5'] ?> <span class="required-mark">*</span></label>
+                                                            <label for="email"><?php echo $lang['user_manage5'] ?></label>
                                                             <input type="email" class="form-control" id="email" name="email" value="<?php echo $h($row->email); ?>" placeholder="<?php echo $lang['user_manage5'] ?>">
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <div class="form-group">
-                                                            <label for="gender"><?php echo $lang['user_manage11'] ?> <span class="required-mark">*</span></label>
+                                                            <label for="gender"><?php echo $lang['user_manage11'] ?></label>
                                                             <select class="custom-select form-control" id="gender" name="gender">
                                                                 <option value="">-- Select --</option>
                                                                 <option value="Male" <?php echo ($row->gender == 'Male') ? 'selected' : ''; ?>><?php echo $lang['leftorder179'] ?></option>
@@ -316,18 +300,35 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
                                                 </div>
 
                                                 <div class="row">
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-12">
                                                         <div class="form-group">
-                                                            <label>WhatsApp <?php echo $lang['user_manage9'] ?></label>
-                                                            <input type="text" class="form-control" disabled readonly value="<?php echo $h($row->phone); ?>">
-                                                            <small class="text-muted">To change it, use the <strong>WhatsApp Number</strong> button on the left. Changes are confirmed by a code sent to the number.</small>
+                                                            <label for="profile_phone_display">
+                                                                WhatsApp <?php echo $lang['user_manage9'] ?>
+                                                                <?php if ($phoneStatus === 'verified') { ?>
+                                                                    <span class="badge badge-success profile-phone-status ml-1">Confirmed</span>
+                                                                <?php } elseif ($phoneStatus === 'pending') { ?>
+                                                                    <span class="badge badge-warning profile-phone-status ml-1">Not Confirmed</span>
+                                                                <?php } ?>
+                                                            </label>
+                                                            <div class="profile-phone-row">
+                                                                <input type="text" class="form-control" id="profile_phone_display" disabled readonly value="<?php echo $h($row->phone); ?>" placeholder="Not set">
+                                                                <?php if ($isOwn) { ?>
+                                                                    <button type="button" class="btn btn-outline-success" id="btn_change_whatsapp">
+                                                                        <i class="fab fa-whatsapp"></i>
+                                                                        <?php echo $row->phone !== '' ? 'Confirm Or Change Number' : 'Add WhatsApp Number'; ?>
+                                                                    </button>
+                                                                <?php } ?>
+                                                            </div>
+                                                            <?php if ($isOwn) { ?>
+                                                                <small class="text-muted">We first ask whether this is the number you use on WhatsApp, then send a code to confirm it.</small>
+                                                            <?php } ?>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 <hr>
-                                                <h4>Addresses <span class="required-mark">*</span></h4>
-                                                <p class="text-muted small">At least one address is required, and every field of each address must be filled.</p>
+                                                <h4>Addresses <small class="text-muted">(optional)</small></h4>
+                                                <p class="text-muted small">A new address needs all of its fields; leave a new block empty to skip it.</p>
 
                                                 <div id="resultados_ajax"></div>
 
@@ -353,7 +354,7 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
                                                         <div class="row">
                                                             <div class="col-md-4 mb-3">
                                                                 <div class="form-group">
-                                                                    <label class="control-label col-form-label"><?php echo $lang['leftorder318'] ?> <span class="required-mark">*</span></label>
+                                                                    <label class="control-label col-form-label"><?php echo $lang['leftorder318'] ?></label>
                                                                     <select class="select2 form-control custom-select" name="country[]" id="country<?php echo $count; ?>">
                                                                         <?php if ($country) { ?><option value="<?php echo (int) $country->id; ?>" selected><?php echo $h($country->name); ?></option><?php } ?>
                                                                     </select>
@@ -361,7 +362,7 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
                                                             </div>
                                                             <div class="col-md-4 mb-3">
                                                                 <div class="form-group">
-                                                                    <label class="control-label col-form-label">State <span class="required-mark">*</span></label>
+                                                                    <label class="control-label col-form-label">State</label>
                                                                     <select class="select2 form-control custom-select" id="state<?php echo $count; ?>" name="state[]">
                                                                         <?php if ($state) { ?><option value="<?php echo (int) $state->id; ?>" selected><?php echo $h($state->name); ?></option><?php } ?>
                                                                     </select>
@@ -369,7 +370,7 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
                                                             </div>
                                                             <div class="col-md-4 mb-3">
                                                                 <div class="form-group">
-                                                                    <label class="control-label col-form-label"><?php echo $lang['leftorder320'] ?> <span class="required-mark">*</span></label>
+                                                                    <label class="control-label col-form-label"><?php echo $lang['leftorder320'] ?></label>
                                                                     <select class="select2 form-control custom-select" id="city<?php echo $count; ?>" name="city[]">
                                                                         <?php if ($city) { ?><option value="<?php echo (int) $city->id; ?>" selected><?php echo $h($city->name); ?></option><?php } ?>
                                                                     </select>
@@ -377,13 +378,13 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
                                                             </div>
                                                             <div class="col-md-4">
                                                                 <div class="form-group">
-                                                                    <label><?php echo $lang['user_manage14'] ?> <span class="required-mark">*</span></label>
+                                                                    <label><?php echo $lang['user_manage14'] ?></label>
                                                                     <input type="text" class="form-control form-control-sm" value="<?php echo $h($rowAddress->zip_code); ?>" name="postal[]" id="postal<?php echo $count; ?>" placeholder="<?php echo $lang['user_manage14'] ?>">
                                                                 </div>
                                                             </div>
                                                             <div class="col-md-4">
                                                                 <div class="form-group">
-                                                                    <label><?php echo $lang['user_manage10'] ?> <span class="required-mark">*</span></label>
+                                                                    <label><?php echo $lang['user_manage10'] ?></label>
                                                                     <input type="text" class="form-control form-control-sm" value="<?php echo $h($rowAddress->address); ?>" name="address[]" id="address<?php echo $count; ?>" placeholder="<?php echo $lang['user_manage10'] ?>">
                                                                 </div>
                                                             </div>
