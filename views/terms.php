@@ -18,60 +18,17 @@
     <!-- Main Css -->
     <link href="<?= cdp_asset('assets/css_main_swiftlane/css/style.css') ?>" rel="stylesheet" type="text/css" id="theme-opt" />
     <link href="<?= cdp_asset('assets/css_main_swiftlane/css/colors/default.css') ?>" rel="stylesheet" id="color-opt">
-    <?php include 'views/inc/auth_head.php'; ?>
+    <?php $cdpAuthPhoto = 'terms'; include 'views/inc/auth_head.php'; ?>
 
     <style>
         /* ── Terms page: design-system tokens (auth-pages.css supplies them) ── */
-        body.auth-page { background: var(--surface-page); }
-        .terms-topbar {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            background: var(--white);
-            border-bottom: 1px solid var(--border-default);
-        }
-        .terms-topbar-inner {
-            max-width: 880px;
-            margin: 0 auto;
-            padding: 16px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-        }
-        .terms-topbar .logo img { max-height: 44px; width: auto; }
-        .terms-topbar .btn-back {
-            width: 40px;
-            height: 40px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: var(--radius-pill);
-            background: var(--white);
-            box-shadow: var(--ring-default);
-            color: var(--ink-800);
-            flex-shrink: 0;
-            transition: background var(--motion-fast) var(--ease-standard);
-        }
-        .terms-topbar .btn-back:hover { background: var(--swift-amber); color: var(--ink-800); }
-        .terms-main { max-width: 880px; margin: 0 auto; padding: 48px 24px 64px; }
-        .terms-hero { text-align: center; margin-bottom: 32px; }
-        .terms-hero .auth-badge { margin-bottom: 16px; }
-        .terms-hero h1 {
-            font-family: var(--font-display);
-            font-weight: 400;
-            font-size: clamp(28px, 3vw, 36px);
-            line-height: 1.2;
-            letter-spacing: var(--display-track);
-            text-transform: uppercase;
-            color: var(--ink-800);
-            margin: 0 0 8px;
-        }
-        .terms-hero p { font-family: var(--font-ui); color: var(--slate-400); font-size: 16px; line-height: 24px; margin: 0; }
         .terms-card {
+            width: 100%;
+            max-width: 880px;
             background: var(--white);
             border-radius: var(--radius-24);
             padding: 40px;
+            box-shadow: 0 24px 64px rgba(8, 16, 28, .38);
         }
         .terms-card h4 {
             font-family: var(--font-ui);
@@ -104,14 +61,8 @@
             line-height: 20px;
             color: var(--ink-800);
         }
-        .terms-footer { text-align: center; margin-top: 32px; font-family: var(--font-ui); color: var(--slate-400); font-size: 14px; line-height: 20px; }
-        .terms-footer a { color: var(--ink-800); font-weight: 700; text-decoration: none; }
-        .terms-footer a:hover { text-decoration: underline; }
-
         @media (max-width: 575.98px) {
-            .terms-topbar-inner { padding: 12px 16px; }
-            .terms-main { padding: 32px 16px 48px; }
-            .terms-card { padding: 24px 20px; }
+            .terms-card { padding: 24px 20px; border-radius: 20px; }
         }
     </style>
 </head>
@@ -127,27 +78,13 @@
         </div>
     </div>
 
-    <!-- Sticky top bar -->
-    <nav class="terms-topbar">
-        <div class="terms-topbar-inner">
-            <a class="logo" href="index.php">
-                <?php echo ($core->logo_web)
-                    ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>'
-                    : '<strong>' . $core->site_name . '</strong>'; ?>
-            </a>
-            <a href="sign-up.php" class="btn-back" aria-label="Back to sign up">
-                <i data-feather="arrow-left" class="icons" style="width:16px;height:16px;"></i>
-            </a>
-        </div>
-    </nav>
-
-    <!-- Main content -->
-    <main class="terms-main">
-        <div class="terms-hero">
-            <span class="auth-badge">Legal</span>
-            <h1>Terms &amp; Conditions</h1>
-            <p>Read carefully before using our services.</p>
-        </div>
+    <?php cdp_authFrameOpen($core, [
+        'photo' => 'terms',
+        'badge' => 'Legal',
+        'title' => 'Terms & Conditions',
+        'links' => [['href' => 'sign-up.php', 'label' => 'Register', 'icon' => 'user-plus'], ['href' => 'login.php', 'label' => 'Sign In', 'icon' => 'log-in', 'primary' => true]],
+        'wide'  => true,
+    ]); ?>
 
         <div class="terms-card">
             <h4>1. Acceptance of Terms</h4>
@@ -174,16 +111,8 @@
             </div>
         </div>
 
-        <div class="terms-footer">
-            &copy; <?php echo date('Y') ?>
-            <a href="index.php"><?php echo htmlspecialchars($core->site_name, ENT_QUOTES, 'UTF-8') ?></a>
-            &mdash; All rights reserved.
-            &nbsp;&bull;&nbsp;
-            <a href="sign-up.php">Register</a>
-            &nbsp;&bull;&nbsp;
-            <a href="login.php">Sign in</a>
-        </div>
-    </main>
+    <?php cdp_authFrameClose($core); ?>
+
 
     <script src="assets/custom_dependencies/jquery-3.6.0.min.js"></script>
     <script src="<?= cdp_asset('assets/css_main_swiftlane/js/bootstrap.bundle.min.js') ?>"></script>
