@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/finance_switch.php'; // cdp_financeEnabled() and the clearance rules
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -186,7 +187,7 @@ $userData = $user->cdp_getUserData();
                                         <?php if ($user->cdp_hasPermission('view_top_users_air')) { ?>
                                         <a class="swl-kv__row" href="report_top_users_air.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo 'Top Users' ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
-                                        <?php if ($user->cdp_hasPermission('view_shipment_by_agencies')) { ?>
+                                        <?php if (cdp_financeEnabled() && $user->cdp_hasPermission('view_shipment_by_agencies')) { ?>
                                         <a class="swl-kv__row" href="financial_sheet.php"><div class="swl-kv__text"><span class="swl-kv__label"><?php echo 'Financial Sheet' ?></span></div><span class="swl-kv__value"><span class="btn btn-xs btn-outline-dark">Open</span></span></a>
                                         <?php } ?>
                                     </div>
