@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/finance_switch.php'; // cdp_financeEnabled() and the clearance rules
 // ============================================================================
 // Warehouse Control Panel — stock on hand, deliverables and collection aging.
 //
@@ -27,7 +28,7 @@ $ct_wh_ship   = cdp_dashCount('cdb_add_order', "AND status_courier = 4" . $agenc
 $ct_wh_pkg    = cdp_dashCount('cdb_customers_packages', "AND status_courier = 4" . $agency_where);
 $ct_sorting   = cdp_dashCount('cdb_add_order', "AND status_courier = 33" . $agency_where);
 $ct_ready     = cdp_dashCount('cdb_add_order', "AND status_courier IN (6,32)" . $agency_where);
-$ct_cleared   = cdp_dashCount('cdb_add_order', "AND fs_cleared_for_delivery = 1 AND status_courier NOT IN (8,21)" . $agency_where);
+$ct_cleared   = cdp_dashCount('cdb_add_order', "AND " . cdp_wdQueueSql() . " AND status_courier NOT IN (8,21)" . $agency_where);
 $ct_uncollect = cdp_dashCount('cdb_add_order', "AND status_courier IN (1,16)" . $agency_where);
 $ct_auction   = cdp_dashCount('cdb_add_order', "AND status_courier = 35" . $agency_where);
 
