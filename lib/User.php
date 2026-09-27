@@ -22,6 +22,7 @@
 
 
 require_once __DIR__ . '/../helpers/otp_settings.php';
+require_once __DIR__ . '/../helpers/finance_switch.php';
 
 class User
 {
@@ -426,6 +427,21 @@ class User
 
     public function cdp_hasPermission(...$permissions)
     {
+        if (count($permissions) === 1 && is_array($permissions[0])) {
+            $permissions = $permissions[0];
+        }
+
+        // Financial module switched off (helpers/finance_switch.php): its
+        // permissions are granted to no one, superadmin included.
+        if (!cdp_financeEnabled()) {
+            $permissions = array_values(array_filter($permissions, function ($p) {
+                return !cdp_isFinancePermission($p);
+            }));
+            if (!$permissions) {
+                return false;
+            }
+        }
+
         // Superadmin siempre tiene acceso
         if ($this->userlevel == 9 || in_array('*', $this->permissions)) {
             return true;
