@@ -342,7 +342,7 @@ if ($challengeId > 0) {
     <!-- Main Css -->
     <link href="<?= cdp_asset('assets/css_main_swiftlane/css/style.css') ?>" rel="stylesheet" type="text/css" id="theme-opt" />
     <link href="<?= cdp_asset('assets/css_main_swiftlane/css/colors/default.css') ?>" rel="stylesheet" id="color-opt">
-    <?php include 'views/inc/auth_head.php'; ?>
+    <?php $cdpAuthPhoto = 'otp'; include 'views/inc/auth_head.php'; ?>
     <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <style>
         /* Keep all OTP boxes on a single row, even on small phones. */
@@ -403,111 +403,87 @@ if ($challengeId > 0) {
         </div>
     </div>
 
-    <div class="back-to-home">
-        <a href="login.php" class="back-button btn btn-icon btn-primary" aria-label="Back to login"><i data-feather="arrow-left" class="icons"></i></a>
-    </div>
+    <?php cdp_authFrameOpen($core, [
+        'photo' => 'otp',
+        'badge' => 'Secure Verification',
+        'title' => 'Confirm the session, then continue.',
+        'links' => [['href' => 'login.php', 'label' => 'Back to Sign In', 'icon' => 'arrow-left']],
+    ]); ?>
 
-    <section class="auth-shell">
-        <div class="container-fluid px-0">
-            <div class="row g-0 auth-shell__grid">
-                <div class="col-lg-6 auth-shell__panel auth-shell__panel--visual order-1 order-lg-1">
-                    <div class="auth-visual d-flex flex-column justify-content-center h-100">
-                        <a class="auth-mobile-logo auth-brand" href="index.php">
-                            <?php echo ($core->logo_web)
-                                ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="100px" height="' . $core->thumb_hweb . '"/>'
-                                : $core->site_name; ?>
-                        </a>
-                        <div class="auth-visual-copy">
-                            <span class="auth-badge">Secure verification</span>
-                            <h1>Confirm the session, then continue.</h1>
-                            <p>Use the code sent to your email or WhatsApp to finish the sign-in flow.</p>
-                            <div class="auth-mini-list">
-                                <span>Email</span>
-                                <span>WhatsApp</span>
-                                <span>Trusted device</span>
-                            </div>
-                        </div>
-                        <img src="assets/images/OT(1)P.svg" class="auth-visual__image img-fluid" alt="OTP verification illustration">
-                    </div>
+        <div class="auth-card auth-card--compact card login-page border-0">
+            <div class="auth-card__top text-center">
+                <a class="logo" href="index.php">
+                    <?php echo ($core->logo_web)
+                        ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>'
+                        : $core->site_name; ?>
+                </a>
+            </div>
+
+            <div class="card-body">
+                <div class="text-center">
+                    <h4 class="auth-heading mb-2">OTP Verification</h4>
+                    <p class="auth-subtitle">Enter the code sent to your email or WhatsApp.</p>
                 </div>
 
-                <div class="col-lg-6 auth-shell__panel auth-shell__panel--form order-2 order-lg-2">
-                    <div class="auth-card auth-card--compact card login-page border-0">
-                        <div class="auth-card__top text-center">
-                            <a class="logo" href="index.php">
-                                <?php echo ($core->logo_web)
-                                    ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>'
-                                    : $core->site_name; ?>
-                            </a>
+                <div id="msgholder2" class="mt-4">
+                    <?php if ($message): ?>
+                        <div class="alert alert-success">
+                            <p class="mb-0"><?php echo $message; ?></p>
                         </div>
+                    <?php endif; ?>
+                    <?php if ($error): ?>
+                        <div class="alert alert-danger">
+                            <p class="mb-0">
+                                <span class="icon-minus-sign"></span>
+                                <i class="close icon-remove-circle"></i>
+                                <span>Error!</span> <?php echo $error; ?>
+                            </p>
+                        </div>
+                    <?php endif; ?>
+                </div>
 
-                        <div class="card-body">
-                            <div class="text-center">
-                                <h4 class="auth-heading mb-2">OTP Verification</h4>
-                                <p class="auth-subtitle">Enter the code sent to your email or WhatsApp.</p>
-                            </div>
+                <div id="loader" style="display:none"></div>
 
-                            <div id="msgholder2" class="mt-4">
-                                <?php if ($message): ?>
-                                    <div class="alert alert-success">
-                                        <p class="mb-0"><?php echo $message; ?></p>
-                                    </div>
-                                <?php endif; ?>
-                                <?php if ($error): ?>
-                                    <div class="alert alert-danger">
-                                        <p class="mb-0">
-                                            <span class="icon-minus-sign"></span>
-                                            <i class="close icon-remove-circle"></i>
-                                            <span>Error!</span> <?php echo $error; ?>
-                                        </p>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-
-                            <div id="loader" style="display:none"></div>
-
-                            <form class="login-form mt-4" method="post" id="otp-form">
-                                <div class="row">
-                                    <div class="col-12">
-                                        <div class="mb-3">
-                                            <div class="d-flex justify-content-center gap-2 flex-nowrap" id="otp_boxes">
-                                                <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
-                                                <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
-                                                <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
-                                                <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
-                                                <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
-                                                <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
-                                            </div>
-                                            <input type="hidden" name="otp_code" id="otp_code_hidden">
-                                        </div>
-                                    </div>
-
-                                    <div class="col-12 mt-2">
-                                        <div class="d-grid">
-                                            <button type="submit" class="btn btn-grad">Verify</button>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-12 text-center">
-                                        <p class="mb-0 mt-3">
-                                            <button type="submit" name="resend" value="1"
-                                                class="btn btn-link p-0 text-dark fw-bold align-baseline"
-                                                id="resendBtn" disabled>
-                                                Resend code
-                                            </button>
-                                        </p>
-                                        <p id="resend-timer" style="display:none;">
-                                            You can request a new code in <strong id="timer-countdown"></strong>
-                                        </p>
-                                    </div>
+                <form class="login-form mt-4" method="post" id="otp-form">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-center gap-2 flex-nowrap" id="otp_boxes">
+                                    <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                                    <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                                    <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                                    <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                                    <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                                    <input type="text" maxlength="1" class="otp-box form-control fw-bold fs-4" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
                                 </div>
-                            </form>
+                                <input type="hidden" name="otp_code" id="otp_code_hidden">
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-2">
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-grad">Verify</button>
+                            </div>
+                        </div>
+
+                        <div class="col-12 text-center">
+                            <p class="mb-0 mt-3">
+                                <button type="submit" name="resend" value="1"
+                                    class="btn btn-link p-0 text-dark fw-bold align-baseline"
+                                    id="resendBtn" disabled>
+                                    Resend code
+                                </button>
+                            </p>
+                            <p id="resend-timer" style="display:none;">
+                                You can request a new code in <strong id="timer-countdown"></strong>
+                            </p>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
-    </section>
+
+    <?php cdp_authFrameClose($core); ?>
 
     <script src="assets/custom_dependencies/jquery-3.6.0.min.js"></script>
     <script src="<?= cdp_asset('assets/css_main_swiftlane/js/bootstrap.bundle.min.js') ?>"></script>
