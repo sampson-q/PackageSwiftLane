@@ -165,7 +165,7 @@ function cdpWarehouseDeliver(orderNos) {
             Swal.fire({
                 title: "Confirm Delivery",
                 html: '<div style="max-height:260px;overflow-y:auto;">' + rows + "</div>" +
-                      "<p class='mt-2 mb-0'>Mark " + (deliverable.length === 1 ? "the 1 cleared package" : "the " + deliverable.length + " cleared packages") + " as delivered?</p>",
+                      "<p class='mt-2 mb-0'>Mark " + (deliverable.length === 1 ? "the 1 package" : "the " + deliverable.length + " packages") + " as delivered?</p>",
                 icon: "question",
                 showCancelButton: true,
                 confirmButtonText: "Yes, deliver",

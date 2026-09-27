@@ -14,6 +14,7 @@
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once("../../helpers/querys.php");
+require_once(__DIR__ . "/../../helpers/finance_switch.php");
 require_login();
 require_permission('deliver_shipment');
 
@@ -58,7 +59,7 @@ if ($action === 'preview') {
             'carrier'           => $carrier->tracking_number ?: 'N/A',
             'name'              => $sender && function_exists('cdp_nameWithLocker') ? cdp_nameWithLocker($sender) : 'N/A',
             'already_delivered' => ((int) $row->status_courier === CDP_WH_DELIVERED_STATUS),
-            'cleared'           => ((int) ($row->fs_cleared_for_delivery ?? 0) === 1),
+            'cleared'           => cdp_fsIsCleared($row->fs_cleared_for_delivery ?? 0),
         ];
     }
 
@@ -85,7 +86,7 @@ if ($action === 'deliver') {
         }
         // Finance must have cleared the package first — never deliver an
         // uncleared package even if the request is crafted directly.
-        if ((int) ($row->fs_cleared_for_delivery ?? 0) !== 1) {
+        if (!cdp_fsIsCleared($row->fs_cleared_for_delivery ?? 0)) {
             $skippedUncleared++;
             continue;
         }
