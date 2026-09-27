@@ -15,6 +15,8 @@
 require_once(__DIR__ . '/../../helpers/phpmailer/class.phpmailer.php');
 require_once(__DIR__ . '/../../helpers/phpmailer/class.smtp.php');
 require_once("../../loader.php");
+require_once(__DIR__ . '/../../helpers/finance_switch.php');
+cdp_financeGuardAjax(); // financial module switched off
 require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/autoload_lang.php');

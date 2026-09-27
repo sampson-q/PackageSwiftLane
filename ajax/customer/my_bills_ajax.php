@@ -12,6 +12,8 @@
 // ============================================================================
 
 require_once(__DIR__ . '/../../loader.php');
+require_once(__DIR__ . '/../../helpers/finance_switch.php');
+cdp_financeGuardAjax(); // financial module switched off
 require_once(__DIR__ . '/../../helpers/querys.php');
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/autoload_lang.php');
