@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/finance_switch.php'; // cdp_financeEnabled() and the clearance rules
 // ============================================================================
 // Admin Control Panel — the landing dashboard for admin-type roles.
 // Layout follows the "Control Panel" screen of the Swift Lane Ops design:
@@ -54,7 +55,7 @@ if ($canStats) {
     $ct_prealert  = cdp_dashCount('cdb_pre_alert', "AND is_package=0");
     $ct_packages  = cdp_dashCount('cdb_customers_packages', "AND status_courier != 21");
     $ct_warehouse = cdp_dashCount('cdb_add_order', "AND status_courier = 4");
-    $ct_cleared   = cdp_dashCount('cdb_add_order', "AND fs_cleared_for_delivery = 1 AND status_courier NOT IN (8,21)");
+    $ct_cleared   = cdp_dashCount('cdb_add_order', "AND " . cdp_wdQueueSql() . " AND status_courier NOT IN (8,21)");
     try {
         $db->cdp_query("SELECT COUNT(u.id) t FROM cdb_users u
                         JOIN cdb_user_roles r ON r.role_id = u.userlevel
