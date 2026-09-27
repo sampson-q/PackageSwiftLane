@@ -17,6 +17,8 @@ var errorMap = [
 
 
 var input = document.querySelector("#phone_custom");
+// The number on file when the page opened: saving it unchanged never needs re-validation.
+var cdpDriverEditInitialPhone = input ? String(input.value || "").trim() : "";
 var iti = window.intlTelInput(input, {
 
     geoIpLookup: function (callback) {
@@ -77,7 +79,9 @@ $("#edit_user").on("submit", function (event) {
       
 
 
-  if (iti.isValidNumber()) {
+  // The phone only has to be valid when it was actually changed.
+  var phoneNow = $.trim(input.value || '');
+  if (!phoneNow || phoneNow === cdpDriverEditInitialPhone || iti.isValidNumber()) {
 
 
     $("#save_data").attr("disabled", true);
@@ -103,10 +107,9 @@ $("#edit_user").on("submit", function (event) {
     var missingFields = [];
 
     // Verifica si los campos obligatorios están vacíos y guarda los nombres en el array
-    if (!email) missingFields.push(message_error_form8);
-    if (!fname) missingFields.push(message_error_form9);
-    if (!lname) missingFields.push(message_error_form10);
-    if (!phone) missingFields.push(message_error_form11);
+    // Nothing is compulsory: a field left blank keeps the driver's stored value
+    // on the server (partial saves). Only a malformed email is caught here.
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) missingFields.push(message_error_form8);
 
     // Verifica si hay campos faltantes
     if (missingFields.length > 0) {

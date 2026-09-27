@@ -32,30 +32,34 @@ $core = new Core;
 $errors = array();
 
 
-if (empty($_POST['fname']))
+// Partial saves: a field left blank keeps the driver's stored value, so a
+// field nobody touched can never block saving the ones that were changed.
+$currentRow = null;
+$cur = cdp_getUserEdit4bozo((int) ($_POST['id'] ?? 0));
+if ($cur && $cur['rowCount'] == 1) {
+    $currentRow = $cur['data'];
+}
+if (!$currentRow) {
+    $errors[] = 'Driver not found.';
+} else {
+    foreach (['fname', 'lname', 'email', 'phone', 'enrollment', 'vehiclecode', 'gender'] as $k) {
+        $v = isset($_POST[$k]) ? trim((string) $_POST[$k]) : '';
+        if ($v === '' || $v === 'undefined') {
+            $_POST[$k] = (string) ($currentRow->$k ?? '');
+        }
+    }
+    if (!isset($_POST['newsletter'])) $_POST['newsletter'] = (int) $currentRow->newsletter;
+    if (!isset($_POST['active']))     $_POST['active']     = (int) $currentRow->active;
+    if (!array_key_exists('notes', $_POST)) $_POST['notes'] = (string) $currentRow->notes;
 
-    $errors['fname'] = $lang['validate_field_ajax122'];
-if (empty($_POST['lname']))
-
-    $errors['lname'] = $lang['validate_field_ajax123'];
-
-if (empty($_POST['email']))
-
-    $errors['email'] = $lang['validate_field_ajax125'];
-
-if ($user->cdp_emailExists($_POST['email'], $_POST['id']))
-
-    $errors[] = $lang['validate_field_ajax126'];
-
-if (!$user->cdp_isValidEmail($_POST['email']))
-
-    $errors[] = $lang['validate_field_ajax127'];
-
-if (empty($_POST['phone']))
-
-    $errors['phone'] = $lang['validate_field_ajax128'];
-
-
+    if (strcasecmp(trim($_POST['email']), (string) $currentRow->email) !== 0 && $_POST['email'] !== '') {
+        if ($user->cdp_emailExists($_POST['email'], $_POST['id'])) {
+            $errors[] = $lang['validate_field_ajax126'];
+        } elseif (!$user->cdp_isValidEmail($_POST['email'])) {
+            $errors[] = $lang['validate_field_ajax127'];
+        }
+    }
+}
 
 if (CDP_APP_MODE_DEMO === true) {
 ?>

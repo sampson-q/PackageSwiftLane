@@ -250,13 +250,13 @@ $row = $data['data'];
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label for="emailAddress1"><?php echo $lang['edit-clien59'] ?></label>
-                                                            <input type="text" class="form-control" id="enrollment" name="enrollment" required placeholder="<?php echo $lang['edit-clien59'] ?>" value="<?php echo $row->enrollment; ?>">
+                                                            <input type="text" class="form-control" id="enrollment" name="enrollment" placeholder="<?php echo $lang['edit-clien59'] ?>" value="<?php echo $row->enrollment; ?>">
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label for="phoneNumber1"><?php echo $lang['edit-clien60'] ?></label>
-                                                            <input type="text" class="form-control" id="vehiclecode" name="vehiclecode" placeholder="<?php echo $lang['edit-clien60'] ?>" required value="<?php echo $row->vehiclecode; ?>">
+                                                            <input type="text" class="form-control" id="vehiclecode" name="vehiclecode" placeholder="<?php echo $lang['edit-clien60'] ?>" value="<?php echo $row->vehiclecode; ?>">
                                                         </div>
                                                     </div>
                                                 </div>
