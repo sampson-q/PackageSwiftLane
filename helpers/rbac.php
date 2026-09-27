@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/finance_switch.php';
 /**
  * Account-management rank rules: who may manage/assign which accounts.
  *
@@ -292,6 +293,10 @@ if (!function_exists('cdp_canViewMoney')) {
     function cdp_canViewMoney($user, $area = null)
     {
         if (!($user instanceof User) || empty($user->logged_in)) {
+            return false;
+        }
+        // Dashboard money comes from the financial module's ledgers.
+        if ($area === 'dashboard' && !cdp_financeEnabled()) {
             return false;
         }
         $perms = ['view_monetary_values'];
