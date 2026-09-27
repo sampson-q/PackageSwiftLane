@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Main Css -->
     <link href="<?= cdp_asset('assets/css_main_swiftlane/css/style.css') ?>" rel="stylesheet" type="text/css" id="theme-opt" />
     <link href="<?= cdp_asset('assets/css_main_swiftlane/css/colors/default.css') ?>" rel="stylesheet" id="color-opt">
-    <?php include 'views/inc/auth_head.php'; ?>
+    <?php $cdpAuthPhoto = 'forgot'; include 'views/inc/auth_head.php'; ?>
 </head>
 
 <body class="auth-page">
@@ -76,103 +76,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <!-- Loader -->
 
-    <div class="back-to-home">
-        <a href="forgot-password.php" class="back-button btn btn-icon btn-primary" aria-label="Back to forgot password"><i data-feather="arrow-left" class="icons"></i></a>
-    </div>
+    <?php cdp_authFrameOpen($core, [
+        'photo' => 'forgot',
+        'badge' => 'Reset Access',
+        'title' => 'Set a new password and get back in.',
+        'links' => [['href' => 'login.php', 'label' => 'Sign In', 'icon' => 'log-in', 'primary' => true]],
+    ]); ?>
 
-    <section class="auth-shell">
-        <div class="container-fluid px-0">
-            <div class="row g-0 auth-shell__grid">
-                <div class="col-lg-6 auth-shell__panel auth-shell__panel--visual order-1 order-lg-1">
-                    <div class="auth-visual d-flex flex-column justify-content-center h-100">
-                        <a class="auth-mobile-logo auth-brand" href="index.php">
-                            <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
-                        </a>
-                        <div class="auth-visual-copy">
-                            <span class="auth-badge">Reset Access</span>
-                            <h1>Set a new password and get back in.</h1>
-                            <p>Choose something strong and continue with the recovery flow.</p>
-                            <div class="auth-mini-list">
-                                <span>Secure</span>
-                                <span>Fast</span>
-                                <span>Simple</span>
-                            </div>
+        <div class="card auth-card auth-card--compact login-page border-0" style="z-index: 1">
+            <div class="auth-card__top text-center">
+                <a class="logo" href="index.php">
+                    <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
+                </a>
+            </div>
+            <div class="card-body">
+                <h4 class="card-title text-center">Set New Password</h4>
+                <p class="text-center auth-subtitle">Choose a strong password for your account.</p>
+
+                <div id="msgholder2">
+                    <?php if ($message): ?>
+                        <div class="alert alert-success" id="success-alert">
+                            <p class="mb-0"><?php echo $message; ?> <a href="login.php" class="fw-bold">Sign in</a></p>
                         </div>
-                        <img src="assets/images/ForgotPassword.svg" alt="Forgot password illustration" class="auth-visual__image img-fluid">
-                    </div>
+                    <?php endif; ?>
+                    <?php if ($error): ?>
+                        <div class="alert alert-danger" id="success-alert">
+                            <p class="mb-0"><span class="icon-minus-sign"></span>
+                                <i class="close icon-remove-circle"></i>
+                                <span>Error!</span> <?php echo $error; ?>
+                            </p>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
-                <div class="col-lg-6 auth-shell__panel auth-shell__panel--form order-2 order-lg-2">
-                    <div class="card auth-card auth-card--compact login-page border-0" style="z-index: 1">
-                        <div class="auth-card__top text-center">
-                            <a class="logo" href="index.php">
-                                <?php echo ($core->logo_web) ? '<img src="assets/' . $core->logo_web . '" alt="' . $core->site_name . '" width="' . $core->thumb_web . '" height="' . $core->thumb_hweb . '"/>' : $core->site_name; ?>
-                            </a>
-                        </div>
-                        <div class="card-body">
-                            <h4 class="card-title text-center">Set New Password</h4>
-                            <p class="text-center auth-subtitle">Choose a strong password for your account.</p>
+                <div id="loader" style="display:none"></div>
 
-                            <div id="msgholder2">
-                                <?php if ($message): ?>
-                                    <div class="alert alert-success" id="success-alert">
-                                        <p class="mb-0"><?php echo $message; ?> <a href="login.php" class="fw-bold">Sign in</a></p>
-                                    </div>
-                                <?php endif; ?>
-                                <?php if ($error): ?>
-                                    <div class="alert alert-danger" id="success-alert">
-                                        <p class="mb-0"><span class="icon-minus-sign"></span>
-                                            <i class="close icon-remove-circle"></i>
-                                            <span>Error!</span> <?php echo $error; ?>
-                                        </p>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-
-                            <div id="loader" style="display:none"></div>
-
-                            <?php if (!$message): ?>
-                            <form class="login-form mt-4" method="post">
-                                <div class="row">
-                                    <div class="col-12">
-                                        <div class="mb-3">
-                                            <label class="form-label">New Password <span class="text-danger">*</span></label>
-                                            <div class="form-icon position-relative">
-                                                <i data-feather="lock" class="fea icon-sm icons"></i>
-                                                <input type="password" name="password" class="form-control ps-5" placeholder="Enter new password" required>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <div class="mb-3">
-                                            <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                                            <div class="form-icon position-relative">
-                                                <i data-feather="lock" class="fea icon-sm icons"></i>
-                                                <input type="password" name="password_confirm" class="form-control ps-5" placeholder="Confirm new password" required>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-12 mb-0">
-                                        <div class="d-grid">
-                                            <button type="submit" class="btn btn-grad">Update Password</button>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-12 text-center auth-footer-links">
-                                        <small class="text-dark me-2">Remember your password?</small>
-                                        <a href="login.php" class="text-dark fw-bold">Sign in</a>
-                                    </div>
+                <?php if (!$message): ?>
+                <form class="login-form mt-4" method="post">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">New Password <span class="text-danger">*</span></label>
+                                <div class="form-icon position-relative">
+                                    <i data-feather="lock" class="fea icon-sm icons"></i>
+                                    <input type="password" name="password" class="form-control ps-5" placeholder="Enter new password" required>
                                 </div>
-                            </form>
-                            <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                <div class="form-icon position-relative">
+                                    <i data-feather="lock" class="fea icon-sm icons"></i>
+                                    <input type="password" name="password_confirm" class="form-control ps-5" placeholder="Confirm new password" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mb-0">
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-grad">Update Password</button>
+                            </div>
+                        </div>
+
+                        <div class="col-12 text-center auth-footer-links">
+                            <small class="text-dark me-2">Remember your password?</small>
+                            <a href="login.php" class="text-dark fw-bold">Sign in</a>
                         </div>
                     </div>
-                </div>
+                </form>
+                <?php endif; ?>
             </div>
         </div>
-    </section>
+
+    <?php cdp_authFrameClose($core); ?>
 
     <!-- javascript -->
     <script src="assets/custom_dependencies/jquery-3.6.0.min.js"></script>
