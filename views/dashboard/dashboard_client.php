@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/finance_switch.php'; // cdp_financeEnabled() and the clearance rules
 // ============================================================================
 // Customer Dashboard — everything scoped to the signed-in customer.
 // The outstanding balance comes from the Financial Sheet ledger (the same
@@ -26,7 +27,10 @@ $ct_delivered = cdp_dashCount('cdb_add_order', "AND status_courier IN (8,15) AND
 $ct_ready     = cdp_dashCount('cdb_add_order', "AND status_courier IN (6,32) AND order_incomplete=1 $own");
 
 // ---- My balance (Financial Sheet — same figures as My Bills) ---------------
-$fs = cdp_dashFsTotals($uid);
+// Hidden, with the My Bills links, while the financial module is switched off
+// (helpers/finance_switch.php).
+$showBills = cdp_financeEnabled();
+$fs = $showBills ? cdp_dashFsTotals($uid) : null;
 
 // ---- My charts -------------------------------------------------------------
 $charts = [
@@ -71,7 +75,7 @@ $bd = cdp_dashStatusBreakdown('cdb_add_order', "AND order_incomplete=1 $own");
                     </div>
                     <div class="sw-quick-actions">
                         <a href="prealert_add.php" class="btn btn-sm btn-dark"><iconify-icon icon="solar:add-circle-linear"></iconify-icon> New Pre-Alert</a>
-                        <a href="my_bills.php" class="btn btn-sm btn-outline-dark">My Bills</a>
+                        <?php if ($showBills) { ?><a href="my_bills.php" class="btn btn-sm btn-outline-dark">My Bills</a><?php } ?>
                         <a href="tracking.php" class="btn btn-sm btn-outline-dark">Track</a>
                     </div>
                 </div>
@@ -80,14 +84,14 @@ $bd = cdp_dashStatusBreakdown('cdb_add_order', "AND order_incomplete=1 $own");
             <div class="container-fluid">
                 <!-- My balance + activity -->
                 <div class="row">
-                    <?php cdp_dashKpi(['icon' => 'solar:bill-list-linear', 'label' => 'Outstanding Balance', 'value' => cdb_money_format($fs['outstanding']), 'href' => 'my_bills.php', 'accent' => ($fs['outstanding'] > 0 ? '#e67e22' : '#1b8a5a'), 'sub' => 'Matches My Bills']); ?>
+                    <?php if ($showBills) cdp_dashKpi(['icon' => 'solar:bill-list-linear', 'label' => 'Outstanding Balance', 'value' => cdb_money_format($fs['outstanding']), 'href' => 'my_bills.php', 'accent' => ($fs['outstanding'] > 0 ? '#e67e22' : '#1b8a5a'), 'sub' => 'Matches My Bills']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:box-minimalistic-linear', 'label' => 'My Shipments', 'value' => number_format($ct_ship), 'href' => 'courier_list.php', 'accent' => '#FFCB01']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:clock-circle-linear', 'label' => 'My Pickup Requests', 'value' => number_format($ct_pickups), 'href' => 'pickup_list.php', 'accent' => '#0077B6']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:cart-large-2-linear', 'label' => 'My Packages', 'value' => number_format($ct_packages), 'href' => 'customer_packages_list.php', 'accent' => '#00B4D8']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:bell-linear', 'label' => 'My Pre-Alerts', 'value' => number_format($ct_prealerts), 'href' => 'prealert_list.php', 'accent' => '#7C3EE2']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:box-linear', 'label' => 'Ready For Collection', 'value' => number_format($ct_ready), 'accent' => '#0ae4ff', 'sub' => 'Available At Office']); ?>
                     <?php cdp_dashKpi(['icon' => 'solar:check-circle-linear', 'label' => 'Delivered / Collected', 'value' => number_format($ct_delivered), 'accent' => '#1b8a5a', 'sub' => 'All Time']); ?>
-                    <?php cdp_dashKpi(['icon' => 'solar:card-linear', 'label' => 'My Bills', 'value' => 'Pay Online', 'href' => 'my_bills.php', 'accent' => '#192A3E', 'sub' => 'Mobile Money']); ?>
+                    <?php if ($showBills) cdp_dashKpi(['icon' => 'solar:card-linear', 'label' => 'My Bills', 'value' => 'Pay Online', 'href' => 'my_bills.php', 'accent' => '#192A3E', 'sub' => 'Mobile Money']); ?>
                 </div>
 
                 <!-- Virtual mailbox addresses -->
