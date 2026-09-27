@@ -90,22 +90,35 @@ require_once(__DIR__ . '/../../helpers/rbac.php');
     // STEP 4: PREPARE NEW DATA & DETECT CHANGES
     // ============================================================
 
+    // A field that is not posted, or posted blank, keeps its stored value: the
+    // user may save only what they changed (e.g. just their name) and nothing
+    // they left alone can block the save or be wiped. In particular the form
+    // does not post the ID document fields, which used to blank them on every
+    // save.
+    $keep = function ($key, $current) {
+        if (!isset($_POST[$key])) {
+            return $current;
+        }
+        $v = is_string($_POST[$key]) ? trim($_POST[$key]) : $_POST[$key];
+        return ($v === '' || $v === 'undefined') ? $current : $v;
+    };
+
     $newData = array(
-        'fname'         => trim($_POST['fname'] ?? ''),
-        'lname'         => trim($_POST['lname'] ?? ''),
-        'email'         => trim($_POST['email'] ?? ''),
-        'phone'         => trim($_POST['phone'] ?? ''),
-        'gender'        => $_POST['gender'] ?? '',
-        'active'        => isset($_POST['active']) ? intval($_POST['active']) : null,
-        'newsletter'    => isset($_POST['newsletter']) ? intval($_POST['newsletter']) : null,
-        'notes'         => $_POST['notes'] ?? '',
+        'fname'         => (string) $keep('fname', (string) $currentUser->fname),
+        'lname'         => (string) $keep('lname', (string) $currentUser->lname),
+        'email'         => (string) $keep('email', (string) $currentUser->email),
+        'phone'         => (string) $keep('phone', (string) $currentUser->phone),
+        'gender'        => (string) $keep('gender', (string) $currentUser->gender),
+        'active'        => isset($_POST['active']) ? intval($_POST['active']) : (int) $currentUser->active,
+        'newsletter'    => isset($_POST['newsletter']) ? intval($_POST['newsletter']) : (int) $currentUser->newsletter,
+        // Notes may legitimately be cleared, so only a missing key keeps them.
+        'notes'         => array_key_exists('notes', $_POST) ? (string) $_POST['notes'] : (string) $currentUser->notes,
         // The field is only rendered for super admins; a missing/"undefined"
         // value must never overwrite the stored office.
-        'branch_office' => (isset($_POST['branch_office']) && $_POST['branch_office'] !== 'undefined' && trim($_POST['branch_office']) !== '')
-                            ? trim($_POST['branch_office']) : (string) $currentUser->name_off,
+        'branch_office' => (string) $keep('branch_office', (string) $currentUser->name_off),
         'password'      => $_POST['password'] ?? '',
-        'document_type' => $_POST['document_type'] ?? '',
-        'document_number' => $_POST['document_number'] ?? '',
+        'document_type' => (string) $keep('document_type', (string) $currentUser->document_type),
+        'document_number' => (string) $keep('document_number', (string) $currentUser->document_number),
         'userlevel'     => isset($_POST['userlevel']) ? intval($_POST['userlevel']) : (int)$currentUser->userlevel,
     );
 
