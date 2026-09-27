@@ -1006,11 +1006,12 @@ if ($row_order->status_invoice == 1) {
                 <!-- Row -->
                 <!-- DETAILS TAX PERMISSION  -->
                 <?php if ($user->cdp_hasPermission('view_details_courier') || (int)$userData->userlevel === 1) {
-                    // Customers (userlevel 1) see the item list too, but per-item WEIGHT,
-                    // CUSTOM PRICE and LINE TOTAL are redacted SERVER-SIDE — the real
-                    // values are never written to the page, so the blur cannot be removed
-                    // (via inspector / display:none) to reveal them. Line total is
-                    // included because for custom items it equals custom_price x qty.
+                    // Customers (userlevel 1) see the item list too, including every
+                    // item's WEIGHT and the package weight. CUSTOM PRICE and LINE TOTAL
+                    // are redacted SERVER-SIDE — the real values are never written to
+                    // the page, so the blur cannot be removed (via inspector /
+                    // display:none) to reveal them. Line total is included because for
+                    // custom items it equals custom_price x qty.
                     $cv_is_customer = ((int)$userData->userlevel === 1);
                     // Prices stay hidden from a customer UNTIL they have been billed
                     // (a Financial Sheet bill exists for this package's consolidation).
@@ -1132,7 +1133,7 @@ if ($row_order->status_invoice == 1) {
                                                                 <span class="badge badge-dark">Weight</span>
                                                             <?php } ?>
                                                         </td>
-                                                        <td><?php echo $cv_hide ? $cv_redact : ($use_custom_item ? '—' : $weight_item); ?></td>
+                                                        <td><?php echo $use_custom_item ? '—' : $weight_item; ?></td>
                                                         <td class="text-center"><?php echo $cv_hide ? $cv_redact : ($use_custom_item ? number_format($custom_price_item, 2) : '—'); ?></td>
                                                         <td class="text-center"><?php echo $cv_hide ? $cv_redact : number_format($line_total_item, 2); ?></td>
                                                         <td class="text-center"><?php echo $row_order_item->order_item_fixed_value; ?></td>
@@ -1246,6 +1247,24 @@ if ($row_order->status_invoice == 1) {
                                                 <td></td>
                                             </tr>
 
+                                        </tfoot>
+                                        <?php } elseif ($cv_is_customer) {
+                                            // Customer: weight totals only (no rate, discount or money).
+                                            $cv_unit     = htmlspecialchars((string) ($core->weight_p ?? ''), ENT_QUOTES, 'UTF-8');
+                                            $cv_itemsWt  = isset($sumador_libras) ? (float) $sumador_libras : 0.0;
+                                            $cv_pkgWt    = (float) ($row_order->total_weight ?? 0);
+                                        ?>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="8">
+                                                    <b>Package Weight:</b>
+                                                    <?php echo number_format($cv_pkgWt > 0 ? $cv_pkgWt : $cv_itemsWt, 2) . ' ' . $cv_unit; ?>
+                                                    <?php if ($cv_pkgWt > 0 && $cv_itemsWt > 0 && abs($cv_pkgWt - $cv_itemsWt) >= 0.01) { ?>
+                                                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                                                        <b>Items Weight:</b> <?php echo number_format($cv_itemsWt, 2) . ' ' . $cv_unit; ?>
+                                                    <?php } ?>
+                                                </td>
+                                            </tr>
                                         </tfoot>
                                         <?php } ?>
                                     </table>
