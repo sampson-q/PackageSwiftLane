@@ -25,6 +25,8 @@
 // *************************************************************************
 
 require_once("../../loader.php");
+require_once(__DIR__ . '/../../helpers/finance_switch.php');
+cdp_financeGuardPage('../../index.php'); // financial module switched off
 require_once("../../helpers/querys.php");
 
 $user = new User;

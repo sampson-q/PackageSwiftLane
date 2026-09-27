@@ -4,6 +4,8 @@
 // ============================================================================
 
 require_once("loader.php");
+require_once("helpers/finance_switch.php");
+cdp_financeGuardPage(); // financial module switched off: back to the dashboard
 
 $user = new User();
 $core = new Core();
