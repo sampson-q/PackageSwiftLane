@@ -3,6 +3,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/querys.php');
+require_once(__DIR__ . '/../../helpers/finance_switch.php');
 require_login();
 require_permission('warehouse_view');
 
@@ -263,7 +264,7 @@ if ($numrows > 0) { ?>
 							        </button>
 							        <div class="dropdown-menu" style="overflow-y: auto; max-height: 200px;">
 							            <?php if ($canBulkDeliver) { ?>
-							                <?php if ((int) $row->fs_cleared_for_delivery === 1) { ?><a class="dropdown-item" href="javascript:void(0)"
+							                <?php if (cdp_fsIsCleared($row->fs_cleared_for_delivery)) { ?><a class="dropdown-item" href="javascript:void(0)"
 							                   onclick="cdpWarehouseDeliver(<?php echo htmlspecialchars(json_encode([(string) $row->order_no]), ENT_QUOTES); ?>)"
 							                   title="<?php echo 'Deliver Package' ?>">
 							                    <i style="color:#343a40" class="fa fa-box"></i>&nbsp;<?php echo 'Deliver Package' ?>
