@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/finance_switch.php'; // cdp_financeEnabled() and the clearance rules
 // ============================================================================
 // Warehouse Delivery — consolidation LIST page (mirrors financial_sheet.php).
 // Lists consolidations that have packages cleared for delivery; clicking a card
@@ -34,7 +35,7 @@ $userData = $user->cdp_getUserData();
                     <i class="mdi mdi-truck-delivery wd-banner-ico"></i>
                     <div>
                         <h4>Warehouse Delivery</h4>
-                        <small>Deliver packages Accounts has cleared for delivery.</small>
+                        <small><?php echo cdp_financeEnabled() ? 'Deliver packages Accounts has cleared for delivery.' : 'Deliver packages that have arrived in Ghana.'; ?></small>
                     </div>
                 </div>
 

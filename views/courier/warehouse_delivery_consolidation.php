@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/finance_switch.php'; // cdp_financeEnabled() and the clearance rules
 // The consolidation reference helper (waybill first, code after) lives in
 // helpers/querys.php, which nothing on this page's include chain loads.
 require_once('helpers/querys.php');
@@ -41,7 +42,7 @@ foreach ($wd_rows as $r) {
     $wd_weight += (float) $r->total_weight;
     if ((int) $r->status_courier === 8) { $wd_delivered++; }
     elseif (in_array((int) $r->status_courier, $WD_TERMINAL, true)) { /* terminal */ }
-    elseif ((int) $r->fs_cleared_for_delivery === 1) { $wd_ready++; }
+    elseif (cdp_fsIsCleared($r->fs_cleared_for_delivery)) { $wd_ready++; }
     else { $wd_awaiting++; }
 }
 
@@ -77,7 +78,7 @@ $wd_progCls = ($wd_delivered >= $wd_total && $wd_total > 0) ? 'badge-success' : 
                     <i class="mdi mdi-truck-delivery wd-banner-ico"></i>
                     <div>
                         <h4>Warehouse Delivery</h4>
-                        <small>Deliver packages Accounts has cleared for delivery.</small>
+                        <small><?php echo cdp_financeEnabled() ? 'Deliver packages Accounts has cleared for delivery.' : 'Deliver packages that have arrived in Ghana.'; ?></small>
                     </div>
                 </div>
 

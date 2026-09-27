@@ -25,6 +25,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once("../../helpers/querys.php");
+require_once(__DIR__ . '/../../helpers/finance_switch.php'); // clearance rules while the finance module is off
 // PHPMailer MUST be loaded before anything that can call cdp_sendTemplateEmail
 // (the delivery notification), or the process crashes silently. WhatsApp
 // service powers the "your package was delivered" message.
@@ -73,7 +74,7 @@ if ($action === 'count') {
     $db->cdp_query("SELECT COUNT(DISTINCT a.order_id) AS n
                     FROM cdb_consolidate_detail d
                     INNER JOIN cdb_add_order a ON a.order_id = CAST(d.order_id AS UNSIGNED)
-                    WHERE a.fs_cleared_for_delivery = 1
+                    WHERE " . cdp_wdQueueSql('a') . "
                       AND a.status_courier NOT IN (8, 15, 16, 21, 27, 35) $ownOnly");
     $db->cdp_execute();
     $row = $db->cdp_registro();
@@ -110,7 +111,7 @@ function wd_pkg_state($p, array $terminal)
 {
     if ((int) $p->status_courier === CDP_WD_DELIVERED) { return 'delivered'; }
     if (in_array((int) $p->status_courier, $terminal, true)) { return 'other'; }
-    return ((int) $p->fs_cleared_for_delivery === 1) ? 'ready' : 'awaiting';
+    return cdp_fsIsCleared($p->fs_cleared_for_delivery) ? 'ready' : 'awaiting';
 }
 
 /** After a delivery/undo, recompute a consolidation's status_courier.
@@ -257,7 +258,7 @@ if ($action === 'list') {
     $where = " WHERE EXISTS (SELECT 1 FROM cdb_consolidate_detail d
                              INNER JOIN cdb_add_order a ON a.order_id = CAST(d.order_id AS UNSIGNED)
                              WHERE d.consolidate_id = c.consolidate_id
-                               AND a.fs_cleared_for_delivery = 1 $ownOnly) ";
+                               AND " . cdp_wdQueueSql('a') . " $ownOnly) ";
     $bind = [];
     if ($search !== '') {
         $where .= " AND (CONCAT(COALESCE(c.c_prefix,''),COALESCE(c.c_no,'')) LIKE :q
@@ -283,7 +284,7 @@ if ($action === 'list') {
     if (!$consols) {
         echo '<div class="text-center text-muted py-5">'
             . '<img src="assets/images/alert/ohh_shipment.png" width="130"><br>'
-            . 'No consolidations have packages cleared for delivery right now.</div>';
+            . (cdp_financeEnabled() ? 'No consolidations have packages cleared for delivery right now.' : 'No consolidations have packages waiting in Ghana right now.') . '</div>';
         exit;
     }
 
@@ -459,7 +460,7 @@ function wd_search_pairs(Conexion $db, array $uids, $ownOnly)
                     WHERE a.sender_id IN ($in) $ownOnly
                       AND EXISTS (SELECT 1 FROM cdb_consolidate_detail d2
                                   INNER JOIN cdb_add_order a2 ON a2.order_id = CAST(d2.order_id AS UNSIGNED)
-                                  WHERE d2.consolidate_id = d.consolidate_id AND a2.fs_cleared_for_delivery = 1)
+                                  WHERE d2.consolidate_id = d.consolidate_id AND " . cdp_wdQueueSql('a2') . ")
                     ORDER BY cid DESC LIMIT 100");
     $db->cdp_execute();
     $byCid = [];
@@ -519,7 +520,7 @@ if ($action === 'search_customer') {
 
     $byCid = wd_search_pairs($db, $uids, $ownOnly);
     if (!$byCid) {
-        echo '<div class="text-center text-muted py-4"><img src="assets/images/alert/ohh_shipment.png" width="120"><br>No matching customers with packages cleared for delivery.</div>';
+        echo '<div class="text-center text-muted py-4"><img src="assets/images/alert/ohh_shipment.png" width="120"><br>' . (cdp_financeEnabled() ? 'No matching customers with packages cleared for delivery.' : 'No matching customers with packages waiting in Ghana.') . '</div>';
         exit;
     }
     echo '<div class="alert alert-info py-2 mb-3">Customer matches in <b>' . count($byCid) . '</b> consolidation(s).</div>';
@@ -537,7 +538,7 @@ if ($action === 'search_package') {
                     WHERE CONCAT(COALESCE(a.order_prefix,''),COALESCE(a.order_no,'')) LIKE :q $ownOnly
                       AND EXISTS (SELECT 1 FROM cdb_consolidate_detail d2
                                   INNER JOIN cdb_add_order a2 ON a2.order_id = CAST(d2.order_id AS UNSIGNED)
-                                  WHERE d2.consolidate_id = d.consolidate_id AND a2.fs_cleared_for_delivery = 1)
+                                  WHERE d2.consolidate_id = d.consolidate_id AND " . cdp_wdQueueSql('a2') . ")
                     ORDER BY cid DESC LIMIT 100");
     $db->bind(':q', '%' . $q . '%');
     $db->cdp_execute();
@@ -545,7 +546,7 @@ if ($action === 'search_package') {
     foreach ((array) $db->cdp_registros() as $r) { $byCid[(int) $r->cid][] = (int) $r->sid; }
 
     if (!$byCid) {
-        echo '<div class="text-center text-muted py-4"><img src="assets/images/alert/ohh_shipment.png" width="120"><br>No matching packages in consolidations cleared for delivery.</div>';
+        echo '<div class="text-center text-muted py-4"><img src="assets/images/alert/ohh_shipment.png" width="120"><br>' . (cdp_financeEnabled() ? 'No matching packages in consolidations cleared for delivery.' : 'No matching packages waiting in Ghana.') . '</div>';
         exit;
     }
     echo '<div class="alert alert-info py-2 mb-3">Package matches in <b>' . count($byCid) . '</b> consolidation(s).</div>';
@@ -564,7 +565,7 @@ function wd_do_deliver(Conexion $db, $no, $uid, array $terminal)
     $row = cdp_getCourierMultiple($no);
     if (!$row) { return ['ok' => false, 'reason' => 'not_found']; }
     if ((int) $row->status_courier === CDP_WD_DELIVERED) { return ['ok' => false, 'reason' => 'already']; }
-    if ((int) ($row->fs_cleared_for_delivery ?? 0) !== 1) { return ['ok' => false, 'reason' => 'uncleared']; }
+    if (!cdp_fsIsCleared($row->fs_cleared_for_delivery ?? 0)) { return ['ok' => false, 'reason' => 'uncleared']; }
     if (in_array((int) $row->status_courier, $terminal, true)) { return ['ok' => false, 'reason' => 'terminal']; }
 
     cdp_updateStatusCourierMultiple($no, CDP_WD_DELIVERED);
