@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/../../helpers/finance_switch.php'; // cdp_financeEnabled() and the clearance rules ?>
 <aside class="left-sidebar">
 	<!-- Brand + collapse toggle. The logo lives here (not in the topbar) so the
 	     content column has no header bar, matching the Swift Lane Ops design.
@@ -462,7 +463,9 @@
 						'view_global_payments',
 						'view_transactions',
 						];
-						if ($user->cdp_hasPermission($perModule)) {
+						// Whole group hidden while the financial module is switched off
+						// (helpers/finance_switch.php) — the Accounts dashboard is finance too.
+						if (cdp_financeEnabled() && $user->cdp_hasPermission($perModule)) {
 
 					?>
                     <li class="sidebar-item nav-divider"></li>
