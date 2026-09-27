@@ -7,8 +7,13 @@
  * series after it, and all of it blocked the first paint. Here the tokens are
  * linked directly and the fonts load without blocking (preload, then switched
  * to a stylesheet; display=swap shows text in the fallback face meanwhile).
+ *
+ * A page that sets $cdpAuthPhoto before including this file gets its background
+ * photo preloaded (see views/inc/auth_chrome.php).
  */
+require_once __DIR__ . '/auth_chrome.php';
 ?>
+    <?php if (!empty($cdpAuthPhoto)) { cdp_authPhotoPreload($cdpAuthPhoto); } ?>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="<?= cdp_asset('assets/css_main_swiftlane/css/swiftlane-tokens.css') ?>" rel="stylesheet" type="text/css" />
