@@ -77,7 +77,7 @@ $offset = ($page - 1) * $per_page;
 
 
 
-$sql = "SELECT a.is_prealert, a.is_consolidate, a.tracking_purchase, a.provider_purchase, a.price_purchase, a.status_invoice, a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options,  b.mod_style, b.color FROM
+$sql = "SELECT a.is_prealert, a.is_consolidate, a.tracking_purchase, a.provider_purchase, a.price_purchase, a.status_invoice, a.total_order, a.order_id, a.order_prefix, a.order_no, a.order_date, a.sender_id, a.order_courier, a.order_pay_mode, a.status_courier, a.driver_id, a.order_service_options, a.total_weight,  b.mod_style, b.color FROM
 			 cdb_customers_packages as a
 			 INNER JOIN cdb_styles as b ON a.status_courier = b.id
 			 $sWhere
@@ -126,6 +126,9 @@ if ($numrows > 0) { ?>
 					<?php } ?>
 
 					<th class="text-center"><b><?php echo $lang['ldestination'] ?></b></th>
+					<?php if ($userData->userlevel == 1) { // customers see their package weight ?>
+						<th class="text-center"><b>Weight</b></th>
+					<?php } ?>
 					<th class="text-center"><b><?php echo $lang['left47'] ?></b></th>
 					<th class="text-center"><b><?php echo $lang['left48'] ?></b></th>
 					<th class="text-center"><b><?php echo $lang['left46'] ?></b></th>
@@ -233,6 +236,9 @@ if ($numrows > 0) { ?>
 
 
 							<td class="text-center"><?php echo $address_order->sender_country; ?>-<?php echo $address_order->sender_city; ?></td>
+							<?php if ($userData->userlevel == 1) { ?>
+								<td class="text-center text-nowrap"><?php echo ((float) $row->total_weight > 0) ? number_format((float) $row->total_weight, 2) . ' ' . htmlspecialchars((string) $core->weight_p, ENT_QUOTES, 'UTF-8') : '—'; ?></td>
+							<?php } ?>
 							<td class="text-center"><?php echo $courier_com->name_com; ?></td>
 
 							<td class="text-center">
