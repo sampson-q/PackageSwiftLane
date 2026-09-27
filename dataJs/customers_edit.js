@@ -13,6 +13,8 @@ var errorMap = [
 ];
 
 var input = document.querySelector("#phone_custom");
+// The number on file when the page opened: saving it unchanged never needs re-validation.
+var cdpCustEditInitialPhone = input ? String(input.value || "").trim() : "";
 var iti = window.intlTelInput(input, {
   geoIpLookup: function (callback) {
     $.get("http://ipinfo.io", function () {}, "jsonp").always(function (resp) {
@@ -338,11 +340,14 @@ $("#edit_user").on("submit", function (event) {
           var cityField = $('#city' + no);
           var postalField = $('#postal' + no);
 
-          if ($.trim(addressField.val()).length === 0 ||
-              $.trim(countryField.val()).length === 0 ||
-              $.trim(stateField.val()).length === 0 ||
-              $.trim(cityField.val()).length === 0 ||
-              $.trim(postalField.val()).length === 0) {
+          // A saved address keeps its stored value for any field left blank, and
+          // an empty new block is skipped; only a half-filled NEW block stops the save.
+          if (!addressField.length) { continue; }
+          var isSaved = parseInt($('#address_id' + no).val() || '0', 10) > 0;
+          var parts = [$.trim(addressField.val() || ''), $.trim(countryField.val() || ''), $.trim(stateField.val() || ''),
+                       $.trim(cityField.val() || ''), $.trim(postalField.val() || '')];
+          var filledParts = parts.filter(function (v) { return v.length > 0; }).length;
+          if (!isSaved && filledParts > 0 && filledParts < parts.length) {
               Swal.fire({
                   type: 'error',
                   title: message_error_form1,
@@ -355,7 +360,9 @@ $("#edit_user").on("submit", function (event) {
           }
       }
 
-  if (iti.isValidNumber()) {
+  // The phone only has to be valid when it was actually changed.
+  var phoneNow = $.trim(input.value || '');
+  if (!phoneNow || phoneNow === cdpCustEditInitialPhone || iti.isValidNumber()) {
 
 
     $("#save_data").attr("disabled", true);
@@ -390,12 +397,9 @@ $("#edit_user").on("submit", function (event) {
     var missingFields = [];
 
     // Verifica si los campos obligatorios están vacíos y guarda los nombres en el array
-    if (!email) missingFields.push(message_error_form8);
-    if (!fname) missingFields.push(message_error_form9);
-    if (!lname) missingFields.push(message_error_form10);
-    if (!phone) missingFields.push(message_error_form11);
-    if (!document_type) missingFields.push(message_error_form12);
-    if (!document_number) missingFields.push(message_error_form13);
+    // Nothing is compulsory any more: a field left blank keeps the customer's
+    // stored value on the server (partial saves). Only a malformed email is caught here.
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) missingFields.push(message_error_form8);
 
     // Verifica si hay campos faltantes
     if (missingFields.length > 0) {

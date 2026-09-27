@@ -52,21 +52,37 @@ if ($targetId > 0) {
     }
 }
 
-if (empty($_POST['fname'])) {
-    $errors['fname'] = $lang['validate_field_ajax122'];
+// Partial saves: a field left blank keeps the customer's stored value, so an
+// empty field the admin did not touch (a missing ID number, an old phone that
+// was never filled in) can no longer block saving e.g. a name change.
+$currentRow = null;
+if ($targetId > 0) {
+    $cur = cdp_getUserEdit4bozo($targetId);
+    $currentRow = ($cur && $cur['rowCount'] == 1) ? $cur['data'] : null;
 }
-if (empty($_POST['lname'])) {
-    $errors['lname'] = $lang['validate_field_ajax123'];
+if (!$currentRow) {
+    echo json_encode(['status' => 'error', 'message' => 'Customer not found.']);
+    exit;
 }
-if (empty($_POST['email'])) {
-    $errors['email'] = $lang['validate_field_ajax125'];
-} elseif (!$user->cdp_isValidEmail($_POST['email']) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-    $errors['email'] = $lang['validate_field_ajax127'];
-} elseif ($user->cdp_emailExists($_POST['email'], $_POST['id'])) {
-    $errors['email'] = $lang['validate_field_ajax126'];
+foreach (['fname', 'lname', 'email', 'phone', 'document_type', 'document_number', 'gender', 'company'] as $k) {
+    $v = isset($_POST[$k]) ? trim((string) $_POST[$k]) : '';
+    if ($v === '' || $v === 'undefined') {
+        $_POST[$k] = (string) ($currentRow->$k ?? '');
+    }
 }
-if (empty($_POST['phone'])) {
-    $errors['phone'] = $lang['validate_field_ajax128'];
+
+if ($_POST['fname'] !== (string) $currentRow->fname && mb_strlen(trim($_POST['fname'])) < 2) {
+    $errors['fname'] = 'First name must be at least 2 characters.';
+}
+if ($_POST['lname'] !== (string) $currentRow->lname && mb_strlen(trim($_POST['lname'])) < 2) {
+    $errors['lname'] = 'Last name must be at least 2 characters.';
+}
+if (strcasecmp(trim($_POST['email']), (string) $currentRow->email) !== 0 && $_POST['email'] !== '') {
+    if (!$user->cdp_isValidEmail($_POST['email']) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+        $errors['email'] = $lang['validate_field_ajax127'];
+    } elseif ($user->cdp_emailExists($_POST['email'], $targetId)) {
+        $errors['email'] = $lang['validate_field_ajax126'];
+    }
 }
 
 $approve = 0;
@@ -103,16 +119,16 @@ if (CDP_APP_MODE_DEMO === true) {
             'fname' => cdp_sanitize($_POST['fname']),
             'document_number' => cdp_sanitize($_POST['document_number'] ?? ''),
             'document_type' => cdp_sanitize($_POST['document_type'] ?? ''),
-            'newsletter' => intval($_POST['newsletter']),
-            'notes' => cdp_sanitize($_POST['notes']),
+            'newsletter' => isset($_POST['newsletter']) ? intval($_POST['newsletter']) : (int) $currentRow->newsletter,
+            'notes' => array_key_exists('notes', $_POST) ? cdp_sanitize($_POST['notes']) : (string) $currentRow->notes,
             'phone' => cdp_sanitize($_POST['phone']),
             'gender' => cdp_sanitize($_POST['gender']),
-            'active' => cdp_sanitize($_POST['active']),
+            'active' => isset($_POST['active']) ? cdp_sanitize($_POST['active']) : (int) $currentRow->active,
             'id' => cdp_sanitize($_POST['id']),
             'company' => cdp_sanitize($_POST['company']) ?? ''
         );
 
-        if (cdp_sanitize($_POST['active']) == 1 && $approve == 0) {
+        if ((int) $datos['active'] === 1 && $approve == 0) {
             $datos['approve'] = 1;
         }
 
@@ -137,30 +153,53 @@ if (CDP_APP_MODE_DEMO === true) {
         $update = cdp_updateCustomers($datos, $approve=true);
 
         if ($update && isset($_POST['total_address'])) {
-            for ($count = 0; $count < $_POST['total_address']; $count++) {
-                if (!empty($_POST['address_id'][$count])) {
-                    $dataAddresses = array(
-                        'address_id' => cdp_sanitize($_POST['address_id'][$count]),
-                        'address' => cdp_sanitize($_POST['address'][$count]),
-                        'country' => cdp_sanitize($_POST['country'][$count]),
-                        'city' => cdp_sanitize($_POST['city'][$count]),
-                        'state' => cdp_sanitize($_POST['state'][$count]),
-                        'postal' => cdp_sanitize($_POST['postal'][$count])
-                    );
+            // Addresses of this customer, for ownership and the keep-blank merge.
+            $adb = new Conexion;
+            $adb->cdp_query("SELECT * FROM cdb_senders_addresses WHERE user_id = :uid");
+            $adb->bind(':uid', $targetId);
+            $ownAddr = [];
+            foreach ((array) $adb->cdp_registros() as $oa) {
+                $ownAddr[(int) $oa->id_addresses] = $oa;
+            }
 
-                    cdp_updateCustomerAddress($dataAddresses);
-                } else {
-                    $dataAddresses = array(
-                        'user_id' => cdp_sanitize($datos['id']),
-                        'address' => cdp_sanitize($_POST['address'][$count]),
-                        'country' => cdp_sanitize($_POST['country'][$count]),
-                        'city' => cdp_sanitize($_POST['city'][$count]),
-                        'state' => cdp_sanitize($_POST['state'][$count]),
-                        'postal' => cdp_sanitize($_POST['postal'][$count])
-                    );
+            for ($count = 0; $count < (int) $_POST['total_address']; $count++) {
+                $row = [
+                    'address' => trim((string) ($_POST['address'][$count] ?? '')),
+                    'country' => (int) ($_POST['country'][$count] ?? 0),
+                    'city'    => (int) ($_POST['city'][$count] ?? 0),
+                    'state'   => (int) ($_POST['state'][$count] ?? 0),
+                    'postal'  => trim((string) ($_POST['postal'][$count] ?? '')),
+                ];
+                $aid = (int) ($_POST['address_id'][$count] ?? 0);
 
-                    cdp_insertAddressCustomer($dataAddresses);
+                if ($aid > 0) {
+                    if (!isset($ownAddr[$aid])) {
+                        continue; // never touch another account's address
+                    }
+                    $oa = $ownAddr[$aid];
+                    cdp_updateCustomerAddress([
+                        'address_id' => $aid,
+                        'address' => cdp_sanitize($row['address'] !== '' ? $row['address'] : (string) $oa->address),
+                        'country' => $row['country'] > 0 ? $row['country'] : (int) $oa->country,
+                        'city'    => $row['city'] > 0 ? $row['city'] : (int) $oa->city,
+                        'state'   => $row['state'] > 0 ? $row['state'] : (int) $oa->state,
+                        'postal'  => cdp_sanitize($row['postal'] !== '' ? $row['postal'] : (string) $oa->zip_code),
+                    ]);
+                    continue;
                 }
+
+                // New address: saved only when complete; an empty block is skipped.
+                if ($row['address'] === '' || $row['country'] <= 0 || $row['state'] <= 0 || $row['city'] <= 0 || $row['postal'] === '') {
+                    continue;
+                }
+                cdp_insertAddressCustomer([
+                    'user_id' => $targetId,
+                    'address' => cdp_sanitize($row['address']),
+                    'country' => $row['country'],
+                    'city'    => $row['city'],
+                    'state'   => $row['state'],
+                    'postal'  => cdp_sanitize($row['postal']),
+                ]);
             }
         }
 
