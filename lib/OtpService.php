@@ -372,7 +372,7 @@ class OtpService {
                 ],
                 $tpl->body
             );
-            sendNotificationWhatsApp_v2($userInfo, $body);
+            sendNotificationWhatsApp_v2($userInfo, $body, null, ['force_sms' => true]);
         } else {
             return ['ok' => false, 'error' => "WhatsApp template #{$whatsappTemplateId} not found."];
         }
