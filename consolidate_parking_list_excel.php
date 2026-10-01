@@ -1,0 +1,35 @@
+<?php
+// *************************************************************************
+// *                                                                       *
+// * Swiftlane - Integrated Web Shipping System                            *
+// * Copyright (c) iSolveAfrica Ltd. All rights reserved.                  *
+// *                                                                       *
+// *************************************************************************
+// *                                                                       *
+// * This software and its source code are proprietary and confidential    *
+// * property of iSolveAfrica Ltd. and were developed specifically for     *
+// * Swiftlane.                                                            *
+// *                                                                       *
+// * The software may not be copied, reproduced, modified, distributed,    *
+// * sublicensed, published, or used in whole or in part except as         *
+// * expressly permitted under the applicable license or written           *
+// * agreement with iSolveAfrica Ltd. Any permitted copies or derivative   *
+// * works must retain this copyright notice and all applicable            *
+// * proprietary notices.                                                  *
+// *                                                                       *
+// *************************************************************************
+
+
+// Consolidation Parking List — Excel download.
+// Rendering and access checks: views/print/print_consolidate_parking_list.php
+
+require_once("loader.php");
+
+if ((new User())->cdp_loginCheck() == true) {
+    // Audit: record who took this document out of the system.
+    require_once(__DIR__ . "/helpers/activity_log.php");
+    cdp_activityLogDocument();
+}
+
+$cdpParkingFormat = 'excel';
+include('views/print/print_consolidate_parking_list.php');
