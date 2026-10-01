@@ -73,11 +73,12 @@
 						</a>
 					</li>
 					<?php } ?>
-					<?php if ($user->cdp_hasPermission('edit_sms_config')) { ?>
+					<?php require_once __DIR__ . '/../../helpers/hubtel_sms.php'; ?>
+					<?php if (cdp_smsCanManage($user)) { ?>
 					<li class="list-group-item  sidebar-item">
 						<a href="config_sms.php" class="list-group-item-action">
 							<iconify-icon icon="solar:chat-square-linear" class="tools-menu-icon"></iconify-icon>
-							<?php echo $lang['ws-add-text30'] ?>
+							SMS Settings
 						</a>
 					</li>
 					<?php } ?>
