@@ -107,7 +107,7 @@ $message = implode("\n", [
     "{$core->site_name} Team.",
 ]);
 
-$sendResult = sendNotificationWhatsApp_v2($sender, $message);
+$sendResult = sendNotificationWhatsApp_v2($sender, $message, null, ['allow_sms' => false]);
 
 if (empty($sendResult['success'])) {
     echo json_encode([
