@@ -400,7 +400,7 @@ if (isset($_POST['person_receives'])) {
                         '[COMPANY_NAME]'      => !empty($settings_wa->site_name) ? $settings_wa->site_name : 'Our team',
                     ));
                     if ($whatsapp_body !== null) {
-                        sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                        sendNotificationWhatsApp_v2($sender_data, $whatsapp_body, null, ['allow_sms' => false]);
                     }
                 } catch (Exception $e) {
                     error_log('Error sending WhatsApp v2 notification to sender on delivery: ' . $e->getMessage());

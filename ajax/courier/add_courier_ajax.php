@@ -904,7 +904,7 @@ if (empty($errors)) {
                             $tpl->body
                         );
 
-                        $wa_result = sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                        $wa_result = sendNotificationWhatsApp_v2($sender_data, $whatsapp_body, null, ['allow_sms' => false]);
 
                         if (!$wa_result['success']) {
                             error_log("WhatsApp notification failed for shipment {$fullshipment}: " . $wa_result['message']);

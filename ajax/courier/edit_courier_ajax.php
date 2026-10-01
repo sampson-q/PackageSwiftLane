@@ -787,7 +787,7 @@ if (empty($errors)) {
                             [cdp_nameWithLocker($sender_data), $fullshipment, $old_status_label ?: $current_status_name, $current_status_name, implode("\n", $wa_changes_lines), $order_date_fmt, $recipient_name, $origin, $destination, $app_url, $settings->site_name],
                             $tpl->body
                         );
-                        sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                        sendNotificationWhatsApp_v2($sender_data, $whatsapp_body, null, ['allow_sms' => false]);
                     }
                 }
             } catch (Exception $e) { error_log('WhatsApp edit error: ' . $e->getMessage()); }

@@ -336,7 +336,7 @@ if (empty($errors)) {
                     }
 
                     // Send via v2 API
-                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body, null, ['allow_sms' => false]);
                 }
             } catch (Exception $e) {
                 error_log('Error sending WhatsApp v2 notification to sender on delivery: ' . $e->getMessage());

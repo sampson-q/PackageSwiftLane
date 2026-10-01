@@ -295,7 +295,7 @@ if (empty($errors)) {
                         $app_url . "\n\n" .
                         "Thank you, *{$msnames}* Team";
 
-                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body_sender);
+                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body_sender, null, ['allow_sms' => false]);
                 } catch (Exception $e) {
                     error_log('Error sending WhatsApp to sender for ' . $fullshipment . ': ' . $e->getMessage());
                 }

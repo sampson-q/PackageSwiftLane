@@ -658,7 +658,7 @@ if (empty($errors)) {
                         $app_url . "\n\n" .
                         "Thank you, *{$msnames}* Team";
 
-                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                    sendNotificationWhatsApp_v2($sender_data, $whatsapp_body, null, ['allow_sms' => false]);
                 }
 
             } catch (Exception $e) {

@@ -327,7 +327,7 @@ if (empty($errors)) {
                     "Thank you for choosing *{$msnames}*. We hope to serve you again! 🙏";
 
                 // Send via v2 API
-                sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
+                sendNotificationWhatsApp_v2($sender_data, $whatsapp_body, null, ['allow_sms' => false]);
                 
             } catch (Exception $e) {
                 // Capture specific exceptions and log them for easier debugging
