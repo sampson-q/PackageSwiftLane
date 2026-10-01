@@ -303,7 +303,11 @@ if (empty($errors)) {
         }
 
         // Obtener el estado de las casillas de verificación
-        $notify_sms_sender = isset($_POST['notify_sms_sender']) && $_POST['notify_sms_sender'] == 1;
+        // A package marked Delivered (8) or Picked Up (15) here always texts the
+        // customer (SMS switch and opt-out still apply); other status updates
+        // only when the operator ticks "notify by SMS".
+        $notify_sms_sender = (isset($_POST['notify_sms_sender']) && $_POST['notify_sms_sender'] == 1)
+            || in_array((int) $status, [8, 15], true);
         $notify_sms_receiver = isset($_POST['notify_sms_receiver']) && $_POST['notify_sms_receiver'] == 1;
 
         // Generar cuerpo del SMS para el remitente
