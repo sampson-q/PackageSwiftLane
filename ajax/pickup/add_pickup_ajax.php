@@ -544,7 +544,10 @@ if (empty($errors)) {
         $templatesreceiver = 12;
 
         // Obtener el estado de las casillas de verificación
-        $notify_sms_sender = isset($_POST['notify_sms_sender']) && $_POST['notify_sms_sender'] == 1;
+        // The customer is always texted when a package is created (the SMS switch
+        // on Tools > SMS and the customer's own opt-out still apply). The
+        // form sends no WhatsApp, so this is the customer's only message.
+        $notify_sms_sender = true;
         $notify_sms_receiver = isset($_POST['notify_sms_receiver']) && $_POST['notify_sms_receiver'] == 1;
 
         // Generar cuerpo del SMS para el remitente
