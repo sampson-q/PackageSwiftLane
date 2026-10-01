@@ -63,7 +63,8 @@ function cdp_pushNotifyUser($user, $subject, $message, $settings, array $ctx = [
                     (string) $tpl->body
                 );
                 cdp_msgSetContext(['template_id' => 12]);
-                $r = sendNotificationWhatsApp_v2($user, $body);
+                // The sender picked the channels on the page: no SMS copy here.
+                $r = sendNotificationWhatsApp_v2($user, $body, null, ['allow_sms' => false]);
                 cdp_msgClearContext(['template_id']);
                 if (!empty($r['success'])) {
                     $out['whatsapp'] = ['status' => 'sent', 'detail' => ''];
