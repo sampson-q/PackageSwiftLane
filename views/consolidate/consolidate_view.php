@@ -21,6 +21,7 @@
  
 
 require_once('helpers/querys.php');
+require_once('helpers/rbac.php'); // cdp_roleIsClient() for the Parking List export
 
 $userData = $user->cdp_getUserData();
 
@@ -272,6 +273,15 @@ if ($row_order->status_invoice == 1) {
                                                         </a>
                                                         <a class="dropdown-item" href="print_label_consolidate.php?id=<?php echo $_GET['id']; ?>" target="_blank">
                                                             <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?> 
+                                                        </a>
+                                                    <?php } ?>
+
+                                                    <?php if ($user->cdp_hasPermission('print_consolidate') && !cdp_roleIsClient((int) $userData->userlevel)) { ?>
+                                                        <a class="dropdown-item" href="consolidate_parking_list.php?id=<?php echo (int) $row_order->consolidate_id; ?>" target="_blank">
+                                                            <i style="color:#343a40" class="ti-export"></i>&nbsp;Export Parking List (PDF)
+                                                        </a>
+                                                        <a class="dropdown-item" href="consolidate_parking_list_excel.php?id=<?php echo (int) $row_order->consolidate_id; ?>">
+                                                            <i style="color:#343a40" class="ti-export"></i>&nbsp;Export Parking List (Excel)
                                                         </a>
                                                     <?php } ?>
 
