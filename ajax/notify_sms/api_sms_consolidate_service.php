@@ -11,17 +11,24 @@ require_once(__DIR__ . "/../../helpers/hubtel_sms.php");
 // Configuración de la plantilla
 function generateSMSBody($user_data, $fullshipment, $add_status, $app_url, $template_id) {
     $subjectVal = cdp_getsmsTemplates($template_id);
+    if (!$subjectVal || trim((string) $subjectVal->body) === '') {
+        return '';
+    }
+
+    // Every stored template starts with [SITE_NAME]; it was never filled in,
+    // so texts went out reading "[SITE_NAME]: ...".
+    static $siteName = null;
+    if ($siteName === null) {
+        $settings = cdp_getSettingsCourier();
+        $siteName = trim((string) ($settings->site_name ?? ''));
+    }
 
     $body = str_replace(
+        array('[SITE_NAME]', '[NAME]', '[TRACK]', '[STATUS]', '[LINK]'),
         array(
-            '[NAME]', 
-            '[TRACK]', 
-            '[STATUS]', 
-            '[LINK]'
-        ),
-        array(
-            $user_data->fname . ' ' . $user_data->lname, 
-            $fullshipment, 
+            $siteName,
+            trim(($user_data->fname ?? '') . ' ' . ($user_data->lname ?? '')),
+            $fullshipment,
             $add_status,
             $app_url
         ),
