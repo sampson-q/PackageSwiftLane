@@ -338,7 +338,10 @@ if (empty($errors)) {
 
 
         // Obtener el estado de las casillas de verificación
-        $notify_sms_sender = isset($_POST['notify_sms_sender']) && $_POST['notify_sms_sender'] == 1;
+        // The customer is always texted when a package is delivered (the SMS switch
+        // on Tools > SMS and the customer's own opt-out still apply). The
+        // WhatsApp send here skips its SMS copy, so this is the only text.
+        $notify_sms_sender = true;
 
         // Generar cuerpo del SMS para el remitente
         try {
