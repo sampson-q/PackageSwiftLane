@@ -6,12 +6,7 @@ if (!defined('SWIFTLANE_LOADER_LOADED')) {
     require_login();
     require_permission('view_dashboard');
 }
-require_once(__DIR__ . "/../../helpers/vendor/autoload.php");
-
-use ClickSend\Api\SMSApi;
-use ClickSend\Model\SmsMessage;
-use ClickSend\Model\SmsMessageCollection;
-use GuzzleHttp\Client as GuzzleClient;
+require_once(__DIR__ . "/../../helpers/hubtel_sms.php");
 
 // Configuración de la plantilla
 function generateSMSBody($user_data, $fullshipment, $add_status, $app_url, $template_id) {
@@ -38,50 +33,10 @@ function generateSMSBody($user_data, $fullshipment, $add_status, $app_url, $temp
     return $newbody;
 }
 
-// Función para enviar la notificación SMS
+// The SMS the "notify by SMS" toggles ask for. Hubtel sends it (Tools > SMS);
+// the shared body lives in helpers/hubtel_sms.php so both SMS services and the
+// WhatsApp copy clean the text the same way (plain text, no emoji).
 function sendNotificationSMS($user, $sms_body, $notify)
 {
-    $settings = cdp_getSettingsCourier();
-
-    if (!$notify || intval($settings->active_sms) != 1) {
-        return [
-            'success' => false,
-            'message' => 'Notification not enabled'
-        ];
-    }
-
-    $result = [
-        'success' => false,
-        'message' => ''
-    ];
-
-    if ($sms_body !== null) {
-        try {
-            // Configurar la autenticación básica de HTTP: BasicAuth
-            $config = ClickSend\Configuration::getDefaultConfiguration()
-                          ->setUsername($settings->twilio_sms_sid) // Asegúrate de que estos campos estén configurados correctamente en tu configuración
-                          ->setPassword($settings->twilio_sms_token);
-
-            $apiInstance = new SMSApi(new GuzzleClient(), $config);
-            $msg = new SmsMessage();
-            $msg->setBody(htmlentities($sms_body));
-            $msg->setTo($user->phone);
-            $msg->setSource("sdk");
-
-            // \ClickSend\Model\SmsMessageCollection | SmsMessageCollection model
-            $sms_messages = new SmsMessageCollection();
-            $sms_messages->setMessages([$msg]);
-
-            // Enviar el SMS
-            $resultAPI = $apiInstance->smsSendPost($sms_messages);
-            $result['success'] = true;
-            $result['message'] = "Notification sent successfully";
-        } catch (Exception $e) {
-            $result['message'] = 'Exception when calling SMSApi->smsSendPost: ' . $e->getMessage();
-        }
-    } else {
-        $result['message'] = "Error: No body defined for the SMS";
-    }
-
-    return $result;
+    return cdp_smsSendNotification($user, $sms_body, $notify);
 }
