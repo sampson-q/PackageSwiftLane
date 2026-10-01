@@ -4,6 +4,7 @@ $projectRoot = dirname(__DIR__, 2);
 require_once $projectRoot . '/helpers/querys.php';
 require_once $projectRoot . '/helpers/whatsapp.php';
 require_once $projectRoot . '/helpers/message_log.php';
+require_once $projectRoot . '/helpers/hubtel_sms.php';
 // helpers/vendor/autoload.php is NOT loaded here: this file talks to UltraMsg
 // with cURL and uses nothing from that vendor tree (ClickSend SDK, Guzzle,
 // Symfony polyfills). Loading it cost 50-170 ms on every page that sends a
@@ -24,22 +25,48 @@ require_once $projectRoot . '/helpers/message_log.php';
  * @param object     $sender                 Record with at least a `phone` property.
  * @param string     $template_whatsapp_body The fully-rendered message body to send.
  * @param mixed|null $countryHint            Optional recipient country (id/iso/name/code).
- * @return array ['success' => bool, 'skipped' => bool, 'message' => string]
+ * @param array      $opts                   SMS copy: ['force_sms' => true] for one-time
+ *                                           codes, ['allow_sms' => false] when the caller
+ *                                           texts the event itself (helpers/hubtel_sms.php).
+ * @return array ['success' => bool, 'skipped' => bool, 'message' => string,
+ *                'wa_sent' => bool, 'sms_sent' => bool]
  */
-function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryHint = null) {
+function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryHint = null, array $opts = []) {
     // Respond first, deliver after (helpers/after_response.php). The number
     // check and the send are two API calls; a request that opted into queued
     // notifications gets an optimistic result and the message log records the
     // real one.
     if (function_exists('cdp_notifyDeferred') && cdp_notifyDeferred()) {
-        cdp_afterResponse(function () use ($sender, $template_whatsapp_body, $countryHint) {
-            sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryHint);
+        cdp_afterResponse(function () use ($sender, $template_whatsapp_body, $countryHint, $opts) {
+            sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryHint, $opts);
         });
         return ['success' => true, 'queued' => true, 'message' => 'Queued for delivery.'];
     }
 
     // Fetch your API credentials & endpoint
     $settings = cdp_getSettingsCourier();
+
+    // SMS copy, side by side with WhatsApp (helpers/hubtel_sms.php decides
+    // whether one is owed). It goes out once, whatever happened to the
+    // WhatsApp send, and the result reports both channels.
+    $smsOwed = cdp_smsCopyOwed($sender, $opts, $settings);
+    $finish = function (array $res) use ($smsOwed, $sender, $template_whatsapp_body, $countryHint) {
+        $waOk = !empty($res['success']);
+        $res['wa_sent']  = $waOk;
+        $res['sms_sent'] = false;
+        if (!$smsOwed) {
+            return $res;
+        }
+        $sms = cdp_smsToRecipient($sender, $template_whatsapp_body, $countryHint);
+        $res['sms_sent'] = !empty($sms['success']);
+        if ($res['sms_sent']) {
+            $res['success'] = true;
+            $res['message'] = $waOk ? $res['message'] . ' + SMS copy' : 'Sent by SMS (' . $res['message'] . ')';
+        } else {
+            $res['message'] .= ' (SMS copy failed: ' . ($sms['message'] ?? '') . ')';
+        }
+        return $res;
+    };
 
     $who = cdp_msgRecipientFromEntity($sender);
     $log = function ($status, $detail, $to = '', $response = null) use ($who, $template_whatsapp_body) {
@@ -58,22 +85,22 @@ function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryH
     // Global kill-switch: if WhatsApp is disabled, send nothing.
     if (intval($settings->active_whatsapp) != 1) {
         $log('skipped', 'WhatsApp is not active in settings.');
-        return [
+        return $finish([
             'success' => false,
             'skipped' => true,
             'message' => 'WhatsApp is not active in settings.',
-        ];
+        ]);
     }
 
     // Normalise + verify the destination number (anti-ban gate).
     $target = cdp_wa_resolveSendTarget($sender, $countryHint);
     if ($target['skip']) {
         $log('skipped', $target['reason'], (string) $target['phone']);
-        return [
+        return $finish([
             'success' => false,
             'skipped' => true,
             'message' => $target['reason'],
-        ];
+        ]);
     }
 
     $apiToken = $settings->api_ws_token;
@@ -108,10 +135,10 @@ function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryH
     if ($err || $response === false) {
         cdp_wa_log("send transport error to {$target['phone']}: {$err}");
         $log('failed', "cURL error: {$err}", $target['phone']);
-        return [
+        return $finish([
             'success' => false,
             'message' => "cURL error: {$err}",
-        ];
+        ]);
     }
 
     // The request completed, but a 200 from cURL does NOT mean UltraMsg accepted
@@ -128,26 +155,26 @@ function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryH
             $reason = is_scalar($data['error']) ? (string) $data['error'] : json_encode($data['error']);
             cdp_wa_log("send rejected for {$target['phone']} (HTTP {$http_code}): {$reason}");
             $log('failed', "WhatsApp API error: {$reason}", $target['phone'], $rawResponse);
-            return ['success' => false, 'message' => "WhatsApp API error: {$reason}"];
+            return $finish(['success' => false, 'message' => "WhatsApp API error: {$reason}"]);
         }
         if (isset($data['sent']) && filter_var($data['sent'], FILTER_VALIDATE_BOOLEAN) === false) {
             $reason = isset($data['message']) ? (string) $data['message'] : 'message not sent';
             cdp_wa_log("send not sent for {$target['phone']} (HTTP {$http_code}): {$reason}");
             $log('failed', "WhatsApp API: {$reason}", $target['phone'], $rawResponse);
-            return ['success' => false, 'message' => "WhatsApp API: {$reason}"];
+            return $finish(['success' => false, 'message' => "WhatsApp API: {$reason}"]);
         }
     } elseif ($http_code < 200 || $http_code >= 300) {
         // Non-JSON body on a non-2xx response is a clear failure.
         cdp_wa_log("send failed for {$target['phone']} (HTTP {$http_code}): " . substr((string) $response, 0, 200));
         $log('failed', "WhatsApp API HTTP {$http_code}", $target['phone'], $rawResponse);
-        return ['success' => false, 'message' => "WhatsApp API HTTP {$http_code}"];
+        return $finish(['success' => false, 'message' => "WhatsApp API HTTP {$http_code}"]);
     }
 
     // Explicit acceptance, or an ambiguous/unrecognised 2xx body (fail-open).
     $detail = (is_array($data) && isset($data['id'])) ? 'Accepted by UltraMsg (id ' . $data['id'] . ')' : 'Accepted by UltraMsg';
     $log('sent', $detail, $target['phone'], $rawResponse);
-    return [
+    return $finish([
         'success' => true,
         'message' => "WhatsApp notification sent successfully",
-    ];
+    ]);
 }
