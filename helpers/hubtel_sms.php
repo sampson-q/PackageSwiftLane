@@ -237,6 +237,7 @@ if (!function_exists('cdp_smsPlainText')) {
         $text = preg_replace($emoji, '', $text);
 
         $text = preg_replace('/[ \t]+/u', ' ', $text);
+        $text = preg_replace('/ +([,.!?;:])/u', '$1', $text); // "Ama 👋," leaves "Ama ," once the emoji is gone
         $text = preg_replace('/ *\n */u', "\n", $text);
         $text = preg_replace('/\n{3,}/u', "\n\n", $text);
         return trim($text);
