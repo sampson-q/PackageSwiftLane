@@ -15,6 +15,9 @@ require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once("../../helpers/querys.php");
 require_once(__DIR__ . "/../../helpers/finance_switch.php");
+require_once(__DIR__ . "/../../helpers/whatsapp.php");     // cdp_normalizePhone() for the SMS number
+require_once(__DIR__ . "/../../helpers/message_log.php");  // the SMS leaves a message-log row
+require_once(__DIR__ . "/../../helpers/hubtel_sms.php");
 require_login();
 require_permission('deliver_shipment');
 
@@ -108,6 +111,17 @@ if ($action === 'deliver') {
                 'date_history' => date('Y-m-d H:i:s'),
             ]);
         }
+        // The customer is texted that the package was delivered (SMS switch
+        // and opt-out apply; this screen sends no WhatsApp or e-mail).
+        try {
+            $smsSender = cdp_getSenderCourier((int) ($row->sender_id ?? 0));
+            if ($smsSender) {
+                $siteName = trim((string) ((new Core)->site_name ?? ''));
+                cdp_smsEventNotify($smsSender, ($siteName !== '' ? $siteName . ': ' : '')
+                    . 'Package ' . $tracking . ' has been delivered. Thank you for shipping with us.');
+            }
+        } catch (Throwable $e) { /* best-effort: the delivery itself is already recorded */ }
+
         $delivered++;
     }
 

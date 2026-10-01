@@ -462,3 +462,26 @@ if (!function_exists('cdp_smsCopyOwed')) {
         return !(is_object($recipient) && isset($recipient->notify_sms) && intval($recipient->notify_sms) === 0);
     }
 }
+
+if (!function_exists('cdp_smsEventNotify')) {
+
+    /**
+     * Text a customer about a package event that has no WhatsApp message of
+     * its own (e.g. the Warehouse View bulk deliver). Same rules as the
+     * WhatsApp copy: Hubtel configured, the SMS switch on, and the customer
+     * not opted out. Returns null when no SMS was owed.
+     */
+    function cdp_smsEventNotify($recipient, $text)
+    {
+        if (is_array($recipient)) {
+            $recipient = (object) $recipient;
+        }
+        if (!is_object($recipient) || trim((string) ($recipient->phone ?? '')) === '') {
+            return null;
+        }
+        if (!cdp_smsCopyOwed($recipient, [])) {
+            return null;
+        }
+        return cdp_smsToRecipient($recipient, $text);
+    }
+}
