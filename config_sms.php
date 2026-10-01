@@ -31,7 +31,9 @@
 
         $permissions = $user->cdp_getUserPermissions();
 
-        if (!$user->cdp_hasPermission('edit_sms_config')) {
+        // The SMS settings hold Hubtel API keys: super admins only.
+        require_once("helpers/hubtel_sms.php");
+        if (!cdp_smsCanManage($user)) {
             header("location: error403.php");
             exit;
         }

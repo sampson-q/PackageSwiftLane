@@ -21,8 +21,12 @@
 
 
 
-if (!$user->cdp_is_Admin())
-	cdp_redirect_to("login.php");
+require_once __DIR__ . '/../../helpers/hubtel_sms.php';
+
+// API keys live here: super admins only (the root page checks the same).
+if (!cdp_smsCanManage($user)) {
+	cdp_redirect_to("error403.php");
+}
 
 $userData = $user->cdp_getUserData();
 
@@ -49,8 +53,7 @@ $userData = $user->cdp_getUserData();
     <meta property="og:image" content="<?php echo htmlspecialchars($core->og_image, ENT_QUOTES, 'UTF-8'); ?>">
 	<!-- Favicon icon -->
 	<link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
-	<title><?php echo $lang['tools-config61'] ?> | <?php echo $core->site_name ?></title>
-	<link rel="stylesheet" href="assets/template/assets/libs/intlTelInput/intlTelInput.css">
+	<title>SMS Settings | <?php echo $core->site_name ?></title>
 
 	<?php include 'views/inc/head_scripts.php'; ?>
 
@@ -117,7 +120,7 @@ $userData = $user->cdp_getUserData();
 					<div class="p-15 b-b">
 						<div class="d-flex align-items-center">
 							<div>
-								<span><?php echo $lang['left1123'] ?></span>
+								<span>SMS Settings</span>
 							</div>
 
 						</div>
@@ -146,64 +149,76 @@ $userData = $user->cdp_getUserData();
 									<div class="card-body">
 										<!-- <div id="loader" style="display:none"></div> -->
 										<!-- <div id="msgholder"></div> -->
-										<form class="form-horizontal form-material" id="save_data" name="save_data" method="post">
-                                            <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-											<header><b><?php echo $lang['ws-add-text32'] ?></b></header> <br><br>
+										<?php
+										$cdpSmsCfg     = cdp_hubtelSmsConfig();
+										$cdpSmsReady   = cdp_hubtelSmsReady();
+										$cdpSecretSet  = $cdpSmsCfg['client_secret'] !== '';
+										?>
+										<form class="form-horizontal form-material" id="save_sms_settings" name="save_sms_settings" method="post" autocomplete="off">
+											<input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
+											<input type="hidden" name="action" value="save">
+											<header class="d-flex align-items-center justify-content-between">
+												<b>Hubtel SMS</b>
+												<span id="sms_status_badge" class="badge <?php echo $cdpSmsReady ? 'badge-success' : 'badge-secondary'; ?>"><?php echo $cdpSmsReady ? 'Configured' : 'Not Configured'; ?></span>
+											</header>
+											<br>
 											<section>
 												<div class="row">
-													<div class="col-md-12">
+													<div class="col-md-6">
 														<div class="form-group">
-															<label for="firstName1"><?php echo $lang['messagesform108'] ?></label>
-															<input type="text" class="form-control" name="twilio_sms_sid" id="twilio_sms_sid" placeholder="<?php echo $lang['messagesform108'] ?>" value="<?php echo $core->twilio_sms_sid; ?>">
+															<label for="hubtel_client_id">Client ID</label>
+															<input type="text" class="form-control" name="hubtel_client_id" id="hubtel_client_id" maxlength="128" autocomplete="off" value="<?php echo htmlspecialchars($cdpSmsCfg['client_id'], ENT_QUOTES, 'UTF-8'); ?>">
 														</div>
 													</div>
-
+													<div class="col-md-6">
+														<div class="form-group">
+															<label for="hubtel_client_secret">Client Secret</label>
+															<input type="password" class="form-control" name="hubtel_client_secret" id="hubtel_client_secret" maxlength="128" autocomplete="new-password" placeholder="<?php echo $cdpSecretSet ? '••••••••••••' : ''; ?>" value="">
+														</div>
+													</div>
 												</div>
-
 												<div class="row">
-													<div class="col-md-12">
+													<div class="col-md-6">
 														<div class="form-group">
-															<label for="firstName1"><?php echo $lang['left604'] ?></label>
-															<input type="text" class="form-control" name="twilio_sms_token" id="twilio_sms_token" placeholder="<?php echo $lang['left604'] ?>" value="<?php echo $core->twilio_sms_token; ?>">
+															<label for="hubtel_sender_id">Sender ID</label>
+															<input type="text" class="form-control" name="hubtel_sender_id" id="hubtel_sender_id" maxlength="11" autocomplete="off" value="<?php echo htmlspecialchars($cdpSmsCfg['sender'], ENT_QUOTES, 'UTF-8'); ?>">
 														</div>
 													</div>
-
 												</div>
-
-												<div class="row">
-													<div class="col-md-12">
-														<div class="form-group">
-															<label for="firstName1"><?php echo $lang['left1122'] ?></label>
-															<input type="text" class="form-control" name="phone_custom" id="phone_custom" placeholder="+14155238886" value="<?php echo $core->twilio_sms_number; ?>">
-															<span id="valid-msg" class="hide"></span>
-															<div id="error-msg" class="hide text-danger"></div>
-														</div>
-													</div>
-
-													<input type="hidden" name="twilio_sms_number" id="twilio_sms_number" value="<?php echo $core->twilio_sms_number; ?>" />
-												</div>
-
-												<div class="row mt-3 mb-3">
+												<div class="row mt-2 mb-3">
 													<div class="col-md-12">
 														<div class="form-group">
 															<label class="custom-control custom-checkbox">
-																<?php echo $lang['ws-add-text31'] ?>
-																<input type="checkbox" class="custom-control-input" name="active_sms" id="active_sms" 
-																value="1" <?php if ($core->active_sms == 1) {echo 'checked';} ?>>
-
+																Send SMS Notifications
+																<input type="checkbox" class="custom-control-input" name="active_sms" id="active_sms" value="1" <?php if ((int) $core->active_sms === 1) { echo 'checked'; } ?>>
 																<span class="custom-control-indicator"></span>
 															</label>
 														</div>
 													</div>
-
 												</div>
 											</section>
-
 											<div class="form-group">
-												<div class="col-sm-12">
-													<button class="btn btn-danger btn-confirmation" name="dosubmit" type="submit"><?php echo $lang['leftorder228'] ?> <span><i class="icon-ok"></i></span></button>
+												<button class="btn btn-danger" id="sms_save_btn" type="submit">Save Settings</button>
+											</div>
+										</form>
 
+										<hr class="my-4">
+
+										<form class="form-horizontal form-material" id="sms_test_form" name="sms_test_form" method="post" autocomplete="off">
+											<input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
+											<input type="hidden" name="action" value="test">
+											<header><b>Send Test SMS</b></header>
+											<br>
+											<div class="row">
+												<div class="col-md-6">
+													<div class="form-group">
+														<label for="sms_test_phone">Phone Number</label>
+														<input type="tel" class="form-control" name="sms_test_phone" id="sms_test_phone" maxlength="20" autocomplete="off">
+													</div>
 												</div>
+											</div>
+											<div class="form-group">
+												<button class="btn btn-outline-secondary" id="sms_test_btn" type="submit">Send Test SMS</button>
 											</div>
 										</form>
 									</div>
@@ -227,8 +242,7 @@ $userData = $user->cdp_getUserData();
 		<?php include('helpers/languages/translate_to_js.php'); ?>
 
 
-		<script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
-		<script src="<?= cdp_asset('dataJs/config_twilio_sms.js') ?>"></script>
+		<script src="<?= cdp_asset('dataJs/config_sms_hubtel.js') ?>"></script>
 
 </body>
 
