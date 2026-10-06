@@ -282,95 +282,18 @@ if (isset($_POST["total_item"])) {
                     <tbody>' . $rows_html . '</tbody>
                 </table>';
 
-                // Re-send the full current consolidation details (status + the
-                // shipments folded into it — no money), not just the diff.
-                $consol_items_edit = '';
-                $db_ci = new Conexion;
-                $db_ci->cdp_query("SELECT o.order_prefix, o.order_no
-                    FROM cdb_consolidate_detail d
-                    INNER JOIN cdb_add_order o ON o.order_id = d.order_id
-                    WHERE d.consolidate_id = :cid");
-                $db_ci->bind(':cid', (int) $order_id);
-                $ci_rows = $db_ci->cdp_registros();
-                if ($ci_rows) {
-                    foreach ($ci_rows as $cir) {
-                        $consol_items_edit .= '<li>' . htmlspecialchars($cir->order_prefix . $cir->order_no, ENT_QUOTES, 'UTF-8') . '</li>';
-                    }
-                }
-                $message_html .= '<table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:8px 0 16px 0;background:#fafafa;border-left:4px solid #f5a800;font-family:Roboto,Arial,Helvetica,sans-serif;"><tr><td style="padding:12px 18px;">'
-                    . '<p style="margin:0 0 4px 0;font-size:10px;color:#aaaaaa;text-transform:uppercase;letter-spacing:1px;">Consolidation Status</p>'
-                    . '<p style="margin:0 0 10px 0;font-size:15px;font-weight:700;color:#1a1a1a;">' . htmlspecialchars($new_status_label, ENT_QUOTES, 'UTF-8') . '</p>'
-                    . '<p style="margin:0 0 4px 0;font-size:10px;color:#aaaaaa;text-transform:uppercase;letter-spacing:1px;">Consolidated Shipments</p>'
-                    . ($consol_items_edit !== '' ? '<ul style="margin:0;padding-left:18px;font-size:14px;color:#1a1a1a;">' . $consol_items_edit . '</ul>' : '<p style="margin:0;font-size:14px;">N/A</p>')
-                    . '</td></tr></table>';
-
-                $db_tpl = new Conexion;
-                $db_tpl->cdp_query("SELECT * FROM cdb_email_templates WHERE id = 12 LIMIT 1");
-                $db_tpl->cdp_execute();
-                $email_tpl_12 = $db_tpl->cdp_registro();
-
-                if ($email_tpl_12) {
-                    $db_cfg = new Conexion;
-                    $db_cfg->cdp_query("SELECT * FROM cdb_settings LIMIT 1");
-                    $db_cfg->cdp_execute();
-                    $mail_cfg = $db_cfg->cdp_registro();
-
-                    $db_sender_email = new Conexion;
-                    $db_sender_email->cdp_query("SELECT fname, lname, email, locker FROM cdb_users WHERE id = :id LIMIT 1");
-                    $db_sender_email->bind(':id', (int) $_before_edit->sender_id);
-                    $db_sender_email->cdp_execute();
-                    $email_recipient_user = $db_sender_email->cdp_registro();
-
-                    if ($email_recipient_user && !empty($email_recipient_user->email)) {
-                        
-                        $sender_full_name = cdp_nameWithLocker($email_recipient_user);
-
-                        $email_body_12 = str_replace(
-                            ['[SITE_NAME]', '[NAME]', '[MESSAGE]', '[URL]'],
-                            [
-                                $mail_cfg->site_name,
-                                htmlspecialchars($sender_full_name),
-                                $message_html,
-                                rtrim($mail_cfg->site_url, '/'),
-                            ],
-                            $email_tpl_12->body
-                        );
-
-                        $email_body_12 = cdp_cleanOutx($email_body_12);
-                        $edit_subject = 'Consolidation Updated: ' . $consolidate_number;
-
-                        if ($mail_cfg->mailer === 'PHP') {
-                            $mail_headers = "MIME-Version: 1.0\r\n";
-                            $mail_headers .= "Content-type: text/html; charset=UTF-8\r\n";
-                            $mail_headers .= "From: " . $mail_cfg->site_email . "\r\n";
-                            mail($email_recipient_user->email, $edit_subject, $email_body_12, $mail_headers);
-
-                        } elseif ($mail_cfg->mailer === 'SMTP') {
-                            $edit_mail = new PHPMailer();
-                            $edit_mail->IsSMTP();
-                            $edit_mail->SMTPAuth = true;
-                            $edit_mail->Port = $mail_cfg->smtp_port;
-                            $edit_mail->IsHTML(true);
-                            $edit_mail->CharSet = 'utf-8';
-                            $edit_mail->Host = $mail_cfg->smtp_host;
-                            $edit_mail->Username = $mail_cfg->smtp_user;
-                            $edit_mail->Password = $mail_cfg->smtp_password;
-                            $edit_mail->From = $mail_cfg->site_email;
-                            $edit_mail->FromName = $mail_cfg->smtp_names;
-                            $edit_mail->AddAddress($email_recipient_user->email);
-                            $edit_mail->Subject = $edit_subject;
-                            $edit_mail->Body = '<html><body>' . $email_body_12 . '</body></html>';
-                            $edit_mail->SMTPOptions = [
-                                'ssl' => [
-                                    'verify_peer' => false,
-                                    'verify_peer_name' => false,
-                                    'allow_self_signed' => true,
-                                ],
-                            ];
-                            $edit_mail->Send();
-                        }
-                    }
-                }
+                // Sent after the response, to the consolidation's sender, with the
+                // current status and shipments appended (helpers/consolidation_edit_mail.php).
+                require_once __DIR__ . '/../../helpers/consolidation_edit_mail.php';
+                cdp_mailConsolidationEdit(
+                    'consolidate',
+                    (int) $row_order->consolidate_id,
+                    (int) $_before_edit->sender_id,
+                    $consolidate_number,
+                    'Consolidation Updated: ' . $consolidate_number,
+                    $message_html,
+                    $new_status_label
+                );
             }
         }
     } catch (Exception $e) {

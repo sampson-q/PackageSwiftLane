@@ -240,28 +240,6 @@ if (isset($_POST["total_item"])) {
                     'awb_no'         => isset($_POST['awb_no']) ? cdp_awbNormalize($_POST['awb_no']) : cdp_consolidationAwb($row_order, 'consolidate_packages'),
                 ), 'consolidate_packages');
 
-                // Re-send the full current consolidation details (status + the
-                // shipments folded into it — no money), not just the diff.
-                $consol_items_edit2 = '';
-                $db_ci2 = new Conexion;
-                $db_ci2->cdp_query("SELECT o.order_prefix, o.order_no
-                    FROM cdb_consolidate_packages_detail d
-                    INNER JOIN cdb_customers_packages o ON o.order_id = d.order_id
-                    WHERE d.consolidate_id = :cid");
-                $db_ci2->bind(':cid', (int) $order_id);
-                $ci_rows2 = $db_ci2->cdp_registros();
-                if ($ci_rows2) {
-                    foreach ($ci_rows2 as $cir) {
-                        $consol_items_edit2 .= '<li>' . htmlspecialchars($cir->order_prefix . $cir->order_no, ENT_QUOTES, 'UTF-8') . '</li>';
-                    }
-                }
-                $consol_details2 = '<table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:8px 0 16px 0;background:#fafafa;border-left:4px solid #f5a800;font-family:Roboto,Arial,Helvetica,sans-serif;"><tr><td style="padding:12px 18px;">'
-                    . '<p style="margin:0 0 4px 0;font-size:10px;color:#aaaaaa;text-transform:uppercase;letter-spacing:1px;">Consolidation Status</p>'
-                    . '<p style="margin:0 0 10px 0;font-size:15px;font-weight:700;color:#1a1a1a;">' . htmlspecialchars($new_status_label2, ENT_QUOTES, 'UTF-8') . '</p>'
-                    . '<p style="margin:0 0 4px 0;font-size:10px;color:#aaaaaa;text-transform:uppercase;letter-spacing:1px;">Consolidated Shipments</p>'
-                    . ($consol_items_edit2 !== '' ? '<ul style="margin:0;padding-left:18px;font-size:14px;color:#1a1a1a;">' . $consol_items_edit2 . '</ul>' : '<p style="margin:0;font-size:14px;">N/A</p>')
-                    . '</td></tr></table>';
-
                 $message_html2 = '
                 <p style="margin:0 0 16px 0;font-size:14px;color:#444444;line-height:24px;font-family:Roboto,Arial,Helvetica,sans-serif;">
                     The following changes were made to consolidation package
@@ -277,90 +255,20 @@ if (isset($_POST["total_item"])) {
                         </tr>
                     </thead>
                     <tbody>' . $rows_html2 . '</tbody>
-                </table>' . $consol_details2 . '
-                <p style="margin:0;font-size:13px;color:#888888;font-family:Roboto,Arial,Helvetica,sans-serif;">
-                    If you have any questions, please contact us.
-                </p>';
+                </table>';
     
-                // ── 4. Load template 12 ─────────────────────────────────────────
-                $db_tpl2 = new Conexion;
-                $db_tpl2->cdp_query("SELECT * FROM cdb_email_templates WHERE id = 12 LIMIT 1");
-                $db_tpl2->cdp_execute();
-                $email_tpl_12b = $db_tpl2->cdp_registro();
-    
-                if ($email_tpl_12b) {
-    
-                    $db_cfg2 = new Conexion;
-                    $db_cfg2->cdp_query("SELECT * FROM cdb_settings LIMIT 1");
-                    $db_cfg2->cdp_execute();
-                    $mail_cfg2 = $db_cfg2->cdp_registro();
-    
-                    // Get sender's user record
-                    $db_sender2 = new Conexion;
-                    $db_sender2->cdp_query("SELECT fname, lname, email, locker FROM cdb_users WHERE id = :id LIMIT 1");
-                    $db_sender2->bind(':id', (int) cdp_sanitize($_POST["sender_id"]));
-                    $db_sender2->cdp_execute();
-                    $email_recipient2 = $db_sender2->cdp_registro();
-    
-                    if ($email_recipient2 && !empty($email_recipient2->email)) {
-    
-                        $sender_name2 = cdp_nameWithLocker($email_recipient2);
-    
-                        $email_body_12b = str_replace(
-                            ['[SITE_NAME]', '[NAME]', '[MESSAGE]', '[URL]'],
-                            [
-                                $mail_cfg2->site_name,
-                                htmlspecialchars($sender_name2),
-                                $message_html2,
-                                rtrim($mail_cfg2->site_url, '/'),
-                            ],
-                            $email_tpl_12b->body
-                        );
-    
-                        $email_body_12b = cdp_cleanOutx($email_body_12b);
-    
-                        $edit_subject2 = 'Consolidation Package Updated: ' . $consolidate_number2;
-    
-                        if ($mail_cfg2->mailer === 'PHP') {
-    
-                            $mail_headers2  = "MIME-Version: 1.0\r\n";
-                            $mail_headers2 .= "Content-type: text/html; charset=UTF-8\r\n";
-                            $mail_headers2 .= "From: " . $mail_cfg2->site_email . "\r\n";
-    
-                            mail(
-                                $email_recipient2->email,
-                                $edit_subject2,
-                                $email_body_12b,
-                                $mail_headers2
-                            );
-    
-                        } elseif ($mail_cfg2->mailer === 'SMTP') {
-    
-                            $edit_mail2 = new PHPMailer();
-                            $edit_mail2->IsSMTP();
-                            $edit_mail2->SMTPAuth   = true;
-                            $edit_mail2->Port       = $mail_cfg2->smtp_port;
-                            $edit_mail2->IsHTML(true);
-                            $edit_mail2->CharSet    = 'utf-8';
-                            $edit_mail2->Host       = $mail_cfg2->smtp_host;
-                            $edit_mail2->Username   = $mail_cfg2->smtp_user;
-                            $edit_mail2->Password   = $mail_cfg2->smtp_password;
-                            $edit_mail2->From       = $mail_cfg2->site_email;
-                            $edit_mail2->FromName   = $mail_cfg2->smtp_names;
-                            $edit_mail2->AddAddress($email_recipient2->email);
-                            $edit_mail2->Subject    = $edit_subject2;
-                            $edit_mail2->Body       = '<html><body>' . $email_body_12b . '</body></html>';
-                            $edit_mail2->SMTPOptions = [
-                                'ssl' => [
-                                    'verify_peer'       => false,
-                                    'verify_peer_name'  => false,
-                                    'allow_self_signed' => true,
-                                ],
-                            ];
-                            $edit_mail2->Send();
-                        }
-                    }
-                }
+                // Sent after the response, to the consolidation's sender, with the
+                // current status and shipments appended (helpers/consolidation_edit_mail.php).
+                require_once __DIR__ . '/../../helpers/consolidation_edit_mail.php';
+                cdp_mailConsolidationEdit(
+                    'consolidate_packages',
+                    (int) $row_order->consolidate_id,
+                    (int) cdp_sanitize($_POST["sender_id"]),
+                    $consolidate_number2,
+                    'Consolidation Package Updated: ' . $consolidate_number2,
+                    $message_html2,
+                    $new_status_label2
+                );
             } // end if !empty($changed_rows2)
         }
     } catch (Exception $e) {
