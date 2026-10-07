@@ -86,6 +86,14 @@ if (empty($_POST['status_courier']))
 if (empty($_POST['order_payment_method']))
     $errors['order_payment_method'] = $lang['validate_field_ajax158'];
 
+// Delivered / Picked up only with the owner's verified pickup code
+// (helpers/pickup_code.php).
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
+$cdpPickupGate = cdp_pickupCodeGate('air', [intval($_POST['order_id'] ?? 0)], intval($_POST['status_courier'] ?? 0));
+if (!$cdpPickupGate['ok']) {
+    $errors['pickup_code'] = $cdpPickupGate['message'];
+}
+
 if (empty($errors)) {
 
     $min_cost_tax = $core->min_cost_tax;
@@ -129,6 +137,9 @@ if (empty($errors)) {
 
 
     $updateShip = cdp_updateCourierShipmentFromCustomer($dataShipment);
+    if (cdp_pickupCodeGatedStatus(intval($_POST['status_courier'] ?? 0))) {
+        cdp_pickupCodeConsume('air', [intval($_POST['order_id'] ?? 0)], (int) ($_SESSION['userid'] ?? 0));
+    }
     $sender_data = cdp_getSenderCourier(intval($_POST["sender_id"]));
     // recipient_type='user': the sender doubles as recipient (cdb_users), not cdb_recipients.
     $receiver_data = ((cdp_sanitize($_POST['recipient_type'] ?? 'recipient')) === 'user')
