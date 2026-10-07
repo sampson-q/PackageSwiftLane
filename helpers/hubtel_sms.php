@@ -20,9 +20,15 @@
 // *************************************************************************
 
 /**
- * Hubtel SMS — the system's SMS provider.
+ * SMS — Hubtel and mNotify (helpers/mnotify_sms.php), and which one sends.
  *
- * Contract (Hubtel Notification APIs, SMS):
+ * Each provider has its own credentials and its own on/off switch, and one is
+ * the default (Tools > SMS). cdp_sendSms() sends through the default; when the
+ * default is switched off or has no credentials it uses the other one, and
+ * with "fall back" ticked it also retries a failed send on the other one.
+ * Every SMS in the system reaches a provider through cdp_sendSms().
+ *
+ * Hubtel contract (Hubtel Notification APIs, SMS):
  *   POST https://sms.hubtel.com/v1/messages/send
  *   Authorization: Basic base64(ClientID:ClientSecret)
  *   Body: {"From": sender ID (max 11 chars), "To": msisdn, "Content": text}
@@ -181,6 +187,125 @@ if (!function_exists('cdp_hubtelSmsConfig')) {
     {
         $c = cdp_hubtelSmsConfig();
         return $c['client_id'] !== '' && $c['client_secret'] !== '' && $c['sender'] !== '';
+    }
+}
+
+require_once __DIR__ . '/mnotify_sms.php';
+
+if (!function_exists('cdp_smsProviders')) {
+
+    /** Provider key => label, in the order the settings page lists them. */
+    function cdp_smsProviders()
+    {
+        return ['hubtel' => 'Hubtel', 'mnotify' => 'mNotify'];
+    }
+
+    function cdp_smsProviderConfigured($provider)
+    {
+        if ($provider === 'hubtel') {
+            return cdp_hubtelSmsReady();
+        }
+        if ($provider === 'mnotify') {
+            return cdp_mnotifySmsConfigured();
+        }
+        return false;
+    }
+
+    /**
+     * The provider's on/off switch. Before the switches existed Hubtel was the
+     * only provider and always on, so an unset Hubtel switch reads as on; an
+     * unset mNotify switch reads as off.
+     */
+    function cdp_smsProviderEnabled($provider)
+    {
+        $v = cdp_smsSetting($provider . '_enabled', $provider === 'hubtel' ? '1' : '0');
+        return (string) $v === '1';
+    }
+
+    /** Switched on and holding every credential. */
+    function cdp_smsProviderReady($provider)
+    {
+        return cdp_smsProviderEnabled($provider) && cdp_smsProviderConfigured($provider);
+    }
+
+    function cdp_smsDefaultProvider()
+    {
+        $p = (string) cdp_smsSetting('sms_default_provider', 'hubtel');
+        return array_key_exists($p, cdp_smsProviders()) ? $p : 'hubtel';
+    }
+
+    /** Retry a failed send on the other provider. */
+    function cdp_smsFallbackOn()
+    {
+        return (string) cdp_smsSetting('sms_fallback', '0') === '1';
+    }
+
+    /** At least one provider can send. */
+    function cdp_smsReady()
+    {
+        foreach (array_keys(cdp_smsProviders()) as $p) {
+            if (cdp_smsProviderReady($p)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Providers in the order a send tries them: the default first. */
+    function cdp_smsProviderOrder()
+    {
+        $default = cdp_smsDefaultProvider();
+        $order   = [$default];
+        foreach (array_keys(cdp_smsProviders()) as $p) {
+            if ($p !== $default) {
+                $order[] = $p;
+            }
+        }
+        return $order;
+    }
+
+    /** Send through one named provider (the settings page tests each one). */
+    function cdp_sendSmsVia($provider, $to, $content, array $who = [])
+    {
+        if ($provider === 'mnotify') {
+            return cdp_sendMnotifySms($to, $content, $who);
+        }
+        return cdp_sendHubtelSms($to, $content, $who);
+    }
+
+    /**
+     * Send one SMS through the default provider. When the default is switched
+     * off or unconfigured the other ready provider sends instead; when it
+     * refuses or cannot be reached, the other one retries only with the
+     * fall-back switch on (a timed-out send may still have gone out).
+     *
+     * @return array{success:bool,message:string,provider?:string}
+     */
+    function cdp_sendSms($to, $content, array $who = [])
+    {
+        $ready = array_values(array_filter(cdp_smsProviderOrder(), 'cdp_smsProviderReady'));
+        if (!$ready) {
+            if (function_exists('cdp_msgLog')) {
+                cdp_msgLog([
+                    'channel' => 'sms', 'status' => 'skipped',
+                    'status_detail' => 'No SMS provider is switched on and configured.',
+                    'body' => cdp_smsPlainText($content), 'recipient_to' => preg_replace('/\D+/', '', (string) $to),
+                    'recipient_user_id' => (int) ($who['id'] ?? 0), 'recipient_name' => (string) ($who['name'] ?? ''),
+                ]);
+            }
+            return ['success' => false, 'message' => 'No SMS provider is switched on and configured.'];
+        }
+
+        $tries = cdp_smsFallbackOn() ? $ready : [$ready[0]];
+        $res   = ['success' => false, 'message' => 'SMS not sent.'];
+        foreach ($tries as $p) {
+            $res = cdp_sendSmsVia($p, $to, $content, $who);
+            $res['provider'] = $p;
+            if (!empty($res['success'])) {
+                break;
+            }
+        }
+        return $res;
     }
 }
 
@@ -352,7 +477,7 @@ if (!function_exists('cdp_smsToRecipient')) {
             ? (string) cdp_normalizePhone($raw, $hint)
             : preg_replace('/\D+/', '', $raw);
 
-        return cdp_sendHubtelSms($to, $body, $who);
+        return cdp_sendSms($to, $body, $who);
     }
 }
 
@@ -360,9 +485,10 @@ if (!function_exists('cdp_smsSendNotification')) {
 
     /**
      * The per-shipment SMS the "notify by SMS" toggles ask for — the body of
-     * both sendNotificationSMS() copies (ajax/notify_sms/). Hubtel sends it;
-     * the older ClickSend client is reached only while Hubtel holds no
-     * credentials, so an install still configured that way keeps texting.
+     * both sendNotificationSMS() copies (ajax/notify_sms/). cdp_sendSms()
+     * sends it (Hubtel or mNotify); the older ClickSend client is reached
+     * only while neither can send, so an install still configured that way
+     * keeps texting.
      * Every outcome except "toggle not ticked" leaves a message-log row.
      */
     function cdp_smsSendNotification($user, $sms_body, $notify)
@@ -403,7 +529,7 @@ if (!function_exists('cdp_smsSendNotification')) {
             return ['success' => false, 'message' => 'No phone number on file.'];
         }
 
-        if (cdp_hubtelSmsReady()) {
+        if (cdp_smsReady()) {
             return cdp_smsToRecipient($user, $sms_body); // writes its own log row
         }
 
@@ -446,7 +572,7 @@ if (!function_exists('cdp_smsCopyOwed')) {
      */
     function cdp_smsCopyOwed($recipient, array $opts, $settings = null)
     {
-        if (!cdp_hubtelSmsReady()) {
+        if (!cdp_smsReady()) {
             return false;
         }
         if (!empty($opts['force_sms'])) {
@@ -468,8 +594,8 @@ if (!function_exists('cdp_smsEventNotify')) {
     /**
      * Text a customer about a package event that has no WhatsApp message of
      * its own (e.g. the Warehouse View bulk deliver). Same rules as the
-     * WhatsApp copy: Hubtel configured, the SMS switch on, and the customer
-     * not opted out. Returns null when no SMS was owed.
+     * WhatsApp copy: an SMS provider ready, the SMS switch on, and the
+     * customer not opted out. Returns null when no SMS was owed.
      */
     function cdp_smsEventNotify($recipient, $text)
     {
