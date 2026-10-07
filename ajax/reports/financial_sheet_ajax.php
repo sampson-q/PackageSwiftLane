@@ -25,6 +25,7 @@ require_once(__DIR__ . '/../../helpers/fs_gateways.php');
 require_once(__DIR__ . '/../../helpers/fs_payments.php');
 require_once(__DIR__ . '/../notify_whatsapp/api_whatsapp_service_v2.php');
 require_login();
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
 
 // Release the PHP session lock immediately: nothing below writes to the
 // session, and a long report query would otherwise block EVERY other request
@@ -661,6 +662,14 @@ function fs_render_customer($cid, array $g, array $stats, $billing, $bodyHtml = 
                            onclick="fsPrintShipments(this);">
                             <i class="mdi mdi-printer"></i> Print Shipment
                         </a>
+                        <?php
+                        // One pickup code for this customer's packages not yet handed over.
+                        $fsPcIds = [];
+                        foreach (cdp_pickupCodePackages('air', (array) ($g['oids'] ?? [])) as $fsPc) {
+                            if (!cdp_pickupCodeGatedStatus($fsPc->status_courier)) { $fsPcIds[] = (int) $fsPc->order_id; }
+                        }
+                        echo cdp_pickupCodeMenuItem('air', $fsPcIds, 'financial_sheet');
+                        ?>
                 </div>
             </div>
             <?php endif; ?>
