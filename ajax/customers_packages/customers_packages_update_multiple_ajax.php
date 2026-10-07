@@ -92,7 +92,16 @@ foreach ($data as $key) {
         }
         $courier = cdp_getCustomerPackage($cdpPickupIds[(string) $key]);
     } else {
-        $courier  = cdp_getPackageMultiple($key);
+        // One package per number (helpers/querys.php cdp_resolveOrderNumber):
+        // a number shared by several open packages is skipped, never guessed.
+        $cdpRes = cdp_resolveOrderNumber('cdb_customers_packages', $key);
+        if (!$cdpRes['row']) {
+            $message[$key] = $key . ($cdpRes['ambiguous']
+                ? ': this order number belongs to more than one package. Update it from its own page.'
+                : ': not found.');
+            continue;
+        }
+        $courier = $cdpRes['row'];
     }
     $prefix   = $courier->order_prefix;
     $office   = $courier->origin_off;
@@ -117,7 +126,12 @@ foreach ($data as $key) {
             $cdpDb->cdp_execute();
             cdp_pickupCodeConsume('sea', [(int) $courier->order_id], (int) ($_SESSION['userid'] ?? 0));
         } else {
-            cdp_updateStatusCustomerPackageMultiple($key, $status);
+            // By order_id: a number update would also move another customer's package.
+            $cdpDb = new Conexion;
+            $cdpDb->cdp_query("UPDATE cdb_customers_packages SET status_courier = :s WHERE order_id = :id");
+            $cdpDb->bind(':s', $status);
+            $cdpDb->bind(':id', (int) $courier->order_id);
+            $cdpDb->cdp_execute();
         }
 
         // Build comment and insert track entry
@@ -127,7 +141,7 @@ foreach ($data as $key) {
 
         // Audit: one row per package moved, so the log can answer "who put this
         // package into Ready For Pickup, and when".
-        cdp_activityLogStatus('packages', 'package', (int) $key, $tracking, $status, $new_status_label, $old_status_label);
+        cdp_activityLogStatus('packages', 'package', (int) $courier->order_id, $tracking, $status, $new_status_label, $old_status_label);
 
         // Get sender details
         $sender_data = cdp_getSenderCourier((int)$courier->sender_id);
