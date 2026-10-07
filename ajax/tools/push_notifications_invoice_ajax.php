@@ -117,7 +117,7 @@ if ($action === 'send_invoices') {
 
     // fetch minimal order data for validation and tracking text
     $placeholders_all = implode(',', array_fill(0, count($flat_order_ids), '?'));
-    $sql_orders = "SELECT order_id, order_prefix, order_no AS tracking, user_id FROM cdb_add_order WHERE order_id IN ($placeholders_all)";
+    $sql_orders = "SELECT order_id, order_prefix, order_no AS tracking, sender_id FROM cdb_add_order WHERE order_id IN ($placeholders_all)";
     $db->cdp_query($sql_orders);
     foreach ($flat_order_ids as $k => $oid) {
         $db->bind(($k+1), $oid);
@@ -131,7 +131,10 @@ if ($action === 'send_invoices') {
         $order_lookup[intval($row->order_id)] = $row;
     }
 
-    // ------------------ GROUP VALIDATION & BUCKETING (use sender_id from client, but verify ownership)
+    // ------------------ GROUP VALIDATION & BUCKETING
+    // The row's sender_id comes from the browser: every order in the row must
+    // belong to that customer (cdb_add_order.sender_id), or the row is skipped,
+    // so a customer is never sent another customer's tracking numbers.
     $orders_by_user = []; // sender_id => ['user' => null (attached later), 'groups' => []]
     $processed_order_ids = [];
     $send_errors = [];
@@ -158,7 +161,12 @@ if ($action === 'send_invoices') {
             }
 
             $row = $order_lookup[$oid];
-            
+            if ((int) $row->sender_id !== $sender_id) {
+                $send_errors[] = "Row " . ($gidx+1) . ": Order {$oid} does not belong to the selected customer; row skipped.";
+                $mismatch = true;
+                break;
+            }
+
             $valid_oids[] = $oid;
             $tracking_texts[] = trim(($row->order_prefix ?: '') . ($row->tracking ?: $oid));
         }
