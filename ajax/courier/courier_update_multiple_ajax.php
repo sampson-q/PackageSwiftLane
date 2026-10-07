@@ -72,7 +72,16 @@ foreach ($data as $key) {
         }
         $courier = cdp_getCourier($cdpPickupIds[(string) $key]);
     } else {
-        $courier = cdp_getCourierMultiple($key);
+        // One package per number (helpers/querys.php cdp_resolveOrderNumber):
+        // a number shared by several open packages is skipped, never guessed.
+        $cdpRes = cdp_resolveOrderNumber('cdb_add_order', $key);
+        if (!$cdpRes['row']) {
+            $message[$key] = $key . ($cdpRes['ambiguous']
+                ? ': this order number belongs to more than one package. Update it from its own page.'
+                : ': not found.');
+            continue;
+        }
+        $courier = $cdpRes['row'];
     }
     $prefix = $courier->order_prefix;
     $office = $courier->origin_off;
@@ -92,7 +101,12 @@ foreach ($data as $key) {
             $cdpDb->cdp_execute();
             cdp_pickupCodeConsume('air', [(int) $courier->order_id], (int) ($_SESSION['userid'] ?? 0));
         } else {
-            cdp_updateStatusCourierMultiple($key, $status);
+            // By order_id: a number update would also move another customer's package.
+            $cdpDb = new Conexion;
+            $cdpDb->cdp_query("UPDATE cdb_add_order SET status_courier = :s WHERE order_id = :id");
+            $cdpDb->bind(':s', $status);
+            $cdpDb->bind(':id', (int) $courier->order_id);
+            $cdpDb->cdp_execute();
         }
 
         // Agregar comentario
@@ -106,7 +120,7 @@ foreach ($data as $key) {
         cdp_activityLogStatus(
             'shipments',
             'shipment',
-            (int) $key,
+            (int) $courier->order_id,
             $tracking,
             $status,
             cdp_activityStatusName($status),
