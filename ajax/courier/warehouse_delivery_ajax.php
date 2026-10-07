@@ -559,18 +559,46 @@ if ($action === 'search_package') {
 // ---------------------------------------------------------------------------
 header('Content-Type: application/json; charset=UTF-8');
 
-/** Deliver a single order (by order_no), enforcing clearance. Returns bool. */
-function wd_do_deliver(Conexion $db, $no, $uid, array $terminal)
+/**
+ * The package an action targets: the member of consolidation $cid with this
+ * order number. Order numbers repeat across customers, so a bare-number lookup
+ * (cdp_getCourierMultiple) could land on, update and notify ANOTHER customer's
+ * package. Null when the consolidation has no such package (or, defensively,
+ * more than one).
+ */
+function wd_find_package(Conexion $db, $cid, $no)
 {
-    $row = cdp_getCourierMultiple($no);
+    if ((int) $cid <= 0 || (string) $no === '') { return null; }
+    $db->cdp_query("SELECT a.* FROM cdb_consolidate_detail d
+                    INNER JOIN cdb_add_order a ON a.order_id = CAST(d.order_id AS UNSIGNED)
+                    WHERE d.consolidate_id = :cid AND a.order_no = :no LIMIT 2");
+    $db->bind(':cid', (int) $cid);
+    $db->bind(':no', (string) $no);
+    $db->cdp_execute();
+    $rows = $db->cdp_registros() ?: [];
+    return count($rows) === 1 ? $rows[0] : null;
+}
+
+/** Set one package's status by order_id (never by order number). */
+function wd_set_status(Conexion $db, $orderId, $status)
+{
+    $db->cdp_query("UPDATE cdb_add_order SET status_courier = :s WHERE order_id = :id");
+    $db->bind(':s', (int) $status);
+    $db->bind(':id', (int) $orderId);
+    return $db->cdp_execute();
+}
+
+/** Deliver one package row (from wd_find_package / wd_consolidation_packages), enforcing clearance. */
+function wd_do_deliver(Conexion $db, $row, $uid, array $terminal)
+{
     if (!$row) { return ['ok' => false, 'reason' => 'not_found']; }
     if ((int) $row->status_courier === CDP_WD_DELIVERED) { return ['ok' => false, 'reason' => 'already']; }
     if (!cdp_fsIsCleared($row->fs_cleared_for_delivery ?? 0)) { return ['ok' => false, 'reason' => 'uncleared']; }
     if (in_array((int) $row->status_courier, $terminal, true)) { return ['ok' => false, 'reason' => 'terminal']; }
 
-    cdp_updateStatusCourierMultiple($no, CDP_WD_DELIVERED);
+    wd_set_status($db, (int) $row->order_id, CDP_WD_DELIVERED);
     cdp_freeConsolidatedItem((int) $row->order_id);
-    $tracking = ($row->order_prefix ?? '') . $no;
+    $tracking = ($row->order_prefix ?? '') . $row->order_no;
     if (function_exists('cdp_updateShipTrackingMultiple')) {
         cdp_updateShipTrackingMultiple($tracking, CDP_WD_DELIVERED, 'Delivered via Warehouse Delivery', $row->origin_off ?? 0, $uid);
     }
@@ -655,7 +683,7 @@ if ($action === 'deliver_package') {
     $no = trim((string) ($_POST['order_no'] ?? ''));
     if ($no === '') { echo json_encode(['ok' => false, 'message' => 'No package specified.']); exit; }
 
-    $res = wd_do_deliver($db, $no, $uid, $WD_TERMINAL);
+    $res = wd_do_deliver($db, wd_find_package($db, (int) ($_POST['consolidate_id'] ?? 0), $no), $uid, $WD_TERMINAL);
     if (!$res['ok']) {
         $msg = ['already' => 'That package is already delivered.',
                 'uncleared' => 'That package is not cleared for delivery.',
@@ -683,7 +711,7 @@ if ($action === 'deliver_user') {
     foreach ($all as $p) {
         if ((int) $p->sender_id !== $sid) { continue; }
         if (wd_pkg_state($p, $WD_TERMINAL) !== 'ready') { continue; } // only cleared, undelivered
-        $r = wd_do_deliver($db, (string) $p->order_no, $uid, $WD_TERMINAL);
+        $r = wd_do_deliver($db, $p, $uid, $WD_TERMINAL);
         if ($r['ok']) { $delivered++; $notifyTracks[] = (string) ($r['tracking'] ?? ''); } else { $skipped++; }
     }
     wd_sync_consolidation_status($db, $cid);
@@ -698,15 +726,15 @@ if ($action === 'undo_package') {
     $no = trim((string) ($_POST['order_no'] ?? ''));
     if ($no === '') { echo json_encode(['ok' => false, 'message' => 'No package specified.']); exit; }
 
-    $row = cdp_getCourierMultiple($no);
+    $row = wd_find_package($db, (int) ($_POST['consolidate_id'] ?? 0), $no);
     if (!$row) { echo json_encode(['ok' => false, 'message' => 'Package not found.']); exit; }
     if ((int) $row->status_courier !== CDP_WD_DELIVERED) {
         echo json_encode(['ok' => false, 'message' => 'That package is not marked delivered.']);
         exit;
     }
 
-    cdp_updateStatusCourierMultiple($no, CDP_WD_REOPEN);
-    $tracking = ($row->order_prefix ?? '') . $no;
+    wd_set_status($db, (int) $row->order_id, CDP_WD_REOPEN);
+    $tracking = ($row->order_prefix ?? '') . $row->order_no;
     if (function_exists('cdp_updateShipTrackingMultiple')) {
         cdp_updateShipTrackingMultiple($tracking, CDP_WD_REOPEN, 'Delivery reversed via Warehouse Delivery', $row->origin_off ?? 0, $uid);
     }
