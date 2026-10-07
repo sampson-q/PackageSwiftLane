@@ -5,6 +5,7 @@ require_once("../loader.php");
 require_once(__DIR__ . '/../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
+require_once(__DIR__ . '/../helpers/pickup_code.php');
 
 $db = new Conexion;
 $user = new User;
@@ -128,6 +129,7 @@ $data = $db->cdp_registros();
                                     <i style="color:#2962FF" class="ti-package"></i>&nbsp;<?php echo $lang['tooldeliver']; ?>
                                 </a>
                             </button>
+                            <?php echo cdp_pickupCodeMenuItem('air', $row->order_id, 'pickup_client', $row->status_courier ?? 0, 'button'); ?>
                         </td>
                     </tr>
                 <?php $count++; } ?>
