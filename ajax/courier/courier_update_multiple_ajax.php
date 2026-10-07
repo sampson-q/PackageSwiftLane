@@ -36,9 +36,44 @@ session_start();
 $status = intval($_GET['status']);
 $data = json_decode($_GET['checked_data']);
 
+// Delivered / Picked up only with the owner's verified pickup code
+// (helpers/pickup_code.php). Order numbers repeat across customers, so
+// each number is resolved to the one package not yet handed over; a
+// number shared by several such packages is refused, never guessed.
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
+$cdpPickupIds = [];
+if (cdp_pickupCodeGatedStatus($status)) {
+    $cdpResolved = cdp_pickupCodeResolveNumbers('air', (array) $data);
+    $cdpPickupMsg = '';
+    if ($cdpResolved['ambiguous']) {
+        $cdpPickupMsg = 'These order numbers belong to more than one package: ' . implode(', ', $cdpResolved['ambiguous'])
+            . '. Hand each one over from its own page.';
+    } else {
+        $cdpPickupGate = cdp_pickupCodeGate('air', $cdpResolved['ids'], $status);
+        $cdpPickupMsg  = $cdpPickupGate['ok'] ? '' : $cdpPickupGate['message'];
+    }
+    if ($cdpPickupMsg !== '') {
+        echo '<div class="alert alert-danger" id="success-alert"><p>' . htmlspecialchars($cdpPickupMsg, ENT_QUOTES, 'UTF-8') . '</p></div>';
+        exit;
+    }
+    foreach ($cdpResolved['ids'] as $cdpId) {
+        $cdpRow = cdp_getCourier($cdpId);
+        if ($cdpRow) {
+            $cdpPickupIds[(string) $cdpRow->order_no] = (int) $cdpId;
+        }
+    }
+}
+
 foreach ($data as $key) {
     // Obtener información del envío
-    $courier = cdp_getCourierMultiple($key);
+    if (cdp_pickupCodeGatedStatus($status)) {
+        if (!isset($cdpPickupIds[(string) $key])) {
+            continue; // already handed over
+        }
+        $courier = cdp_getCourier($cdpPickupIds[(string) $key]);
+    } else {
+        $courier = cdp_getCourierMultiple($key);
+    }
     $prefix = $courier->order_prefix;
     $office = $courier->origin_off;
     $tracking = $prefix . $key;
@@ -48,7 +83,17 @@ foreach ($data as $key) {
 
     if (!$exists) {
         // Si no existe un registro duplicado, actualizar el estado del envío
-        cdp_updateStatusCourierMultiple($key, $status);
+        if (cdp_pickupCodeGatedStatus($status)) {
+            // By order_id: a number update would also move another customer's package.
+            $cdpDb = new Conexion;
+            $cdpDb->cdp_query("UPDATE cdb_add_order SET status_courier = :s WHERE order_id = :id");
+            $cdpDb->bind(':s', $status);
+            $cdpDb->bind(':id', (int) $courier->order_id);
+            $cdpDb->cdp_execute();
+            cdp_pickupCodeConsume('air', [(int) $courier->order_id], (int) ($_SESSION['userid'] ?? 0));
+        } else {
+            cdp_updateStatusCourierMultiple($key, $status);
+        }
 
         // Agregar comentario
         $comment = $comments = $lang['multiple_updated1'] . ' ' . $tracking;
