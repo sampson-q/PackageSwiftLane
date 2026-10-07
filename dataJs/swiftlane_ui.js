@@ -160,37 +160,9 @@
         window.addEventListener('resize', enforce);
         enforce();
 
-        // About a third of the views have no header row: their title is a
-        // .card-title inside the first card, which left an empty strip holding
-        // only the tray. Promote that title into a standard header so every
-        // page has the same title row. The document title is the fallback, and a
-        // card title that carries controls is left where it is.
-        (function promoteTitle() {
-            var pw = wrap.querySelector('.page-wrapper');
-            if (!pw || pw.querySelector('.page-breadcrumb')) return;
-            // Only the FIRST card's own title qualifies, and only when it is that
-            // card's first heading: the detail views open with an h4 header card
-            // and their first .card-title is a later section ("User Action
-            // History"), which used to be promoted as the page title.
-            var card = pw.querySelector('.card'), src = null, text = '';
-            if (card) {
-                var firstHeading = card.querySelector('h1, h2, h3, h4, h5, .card-title');
-                if (firstHeading && firstHeading.classList.contains('card-title')) src = firstHeading;
-            }
-            if (src && !src.querySelector('a, button, input, select, textarea')) {
-                text = (src.textContent || '').replace(/\s+/g, ' ').trim();
-            } else {
-                src = null;
-            }
-            if (!text) text = (document.title || '').split('|')[0].trim();
-            if (!text || text.length > 80) return;
-            var head = document.createElement('div');
-            head.className = 'page-breadcrumb swl-page-head--auto';
-            head.innerHTML = '<div class="row"><div class="col-12 align-self-center"><h4 class="page-title"></h4></div></div>';
-            head.querySelector('.page-title').textContent = text;
-            pw.insertBefore(head, pw.firstElementChild);
-            if (src) src.classList.add('swl-promoted');
-        })();
+        // Every page opens with its title row, written on the server by
+        // cdp_pageHeader() (views/inc/page_header.php); the row shares this
+        // strip with the tray. scripts/check_page_shell.js keeps it that way.
 
         // Title row and tray share one line: tell the CSS how wide the tray is so
         // the page title and its actions stop short of it.

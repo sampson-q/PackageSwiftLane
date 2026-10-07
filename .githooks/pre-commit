@@ -1,0 +1,8 @@
+#!/bin/sh
+# Pre-commit checks (enable once per clone: git config core.hooksPath .githooks)
+
+# Every page with the top bar must open with its title row - see
+# views/inc/page_header.php. Only runs when a view is part of the commit.
+if git diff --cached --name-only --diff-filter=ACMR | grep -q '^views/'; then
+    node scripts/check_page_shell.js || exit 1
+fi
