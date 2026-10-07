@@ -24,6 +24,7 @@
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/querys.php');
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
 require_login();
 require_permission('view_pickup_list');
 
@@ -198,6 +199,7 @@ if ($numrows > 0) { ?>
 							                <i class="fas fa-ellipsis-v"></i> <!-- Utiliza el icono de puntos suspensivos -->
 							            </button>
 							            <div class="dropdown-menu" style="overflow-y: auto; max-height: 200px;">
+							                <?php echo cdp_pickupCodeMenuItem('air', $row->order_id, 'pickup_list', $row->status_courier ?? 0); ?>
 							                <a class="dropdown-item" href="courier_view.php?id=<?php echo $row->order_id; ?>" title="<?php echo $lang['tooledit'] ?>">
 							                    <i style="color:#343a40" class="fa fa-search"></i>&nbsp;<?php echo $lang['leftorder266']; ?>
 							                </a>
@@ -237,6 +239,7 @@ if ($numrows > 0) { ?>
 							                <?php echo $lang['left906']; ?>
 							            </button>
 							            <div class="dropdown-menu">
+							                <?php echo cdp_pickupCodeMenuItem('air', $row->order_id, 'pickup_list', $row->status_courier ?? 0); ?>
 							                <a class="dropdown-item" href="courier_view.php?id=<?php echo $row->order_id; ?>" title="<?php echo $lang['tooledit'] ?>">
 							                    <i style="color:#343a40" class="fa fa-search"></i>&nbsp;<?php echo $lang['leftorder266']; ?>
 							                </a>
