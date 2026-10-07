@@ -123,6 +123,8 @@ function cdp_msgInferSource()
         ['notify_pending_payments',          'pending_payments',                'Pending Payments Reminder'],
         ['notify_general_customers',         'general_notice',                  'General Customer Notice'],
         ['pickup_aging',                     'pickup_aging',                    'Pickup Aging Reminder'],
+        ['pickup_code',                      'pickup_code',                     'Pickup Code'],
+        ['config_sms',                       'sms_test',                        'SMS Settings Test'],
         ['send_profile_phone_otp',           'otp',                             'One-Time Password'],
         ['auth-otp',                         'otp',                             'One-Time Password'],
         ['forgot',                           'otp',                             'Password Reset'],
@@ -180,6 +182,8 @@ function cdp_msgSources()
         'pending_payments'                => 'Pending Payments Reminder',
         'general_notice'                  => 'General Customer Notice',
         'pickup_aging'                    => 'Pickup Aging Reminder',
+        'pickup_code'                     => 'Pickup Code',
+        'sms_test'                        => 'SMS Settings Test',
         'financial_sheet'                 => 'Financial Sheet',
         'invoice_email'                   => 'Invoice E-mail',
         'otp'                             => 'One-Time Password',
@@ -217,15 +221,16 @@ function cdp_msgStatuses()
 }
 
 // ---------------------------------------------------------------------------
-// Redaction — one-time codes must not sit in a log anyone with the page
-// permission can read.
+// Redaction — one-time codes (sign-in, reset, pickup) must not sit in a log
+// anyone with the page permission can read. Applied to the subject as well as
+// the body: the pickup-code e-mail carries the code in its subject.
 // ---------------------------------------------------------------------------
 function cdp_msgRedact($body, $source, $templateId = null)
 {
     $body = (string) $body;
-    $sensitive = in_array((string) $source, ['otp', 'signup'], true)
+    $sensitive = in_array((string) $source, ['otp', 'signup', 'pickup_code'], true)
         || in_array((int) $templateId, [9, 10], true)
-        || preg_match('/\b(one[- ]time|otp|verification code|reset code)\b/i', $body);
+        || preg_match('/\b(one[- ]time|otp|verification code|reset code|pickup code)\b/i', $body);
     if (!$sensitive) {
         return $body;
     }
@@ -399,7 +404,7 @@ function cdp_msgLog(array $o)
         $db->bind(':source',            substr($source, 0, 80));
         $db->bind(':source_label',      substr($label, 0, 120));
         $db->bind(':template_id',       $templateId);
-        $db->bind(':subject',           mb_substr((string) $get('subject'), 0, 255));
+        $db->bind(':subject',           mb_substr(cdp_msgRedact((string) $get('subject'), $source, $templateId), 0, 255));
         $db->bind(':body',              $body);
         $db->bind(':recipient_user_id', (int) $get('recipient_user_id', 0));
         $db->bind(':recipient_name',    mb_substr((string) $get('recipient_name'), 0, 150));
