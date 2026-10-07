@@ -67,7 +67,6 @@ foreach ($data as $key) {
         $user = $_SESSION['userid'];
         cdp_updateConsolidateTrackingMultiple($tracking, $status, $comment, $office, $user);
 
-        $sender_data = cdp_getSenderCourier($courier->sender_id);
         $status_detail = $core->cdp_getStatusById($status);
         // Actual-change guard (on top of the duplicate-track check above).
         $status_changed = !isset($courier->status_courier) || (int) $courier->status_courier !== (int) $status;
@@ -76,14 +75,8 @@ foreach ($data as $key) {
             require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
 
             if ($status_changed) {
-                // Consolidation's own sender (templated message).
-                if ($sender_data && !empty($sender_data->phone)) {
-                    $wa_result = cdp_sendStatusUpdateWhatsApp($sender_data, $tracking, $status_detail->mod_style);
-                    if (empty($wa_result['success'])) {
-                        error_log("WhatsApp notification failed for consolidation {$tracking}: " . ($wa_result['message'] ?? ''));
-                    }
-                }
-
+                // Nothing to the consolidation's own sender: customers are told
+                // about their own packages only, never the consolidation number.
                 // Every package owner inside the consolidation.
                 cdp_notifyConsolidationPackageSenders('consolidate', (int) $courier->consolidate_id, $tracking, $status_detail->mod_style);
             }
