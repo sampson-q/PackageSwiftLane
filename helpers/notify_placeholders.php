@@ -52,7 +52,8 @@ if (!function_exists('cdp_buildPackageNotifyPlaceholders')) {
         $itemsTable  = $map[$module]['items'];
 
         // Order: original total weight + current status label
-        $db->cdp_query("SELECT a.total_weight, a.status_courier, a.order_no, a.is_consolidate, b.mod_style
+        $ownTrackingCol = ($module === 'sea') ? ', a.tracking_purchase' : '';
+        $db->cdp_query("SELECT a.total_weight, a.status_courier, a.order_no, a.is_consolidate, b.mod_style{$ownTrackingCol}
                         FROM {$ordersTable} a
                         LEFT JOIN cdb_styles b ON a.status_courier = b.id
                         WHERE a.order_id = :id LIMIT 1");
@@ -73,23 +74,20 @@ if (!function_exists('cdp_buildPackageNotifyPlaceholders')) {
         $db->bind(':id', $order_id);
         $items = $db->cdp_registros();
 
-        // Postal / carrier tracking. Air falls back to the legacy
-        // cdb_add_order.tracking_num column for the ~41k old orders; sea has no
-        // such legacy column, so read the new tracking table only. The carrier
-        // tracking number stays the package's own — it is not inherited.
+        // Postal / carrier tracking — always the package's own, never inherited.
+        // Sea: the package row's tracking_purchase. cdb_package_tracking_number
+        // must NOT be read for sea: it is keyed by a bare order_id that only air
+        // shipments write, so a sea package's id finds the AIR shipment with the
+        // same number and its carrier tracking — another customer's.
+        // Air: that table, falling back to the legacy cdb_add_order.tracking_num.
         $postal = '';
-        $pt     = null;
         if ($module === 'sea') {
-            if (function_exists('cdp_getPackageTracking')) {
-                $pt = cdp_getPackageTracking($order_id);
+            $postal = $order ? trim((string) ($order->tracking_purchase ?? '')) : '';
+        } elseif (function_exists('cdp_getPackageTrackingLegacyAware')) {
+            $pt = cdp_getPackageTrackingLegacyAware($order_id);
+            if ($pt && !empty($pt->tracking_number)) {
+                $postal = (string) $pt->tracking_number;
             }
-        } else {
-            if (function_exists('cdp_getPackageTrackingLegacyAware')) {
-                $pt = cdp_getPackageTrackingLegacyAware($order_id);
-            }
-        }
-        if ($pt) {
-            $postal = !empty($pt->tracking_number) ? (string) $pt->tracking_number : '';
         }
 
         // ETA is ONLY an explicitly-entered date — the consolidation's while the
