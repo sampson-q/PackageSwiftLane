@@ -9,6 +9,7 @@
 
 require_once('helpers/message_log_query.php');
 
+$userData = $user->cdp_getUserData();   // the top bar and the sidebar are built from it
 $db = new Conexion;
 $e  = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); };
 
