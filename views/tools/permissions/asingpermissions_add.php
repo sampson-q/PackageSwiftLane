@@ -96,7 +96,7 @@ $modules = $db->cdp_registros();
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-
+            <?php cdp_pageHeader('Assign Permissions to Modules'); ?>
             <!-- Action part -->
             <!-- Button group part -->
             <div class="bg-light">
@@ -126,7 +126,7 @@ $modules = $db->cdp_registros();
 
                                 <div class="d-md-flex align-items-center">
                                     <div>
-                                        <h3 class="card-title"><span><?php echo $lang['rolesp30'] ?></span></h3>
+                                        <h3 class="card-title swl-promoted"><span><?php echo $lang['rolesp30'] ?></span></h3>
                                     </div>
                                 </div>
                                 <div><hr><br></div>

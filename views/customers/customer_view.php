@@ -141,7 +141,8 @@ $history = $db->cdp_registros();
             <!-- Page wrapper  -->
             <!-- ============================================================== -->
             <div class="page-wrapper">
-                
+                <?php cdp_pageHeader('View Customer'); ?>
+
                 <div class="container-fluid">
                     <div class="row">
                         <!-- Column -->
@@ -150,7 +151,7 @@ $history = $db->cdp_registros();
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-6">
-                                            <h4 class="card-title"><span><?php echo "View Customer"; ?></span></h4>
+                                            <h4 class="card-title swl-promoted"><span><?php echo "View Customer"; ?></span></h4>
                                         </div>
                                     </div>
                                     <div><hr></div>

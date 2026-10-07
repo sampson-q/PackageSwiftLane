@@ -114,14 +114,7 @@ $usersEmployeeAdmin = $core->cdp_getUsersEmployeedAdmin();
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-
-            <div class="page-breadcrumb">
-                <div class="row">
-                    <div class="col-5 align-self-center">
-
-                    </div>
-                </div>
-            </div>
+            <?php cdp_pageHeader('Consolidation Report by Employee'); ?>
 
             <div class="container-fluid">
 
@@ -131,7 +124,7 @@ $usersEmployeeAdmin = $core->cdp_getUsersEmployeedAdmin();
                     <div class="col-lg-12 col-xl-12 col-md-12">
 
                         <div class="card card-outline" style="border-top: 3px solid #bbb;">
-                            <h4 class="card-title  ml-4 mt-3"> <?php echo $lang['report-text77'] ?></h4>
+                            <h4 class="card-title swl-promoted  ml-4 mt-3"> <?php echo $lang['report-text77'] ?></h4>
 
                             <div class="card-body">
 

@@ -130,6 +130,7 @@ $fs_dg_color = ($fs_dg_style && !empty($fs_dg_style->color)) ? $fs_dg_style->col
         <?php include 'views/inc/left_sidebar.php'; ?>
 
         <div class="page-wrapper">
+            <?php cdp_pageHeader('Financial Sheet', ['sub' => cdp_consolidationRef($fs_consol)]); ?>
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-12 col-xl-12 col-md-12">

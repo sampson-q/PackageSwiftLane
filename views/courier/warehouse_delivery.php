@@ -30,6 +30,7 @@ $userData = $user->cdp_getUserData();
         <?php include 'views/inc/left_sidebar.php'; ?>
 
         <div class="page-wrapper">
+            <?php cdp_pageHeader('Warehouse Delivery'); ?>
             <div class="container-fluid">
                 <div class="wd-banner">
                     <i class="mdi mdi-truck-delivery wd-banner-ico"></i>

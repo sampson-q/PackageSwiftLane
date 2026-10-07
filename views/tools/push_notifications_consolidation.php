@@ -79,6 +79,7 @@ $row_order = $data['data'];
         <?php include 'views/inc/left_sidebar.php'; ?>
 
         <div class="page-wrapper">
+            <?php cdp_pageHeader('Push Notifications', ['sub' => cdp_consolidationRef($row_order, 'consolidate')]); ?>
             <div class="container-fluid mb-4">
                 <div class="row">
                     <div class="col-lg-12 col-xlg-12 col-md-12">
@@ -86,7 +87,7 @@ $row_order = $data['data'];
                             <div class="card-body">
                                 <div class="d-md-flex align-items-center">
                                     <div>
-                                        <h3 class="card-title"><span><?php echo $lang['left-menu-sidebar-66'] . ' for ' ?><span class="text-danger"><?php echo cdp_consolidationRefHtml($row_order, 'consolidate'); ?></span></h3>
+                                        <h3 class="card-title swl-promoted"><span><?php echo $lang['left-menu-sidebar-66'] . ' for ' ?><span class="text-danger"><?php echo cdp_consolidationRefHtml($row_order, 'consolidate'); ?></span></h3>
                                     </div>
                                 </div>
                                 <div><hr><br></div>

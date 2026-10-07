@@ -87,6 +87,7 @@ $userData = $user->cdp_getUserData();
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
+            <?php cdp_pageHeader('Payment Modes'); ?>
             <!-- Button group part -->
             <div class="bg-light ">
                 <div class="row justify-content-center">
@@ -113,7 +114,7 @@ $userData = $user->cdp_getUserData();
 
                                 <div class="d-md-flex align-items-center">
                                     <div>
-                                        <h3 class="card-title"><span><?php echo $lang['tools-methodpay11'] ?></span></h3>
+                                        <h3 class="card-title swl-promoted"><span><?php echo $lang['tools-methodpay11'] ?></span></h3>
                                     </div>
                                 </div>
                                 <div><hr><br></div>

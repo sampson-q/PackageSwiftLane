@@ -152,7 +152,8 @@ $history = $db->cdp_registros();
             <!-- Page wrapper  -->
             <!-- ============================================================== -->
             <div class="page-wrapper">
-                
+                <?php cdp_pageHeader('Edit Client'); ?>
+
                 <div class="container-fluid">
                     <div class="row">
                         <!-- Column -->
@@ -161,7 +162,7 @@ $history = $db->cdp_registros();
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-6">
-                                            <h3 class="card-title"><span><?php echo $lang['filter4']; ?></span></h3>
+                                            <h3 class="card-title swl-promoted"><span><?php echo $lang['filter4']; ?></span></h3>
                                         </div>
                                         <div class="col-6 justify-content-end d-flex">
                                             <form method="POST" id="changeUserStatus">

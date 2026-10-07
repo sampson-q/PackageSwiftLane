@@ -183,7 +183,7 @@ $pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 10
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-
+            <?php cdp_pageHeader('Client Management'); ?>
             <div class="container-fluid">
 
             <!-- -------------------------------------------------------------- -->
@@ -191,7 +191,7 @@ $pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 10
               <!-- -------------------------------------------------------------- -->
             <div class="d-md-flex align-items-center">
                 <div>
-                    <h3 class="card-title"><span><?php echo $lang['filter6']; ?></span></h3>
+                    <h3 class="card-title swl-promoted"><span><?php echo $lang['filter6']; ?></span></h3>
                 </div>
             </div>
             <div><br></div>

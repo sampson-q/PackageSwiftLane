@@ -340,8 +340,7 @@ if (isset($_POST['person_receives'])) {
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-
-
+            <?php cdp_pageHeader('Deliver Consolidation'); ?>
             <div class="container-fluid">
 
 

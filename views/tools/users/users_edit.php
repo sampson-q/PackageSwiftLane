@@ -137,8 +137,7 @@ $current_role = $role_query['rowCount'] ? $role_query['data']->role_name : '';
 		<!-- Page wrapper  -->
 		<!-- ============================================================== -->
 		<div class="page-wrapper">
-
-
+		    <?php cdp_pageHeader('Edit User'); ?>
 			<!-- ============================================================== -->
 			<!-- End Bread crumb and right sidebar toggle -->
 			<!-- ============================================================== -->
@@ -157,7 +156,7 @@ $current_role = $role_query['rowCount'] ? $role_query['data']->role_name : '';
 							<div class="card-body">
 								<div class="d-md-flex align-items-center">
                                     <div>
-                                        <h3 class="card-title"><span><?php echo $lang['user_manage50'] ?></span></h3>
+                                        <h3 class="card-title swl-promoted"><span><?php echo $lang['user_manage50'] ?></span></h3>
                                     </div>
                                 </div>
                                 <div><hr><br></div>

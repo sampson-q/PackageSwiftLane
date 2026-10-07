@@ -137,7 +137,7 @@ if (!empty($row_data->client_id)) {
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-
+            <?php cdp_pageHeader('Edit Shipping Rate'); ?>
             <!-- Action part -->
             <!-- Button group part -->
             <div class="bg-light">

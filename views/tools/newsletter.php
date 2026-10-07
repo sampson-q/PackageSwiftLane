@@ -98,7 +98,7 @@ if (isset($_GET['email'])) {
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-
+            <?php cdp_pageHeader('Send Email'); ?>
             <div class="container-fluid">
 
                 <div class="row">

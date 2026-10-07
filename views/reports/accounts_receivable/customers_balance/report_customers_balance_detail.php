@@ -147,14 +147,7 @@ $fecha_fin = str_replace('-', '/', $fecha_fin);
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-
-            <div class="page-breadcrumb">
-                <div class="row">
-                    <div class="col-5 align-self-center">
-
-                    </div>
-                </div>
-            </div>
+            <?php cdp_pageHeader('Customer Balance Detail', ['sub' => ($fecha_inicio ?? '') . ' - ' . ($fecha_fin ?? '')]); ?>
 
             <!-- Action part -->
             <!-- Button group part -->
@@ -180,7 +173,7 @@ $fecha_fin = str_replace('-', '/', $fecha_fin);
                     <div class="col-lg-12 col-xl-12 col-md-12">
 
                         <div class="card card-outline">
-                            <h3 class="card-title  ml-4 mt-3"> <?php echo $lang['report-text83'] ?>
+                            <h3 class="card-title swl-promoted  ml-4 mt-3"> <?php echo $lang['report-text83'] ?>
                                 <br>
                                 [<?php echo $fecha_inicio . ' - ' . $fecha_fin; ?>]
 

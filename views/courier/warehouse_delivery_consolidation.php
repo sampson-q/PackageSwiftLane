@@ -73,6 +73,7 @@ $wd_progCls = ($wd_delivered >= $wd_total && $wd_total > 0) ? 'badge-success' : 
         <?php include 'views/inc/left_sidebar.php'; ?>
 
         <div class="page-wrapper">
+            <?php cdp_pageHeader('Warehouse Delivery', ['sub' => cdp_consolidationRef($wd_consol)]); ?>
             <div class="container-fluid">
                 <div class="wd-banner">
                     <i class="mdi mdi-truck-delivery wd-banner-ico"></i>

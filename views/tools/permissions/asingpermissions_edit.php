@@ -127,7 +127,7 @@ if (isset($_GET['id'])) {
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-
+            <?php cdp_pageHeader('Edit Module Permissions'); ?>
             <!-- Action part -->
             <!-- Button group part -->
             <div class="bg-light">
@@ -157,7 +157,7 @@ if (isset($_GET['id'])) {
 
                                 <div class="d-md-flex align-items-center">
                                     <div>
-                                        <h3 class="card-title"><span><?php echo $lang['asingmodule4'] ?> <i class="icon-double-angle-right"></i><strong><?php echo isset($lang['role_'.$row_off->role_id]) ? $lang['role_'.$row_off->role_id] : $row_off->role_name; ?></strong></span></h3>
+                                        <h3 class="card-title swl-promoted"><span><?php echo $lang['asingmodule4'] ?> <i class="icon-double-angle-right"></i><strong><?php echo isset($lang['role_'.$row_off->role_id]) ? $lang['role_'.$row_off->role_id] : $row_off->role_name; ?></strong></span></h3>
                                     </div>
                                 </div>
                                 <div><hr><br></div>

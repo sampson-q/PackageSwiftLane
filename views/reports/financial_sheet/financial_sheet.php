@@ -66,11 +66,12 @@ try {
         <?php include 'views/inc/left_sidebar.php'; ?>
 
         <div class="page-wrapper">
+            <?php cdp_pageHeader('Financial Sheet'); ?>
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-12 col-xl-12 col-md-12">
                         <div class="card card-outline" style="border-top: 3px solid #bbb">
-                            <h4 class="card-title ml-4 mt-3"><i class="fas fa-file-invoice-dollar"></i> Financial Sheet</h4>
+                            <h4 class="card-title swl-promoted ml-4 mt-3"><i class="fas fa-file-invoice-dollar"></i> Financial Sheet</h4>
 
                             <div class="card-body">
                                 <div class="row fs-toolbar">

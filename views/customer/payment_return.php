@@ -32,6 +32,7 @@ $v = $map[$state] ?? $map['failed'];
         <?php include 'views/inc/left_sidebar.php'; ?>
 
         <div class="page-wrapper">
+            <?php cdp_pageHeader($v['title']); ?>
             <div class="container-fluid">
                 <div class="row justify-content-center" style="margin-top:4rem">
                     <div class="col-md-6">

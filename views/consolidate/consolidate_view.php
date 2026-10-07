@@ -218,9 +218,7 @@ if ($row_order->status_invoice == 1) {
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-
-
-
+            <?php cdp_pageHeader('Consolidation', ['sub' => cdp_consolidationRef($row_order, 'consolidate')]); ?>
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-12 col-xl-12 col-md-12">

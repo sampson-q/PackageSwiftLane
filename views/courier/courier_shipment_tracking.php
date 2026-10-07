@@ -123,8 +123,7 @@ $statusrow = $core->cdp_getStatusByType(1);
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-
-
+            <?php cdp_pageHeader('Shipment Tracking'); ?>
             <div class="container-fluid mb-4">
 
 

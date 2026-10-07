@@ -233,8 +233,7 @@ if ($row_order->status_invoice == 1) {
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-
-
+            <?php cdp_pageHeader('Shipment', ['sub' => ($row_order->order_prefix ?? '') . ($row_order->order_no ?? '')]); ?>
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-12 col-xl-12 col-md-12">

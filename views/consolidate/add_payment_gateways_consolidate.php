@@ -137,6 +137,7 @@ $payrow = $core->cdp_getPayment();
         <!-- Page wrapper  -->
 
         <div class="page-wrapper">
+            <?php cdp_pageHeader('Pay Shipping Invoice'); ?>
             <!-- ============================================================== -->
             <!-- Container fluid  -->
             <!-- ============================================================== -->

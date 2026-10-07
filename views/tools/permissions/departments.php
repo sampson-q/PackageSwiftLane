@@ -62,6 +62,7 @@ $userData = $user->cdp_getUserData();
         <?php include 'views/inc/topbar.php'; ?>
         <?php include 'views/inc/left_sidebar.php'; ?>
         <div class="page-wrapper">
+            <?php cdp_pageHeader('Departments'); ?>
             <div class="container-fluid mb-4">
                 <div class="row">
                     <!-- Create department -->

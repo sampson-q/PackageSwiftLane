@@ -101,7 +101,7 @@ $default_notification_templates = $db->cdp_registros();
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-
+            <?php cdp_pageHeader('Default Notification Templates'); ?>
             <!-- ============================================================== -->
             <!-- Start Page Content -->
             <!-- ============================================================== -->
@@ -142,7 +142,7 @@ $default_notification_templates = $db->cdp_registros();
 
                                     <div class="d-md-flex align-items-center">
                                             <div>
-                                            <h3 class="card-title"><span><?php echo $lang['ws-add-text16'] ?></span></h3>
+                                            <h3 class="card-title swl-promoted"><span><?php echo $lang['ws-add-text16'] ?></span></h3>
                                                 </div>
                                                 </div>
                                                 <div><hr><br></div>

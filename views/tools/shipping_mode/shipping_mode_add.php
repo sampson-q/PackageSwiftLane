@@ -90,15 +90,7 @@ $userData = $user->cdp_getUserData();
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
-
-            <div class="page-breadcrumb">
-                <div class="row">
-                    <div class="col-5 align-self-center">
-                        <span><?php echo $lang['tools-config61'] ?> | <?php echo $lang['tools-shipmode10'] ?></span>
-
-                    </div>
-                </div>
-            </div>
+            <?php cdp_pageHeader('Add Shipping Mode'); ?>
 
             <!-- Action part -->
             <!-- Button group part -->

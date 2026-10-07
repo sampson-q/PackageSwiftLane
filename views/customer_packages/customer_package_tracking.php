@@ -121,6 +121,7 @@ $statusrow = $core->cdp_getStatusByType(1);
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
         <div class="page-wrapper">
+            <?php cdp_pageHeader('Package Tracking'); ?>
             <div class="container-fluid">
                 <div class="row justify-content-center">
                     <!-- Column -->

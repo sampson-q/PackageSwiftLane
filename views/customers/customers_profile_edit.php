@@ -133,6 +133,7 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
         <?php include 'views/inc/left_sidebar.php'; ?>
 
         <div class="page-wrapper">
+            <?php cdp_pageHeader($pageTitle); ?>
             <div class="container-fluid">
                 <div class="row">
 
@@ -143,7 +144,7 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
                         <div class="card">
                             <div class="card-body">
                                 <div class="d-md-flex align-items-center">
-                                    <div><h3 class="card-title"><span><?php echo $h($pageTitle); ?></span></h3></div>
+                                    <div><h3 class="card-title swl-promoted"><span><?php echo $h($pageTitle); ?></span></h3></div>
                                 </div>
                                 <div><hr></div>
 

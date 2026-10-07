@@ -56,11 +56,12 @@ $readyDays = (int) CDP_PA_READY_DAYS;
         <?php include 'views/inc/left_sidebar.php'; ?>
 
         <div class="page-wrapper">
+            <?php cdp_pageHeader('Pickup Aging'); ?>
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-12">
                         <div class="card card-outline" style="border-top:3px solid #7a1f1f;">
-                            <h4 class="card-title ml-4 mt-3"><i class="mdi mdi-clock-alert-outline"></i> Pickup Aging</h4>
+                            <h4 class="card-title swl-promoted ml-4 mt-3"><i class="mdi mdi-clock-alert-outline"></i> Pickup Aging</h4>
                             <div class="card-body">
                                 <p class="text-muted">
                                     Packages awaiting collection. A package at <b>Ready for PickUp</b> for

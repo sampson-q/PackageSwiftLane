@@ -39,12 +39,13 @@ $userData = $user->cdp_getUserData();
         <?php include 'views/inc/left_sidebar.php'; ?>
 
         <div class="page-wrapper">
+            <?php cdp_pageHeader('Push Notifications'); ?>
             <div class="container-fluid mb-4">
                 <div class="row">
                     <div class="col-lg-12 col-xlg-12 col-md-12">
                         <div class="card">
                             <div class="card-body">
-                                <div class="d-md-flex align-items-center"><div><h3 class="card-title"><span><?php echo $lang['left-menu-sidebar-66']; ?></span></h3></div></div>
+                                <div class="d-md-flex align-items-center"><div><h3 class="card-title swl-promoted"><span><?php echo $lang['left-menu-sidebar-66']; ?></span></h3></div></div>
                                 <div><hr><br></div>
                                 <div id="resultados_ajax"></div>
 

@@ -129,7 +129,9 @@ $code_currency = $core->cdp_getCodeCountries();
 
         <!-- Page wrapper  -->
         <!-- ============================================================== -->
-        <div class="page-wrapper"> 
+        <div class="page-wrapper">
+            <?php cdp_pageHeader('Tools'); ?>
+
 
             <!-- ============================================================== -->
             <!-- Start Page Content -->
