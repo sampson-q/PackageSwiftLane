@@ -1,4 +1,12 @@
 <?php require_once __DIR__ . '/page_header.php'; // cdp_pageHeader(): the title row each page opens with ?>
+<?php
+// The tray and the menu are built from the signed-in user's record. A page that
+// did not load it rendered an empty sidebar (Message Logs, 2026-10-07), so the
+// shell loads it itself when the page has not.
+if (empty($userData) && isset($user) && is_object($user) && method_exists($user, 'cdp_getUserData')) {
+    $userData = $user->cdp_getUserData();
+}
+?>
 <?php if (!empty($_SESSION['imp_original_username'])): ?>
 	<?php
 		$imp_viewing = trim((string) ($_SESSION['name'] ?? '')) !== '' ? $_SESSION['name'] : ($_SESSION['username'] ?? 'user');

@@ -1,4 +1,12 @@
 <?php require_once __DIR__ . '/../../helpers/finance_switch.php'; // cdp_financeEnabled() and the clearance rules ?>
+<?php
+// The tray and the menu are built from the signed-in user's record. A page that
+// did not load it rendered an empty sidebar (Message Logs, 2026-10-07), so the
+// shell loads it itself when the page has not.
+if (empty($userData) && isset($user) && is_object($user) && method_exists($user, 'cdp_getUserData')) {
+    $userData = $user->cdp_getUserData();
+}
+?>
 <aside class="left-sidebar">
 	<!-- Brand + collapse toggle. The logo lives here (not in the topbar) so the
 	     content column has no header bar, matching the Swift Lane Ops design.
