@@ -25,6 +25,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/querys.php');
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
 require_login();
 require_permission('view_client_list');
 
@@ -310,6 +311,7 @@ if ($numrows > 0) { ?>
 							            <i class="fas fa-ellipsis-v"></i> <!-- Utiliza el icono de puntos suspensivos -->
 							        </button>
 							        <div class="dropdown-menu" style="overflow-y: auto; max-height: 200px;">
+							            <?php echo cdp_pickupCodeMenuItem('sea', $row->order_id, 'package_list', $row->status_courier ?? 0); ?>
 							            <!-- VER DETALLES DEL PAQUETE PERMISO -->
 							            <?php if ($user->cdp_hasPermission('view_package_details')) { ?>
 							                <a class="dropdown-item" href="customer_packages_view.php?id=<?php echo $row->order_id; ?>">
