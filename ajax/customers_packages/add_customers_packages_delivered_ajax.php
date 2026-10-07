@@ -75,6 +75,14 @@ if (!empty($_FILES['miarchivo']['name'])) {
 }
 
 
+// Delivered / Picked up only with the owner's verified pickup code
+// (helpers/pickup_code.php).
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
+$cdpPickupGate = cdp_pickupCodeGate('sea', [intval($_POST['package_id'] ?? 0)], 8);
+if (!$cdpPickupGate['ok']) {
+    $errors['pickup_code'] = $cdpPickupGate['message'];
+}
+
 if (empty($errors)) {
 
     $settings = cdp_getSettingsCourier();
@@ -137,6 +145,9 @@ if (empty($errors)) {
 
 
         $update = updateCustomerPackagesStatusDelivered($dataUpdate);
+        if (cdp_pickupCodeGatedStatus(8)) {
+            cdp_pickupCodeConsume('sea', [$shipment_id], (int) ($_SESSION['userid'] ?? 0));
+        }
 
         $order_track = $shipment->order_prefix . $shipment->order_no;
 
