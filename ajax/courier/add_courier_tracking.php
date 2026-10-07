@@ -65,6 +65,14 @@ if (empty($_POST['country']))
 
 
 
+// Delivered / Picked up only with the owner's verified pickup code
+// (helpers/pickup_code.php).
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
+$cdpPickupGate = cdp_pickupCodeGate('air', [intval($_POST['shipment_id'] ?? 0)], intval($_POST['status_courier'] ?? 0));
+if (!$cdpPickupGate['ok']) {
+    $errors['pickup_code'] = $cdpPickupGate['message'];
+}
+
 if (empty($errors)) {
 
     $settings = cdp_getSettingsCourier();
@@ -107,6 +115,9 @@ if (empty($errors)) {
         $cdp_prev_status = cdp_activityStatusName((int) ($shipment->status_courier ?? 0));
 
         $update = updateCourierStatusFromTracking($status, $shipment_id);
+        if (cdp_pickupCodeGatedStatus($status)) {
+            cdp_pickupCodeConsume('air', [$shipment_id], (int) ($_SESSION['userid'] ?? 0));
+        }
 
         $dataTrack = array(
             'user_id'        => $_SESSION['userid'],

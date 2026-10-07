@@ -163,7 +163,7 @@ $statusrow = $core->cdp_getStatusByType(1);
                                     } ?>
 
                                 </div>
-                                <form class="xform" id="invoice_form" name="invoice_form" method="post">
+                                <form class="xform" id="invoice_form" name="invoice_form" method="post" data-pickup-module="air" data-pickup-id="#shipment_id" data-pickup-status-field="[name=status_courier]" data-pickup-context="shipment_tracking">
                                     <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                     <header>
                                         <h4 class="modal-title"> <b class="text-danger"><?php echo $lang['status-ship1'] ?> </b> <b>| <?php echo $row->order_prefix . $row->order_no; ?></b>
