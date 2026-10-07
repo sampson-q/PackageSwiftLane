@@ -155,12 +155,12 @@ if ($numrows > 0) { ?>
 							data-tracking="<?php echo $tracking; ?>"
 							data-order-no="<?php echo $row->order_no; ?>"
 							data-order-prefix="<?php echo $row->order_prefix; ?>"
-                            data-sender="<?php echo $sender->fname . ' ' . $sender->lname; ?>"
+                            data-sender="<?php echo htmlspecialchars(cdp_nameWithLocker($sender), ENT_QUOTES, 'UTF-8'); ?>"
                             data-description="<?php echo $description->order_item_description; ?>"
                             data-total-order="<?php echo cdb_money_format($row->total_order); ?>"
                             >
 
-							<td><?php echo $sender->fname . ' ' . $sender->lname; ?></td>
+							<td><?php echo htmlspecialchars(cdp_nameWithLocker($sender), ENT_QUOTES, 'UTF-8'); ?></td>
 
 							<td><?php echo $row->order_prefix . $row->order_no; ?></td>
 							<?php
@@ -194,7 +194,7 @@ if ($numrows > 0) { ?>
 
 							<td class="text-right">
 								<button type="button" name="add_row" id="add_row" 
-									onclick="cdp_add_item('<?php echo $row->order_id; ?>','<?php echo $total_metric; ?>', '<?php echo $weight; ?>', '<?php echo $length; ?>', '<?php echo $width; ?>', '<?php echo $height; ?>', '<?php echo $tracking; ?>', '<?php echo $row->order_no; ?>','<?php echo $row->order_prefix; ?>', '<?php echo $sender->fname . ' ' . $sender->lname; ?>', '<?php echo $description->order_item_description; ?>', '<?php echo cdb_money_format($row->total_order); ?>'); 
+									onclick="cdp_add_item('<?php echo $row->order_id; ?>','<?php echo $total_metric; ?>', '<?php echo $weight; ?>', '<?php echo $length; ?>', '<?php echo $width; ?>', '<?php echo $height; ?>', '<?php echo $tracking; ?>', '<?php echo $row->order_no; ?>','<?php echo $row->order_prefix; ?>', '<?php echo htmlspecialchars(addslashes(cdp_nameWithLocker($sender)), ENT_QUOTES, 'UTF-8'); ?>', '<?php echo $description->order_item_description; ?>', '<?php echo cdb_money_format($row->total_order); ?>'); 
 									$('#tb_row_id_<?php echo $row->order_id; ?>').addClass('marked-row').hide();" 
 									class="btn btn-outline-success btn-sm add_row">
 									<i class="fa fa-plus"></i>
