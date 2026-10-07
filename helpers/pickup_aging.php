@@ -135,12 +135,17 @@ if (!function_exists('cdp_pickupAgingPending')) {
     /**
      * Packages that have been at Ready-for-Pickup for >= 14 days and have NOT yet
      * had their senders notified — these drive the admin popup / page.
+     *
+     * Owner and tracking number come from the package itself, not from the
+     * ledger copy taken when the clock started: if the package's sender was
+     * corrected since, the reminder goes to the current owner only.
      */
     function cdp_pickupAgingPending()
     {
         $db = new Conexion;
         $db->cdp_query("
-            SELECT p.order_id, p.order_track, p.sender_id, p.ready_at,
+            SELECT p.order_id, CONCAT(COALESCE(a.order_prefix, ''), a.order_no) AS order_track,
+                   a.sender_id, p.ready_at,
                    DATEDIFF(NOW(), p.ready_at) AS days_ready
             FROM cdb_package_pickup_aging p
             JOIN cdb_add_order a ON a.order_id = p.order_id
