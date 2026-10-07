@@ -22,7 +22,7 @@ $db->cdp_query("
     FROM cdb_package_pickup_aging p
     JOIN cdb_add_order a ON a.order_id = p.order_id
     LEFT JOIN cdb_styles s ON s.id = a.status_courier
-    LEFT JOIN cdb_users  u ON u.id = p.sender_id
+    LEFT JOIN cdb_users  u ON u.id = a.sender_id   -- the package's current owner, not the ledger copy
     ORDER BY p.ready_at ASC");
 $db->cdp_execute();
 $rows = $db->cdp_registros();
