@@ -114,7 +114,17 @@ if (empty($errors)) {
     }
 
     $sender_data = cdp_getSenderCourier(intval($_POST["sender_id"]));
-    $receiver_data = cdp_getRecipientCourier(intval($_POST["recipient_id"]));
+    // recipient_type: posted by the form, else the shipment's stored one.
+    $cdpRecipType = cdp_sanitize($_POST['recipient_type'] ?? '');
+    if ($cdpRecipType === '') {
+        $cdpStored = cdp_getCourier(intval($_POST['order_id'] ?? 0));
+        $cdpRecipType = (string) ($cdpStored->recipient_type ?? 'recipient');
+    }
+    // recipient_type 'user': recipient_id is a cdb_users id (a registered customer),
+    // not a cdb_recipients id - reading cdb_recipients texted an unrelated person.
+    $receiver_data = ($cdpRecipType === 'user')
+        ? cdp_getSenderCourier(intval($_POST["recipient_id"]))
+        : cdp_getRecipientCourier(intval($_POST["recipient_id"]));
     $tariff_mode = isset($_POST['tariff_mode']) ? 1 : 0;
 
     $dataShipment = array(
