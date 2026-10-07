@@ -334,7 +334,11 @@ if (empty($errors)) {
         cdp_insertCourierShipmentTrack($dataTrack);
 
         $sender_data = cdp_getSenderCourier(intval($_POST["sender_id"]));
-        $receiver_data = cdp_getRecipientCourier(intval($_POST["recipient_id"]));
+        // recipient_type 'user': recipient_id is a cdb_users id (a registered customer),
+        // not a cdb_recipients id - reading cdb_recipients texted an unrelated person.
+        $receiver_data = ($recipient_type === 'user')
+            ? cdp_getSenderCourier(intval($_POST["recipient_id"]))
+            : cdp_getRecipientCourier(intval($_POST["recipient_id"]));
 
         $fullshipment = $code_prefix . $_POST["order_no"];
         // Obtener el ID del estado del mensajero desde el POST
