@@ -25,6 +25,7 @@ require_once('helpers/querys.php');
 
 
 
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
 $userData = $user->cdp_getUserData();
 
 if (isset($_GET['id'])) {
@@ -230,6 +231,7 @@ if ($row_order->status_invoice == 1) {
                                                     <?php echo $lang['left533020014'] ?>
                                                 </button>
                                                 <div class="dropdown-menu scrollable-menu" style="overflow-y: auto; max-height: 500px;">
+                                                    <?php echo cdp_pickupCodeMenuItem('sea', $row_order->order_id, 'package_view', $row_order->status_courier ?? 0); ?>
 
 
                                                     <!-- VERIFY PAYMENT PERMISSION  -->
