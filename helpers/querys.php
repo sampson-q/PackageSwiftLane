@@ -4748,6 +4748,35 @@ function cdp_getPackageMultiple_($order_no) {
     return $db->cdp_registro();
 }
 
+/**
+ * The one package an order number posted by a list checkbox stands for.
+ * Order numbers repeat across customers, so "first row with that number"
+ * can be another customer's package. Rule: the only row with that number;
+ * else the only one not yet handed over (Delivered 8 / Picked up 15); else
+ * ambiguous - the caller skips it and says so, never guesses.
+ *
+ * @param string $table 'cdb_add_order' | 'cdb_customers_packages'
+ * @return array{row:?object,ambiguous:bool}
+ */
+function cdp_resolveOrderNumber($table, $order_no)
+{
+    $table = $table === 'cdb_customers_packages' ? 'cdb_customers_packages' : 'cdb_add_order';
+    $db = new Conexion;
+    $db->cdp_query("SELECT * FROM {$table} WHERE order_no = :no ORDER BY order_id");
+    $db->bind(':no', (string) $order_no);
+    $rows = (array) $db->cdp_registros();
+    if (count($rows) === 1) {
+        return ['row' => $rows[0], 'ambiguous' => false];
+    }
+    $open = array_values(array_filter($rows, function ($r) {
+        return !in_array((int) $r->status_courier, [8, 15], true);
+    }));
+    if (count($open) === 1) {
+        return ['row' => $open[0], 'ambiguous' => false];
+    }
+    return ['row' => null, 'ambiguous' => count($rows) > 1];
+}
+
 function cdp_getPackageMultipleByOrderId_($order_id) {
     $db = new Conexion;
 
