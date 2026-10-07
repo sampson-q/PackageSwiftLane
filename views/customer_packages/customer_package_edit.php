@@ -179,7 +179,7 @@ if (!empty($files_order)) {
                 </div>
             </div>
 
-            <form method="post" id="invoice_form" name="invoice_form" enctype="multipart/form-data">
+            <form method="post" id="invoice_form" name="invoice_form" enctype="multipart/form-data" data-pickup-module="sea" data-pickup-id="#order_id" data-pickup-status-field="[name=status_courier]" data-pickup-context="package_edit">
                 <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
                 <!-- Prefill plumbing for edit JS (recipient/sender preselect without disabling/invisibility) -->

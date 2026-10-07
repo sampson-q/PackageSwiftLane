@@ -63,6 +63,14 @@ if (empty($_POST['status_courier'])) $errors['status_courier'] = $lang['validate
 
 if (empty($_POST['order_id'])) $errors['order_id'] = $lang['message_ajax_error2'];
 
+// Delivered / Picked up only with the owner's verified pickup code
+// (helpers/pickup_code.php).
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
+$cdpPickupGate = cdp_pickupCodeGate('sea', [intval($_POST['order_id'] ?? 0)], intval($_POST['status_courier'] ?? 0));
+if (!$cdpPickupGate['ok']) {
+    $errors['pickup_code'] = $cdpPickupGate['message'];
+}
+
 if (empty($errors)) {
 
     $settings = cdp_getSettingsCourier();
@@ -154,6 +162,9 @@ if (empty($errors)) {
     );
 
     $updateShip = cdp_updateCustomerPackages($dataShipment);
+    if (cdp_pickupCodeGatedStatus(intval($_POST['status_courier'] ?? 0))) {
+        cdp_pickupCodeConsume('sea', [(int) $shipment_id], (int) ($_SESSION['userid'] ?? 0));
+    }
 
     if ($updateShip) {
 
