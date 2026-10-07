@@ -38,12 +38,23 @@ $data = json_decode($_GET['checked_data']);
 
 foreach ($data as $key) {
 
-    $customer_packages = cdp_getPackageMultiple($key);
+    // $key is a package's order number; numbers repeat across customers, so
+    // it is resolved to one package (cdp_resolveOrderNumber) and that package
+    // alone is updated and its own owner told. Ambiguous numbers are skipped.
+    $cdpRes = cdp_resolveOrderNumber('cdb_customers_packages', $key);
+    if (!$cdpRes['row']) {
+        $message[$key] = $key . ($cdpRes['ambiguous']
+            ? ': this order number belongs to more than one package. Assign its driver from its own page.'
+            : ': not found.');
+        continue;
+    }
+    $customer_packages = $cdpRes['row'];
 
     $sender_id = $customer_packages->sender_id;
     $sender_data = cdp_getSenderCourier($sender_id);
 
-    $driver_data = cdp_getSenderCourier(cdp_sanitize($_POST['driver']));
+    // The driver comes in the query string ($_GET), not $_POST.
+    $driver_data = cdp_getSenderCourier($driver);
 
     $order_id = $customer_packages->order_id;
 
@@ -75,8 +86,11 @@ foreach ($data as $key) {
     } catch (Exception $e) {
         error_log('WhatsApp notification error for order ' . $order_id . ': ' . $e->getMessage());
     }
-    
-    cdp_updateDriverCustomersPackageMultiple($key, $driver);
+
+    $db->cdp_query("UPDATE cdb_customers_packages SET driver_id = :d WHERE order_id = :id");
+    $db->bind(':d', $driver);
+    $db->bind(':id', (int) $customer_packages->order_id);
+    $db->cdp_execute();
 
     $message[$key] = $key . ' ' . $lang['modal-text30'];
 }
