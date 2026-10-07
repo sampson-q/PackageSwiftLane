@@ -2,6 +2,11 @@
 if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
 // ajax/courier_view_ajax.php
 require_once("../../loader.php");
+require_once(__DIR__ . '/../../helpers/ajax_guard.php');
+// This endpoint had no login check: it served customer names, packages and
+// amounts to anyone who called it. Same permission as its page (customer_view.php).
+require_login();
+require_permission('edit_client');
 require_once(__DIR__ . '/../../helpers/querys.php');
 require_once(__DIR__ . '/../../helpers/pickup_code.php');
 $db    = new Conexion;
