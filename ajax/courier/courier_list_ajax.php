@@ -25,6 +25,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/querys.php');
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
 require_login();
 require_permission('view_shipment_list');
 
@@ -380,6 +381,7 @@ if ($numrows > 0) { ?>
 							            <i class="fas fa-ellipsis-v"></i> <!-- Utiliza el icono de puntos suspensivos -->
 							        </button>
 							        <div class="dropdown-menu" style="overflow-y: auto; max-height: 200px;">
+							            <?php echo cdp_pickupCodeMenuItem('air', $row->order_id, 'shipment_list', $row->status_courier ?? 0); ?>
 							            <!-- VER DETALLES DE ENVÍO PERMISO -->
 							            <?php if ($user->cdp_hasPermission('view_shipment_details')) { ?>
 							                <a class="dropdown-item" href="courier_view.php?id=<?php echo $row->order_id; ?>" title="<?php echo $lang['tooledit'] ?>">
