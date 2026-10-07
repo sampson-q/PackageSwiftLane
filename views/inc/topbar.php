@@ -101,6 +101,16 @@
 					<!-- Comment -->
 					<!-- ============================================================== -->
 
+					<?php
+					require_once __DIR__ . '/../../helpers/pickup_code.php';
+					if (isset($user) && cdp_pickupCodeCanUse($user)) { ?>
+					<li class="nav-item">
+						<a class="nav-link waves-effect waves-dark cdp-pickup-code-list" href="javascript:void(0)" title="Pickup Codes" aria-label="Pickup Codes">
+							<iconify-icon icon="solar:key-linear"></iconify-icon>
+						</a>
+					</li>
+					<?php } ?>
+
 					<li class="nav-item dropdown">
 						<a id="clickme" class="nav-link dropdown-toggle waves-effect waves-dark" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Notifications" aria-label="Notifications">
 							<iconify-icon icon="solar:bell-linear"></iconify-icon>
