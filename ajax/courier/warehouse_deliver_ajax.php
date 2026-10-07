@@ -39,12 +39,34 @@ if (!$orderNos) {
     exit;
 }
 
+// Order numbers repeat across customers: each number is resolved to the one
+// package not yet handed over (helpers/pickup_code.php); a number shared by
+// several such packages is refused, never guessed.
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
+$resolved = cdp_pickupCodeResolveNumbers('air', $orderNos);
+if ($resolved['ambiguous']) {
+    echo json_encode(['ok' => false, 'message' => 'These order numbers belong to more than one package: '
+        . implode(', ', $resolved['ambiguous']) . '. Hand each one over from its own page.']);
+    exit;
+}
+$idByNo = [];
+foreach ($resolved['ids'] as $rid) {
+    $r = cdp_getCourier($rid);
+    if ($r) {
+        $idByNo[(string) $r->order_no] = (int) $rid;
+    }
+}
+/** The selected package behind a number: the open one, else the (delivered) first match. */
+$rowFor = function ($no) use ($idByNo) {
+    return isset($idByNo[(string) $no]) ? cdp_getCourier($idByNo[(string) $no]) : cdp_getCourierMultiple($no);
+};
+
 if ($action === 'preview') {
     $db = new Conexion;
     $packages = [];
 
     foreach ($orderNos as $no) {
-        $row = cdp_getCourierMultiple($no);
+        $row = $rowFor($no);
         if (!$row) {
             continue;
         }
@@ -57,6 +79,8 @@ if ($action === 'preview') {
         $carrier = cdp_getPackageTrackingLegacyAware((int) $row->order_id);
 
         $packages[] = [
+            'order_id'          => (int) $row->order_id,
+            'owner_id'          => (int) $row->sender_id,
             'order_no'          => (string) $row->order_no,
             'tracking'          => ($row->order_prefix ?? '') . $row->order_no,
             'carrier'           => $carrier->tracking_number ?: 'N/A',
@@ -80,10 +104,20 @@ if ($action === 'deliver') {
     $userData = $user->cdp_getUserData();
     $uid      = (int) ($userData->id ?? ($_SESSION['userid'] ?? 0));
 
+    // Every package needs its owner's verified pickup code.
+    $gate = cdp_pickupCodeGate('air', $resolved['ids'], CDP_WH_DELIVERED_STATUS);
+    if (!$gate['ok']) {
+        echo json_encode(['ok' => false, 'message' => $gate['message'], 'pickup_code' => $gate]);
+        exit;
+    }
+
     $delivered = 0;
     $skippedUncleared = 0;
     foreach ($orderNos as $no) {
-        $row = cdp_getCourierMultiple($no);
+        if (!isset($idByNo[(string) $no])) {
+            continue; // already handed over
+        }
+        $row = cdp_getCourier($idByNo[(string) $no]);
         if (!$row || (int) $row->status_courier === CDP_WH_DELIVERED_STATUS) {
             continue;
         }
@@ -94,7 +128,13 @@ if ($action === 'deliver') {
             continue;
         }
 
-        cdp_updateStatusCourierMultiple($no, CDP_WH_DELIVERED_STATUS);
+        // By order_id: a number update would also move another customer's package.
+        $dbu = new Conexion;
+        $dbu->cdp_query("UPDATE cdb_add_order SET status_courier = :s WHERE order_id = :id");
+        $dbu->bind(':s', CDP_WH_DELIVERED_STATUS);
+        $dbu->bind(':id', (int) $row->order_id);
+        $dbu->cdp_execute();
+        cdp_pickupCodeConsume('air', [(int) $row->order_id], $uid);
         cdp_freeConsolidatedItem((int) $row->order_id);
 
         $tracking = ($row->order_prefix ?? '') . $no;

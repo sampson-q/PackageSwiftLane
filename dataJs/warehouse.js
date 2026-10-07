@@ -162,6 +162,20 @@ function cdpWarehouseDeliver(orderNos) {
             }
             var deliverNos = deliverable.map(function (p) { return String(p.order_no); });
 
+            // Each owner's verified pickup code first — one code per customer
+            // (dataJs/pickup_code.js); the server refuses the handover without it.
+            var groups = {};
+            deliverable.forEach(function (p) { (groups[p.owner_id] = groups[p.owner_id] || []).push(p.order_id); });
+            var chain = $.Deferred().resolve().promise();
+            if (window.cdpPickupCode) {
+                Object.keys(groups).forEach(function (owner) {
+                    chain = chain.then(function () {
+                        return cdpPickupCode.ensure({ module: "air", orderIds: groups[owner], context: "warehouse_view" });
+                    });
+                });
+            }
+
+            chain.then(function () {
             Swal.fire({
                 title: "Confirm Delivery",
                 html: '<div style="max-height:260px;overflow-y:auto;">' + rows + "</div>" +
@@ -202,6 +216,7 @@ function cdpWarehouseDeliver(orderNos) {
                     if (typeof cdpSelClear === "function") cdpSelClear();
                     if (typeof window.wdRefreshNavBadge === "function") window.wdRefreshNavBadge();
                 });
+            });
             });
         },
         error: function () {
