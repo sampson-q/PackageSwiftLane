@@ -1,0 +1,2 @@
+# Git hooks run under sh: keep LF line endings, or the shebang is read as "#!/bin/sh<CR>" and fails.
+.githooks/* text eol=lf
