@@ -33,6 +33,7 @@ require_once(__DIR__ . '/../../helpers/phpmailer/class.phpmailer.php');
 require_once(__DIR__ . '/../../helpers/phpmailer/class.smtp.php');
 require_once(__DIR__ . '/../notify_whatsapp/api_whatsapp_service_v2.php');
 require_login();
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
 notify_after_response(); // email + WhatsApp go out after the response (helpers/after_response.php)
 require_permission('view_warehouse_delivery');
 require_once(__DIR__ . '/../../helpers/video_files.php');
@@ -203,11 +204,11 @@ function wd_render_customers($cid, array $pkgs, $canDeliverUser, array $terminal
     ob_start();
     foreach ($groups as $sid => $g) {
         $total = count($g['pkgs']);
-        $delivered = 0; $ready = 0; $awaiting = 0;
+        $delivered = 0; $ready = 0; $awaiting = 0; $readyIds = [];
         foreach ($g['pkgs'] as $p) {
             switch (wd_pkg_state($p, $terminal)) {
                 case 'delivered': $delivered++; break;
-                case 'ready':     $ready++;     break;
+                case 'ready':     $ready++; $readyIds[] = (int) $p->order_id; break;
                 case 'awaiting':  $awaiting++;  break;
             }
         }
@@ -232,6 +233,7 @@ function wd_render_customers($cid, array $pkgs, $canDeliverUser, array $terminal
                             data-cid="<?php echo (int) $cid; ?>" data-sid="<?php echo (int) $sid; ?>"
                             data-name="<?php echo htmlspecialchars($g['label'], ENT_QUOTES); ?>"
                             data-ready="<?php echo $ready; ?>"
+                            data-oids="<?php echo implode(',', $readyIds); ?>"
                             onclick="event.stopPropagation(); wdDeliverUser(this);">
                         <i class="mdi mdi-truck-check"></i> Deliver All (<?php echo $ready; ?>)
                     </button>
@@ -595,8 +597,12 @@ function wd_do_deliver(Conexion $db, $row, $uid, array $terminal)
     if ((int) $row->status_courier === CDP_WD_DELIVERED) { return ['ok' => false, 'reason' => 'already']; }
     if (!cdp_fsIsCleared($row->fs_cleared_for_delivery ?? 0)) { return ['ok' => false, 'reason' => 'uncleared']; }
     if (in_array((int) $row->status_courier, $terminal, true)) { return ['ok' => false, 'reason' => 'terminal']; }
+    // The owner's verified pickup code (helpers/pickup_code.php).
+    $gate = cdp_pickupCodeGate('air', [(int) $row->order_id], CDP_WD_DELIVERED);
+    if (!$gate['ok']) { return ['ok' => false, 'reason' => 'pickup_code', 'message' => $gate['message'], 'order_ids' => $gate['missing']]; }
 
     wd_set_status($db, (int) $row->order_id, CDP_WD_DELIVERED);
+    cdp_pickupCodeConsume('air', [(int) $row->order_id], $uid);
     cdp_freeConsolidatedItem((int) $row->order_id);
     $tracking = ($row->order_prefix ?? '') . $row->order_no;
     if (function_exists('cdp_updateShipTrackingMultiple')) {
@@ -685,6 +691,10 @@ if ($action === 'deliver_package') {
 
     $res = wd_do_deliver($db, wd_find_package($db, (int) ($_POST['consolidate_id'] ?? 0), $no), $uid, $WD_TERMINAL);
     if (!$res['ok']) {
+        if ($res['reason'] === 'pickup_code') {
+            echo json_encode(['ok' => false, 'message' => $res['message'], 'pickup_code' => ['module' => 'air', 'order_ids' => $res['order_ids']]]);
+            exit;
+        }
         $msg = ['already' => 'That package is already delivered.',
                 'uncleared' => 'That package is not cleared for delivery.',
                 'terminal' => 'That package can no longer be delivered.',
@@ -707,6 +717,17 @@ if ($action === 'deliver_user') {
     if (!$cid || !$sid) { echo json_encode(['ok' => false, 'message' => 'Missing consolidation or customer.']); exit; }
 
     $all  = wd_consolidation_packages($db, $cid, $ownOnly);
+    // One pickup code covers the whole collection: every package that would be
+    // handed over must be covered before any of them is.
+    $readyIds = [];
+    foreach ($all as $p) {
+        if ((int) $p->sender_id === $sid && wd_pkg_state($p, $WD_TERMINAL) === 'ready') { $readyIds[] = (int) $p->order_id; }
+    }
+    $gate = cdp_pickupCodeGate('air', $readyIds, CDP_WD_DELIVERED);
+    if (!$gate['ok']) {
+        echo json_encode(['ok' => false, 'message' => $gate['message'], 'pickup_code' => ['module' => 'air', 'order_ids' => $readyIds]]);
+        exit;
+    }
     $delivered = 0; $skipped = 0; $notifyTracks = [];
     foreach ($all as $p) {
         if ((int) $p->sender_id !== $sid) { continue; }

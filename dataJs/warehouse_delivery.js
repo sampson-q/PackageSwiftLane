@@ -149,6 +149,14 @@ function wdAfterAction(cid, sid, msg, summary) {
 function wdDeliverOne(btn) {
     var $b = $(btn);
     var no = String($b.data("no")), track = $b.data("track"), cid = $b.data("cid"), sid = $b.data("sid");
+    var oid = parseInt($b.closest(".wd-pkg-card").data("oid"), 10);
+    // The owner's verified pickup code first (dataJs/pickup_code.js).
+    if (window.cdpPickupCode && oid > 0 && !$b.data("pickupOk")) {
+        cdpPickupCode.ensure({ module: "air", orderIds: [oid], context: "warehouse_delivery" })
+            .then(function () { $b.data("pickupOk", 1); wdDeliverOne(btn); });
+        return;
+    }
+    $b.removeData("pickupOk");
     Swal.fire({
         title: "Deliver Package?",
         html: "Mark <b>" + wdEsc(track) + "</b> as delivered?",
@@ -165,6 +173,14 @@ function wdDeliverOne(btn) {
 function wdDeliverUser(btn) {
     var $b = $(btn);
     var cid = $b.data("cid"), sid = $b.data("sid"), name = $b.data("name"), ready = $b.data("ready");
+    // One pickup code for the whole collection (dataJs/pickup_code.js).
+    var oids = String($b.attr("data-oids") || "");
+    if (window.cdpPickupCode && oids !== "" && !$b.data("pickupOk")) {
+        cdpPickupCode.ensure({ module: "air", orderIds: oids, context: "warehouse_delivery_all" })
+            .then(function () { $b.data("pickupOk", 1); wdDeliverUser(btn); });
+        return;
+    }
+    $b.removeData("pickupOk");
     Swal.fire({
         title: "Deliver All Cleared Packages?",
         html: "Deliver <b>" + ready + "</b> cleared package(s) for <b>" + wdEsc(name) + "</b>?<br>" +
