@@ -26,6 +26,7 @@ require_once('helpers/querys.php');
 
 
 
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
 $userData = $user->cdp_getUserData();
 $core = new Core;
 $db = new Conexion;
@@ -257,6 +258,7 @@ if ($row_order->status_invoice == 1) {
                                                         <?php echo $lang['left533020014'] ?>
                                                     </button>
                                                     <div class="dropdown-menu scrollable-menu" style="overflow-y: auto; max-height: 500px;">
+                                                        <?php echo cdp_pickupCodeMenuItem('air', $row_order->order_id, 'shipment_view', $row_order->status_courier ?? 0); ?>
                                                         <!-- VERIFICAR PAGOS DE ENVÍOS PERMISO -->
                                                         <?php if ($row_order->status_invoice == 2 && $user->cdp_hasPermission('verify_payments')) { ?>
                                                             <?php if ($userData->userlevel == 1) { ?>
@@ -355,6 +357,7 @@ if ($row_order->status_invoice == 1) {
                                                         <?php echo $lang['left533020014'] ?>
                                                     </button>
                                                     <div class="dropdown-menu">
+                                                        <?php echo cdp_pickupCodeMenuItem('air', $row_order->order_id, 'shipment_view', $row_order->status_courier ?? 0); ?>
                                                         <!-- ACEPTAR RECOGIDA (si el usuario tiene el permiso para hacerlo) -->
                                                         <?php if ($user->cdp_hasPermission('complete_client_shipment') && ($userData->userlevel == 9 || $userData->userlevel == 3 || $userData->userlevel == 2)) { ?>
                                                             <?php if ($row_order->status_courier == 14) { ?>
