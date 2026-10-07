@@ -1,6 +1,11 @@
 <?php
 
 require_once("../../loader.php");
+require_once(__DIR__ . '/../../helpers/ajax_guard.php');
+// This endpoint had no login check: it served customer names, packages and
+// amounts to anyone who called it. Same permission as its page (report_top_users_sea.php).
+require_login();
+require_permission('view_top_users_sea');
 
 $db       = new Conexion;
 $user     = new User;
