@@ -319,11 +319,22 @@ class ShipmentsHandler
             ApiResponse::notFound("Shipment #{$id} not found.");
         }
 
+        // Delivered (8) / Picked up (15) only after staff verified the owner's
+        // pickup code in the app (helpers/pickup_code.php).
+        require_once dirname(__DIR__, 3) . '/helpers/pickup_code.php';
+        $gate = cdp_pickupCodeGate('air', [$id], (int) $data['status']);
+        if (!$gate['ok']) {
+            ApiResponse::validationError(['status' => $gate['message']], 'Pickup code not verified');
+        }
+
         // Update status_courier directly by order_id
         $db->cdp_query('UPDATE cdb_add_order SET status_courier = :status WHERE order_id = :id');
         $db->bind(':status', (int)$data['status']);
         $db->bind(':id',     $id);
         $db->cdp_execute();
+        if (cdp_pickupCodeGatedStatus((int) $data['status'])) {
+            cdp_pickupCodeConsume('air', [$id], (int) $authUser->id);
+        }
 
         // Insert tracking event
         $comment = cdp_sanitize($data['comments'] ?? '');
