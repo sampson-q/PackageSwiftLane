@@ -3,6 +3,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
 // ajax/locker_search_ajax.php
 require_once("../../loader.php");
 require_once(__DIR__ . '/../../helpers/querys.php');
+require_once(__DIR__ . '/../../helpers/pickup_code.php');
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_shipment_list');
@@ -241,6 +242,7 @@ if (!$orders) {
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
                                 <div class="dropdown-menu" style="overflow-y: auto; max-height: 200px;">
+                                    <?php echo cdp_pickupCodeMenuItem('air', $row->order_id, 'locker_search', $row->status_courier ?? 0); ?>
                                     <a class="dropdown-item" href="courier_view.php?id=<?php echo $row->order_id; ?>&tracking_number=<?php echo $row->tracking_number; ?>&eta=<?php echo $row->estimated_eta; ?>" title="<?php echo $lang['tooledit']; ?>">
                                         <i style="color:#343a40" class="fa fa-search"></i>&nbsp;<?php echo $lang['leftorder266']; ?>
                                     </a>
