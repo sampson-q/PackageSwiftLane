@@ -157,7 +157,7 @@ $statusrow = $core->cdp_getStatusByType(1);
                                     } ?>
 
                                 </div>
-                                <form class="xform" id="invoice_form" name="invoice_form" method="post">
+                                <form class="xform" id="invoice_form" name="invoice_form" method="post" data-pickup-module="sea" data-pickup-id="#package_id" data-pickup-status-field="[name=status_courier]" data-pickup-context="package_tracking">
                                     <header>
                                         <h4 class="modal-title"> <b class="text-danger"><?php echo $lang['status-ship1'] ?> </b> <b>| <?php echo $row->order_prefix . $row->order_no; ?></b>
                                         </h4><!--  <?php echo $lang['status-ship3'] ?> <?php echo $receiver_data->country; ?> | <?php echo $receiver_data->city; ?> -->
