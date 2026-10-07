@@ -352,7 +352,12 @@ function cdp_sendTemplateEmail($templateId, $toEmail, array $replacements = [], 
         $headers  = "MIME-Version: 1.0\r\n";
         $headers .= "Content-type: text/html; charset=UTF-8\r\n";
         $headers .= "From: {$core->site_name} <{$core->site_email}>\r\n";
-        return ['ok' => (bool) mail($toEmail, $subject, $body, $headers)];
+        $ok = (bool) mail($toEmail, $subject, $body, $headers);
+        // PHPMailer sends log themselves (message_log.php hook); mail() does not.
+        if (function_exists('cdp_msgLogPhpMail')) {
+            cdp_msgLogPhpMail($ok, $toEmail, $subject, $body);
+        }
+        return ['ok' => $ok];
     }
 
     if ($core->mailer === 'SMTP') {
