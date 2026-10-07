@@ -109,30 +109,9 @@ if (empty($errors)) {
 
         cdp_insertNotificationsUsers($notification_id, $_POST["driver_id"]);
 
-        try {
-            require_once("../notify_whatsapp/api_whatsapp_service_v2.php");
-    
-            // Only send if sender has phone
-            if ($sender_data && !empty($sender_data->phone)) {
-                $whatsapp_body = "Dear {$sender_data->fname } {$sender_data->lname },\n\n
-                Your shipment has been updated with a new driver assignment. Here are the details:\n
-                *Tracking Number:* {$tracking_ref}\n
-                *Courier:* {$driver_data->fname}\n
-                $eta
-                
-                Login to your account for more details.";
-
-                // Send WhatsApp notification
-                $wa_result = sendNotificationWhatsApp_v2($sender_data, $whatsapp_body);
-
-                // Log result (don't fail shipment if WhatsApp fails)
-                if (!$wa_result['success']) {
-                    error_log("WhatsApp notification failed for order {$order_id}: " . $wa_result['message']);
-                }
-            }
-        } catch (Exception $e) {
-            error_log('WhatsApp notification error for order ' . $order_id . ': ' . $e->getMessage());
-        }
+        // No WhatsApp to the consolidation's own sender: a driver assignment is
+        // not news for the package owners, and the consolidation number is never
+        // sent to customers.
 
 
         //NOTIFICATION TO ADMIN AND EMPLOYEES
@@ -143,9 +122,6 @@ if (empty($errors)) {
 
             cdp_insertNotificationsUsers($notification_id, $key->id);
         }
-        //NOTIFICATION TO CUSTOMER
-
-        cdp_insertNotificationsUsers($notification_id, $_POST['id_senderclient_driver_update']);
     } else {
 
         $errors['critical_error'] =  $lang['message_error'];
