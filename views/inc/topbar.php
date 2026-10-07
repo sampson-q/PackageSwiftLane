@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/page_header.php'; // cdp_pageHeader(): the title row each page opens with ?>
 <?php if (!empty($_SESSION['imp_original_username'])): ?>
 	<?php
 		$imp_viewing = trim((string) ($_SESSION['name'] ?? '')) !== '' ? $_SESSION['name'] : ($_SESSION['username'] ?? 'user');
