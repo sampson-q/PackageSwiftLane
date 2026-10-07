@@ -63,7 +63,7 @@ $row_off = $data['data'];
     <meta property="og:image" content="<?php echo htmlspecialchars($core->og_image, ENT_QUOTES, 'UTF-8'); ?>">
 	<!-- Favicon icon -->
 	<link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
-	<title><?php echo $lang['tools-config61'] ?> | <?php echo $core->site_name ?></title>
+	<title>Edit Shipping Status | <?php echo $core->site_name ?></title>
 
 	<?php include 'views/inc/head_scripts.php'; ?>
 	<link rel="stylesheet" type="text/css" href="assets/template/assets/libs/claviska/jquery-minicolors/jquery.minicolors.css">

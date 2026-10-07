@@ -62,7 +62,7 @@ $row_off = $data['data'];
     <meta property="og:image" content="<?php echo htmlspecialchars($core->og_image, ENT_QUOTES, 'UTF-8'); ?>">
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
-    <title><?php echo $lang['tools-config61'] ?> | <?php echo $core->site_name ?></title>
+    <title>Edit Payment Mode | <?php echo $core->site_name ?></title>
     <!-- This Page CSS -->
     <!-- Custom CSS -->
     <link href="<?= cdp_asset('assets/css/style.min.css') ?>" rel="stylesheet">

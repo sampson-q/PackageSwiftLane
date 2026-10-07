@@ -57,7 +57,7 @@ if (isset($_GET['email'])) {
     <meta property="og:image" content="<?php echo htmlspecialchars($core->og_image, ENT_QUOTES, 'UTF-8'); ?>">
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
-    <title><?php echo $lang['tools-config61'] ?> | <?php echo $core->site_name ?></title>
+    <title>Send Email | <?php echo $core->site_name ?></title>
     <link href="assets/template/assets/libs/summernote/dist/summernote-bs4.css" rel="stylesheet">
     <?php include 'views/inc/head_scripts.php'; ?>
 
