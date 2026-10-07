@@ -977,17 +977,14 @@ if ($row_order->status_invoice == 1) {
                                                         $total_impuesto = $sumador_total * $row_order->tax_value / 100;
                                                     }
 
-                                                    // Fetch sender name
-                                                    $db->cdp_query("SELECT user_id, sender_id FROM cdb_add_order WHERE order_no = '" . $row_order_item->order_no . "'");
-                                                    $package_owners = $db->cdp_registro();
-
-                                                    $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . $package_owners->sender_id . "'");
-                                                    $sender = $db->cdp_registro();
-                                                    $sender_name = $sender->fname . ' ' . $sender->lname . ' <b>(' . $sender->locker . ')</b>';
-                                                    
-                                                    // Fetch package total price
-                                                    $db->cdp_query("SELECT total_order, order_id, status_courier, total_weight FROM cdb_add_order WHERE order_no='" . $row_order_item->order_no . "'");
-                                                    $order_details = $db->cdp_registro();
+                                                    // The package and its owner by order_id (the same lookup
+                                                    // ajax/consolidate/consolidate_items_ajax.php uses when the
+                                                    // rows filter reloads this table).
+                                                    $order_details = cdp_getConsolidationMember($row_order_item->order_id);
+                                                    if (!$order_details) {
+                                                        continue;
+                                                    }
+                                                    $sender_name = cdp_ownerLabelHtml($order_details);
 
                                                     // Fetch items (quantity + description)
                                                     $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id = '" . $order_details->order_id . "'");

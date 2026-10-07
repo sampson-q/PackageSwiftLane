@@ -1,6 +1,11 @@
 <?php
+// Rows of the consolidation view's package table, reloaded by its rows filter
+// (dataJs/consolidate_view.js). Must render exactly what the page renders:
+// owner (with locker) by order_id, same columns.
 require_once('../../loader.php');
+require_once('../../helpers/ajax_guard.php');
 require_once('../../helpers/querys.php');
+require_permission('view_consolidate');
 
 $id       = isset($_GET['id'])       ? (int)$_GET['id']       : 0;
 $page     = isset($_GET['page'])     ? (int)$_GET['page']     : 1;
@@ -44,15 +49,11 @@ if ($order_items):
         $precio_total   = $calculate_weight * (float)$row_order->value_weight;
         $sumador_total += $precio_total;
 
-        $db->cdp_query("SELECT user_id, sender_id FROM cdb_add_order WHERE order_no = '" . $row_order_item->order_no . "'");
-        $package_owners = $db->cdp_registro();
-
-        $db->cdp_query("SELECT * FROM cdb_users WHERE id='" . $package_owners->sender_id . "'");
-        $sender      = $db->cdp_registro();
-        $sender_name = $sender->fname . ' ' . $sender->lname;
-
-        $db->cdp_query("SELECT total_order, order_id, status_courier FROM cdb_add_order WHERE order_no='" . $row_order_item->order_no . "'");
-        $order_details = $db->cdp_registro();
+        $order_details = cdp_getConsolidationMember($row_order_item->order_id);
+        if (!$order_details) {
+            continue;
+        }
+        $sender_name = cdp_ownerLabelHtml($order_details);
 
         $db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id = '" . $order_details->order_id . "'");
         $items = $db->cdp_registros();
@@ -78,7 +79,7 @@ if ($order_items):
                 <?php } ?>
             </td>
             
-            <td colspan="3"><?php echo number_format($row_order_item->weight, 2, '.', ''); ?></td>
+            <td colspan="3"><?php echo number_format((float) $order_details->total_weight, 2, '.', ''); ?></td>
             <td colspan="3"><?php echo cdb_money_format($order_details->total_order); ?></td>
         </tr>
         <?php

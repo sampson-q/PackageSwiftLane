@@ -2992,6 +2992,39 @@ function cdp_getConsolidationFinancialRows($consolidate_id)
 }
 
 /**
+ * One AIR consolidation member and its owner, by the detail row's order_id.
+ * Never by order number: numbers repeat across customers, so a number lookup
+ * can show another customer's name on the package.
+ *
+ * @return object|null order_id, total_order, status_courier, total_weight,
+ *                     sender_id, fname, lname, locker
+ */
+function cdp_getConsolidationMember($order_id)
+{
+    $db = new Conexion;
+    $db->cdp_query("SELECT a.order_id, a.total_order, a.status_courier, a.total_weight, a.sender_id,
+                           u.fname, u.lname, u.locker
+                    FROM cdb_add_order a
+                    LEFT JOIN cdb_users u ON u.id = a.sender_id
+                    WHERE a.order_id = :oid LIMIT 1");
+    $db->bind(':oid', (int) $order_id);
+    $row = $db->cdp_registro();
+    return $row ?: null;
+}
+
+/** Owner name with the locker in bold beside it — escaped HTML for tables. */
+function cdp_ownerLabelHtml($row)
+{
+    if (!$row) {
+        return 'N/A';
+    }
+    $name   = trim((string) ($row->fname ?? '') . ' ' . (string) ($row->lname ?? ''));
+    $locker = trim((string) ($row->locker ?? ''));
+    $html   = htmlspecialchars($name !== '' ? $name : 'N/A', ENT_QUOTES, 'UTF-8');
+    return $locker !== '' ? $html . ' <b>(' . htmlspecialchars($locker, ENT_QUOTES, 'UTF-8') . ')</b>' : $html;
+}
+
+/**
  * Resolves the financial-sheet S/N for a single order. Returns null when the
  * order is not part of any consolidation (so the label can simply omit it).
  *
