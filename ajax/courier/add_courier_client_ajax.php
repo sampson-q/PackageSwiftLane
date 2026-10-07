@@ -30,6 +30,23 @@ require_login();
 notify_after_response(); // email + WhatsApp go out after the response (helpers/after_response.php)
 require_permission('add_shipment');
 
+// A customer books in their own name only. The form shows the sender as
+// read-only, but the posted sender_id was trusted: a customer could book a
+// shipment under another customer, who then got its messages. For customer
+// roles the sender is the session's user and the sender address must be
+// one of theirs. Staff keep choosing the sender.
+require_once(__DIR__ . '/../../helpers/rbac.php');
+if (cdp_roleIsClient((int) ($_SESSION['userlevel'] ?? 0))) {
+    $_POST['sender_id'] = (int) ($_SESSION['userid'] ?? 0);
+    $cdpAddrDb = new Conexion;
+    $cdpAddrDb->cdp_query("SELECT user_id FROM cdb_senders_addresses WHERE id_addresses = :a LIMIT 1");
+    $cdpAddrDb->bind(':a', (int) ($_POST['sender_address_id'] ?? 0));
+    $cdpAddr = $cdpAddrDb->cdp_registro();
+    if ($cdpAddr && (int) $cdpAddr->user_id !== (int) $_POST['sender_id']) {
+        $_POST['sender_address_id'] = '';   // fails the required-address check below
+    }
+}
+
 require_once("../../helpers/querys.php");
 require_once("../../helpers/phpmailer/class.phpmailer.php");
 require_once("../../helpers/phpmailer/class.smtp.php");
