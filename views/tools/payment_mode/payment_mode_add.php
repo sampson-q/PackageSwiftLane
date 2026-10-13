@@ -61,7 +61,6 @@ $userData = $user->cdp_getUserData();
     <script src="<?= cdp_asset('assets/js/jquery.ui.touch-punch.js') ?>"></script>
     <script src="<?= cdp_asset('assets/js/jquery.wysiwyg.js') ?>"></script>
     <script src="<?= cdp_asset('assets/js/global.js') ?>"></script>
-    <script src="<?= cdp_asset('assets/js/custom.js') ?>"></script>
     <link href="assets/customClassPagination.css" rel="stylesheet">
 
 

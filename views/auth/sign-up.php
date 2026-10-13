@@ -33,7 +33,6 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
     <script src="<?= cdp_asset('assets/js/jquery.ui.touch-punch.js') ?>"></script>
     <script src="<?= cdp_asset('assets/js/jquery.wysiwyg.js') ?>"></script>
     <script src="<?= cdp_asset('assets/js/global.js') ?>"></script>
-    <script src="<?= cdp_asset('assets/js/custom.js') ?>"></script>
     <script src="<?= cdp_asset('assets/js/checkbox.js') ?>"></script>
 
     <style> 

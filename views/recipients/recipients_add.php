@@ -53,7 +53,6 @@ $userData = $user->cdp_getUserData();
 
     <?php include 'views/inc/head_scripts.php'; ?>
 
-    <script src="<?= cdp_asset('assets/js/custom.js') ?>"></script>
     <style>
         .select2-selection__rendered {
             line-height: 31px !important;
