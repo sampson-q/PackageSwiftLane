@@ -122,7 +122,7 @@ $userData = $user->cdp_getUserData();
                       <?php echo $lang['help-text3'] ?>
                     </h6>
                     <p><a href="mailto:support@isolveafrica.com"><b>
-                          <i class="mdi mdi-cart-outline" style="color:#FD571E"></i> <?php echo $lang['help-text4'] ?></b></a></p>
+                          <i class="mdi mdi-cart-outline"></i> <?php echo $lang['help-text4'] ?></b></a></p>
                     <div><br><br></div>
                     <h3 id="item-description__support">
                       <strong><?php echo $lang['help-text8'] ?>

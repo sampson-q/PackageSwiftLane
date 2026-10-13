@@ -117,7 +117,7 @@ $paymethodrow = $core->cdp_getPaymentMethod();
 
                     <div class="col-lg-12 col-xl-12 col-md-12">
 
-                        <div class="card card-outline" style="border-top: 3px solid #bbb;">
+                        <div class="card card-outline">
                             <h4 class="card-title swl-promoted  ml-4 mt-3"> <?php echo $lang['report-text78'] ?></h4>
 
                             <div class="card-body">

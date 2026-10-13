@@ -553,12 +553,12 @@ if (isset($_POST["total_item"])) {
                         <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-book-multiple" style="color:#20c997"></i> <?php echo $lang['add-title13'] ?></h4>
+                                    <h4 class="card-title"><i class="mdi mdi-book-multiple"></i> <?php echo $lang['add-title13'] ?></h4>
                                     <br>
 
                                     <div class="row">
                                         <div class="form-group col-md-3">
-                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title23'] ?> <i style="color:#ff0000" class="fas fa-donate"></i></label>
+                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title23'] ?> <i class="fas fa-donate"></i></label>
                                             <div class="input-group">
                                                 <select class="custom-select col-12" id="order_pay_mode" name="order_pay_mode">
                                                     <option value="0">--<?php echo $lang['left243'] ?>--</option>
@@ -575,7 +575,7 @@ if (isset($_POST["total_item"])) {
                                         <!--/span-->
 
                                         <div class="form-group col-md-3">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['langs_039'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
+                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['langs_039'] ?> <i class="fas fa-shipping-fast"></i></label>
                                             <div class="input-group">
                                                 <select class="custom-select col-12" id="status_courier" name="status_courier">
                                                     <option value="0">--<?php echo $lang['left210'] ?>--</option>
@@ -702,7 +702,7 @@ if (isset($_POST["total_item"])) {
 
                                                     <div class="row ">
                                                         <div class=" col-md-12 mb-3 mt-2">
-                                                            <p class="text-justify"><a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></p>
+                                                            <p class="text-justify"><a target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></p>
 
                                                         </div>
 

@@ -250,7 +250,7 @@ $order_prefix = $settings->prefix;
                                             <label for="inputlname" class="control-label col-form-label"><?php echo $lang['left201'] ?> </label>
                                             <div class="input-group mb-3">
                                                 <?php if ($agency_default_id > 0) { ?><input type="hidden" name="agency" id="agency" value="<?php echo $agency_default_id; ?>"><?php } ?>
-                                                <select class="select2 form-control custom-select" id="<?php echo ($agency_default_id > 0) ? 'agency_select' : 'agency'; ?>" name="<?php echo ($agency_default_id > 0) ? '' : 'agency'; ?>" required style="width: 100%;" <?php echo ($agency_default_id > 0) ? 'disabled style="pointer-events:none;background:#e9ecef;width:100%;"' : ''; ?>>
+                                                <select class="select2 form-control custom-select" id="<?php echo ($agency_default_id > 0) ? 'agency_select' : 'agency'; ?>" name="<?php echo ($agency_default_id > 0) ? '' : 'agency'; ?>" required style="width: 100%;" <?php echo ($agency_default_id > 0) ? 'disabled style="pointer-events:none;width:100%;"' : ''; ?>>
                                                     <?php foreach ($agencyrow as $row) : ?>
                                                         <option value="<?php echo (int)$row->id; ?>" <?php echo ($agency_default_id > 0 && (int)$row->id === $agency_default_id) ? 'selected' : ''; ?>><?php echo htmlspecialchars($row->name_branch ?? ''); ?></option>
                                                     <?php endforeach; ?>
@@ -282,7 +282,7 @@ $order_prefix = $settings->prefix;
                         <div class="col-lg-6">
                             <div class="card">
                                 <div class="card-header bg-secondary">
-                                    <h4 class="card-title text-white"><i class="mdi mdi-information-outline" style="color:#20c997"></i> <?php echo $lang['langs_010']; ?></h4>
+                                    <h4 class="card-title text-white"><i class="mdi mdi-information-outline"></i> <?php echo $lang['langs_010']; ?></h4>
                                 </div>
                                 <div class="card-body">
                                     <div class="resultados_ajax_add_user_modal_sender"></div>
@@ -327,7 +327,7 @@ $order_prefix = $settings->prefix;
                         <div class="col-lg-6">
                             <div class="card">
                                 <div class="card-header bg-secondary">
-                                    <h4 class="card-title text-white"><i class="mdi mdi-information-outline" style="color:#20c997"></i> <?php echo $lang['left334']; ?></h4>
+                                    <h4 class="card-title text-white"><i class="mdi mdi-information-outline"></i> <?php echo $lang['left334']; ?></h4>
                                 </div>
                                 <div class="card-body">
                                     <div class="resultados_ajax_add_user_modal_recipient"></div>
@@ -378,7 +378,7 @@ $order_prefix = $settings->prefix;
                         <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-header bg-secondary">
-                                    <h4 class="card-title text-white"><i class="mdi mdi-book-multiple" style="color:#20c997"></i> <?php echo $lang['add-title13'] ?></h4>
+                                    <h4 class="card-title text-white"><i class="mdi mdi-book-multiple"></i> <?php echo $lang['add-title13'] ?></h4>
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
@@ -435,14 +435,14 @@ $order_prefix = $settings->prefix;
                                             <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title15'] ?></i></label>
                                             <div class="input-group">
                                                 <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
-                                                    <div class="input-group-text"><i style="color:#ff0000" class="fa fa-calendar"></i></div>
+                                                    <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                                                 </div>
                                                 <input type='text' class="form-control" name="order_date" id="order_date" placeholder="--<?php echo $lang['left206'] ?>--" data-toggle="tooltip" data-placement="bottom" title="<?php echo $lang['add-title16'] ?>" readonly value="<?php echo date('Y-m-d'); ?>" />
                                             </div>
                                         </div>
 
                                         <div class="form-group col-md-4">
-                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title23'] ?> <i style="color:#ff0000" class="fas fa-donate"></i></label>
+                                            <label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title23'] ?> <i class="fas fa-donate"></i></label>
                                             <div class="input-group mb-3">
                                                 <select class="select2 form-control custom-select" id="order_pay_mode" name="order_pay_mode" required="" style="width: 100%;">
                                                     <option value="<?php echo $metod_payment->id; ?>"><?php echo $metod_payment->met_payment; ?></option>
@@ -506,7 +506,7 @@ $order_prefix = $settings->prefix;
                                     <div class="row">
                                         <div class="col-md-8">
                                             <h4 class="card-title">
-                                                <i class="fas fas fa-boxes" style="color:#20c997"></i>
+                                                <i class="fas fas fa-boxes"></i>
                                                 <?php echo $lang['left212'] ?>
                                             </h4>
                                         </div>

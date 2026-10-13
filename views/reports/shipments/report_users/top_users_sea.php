@@ -115,7 +115,7 @@ $paymethodrow = $core->cdp_getPaymentMethod();
                     <div class="row">
                         <!-- Column -->
                         <div class="col-lg-12 col-xl-12 col-md-12">
-                            <div class="card card-outline" style="border-top: 3px solid #bbb;">
+                            <div class="card card-outline">
                                 <h4 class="card-title swl-promoted ml-4 mt-3"> <?php echo $lang['report-text89'] ?></h4>
                                 <div class="card-body">
                                     <div class="row mb-4">
@@ -156,7 +156,7 @@ $paymethodrow = $core->cdp_getPaymentMethod();
                     <div class="row">
                         <!-- Column -->
                         <div class="col-lg-12 col-xl-12 col-md-12">
-                            <div class="card card-outline" style="border-top: 3px solid #bbb;">
+                            <div class="card card-outline">
                                 <h4 class="card-title ml-4 mt-3"> <?php echo $lang['report-text92'] ?></h4>
                                 <div class="card-body">
                                     <div class="row mb-4">

@@ -66,7 +66,7 @@ $html = '
 
 		<table border=1>
 		<tbody>
-			<tr style="background-color: #3e5569; color: white">				
+			<tr>				
 				<th><b></b></th>
                 <th><b>' . $lang['report-text82'] . '</b></th>
                 <th><b>' . $lang['modal-text16'] . '</b></th>

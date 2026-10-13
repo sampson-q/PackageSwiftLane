@@ -134,7 +134,7 @@ $userData = $user->cdp_getUserData();
                                                             <div class="row">
                                                                 <div class="col-sm-12 col-md-8">
                                                                     <h4 class="card-title">
-                                                                        <i class="fas fa fa-comments" style="color:#36bea6"></i>
+                                                                        <i class="fas fa fa-comments"></i>
                                                                         <?php echo $lang['invoice_header'] ?>
                                                                     </h4>
                                                                 </div>

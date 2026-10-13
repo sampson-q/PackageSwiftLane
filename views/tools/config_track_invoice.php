@@ -133,7 +133,7 @@ $userData = $user->cdp_getUserData();
 											</div>
 											<div class="col-md-6">
 												<div class="form-group">
-													<label for="lastName1"><i class="mdi mdi-gift" style="color:#7460ee"></i> <?php echo $lang['tools-config72'] ?></label>
+													<label for="lastName1"><i class="mdi mdi-gift"></i> <?php echo $lang['tools-config72'] ?></label>
 													<input type="text" data-toggle="tooltip" class="form-control required" name="track_consolidate" id="track_consolidate" value="<?php echo $core->track_consolidate; ?>" placeholder="<?php echo $lang['tools-config70'] ?>">
 												</div>
 											</div>
@@ -150,7 +150,7 @@ $userData = $user->cdp_getUserData();
 											</div>
 											<div class="col-md-6">
 												<div class="form-group">
-													<label for="lastName1"><i class="mdi mdi-gift" style="color:#7460ee"></i> <?php echo $lang['tools-config73'] ?></label>
+													<label for="lastName1"><i class="mdi mdi-gift"></i> <?php echo $lang['tools-config73'] ?></label>
 													<input type="text" data-toggle="tooltip" class="form-control required" name="track_online_shopping" id="track_online_shopping" value="<?php echo $core->track_online_shopping; ?>" placeholder="<?php echo $lang['tools-config73'] ?>">
 												</div>
 											</div>

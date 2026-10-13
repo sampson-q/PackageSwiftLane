@@ -262,7 +262,7 @@ if ($row_order->status_invoice == 1) {
                                                         <?php if ($row_order->status_invoice == 2 && $user->cdp_hasPermission('verify_payments')) { ?>
                                                             <?php if ($userData->userlevel == 1) { ?>
                                                                 <a class="dropdown-item" href="add_payment_gateways_courier.php?id_order=<?php echo $row_order->order_id; ?>">
-                                                                    <i style="color:#343a40" class="fas fa-dollar-sign"></i>&nbsp;<?php echo $lang['leftorder32'] ?>
+                                                                    <i class="fas fa-dollar-sign"></i>&nbsp;<?php echo $lang['leftorder32'] ?>
                                                                 </a>
                                                             <?php } ?>
                                                         <?php } ?>
@@ -271,7 +271,7 @@ if ($row_order->status_invoice == 1) {
                                                         <?php if ($row_order->status_invoice == 3 && $user->cdp_hasPermission('verify_payments')) { ?>
                                                             <?php if ($userData->userlevel != 1) { ?>
                                                                 <a class="dropdown-item" data-toggle="modal" data-target="#detail_payment_packages" data-id="<?php echo $row_order->order_id; ?>" data-customer="<?php echo $row_order->sender_id; ?>">
-                                                                    <i style="color:#343a40" class="fas fa-dollar-sign"></i>&nbsp;<?php echo $lang['leftorder33'] ?>
+                                                                    <i class="fas fa-dollar-sign"></i>&nbsp;<?php echo $lang['leftorder33'] ?>
                                                                 </a>
                                                             <?php } ?>
                                                         <?php } ?>
@@ -279,14 +279,14 @@ if ($row_order->status_invoice == 1) {
                                                         <!-- ACEPTAR ENVÍO PERMISO -->
                                                         <?php if ($row_order->order_incomplete == 0 && $row_order->is_pickup == 0 && $user->cdp_hasPermission('complete_client_shipment') && $userData->userlevel != 1) { ?>
                                                             <a class="dropdown-item" href="courier_accept.php?id=<?php echo $row_order->order_id; ?>">
-                                                                <i style="color:#343a40" class="ti-pencil"></i>&nbsp;<?php echo $lang['left533020017'] ?>
+                                                                <i class="ti-pencil"></i>&nbsp;<?php echo $lang['left533020017'] ?>
                                                             </a>
                                                         <?php } ?>
 
                                                         <!-- IMPRIMIR ETIQUETA DE ENVÍO PERMISO -->
                                                         <?php if ($row_order->order_incomplete == 0 && $user->cdp_hasPermission('print_label')) { ?>
                                                             <a class="dropdown-item" href="print_label_ship.php?id=<?php echo $row_order->order_id; ?>" target="_blank">
-                                                                <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?>
+                                                                <i class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?>
                                                             </a>
                                                         <?php } ?>
 
@@ -295,7 +295,7 @@ if ($row_order->status_invoice == 1) {
                                                             <?php if (/*$row_order->is_consolidate == 0 &&*/$userData->userlevel == 9 || $userData->userlevel == 2) { ?>
                                                                 <?php if ($row_order->status_courier != 8) { ?>
                                                                     <a class="dropdown-item" href="courier_edit.php?id=<?php echo $_GET['id']; ?>">
-                                                                        <i style="color:#343a40" class="ti-pencil"></i>&nbsp;<?php echo $lang['tooledit'] ?>
+                                                                        <i class="ti-pencil"></i>&nbsp;<?php echo $lang['tooledit'] ?>
                                                                     </a>
                                                                 <?php } ?>
                                                             <?php } ?>
@@ -305,7 +305,7 @@ if ($row_order->status_invoice == 1) {
                                                         <?php if ($user->cdp_hasPermission('cancel_shipment')) { ?>
                                                             <?php if ($row_order->status_courier != 21 && $row_order->status_courier != 12) { ?>
                                                                 <a class="dropdown-item" data-id="<?php echo $row_order->order_id; ?>" href="#" data-toggle="modal" data-target="#myModalCancel">
-                                                                    <i style="color:#f62d51" class="fas fa-times-circle"></i>&nbsp;<?php echo $lang['leftorder34444']; ?>
+                                                                    <i class="fas fa-times-circle"></i>&nbsp;<?php echo $lang['leftorder34444']; ?>
                                                                 </a>
                                                             <?php } ?>
                                                         <?php } ?>
@@ -314,7 +314,7 @@ if ($row_order->status_invoice == 1) {
                                                         <?php if ($user->cdp_hasPermission('assign_drivers')) { ?>
                                                             <?php if ($row_order->status_courier != 21 && $row_order->status_courier != 12 && $row_order->status_courier != 8) { ?>
                                                                 <a class="dropdown-item" data-toggle="modal" data-target="#modalDriver" data-id_shipment="<?php echo $row_order->order_id; ?>">
-                                                                    <i style="color:#ff0000" class="fas fa-car"></i>&nbsp;<?php echo $lang['left208']; ?>
+                                                                    <i class="fas fa-car"></i>&nbsp;<?php echo $lang['left208']; ?>
                                                                 </a>
                                                             <?php } ?>
                                                         <?php } ?>
@@ -323,7 +323,7 @@ if ($row_order->status_invoice == 1) {
                                                         <?php if ($user->cdp_hasPermission('track_shipment')) { ?>
                                                             <?php if ($row_order->status_courier != 21 && $row_order->status_courier != 12) { ?>
                                                                 <a class="dropdown-item" href="courier_shipment_tracking.php?id=<?php echo $_GET['id']; ?>" title="<?php echo $lang['toolupdate'] ?>">
-                                                                    <i style="color:#20c997" class="ti-reload">&nbsp;</i><?php echo $lang['toolupdate'] ?>
+                                                                    <i class="ti-reload">&nbsp;</i><?php echo $lang['toolupdate'] ?>
                                                                 </a>
                                                             <?php } ?>
                                                         <?php } ?>
@@ -331,7 +331,7 @@ if ($row_order->status_invoice == 1) {
                                                         <!-- IMPRIMIR ENVÍO PERMISO -->
                                                         <?php if ($user->cdp_hasPermission('print_shipment')) { ?>
                                                             <a class="dropdown-item" target="blank" href="print_inv_ship.php?id=<?php echo $_GET['id']; ?>">
-                                                                <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toolprint']; ?>
+                                                                <i class="ti-printer"></i>&nbsp;<?php echo $lang['toolprint']; ?>
                                                             </a>
                                                         <?php } ?>
 
@@ -361,7 +361,7 @@ if ($row_order->status_invoice == 1) {
                                                         <?php if ($user->cdp_hasPermission('complete_client_shipment') && ($userData->userlevel == 9 || $userData->userlevel == 3 || $userData->userlevel == 2)) { ?>
                                                             <?php if ($row_order->status_courier == 14) { ?>
                                                                 <a class="dropdown-item" href="pickup_accept.php?id=<?php echo $row_order->order_id; ?>">
-                                                                    <i style="color:#20c997" class="fas fa-check-circle"></i>&nbsp;<?php echo $lang['left533020020'] ?>
+                                                                    <i class="fas fa-check-circle"></i>&nbsp;<?php echo $lang['left533020020'] ?>
                                                                 </a>
                                                             <?php } ?>
                                                         <?php } ?>
@@ -369,7 +369,7 @@ if ($row_order->status_invoice == 1) {
                                                         <!-- ANULAR RECOGIDA PERMISO (solo si tiene el permiso) -->
                                                         <?php if ($user->cdp_hasPermission('cancel_shipment')) { ?>
                                                             <a class="dropdown-item" data-id="<?php echo $row_order->order_id; ?>" href="#" data-toggle="modal" data-target="#myModalCancel">
-                                                                <i style="color:#f62d51" class="fas fa-times-circle"></i>&nbsp;<?php echo $lang['left533020021'] ?>
+                                                                <i class="fas fa-times-circle"></i>&nbsp;<?php echo $lang['left533020021'] ?>
                                                             </a>
                                                         <?php } ?>
                                                     </div>
@@ -745,7 +745,7 @@ if ($row_order->status_invoice == 1) {
 
                                                     <tr class="card-hover">
                                                         <td><?php echo $count; ?></td>
-                                                        <td> <a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></td>
+                                                        <td> <a target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></td>
                                                         <td><?php echo $date_add; ?></td>
 
                                                     </tr>
@@ -818,7 +818,7 @@ if ($row_order->status_invoice == 1) {
 
                                                 <div class="row ">
                                                     <div class=" col-md-12 mb-2 mt-2">
-                                                        <p class="text-justify"><a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></p>
+                                                        <p class="text-justify"><a target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></p>
 
                                                     </div>
 

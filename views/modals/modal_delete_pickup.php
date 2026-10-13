@@ -3,7 +3,7 @@
 		<div class="modal-dialog" role="document">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h4 class="modal-title" id="myModalLabel"><i class="fa fa-trash" style="color:#FF4000"></i> <?php echo $lang['modal-text8'] ?></h4>
+					<h4 class="modal-title" id="myModalLabel"><i class="fa fa-trash"></i> <?php echo $lang['modal-text8'] ?></h4>
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 				</div>
 				<div class="modal-body">

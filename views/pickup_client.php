@@ -104,9 +104,9 @@
                                                 <?php echo $lang['global-1'] ?>
                                             </button>
                                             <div class="dropdown-menu">
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalCheckboxStatus"><i style="color:#20c997" class="ti-reload"></i>&nbsp;<?php echo $lang['left21550'] ?></a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalDriverCheckbox"><i style="color:#ff0000" class="fas fa-car"></i>&nbsp;<?php echo $lang['left208'] ?></a>
-                                                <a class="dropdown-item" onclick="cdp_printMultipleLabel();" target="_blank"> <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?> </a>
+                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalCheckboxStatus"><i class="ti-reload"></i>&nbsp;<?php echo $lang['left21550'] ?></a>
+                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalDriverCheckbox"><i class="fas fa-car"></i>&nbsp;<?php echo $lang['left208'] ?></a>
+                                                <a class="dropdown-item" onclick="cdp_printMultipleLabel();" target="_blank"> <i class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?> </a>
                                             </div>
                                         </div>
                                         <!-- </div> -->

@@ -331,7 +331,7 @@ if (($userData->userlevel ?? 0) != 6 && !$user->cdp_hasPermission('add_client'))
                                                         <input type="checkbox" class="custom-control-input" name="notify" id="notify" value="1">
                                                         <i></i><?php echo $lang['edit-clien34'] ?>
                                                         <span class="custom-control-indicator"></span><br><br>
-                                                        <label><span><i class="ti-email" style="color:#6610f2"></i>&nbsp; <?php echo $lang['edit-clien35'] ?></span></label>
+                                                        <label><span><i class="ti-email"></i>&nbsp; <?php echo $lang['edit-clien35'] ?></span></label>
                                                     </label>
                                                 </div>
                                             </div>

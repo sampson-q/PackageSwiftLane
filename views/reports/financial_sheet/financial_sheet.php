@@ -70,7 +70,7 @@ try {
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-12 col-xl-12 col-md-12">
-                        <div class="card card-outline" style="border-top: 3px solid #bbb">
+                        <div class="card card-outline">
                             <h4 class="card-title swl-promoted ml-4 mt-3"><i class="fas fa-file-invoice-dollar"></i> Financial Sheet</h4>
 
                             <div class="card-body">

@@ -484,13 +484,13 @@ if (isset($_POST['person_receives'])) {
                                             <div class="col-sm-12 col-md-5 offset-1 mt-4">
                                                 <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
                                                     <input type="checkbox" class="custom-control-input" name="notify_sms_sender" id="notify_sms_sender" value="1">
-                                                    <b><?php echo $lang['leftorder144431'] ?> &nbsp; <i class="fa fa-envelope" style="font-size: 22px; color:#07bc4c;"></i></b>
+                                                    <b><?php echo $lang['leftorder144431'] ?> &nbsp; <i class="fa fa-envelope" style="font-size:22px"></i></b>
                                                     <span class="custom-control-indicator"></span>
                                                 </label>
 
                                                 <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
                                                     <input type="checkbox" class="custom-control-input" name="notify_sms_receiver" id="notify_sms_receiver" value="1">
-                                                    <b><?php echo $lang['leftorder144443'] ?> <i class="fa fa-envelope" style="font-size: 22px; color:#07bc4c;"></i></b>
+                                                    <b><?php echo $lang['leftorder144443'] ?> <i class="fa fa-envelope" style="font-size:22px"></i></b>
                                                     <span class="custom-control-indicator"></span>
                                                 </label>
                                             </div>

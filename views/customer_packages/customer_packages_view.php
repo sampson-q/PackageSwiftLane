@@ -239,7 +239,7 @@ if ($row_order->status_invoice == 1) {
                                                         <?php if ($row_order->status_invoice == 2) { ?>
                                                             <?php if ($userData->userlevel == 1) { ?>
                                                                 <a class="dropdown-item" href="add_payment_gateways_package.php?id_order=<?php echo $row_order->order_id; ?>">
-                                                                    <i style="color:#343a40" class="fas fa-dollar-sign"></i>&nbsp;<?php echo $lang['left533020015'] ?></a>
+                                                                    <i class="fas fa-dollar-sign"></i>&nbsp;<?php echo $lang['left533020015'] ?></a>
                                                             <?php } ?>
                                                         <?php } ?>
                                                     <?php } ?>
@@ -249,7 +249,7 @@ if ($row_order->status_invoice == 1) {
                                                     <?php if ($row_order->status_invoice == 3) { ?>
                                                         <?php if ($userData->userlevel != 1) { ?>
                                                             <a class="dropdown-item" data-toggle="modal" data-target="#detail_payment_packages" data-id="<?php echo $row_order->order_id; ?>" data-customer="<?php echo $row_order->sender_id; ?>">
-                                                                <i style="color:#343a40" class="fas fa-dollar-sign"></i>&nbsp; <?php echo $lang['left533020016'] ?></a>
+                                                                <i class="fas fa-dollar-sign"></i>&nbsp; <?php echo $lang['left533020016'] ?></a>
                                                         <?php } ?>
 
                                                     <?php } ?>
@@ -260,7 +260,7 @@ if ($row_order->status_invoice == 1) {
                                                            
                                                             <?php if ($row_order->status_invoice != 1) { ?>
                                                                 <a class="dropdown-item" href="customer_package_edit.php?id=<?php echo $_GET['id']; ?>">
-                                                                    <i style="color:#343a40" class="ti-pencil"></i>&nbsp;<?php echo $lang['messagesform57'] ?></a>
+                                                                    <i class="ti-pencil"></i>&nbsp;<?php echo $lang['messagesform57'] ?></a>
                                                             <?php } ?>
                                                           
                                                         <?php } ?>
@@ -274,7 +274,7 @@ if ($row_order->status_invoice == 1) {
                                                                 <?php if ($userData->userlevel != 1) { ?>
                                                                     <?php if ($row_order->status_courier != 8) { ?>
                                                                         <a class="dropdown-item" data-toggle="modal" data-target="#modalDriver" data-id_shipment="<?php echo $row_order->order_id; ?>">
-                                                                            <i style="color:#ff0000" class="fas fa-car"></i>&nbsp; <?php echo $lang['left208'] ?></a>
+                                                                            <i class="fas fa-car"></i>&nbsp; <?php echo $lang['left208'] ?></a>
                                                                     <?php } ?>
                                                                 <?php } ?>
                                                             <?php } ?>
@@ -282,13 +282,13 @@ if ($row_order->status_invoice == 1) {
                                                             <!-- PRINT PACKAGE PERMISSION  -->
                                                             <?php if ($user->cdp_hasPermission('print_package')) { ?>
                                                                 <a class="dropdown-item" target="blank" href="print_invoice_package.php?id=<?php echo $_GET['id']; ?>">
-                                                                    <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toolprint'] ?></a>
+                                                                    <i class="ti-printer"></i>&nbsp;<?php echo $lang['toolprint'] ?></a>
                                                              <?php } ?>
 
                                                              <!-- PRINT LABEL PERMISSION  -->
                                                              <?php if ($user->cdp_hasPermission('print_label')) { ?>
                                                                 <a class="dropdown-item" href="print_label_package.php?id=<?php echo $_GET['id']; ?>" target="_blank">
-                                                                    <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?> </a>
+                                                                    <i class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?> </a>
                                                             <?php } ?>
 
                                                             <?php if ($row_order->status_invoice == 1) { ?>
@@ -300,12 +300,12 @@ if ($row_order->status_invoice == 1) {
                                                                                 <!-- PACKAGE TRACKING PERMISSION  -->
                                                                                 <?php if ($user->cdp_hasPermission('track_package')) { ?>
                                                                                 <a class="dropdown-item" href="customer_package_tracking.php?id=<?php echo $_GET['id']; ?>">
-                                                                                    <i style="color:#20c997" class="ti-reload">&nbsp;</i><?php echo $lang['toolupdate'] ?></a>
+                                                                                    <i class="ti-reload">&nbsp;</i><?php echo $lang['toolupdate'] ?></a>
                                                                                 <?php } ?>
 
                                                                                 <!-- PACKAGE DELIVER PERMISSION  -->
                                                                                 <?php if ($user->cdp_hasPermission('deliver_package')) { ?>
-                                                                                <a class="dropdown-item" href="customer_package_deliver.php?id=<?php echo $row_order->order_id; ?>" title="<?php echo $lang['tooldeliver'] ?>"><i style="color:#2962FF" class="ti-package"></i>&nbsp;<?php echo $lang['tooldeliver'] ?></a>
+                                                                                <a class="dropdown-item" href="customer_package_deliver.php?id=<?php echo $row_order->order_id; ?>" title="<?php echo $lang['tooldeliver'] ?>"><i class="ti-package"></i>&nbsp;<?php echo $lang['tooldeliver'] ?></a>
                                                                                 <?php } ?>
                                                                             <?php } ?>
                                                                         <?php } ?>
@@ -737,7 +737,7 @@ if ($row_order->status_invoice == 1) {
 
                                                     <tr class="card-hover">
                                                         <td><?php echo $count; ?></td>
-                                                        <td> <a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></td>
+                                                        <td> <a target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></td>
                                                         <td><?php echo $date_add; ?></td>
 
                                                     </tr>
@@ -814,7 +814,7 @@ if ($row_order->status_invoice == 1) {
 
                                                 <div class="row ">
                                                     <div class=" col-md-12 mb-2 mt-2">
-                                                        <p class="text-justify"><a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></p>
+                                                        <p class="text-justify"><a target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></p>
 
                                                     </div>
 

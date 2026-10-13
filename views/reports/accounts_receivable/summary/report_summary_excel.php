@@ -98,7 +98,7 @@ $html = '
 
 		<table border=1>
 		<tbody>
-			<tr style="background-color: #3e5569; color: white">	
+			<tr>	
 
 				<th class="text-center"></th>               
 				<th><b>' . $lang['ltracking'] . '</b></th>

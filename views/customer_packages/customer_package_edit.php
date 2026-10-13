@@ -258,7 +258,7 @@ if (!empty($files_order)) {
                                 <div class="card-body">
 
                                     <h4 class="card-title">
-                                        <i class="mdi mdi-information-outline" style="color:#20c997"></i>
+                                        <i class="mdi mdi-information-outline"></i>
                                         <?php echo $lang['langs_010']; ?>
                                     </h4>
                                     <hr>
@@ -268,7 +268,7 @@ if (!empty($files_order)) {
                                     ?>
                                         <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
                                             <input type="checkbox" class="custom-control-input" name="notify_whatsapp_sender" id="notify_whatsapp_sender" value="1" checked>
-                                            <?php echo $lang['leftorder14443']; ?> <i class="mdi mdi-whatsapp" style="font-size: 22px; color:#07bc4c;"></i>
+                                            <?php echo $lang['leftorder14443']; ?> <i class="mdi mdi-whatsapp" style="font-size:22px"></i>
                                             <span class="custom-control-indicator"></span>
                                         </label>
 
@@ -285,7 +285,7 @@ if (!empty($files_order)) {
                                             <b>
                                                 <?php echo $lang['leftorder14444']; ?>
                                                 <i class="fa fa-envelope"
-                                                   style="font-size: 22px; color:#07bc4c;"></i>
+                                                   style="font-size:22px"></i>
                                             </b>
                                             <span class="custom-control-indicator"></span>
                                         </label>
@@ -360,7 +360,7 @@ if (!empty($files_order)) {
                                 <div class="card-body">
 
                                     <h4 class="card-title">
-                                        <i class="mdi mdi-information-outline" style="color:#20c997"></i>
+                                        <i class="mdi mdi-information-outline"></i>
                                         <?php echo $lang['left334']; ?>
                                     </h4>
                                     <hr>
@@ -378,7 +378,7 @@ if (!empty($files_order)) {
                                             <b>
                                                 <?php echo $lang['leftorder14444']; ?>
                                                 <i class="fa fa-envelope"
-                                                   style="font-size: 22px; color:#07bc4c;"></i>
+                                                   style="font-size:22px"></i>
                                             </b>
                                             <span class="custom-control-indicator"></span>
                                         </label>
@@ -457,7 +457,7 @@ if (!empty($files_order)) {
                         <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-book-multiple" style="color:#20c997"></i> <?php echo $lang['add-title13'] ?></h4>
+                                    <h4 class="card-title"><i class="mdi mdi-book-multiple"></i> <?php echo $lang['add-title13'] ?></h4>
                                     <br>
 
                                     <div class="row">
@@ -541,7 +541,7 @@ if (!empty($files_order)) {
                                         </div>
 
                                         <div class="form-group col-md-4">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
+                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i class="fas fa-shipping-fast"></i></label>
                                             <div class="input-group mb-3">
                                                 <select class="custom-select col-12" id="status_courier" name="status_courier">
                                                     <option value="0">--<?php echo $lang['left210'] ?>--</option>
@@ -632,7 +632,7 @@ if (!empty($files_order)) {
                                     <div class="row">
                                         <div class="col-md-12">
                                             <h4 class="card-title">
-                                                <i class="fas fas fa-boxes" style="color:#20c997"></i>
+                                                <i class="fas fas fa-boxes"></i>
                                                 <?php echo $lang['left212'] ?>
                                             </h4>
                                         </div>
@@ -686,7 +686,7 @@ if (!empty($files_order)) {
                                             <div id="row">
                                                 <div class="col-md-6">
                                                     <h4 class="card-title">
-                                                        <i class="ti-briefcase" style="color:#20c997"></i>
+                                                        <i class="ti-briefcase"></i>
                                                         <?php echo $lang['messageerrorform30'] ?>
                                                     </h4>
                                                 </div>

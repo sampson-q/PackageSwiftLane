@@ -225,38 +225,38 @@ if ($row_order->status_invoice == 1) {
                                                     <?php if ($row_order->status_invoice == 2) { ?>
                                                         <?php if ($userData->userlevel == 1) { ?>
                                                             <a class="dropdown-item" href="add_payment_gateways_consolidate_package.php?id_order=<?php echo $row_order->consolidate_id; ?>">
-                                                                <i style="color:#343a40" class="fas fa-dollar-sign"></i>&nbsp;<?php echo $lang['left533020015'] ?></a>
+                                                                <i class="fas fa-dollar-sign"></i>&nbsp;<?php echo $lang['left533020015'] ?></a>
                                                         <?php } ?>
                                                     <?php } ?>
 
                                                     <?php if ($row_order->status_invoice == 3) { ?>
                                                         <?php if ($userData->userlevel != 1) { ?>
                                                             <a class="dropdown-item" data-toggle="modal" data-target="#detail_payment_packages" data-id="<?php echo $row_order->consolidate_id; ?>" data-customer="<?php echo $row_order->sender_id; ?>">
-                                                                <i style="color:#343a40" class="fas fa-dollar-sign"></i>&nbsp; <?php echo $lang['left533020016'] ?></a>
+                                                                <i class="fas fa-dollar-sign"></i>&nbsp; <?php echo $lang['left533020016'] ?></a>
                                                         <?php } ?>
 
                                                     <?php } ?>
 
                                                     <?php if ($userData->userlevel == 9 || $userData->userlevel == 2) { ?>
                                                         <?php if ($row_order->status_courier != 8) { ?>
-                                                            <a class="dropdown-item" href="consolidate_package_edit.php?id=<?php echo $_GET['id']; ?>" title="<?php echo $lang['langs_01029'] ?>"><i style="color:#343a40" class="ti-pencil"></i>&nbsp;<?php echo $lang['langs_01029'] ?></a>
+                                                            <a class="dropdown-item" href="consolidate_package_edit.php?id=<?php echo $_GET['id']; ?>" title="<?php echo $lang['langs_01029'] ?>"><i class="ti-pencil"></i>&nbsp;<?php echo $lang['langs_01029'] ?></a>
                                                         <?php } ?>
                                                     <?php } ?>
 
                                                     <?php if ($row_order->status_courier != 21) { ?>
                                                         <?php if ($userData->userlevel == 9 || $userData->userlevel == 2 || $userData->userlevel == 3) { ?>
-                                                            <a class="dropdown-item" data-toggle="modal" data-target="#modalDriver" data-id_shipment="<?php echo $row_order->consolidate_id; ?>"><i style="color:#ff0000" class="fas fa-car"></i>&nbsp; <?php echo $lang['left208'] ?></a>
+                                                            <a class="dropdown-item" data-toggle="modal" data-target="#modalDriver" data-id_shipment="<?php echo $row_order->consolidate_id; ?>"><i class="fas fa-car"></i>&nbsp; <?php echo $lang['left208'] ?></a>
                                                         <?php } ?>
 
-                                                        <a class="dropdown-item" target="blank" href="print_consolidate_package.php?id=<?php echo $_GET['id']; ?>"> <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toolprint'] ?></a>
+                                                        <a class="dropdown-item" target="blank" href="print_consolidate_package.php?id=<?php echo $_GET['id']; ?>"> <i class="ti-printer"></i>&nbsp;<?php echo $lang['toolprint'] ?></a>
 
-                                                        <a class="dropdown-item" href="print_label_consolidate_package.php?id=<?php echo $_GET['id']; ?>" target="_blank"> <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?> </a>
+                                                        <a class="dropdown-item" href="print_label_consolidate_package.php?id=<?php echo $_GET['id']; ?>" target="_blank"> <i class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?> </a>
 
 
                                                         <?php if ($row_order->status_courier != 8) { ?>
                                                             <?php if ($userData->userlevel == 9 || $userData->userlevel == 3) { ?>
-                                                                <a class="dropdown-item" href="consolidate_package_shipment_tracking.php?id=<?php echo $_GET['id']; ?>" title="<?php echo $lang['toolupdate'] ?>"><i style="color:#20c997" class="ti-reload">&nbsp;</i><?php echo $lang['toolupdate'] ?></a>
-                                                                <a class="dropdown-item" href="consolidate_package_deliver_shipment.php?id=<?php echo $row_order->consolidate_id; ?>" title="<?php echo $lang['tooldeliver'] ?>"><i style="color:#2962FF" class="ti-package"></i>&nbsp;<?php echo $lang['tooldeliver'] ?></a>
+                                                                <a class="dropdown-item" href="consolidate_package_shipment_tracking.php?id=<?php echo $_GET['id']; ?>" title="<?php echo $lang['toolupdate'] ?>"><i class="ti-reload">&nbsp;</i><?php echo $lang['toolupdate'] ?></a>
+                                                                <a class="dropdown-item" href="consolidate_package_deliver_shipment.php?id=<?php echo $row_order->consolidate_id; ?>" title="<?php echo $lang['tooldeliver'] ?>"><i class="ti-package"></i>&nbsp;<?php echo $lang['tooldeliver'] ?></a>
                                                             <?php } ?>
                                                         <?php } ?>
 
@@ -540,7 +540,7 @@ if ($row_order->status_invoice == 1) {
 
                                                     <tr class="card-hover">
                                                         <td><?php echo $count; ?></td>
-                                                        <td> <a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></td>
+                                                        <td> <a target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></td>
                                                         <td><?php echo $date_add; ?></td>
 
                                                     </tr>
@@ -607,7 +607,7 @@ if ($row_order->status_invoice == 1) {
 
                                                 <div class="row ">
                                                     <div class=" col-md-12 mb-2 mt-2">
-                                                        <p class="text-justify"><a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></p>
+                                                        <p class="text-justify"><a target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></p>
 
                                                     </div>
 

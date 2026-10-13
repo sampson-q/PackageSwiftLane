@@ -129,7 +129,7 @@ $userData = $user->cdp_getUserData();
                         <div class="col-lg-8">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-information-outline" style="color:#20c997"></i> <?php echo $lang['left55'] ?></h4>
+                                    <h4 class="card-title"><i class="mdi mdi-information-outline"></i> <?php echo $lang['left55'] ?></h4>
                                     <hr>
 
                                     <div class="row">
@@ -218,7 +218,7 @@ $userData = $user->cdp_getUserData();
                         <div class="col-lg-4">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-paperclip" style="color:#20c997"></i> <?php echo $lang['leftorder01215'] ?></h4>
+                                    <h4 class="card-title"><i class="mdi mdi-paperclip"></i> <?php echo $lang['leftorder01215'] ?></h4>
                                     <hr>
 
                                     <div class="resultados_file"></div>

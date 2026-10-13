@@ -131,15 +131,15 @@ if ($user->cdp_hasPermission('main_dashboard_package_locker')) {
                                             </button>
                                             <div class="dropdown-menu">
                                                 <?php if ($user->cdp_hasPermission('select_change_status')) { ?>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalCheckboxStatus"><i style="color:#20c997" class="ti-reload"></i>&nbsp;<?php echo $lang['left21550'] ?></a>
+                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalCheckboxStatus"><i class="ti-reload"></i>&nbsp;<?php echo $lang['left21550'] ?></a>
                                                 <?php } ?>
 
                                                 <?php if ($user->cdp_hasPermission('assign_drivers')) { ?>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalDriverCheckbox"><iconify-icon icon="solar:delivery-linear" style="color:#ff0000"></iconify-icon>&nbsp;<?php echo $lang['left208'] ?></a>
+                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalDriverCheckbox"><iconify-icon icon="solar:delivery-linear"></iconify-icon>&nbsp;<?php echo $lang['left208'] ?></a>
                                                 <?php } ?>
 
                                                 <?php if ($user->cdp_hasPermission('print_label')) { ?>
-                                                <a class="dropdown-item" onclick="cdp_printMultipleLabel();" target="_blank"> <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?> </a>
+                                                <a class="dropdown-item" onclick="cdp_printMultipleLabel();" target="_blank"> <i class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?> </a>
                                                 <?php } ?>
                                             </div>
                                         </div>

@@ -138,7 +138,7 @@ $statusrow = $core->cdp_getStatusMultiple(1, 4, 8, 15, 16, 23, 32, 33);
                                             <div class="dropdown-menu">
                                                 <?php if ($user->cdp_hasPermission('deliver_shipment')) { ?>
                                                     <a class="dropdown-item" href="javascript:void(0)" onclick="cdpWarehouseDeliver((typeof cdpSelGet === 'function') ? cdpSelGet() : []);">
-                                                        <i style="color:#343a40" class="fa fa-box"></i>&nbsp;Deliver Selected
+                                                        <i class="fa fa-box"></i>&nbsp;Deliver Selected
                                                     </a>
                                                 <?php } ?>
                                             </div>

@@ -188,19 +188,19 @@ $ship_mode_label = $ship_mode === 'air' ? 'Air Shipments' : ($ship_mode === 'sea
                                         </button>
                                         <div class="dropdown-menu">
                                             <?php if ($user->cdp_hasPermission('select_change_status_courier')) { ?>
-                                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalCheckboxStatus"><i style="color:#20c997" class="ti-reload"></i>&nbsp;<?php echo $lang['left21550'] ?></a>
+                                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalCheckboxStatus"><i class="ti-reload"></i>&nbsp;<?php echo $lang['left21550'] ?></a>
                                             <?php } ?>
 
                                             <?php if ($user->cdp_hasPermission('assign_drivers')) { ?>
-                                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalDriverCheckbox"><i style="color:#ff0000" class="fas fa-car"></i>&nbsp;<?php echo $lang['left208'] ?></a>
+                                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalDriverCheckbox"><i class="fas fa-car"></i>&nbsp;<?php echo $lang['left208'] ?></a>
                                             <?php } ?>
 
                                             <?php if ($user->cdp_hasPermission('print_label')) { ?>
-                                            <a class="dropdown-item" onclick="cdp_printMultipleLabel();" target="_blank"> <i style="color:#343a40" class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?> </a>
+                                            <a class="dropdown-item" onclick="cdp_printMultipleLabel();" target="_blank"> <i class="ti-printer"></i>&nbsp;<?php echo $lang['toollabel'] ?> </a>
                                             <?php } ?>
 
                                             <?php if ($user->cdp_hasPermission('print_shipment')) { ?>
-                                            <a class="dropdown-item" onclick="cdp_printMultipleInvoice();" target="_blank"> <i style="color:#343a40" class="ti-printer"></i>&nbsp;Print Shipments </a>
+                                            <a class="dropdown-item" onclick="cdp_printMultipleInvoice();" target="_blank"> <i class="ti-printer"></i>&nbsp;Print Shipments </a>
                                             <?php } ?>
 
                                         </div>

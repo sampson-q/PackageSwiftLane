@@ -254,7 +254,7 @@ $address_order = $db->cdp_registro();
                         <div class="col-lg-6">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-information-outline" style="color:#20c997"></i><?php echo $lang['langs_010']; ?></h4>
+                                    <h4 class="card-title"><i class="mdi mdi-information-outline"></i><?php echo $lang['langs_010']; ?></h4>
                                     <hr>
 
                                     <div class="resultados_ajax_add_user_modal_sender"></div>
@@ -267,7 +267,7 @@ $address_order = $db->cdp_registro();
                                             <b>
                                                 <?php echo $lang['leftorder14443']; ?>
 
-                                                <i class="mdi mdi-whatsapp" style="font-size: 22px; color:#07bc4c;"></i>
+                                                <i class="mdi mdi-whatsapp" style="font-size:22px"></i>
                                             </b>
                                             <span class="custom-control-indicator"></span>
                                         </label>
@@ -316,7 +316,7 @@ $address_order = $db->cdp_registro();
                         <div class="col-lg-6">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-information-outline" style="color:#20c997"></i><?php echo $lang['left334']; ?></h4>
+                                    <h4 class="card-title"><i class="mdi mdi-information-outline"></i><?php echo $lang['left334']; ?></h4>
                                     <hr>
                                     <div class="resultados_ajax_add_user_modal_recipient"></div>
 
@@ -368,7 +368,7 @@ $address_order = $db->cdp_registro();
                         <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-book-multiple" style="color:#20c997"></i> <?php echo $lang['add-title13'] ?></h4>
+                                    <h4 class="card-title"><i class="mdi mdi-book-multiple"></i> <?php echo $lang['add-title13'] ?></h4>
                                     <br>
                                     <div class="row">
                                         <div class="form-group col-md-3">
@@ -462,7 +462,7 @@ $address_order = $db->cdp_registro();
                                         </div>
 
                                         <div class="form-group col-md-3">
-                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
+                                            <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i class="fas fa-shipping-fast"></i></label>
                                             <div class="input-group mb-3">
                                                 <select class="custom-select col-12" id="status_courier" name="status_courier" required>
                                                     <option value="0">--<?php echo $lang['left210'] ?>--</option>
@@ -526,7 +526,7 @@ $address_order = $db->cdp_registro();
                                             <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title15'] ?></i></label>
                                             <div class="input-group">
                                                 <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
-                                                    <div class="input-group-text"><i style="color:#ff0000" class="fa fa-calendar"></i></div>
+                                                    <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                                                 </div>
                                                 <input type='text' class="form-control" name="order_date" id="order_date" placeholder="--<?php echo $lang['left206'] ?>--" data-toggle="tooltip" data-placement="bottom" title="<?php echo $lang['add-title16'] ?>" value="<?php echo date("Y/m/d", strtotime($row_order->order_datetime)); ?>" readonly />
                                             </div>
@@ -604,7 +604,7 @@ $address_order = $db->cdp_registro();
                                                     <img style="width: 180px; height: 180px;" class="img-thumbnail" src="<?php echo $src; ?>">
                                                     <div class="row ">
                                                         <div class=" col-md-12 mb-3 mt-2">
-                                                            <p class="text-justify"><a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></p>
+                                                            <p class="text-justify"><a target="_blank" href="<?php echo $file->url; ?>" class=""><?php echo $file->name; ?> </a></p>
                                                         </div>
                                                     </div>
 
@@ -631,7 +631,7 @@ $address_order = $db->cdp_registro();
                                     <div class="row">
                                         <div class="col-sm-12 col-md-8">
                                             <h4 class="card-title">
-                                                <i class="fas fas fa-boxes" style="color:#20c997"></i>
+                                                <i class="fas fas fa-boxes"></i>
                                                 <?php echo $lang['left212'] ?>
                                             </h4>
                                         </div>
@@ -691,7 +691,7 @@ $address_order = $db->cdp_registro();
                                             <div class="" id="row">
                                                 <div class="col-md-6">
                                                     <h4 class="card-title">
-                                                        <i class="ti-briefcase" style="color:#20c997"></i>
+                                                        <i class="ti-briefcase"></i>
                                                         <?php echo $lang['messageerrorform30'] ?>
                                                     </h4>
                                                 </div>

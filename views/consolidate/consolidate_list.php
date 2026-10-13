@@ -163,7 +163,7 @@ $ship_mode_label = $ship_mode === 'air' ? 'Air Consolidations' : ($ship_mode ===
                                             </button>
                                             <div class="dropdown-menu">
                                                 <?php if ($user->cdp_hasPermission('select_change_status_courier')) { ?>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalCheckboxStatus"><i style="color:#20c997" class="ti-reload"></i>&nbsp;<?php echo $lang['left21550'] ?></a>
+                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modalCheckboxStatus"><i class="ti-reload"></i>&nbsp;<?php echo $lang['left21550'] ?></a>
                                                 <?php } ?>
                                             </div>
                                         </div>

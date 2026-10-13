@@ -63,7 +63,7 @@ $html = '
 
 		<table border=1>
 		<tbody>
-			<tr style="background-color: #3e5569; color: white">				
+			<tr>				
 				<th><b></b></th>
 				<th class="text-center"><b>' . $lang['leftorder98'] . '</b></th>	
 				<th><b>' . $lang['ddate'] . '</b></th>

@@ -155,7 +155,7 @@ $styles_status = $db->cdp_registro();
 										<div class="col-lg-12">
 
 											<div class="card-header bg-secondary">
-												<h4 class="card-title text-white"><i class="mdi mdi-book-multiple" style="color:#20c997"></i> <?php echo $lang['leftorder89'] ?></h4>
+												<h4 class="card-title text-white"><i class="mdi mdi-book-multiple"></i> <?php echo $lang['leftorder89'] ?></h4>
 											</div>
 											<div class="card-body">
 
@@ -228,7 +228,7 @@ $styles_status = $db->cdp_registro();
 
 
 													<div class="form-group col-md-3">
-														<label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title23'] ?> <i style="color:#ff0000" class="fas fa-donate"></i></label>
+														<label for="inputEmail3" class="control-label col-form-label"><?php echo $lang['add-title23'] ?> <i class="fas fa-donate"></i></label>
 														<div class="input-group mb-3">
 															<select class="select2 form-control custom-select" id="pay_default6" name="pay_default6" required="" style="width: 100%;">
 																<option value="<?php echo $metod_payment->id; ?>"><?php echo $metod_payment->name_pay; ?></option>
@@ -254,7 +254,7 @@ $styles_status = $db->cdp_registro();
 													<!--/span-->
 
 													<div class="form-group col-md-3">
-														<label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
+														<label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i class="fas fa-shipping-fast"></i></label>
 														<div class="input-group mb-3">
 															<select class="select2 form-control custom-select" id="status_default8" name="status_default8" required style="width: 100%;">
 																<option value="<?php echo $styles_status->id; ?>"><?php echo $styles_status->mod_style; ?></option>

@@ -238,7 +238,7 @@ $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel =
                                             <label for="inputlname" class="control-label col-form-label"><?php echo $lang['left201'] ?> </label>
                                             <div class="input-group mb-3">
                                                 <?php if ($agency_default_id > 0) { ?><input type="hidden" name="agency" id="agency" value="<?php echo $agency_default_id; ?>"><?php } ?>
-                                                <select class="custom-select col-12" id="<?php echo ($agency_default_id > 0) ? 'agency_select' : 'agency'; ?>" name="<?php echo ($agency_default_id > 0) ? '' : 'agency'; ?>" <?php echo ($agency_default_id > 0) ? 'disabled style="pointer-events:none;background:#e9ecef;"' : ''; ?>>
+                                                <select class="custom-select col-12" id="<?php echo ($agency_default_id > 0) ? 'agency_select' : 'agency'; ?>" name="<?php echo ($agency_default_id > 0) ? '' : 'agency'; ?>" <?php echo ($agency_default_id > 0) ? 'disabled style="pointer-events:none;"' : ''; ?>>
                                                     <?php foreach ($agencyrow as $row) : ?>
                                                         <option value="<?php echo (int)$row->id; ?>" <?php echo ($agency_default_id > 0 && (int)$row->id === $agency_default_id) ? 'selected' : ''; ?>><?php echo htmlspecialchars($row->name_branch ?? ''); ?></option>
                                                     <?php endforeach; ?>
@@ -269,7 +269,7 @@ $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel =
                         <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-information-outline" style="color:#20c997"></i><?php echo $lang['langs_010']; ?></h4>
+                                    <h4 class="card-title"><i class="mdi mdi-information-outline"></i><?php echo $lang['langs_010']; ?></h4>
                                     <hr>
 
                                     <div class="resultados_ajax_add_user_modal_sender"></div>
@@ -280,7 +280,7 @@ $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel =
 
                                         <label class="custom-control custom-checkbox" style="font-size: 18px; padding-left: 0px">
                                             <input type="checkbox" class="custom-control-input" name="notify_whatsapp_sender" id="notify_whatsapp_sender" value="1" checked>
-                                            <b> <?php echo $lang['leftorder14443']; ?> <i class="mdi mdi-whatsapp" style="font-size: 22px; color:#07bc4c;"></i></b>
+                                            <b> <?php echo $lang['leftorder14443']; ?> <i class="mdi mdi-whatsapp" style="font-size:22px"></i></b>
                                             <span class="custom-control-indicator"></span>
                                         </label>
 
@@ -295,7 +295,7 @@ $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel =
                                             <b>
                                                 <?php echo $lang['leftorder14444']; ?>
 
-                                                <i class="fa fa-envelope" style="font-size: 22px; color:#07bc4c;"></i>
+                                                <i class="fa fa-envelope" style="font-size:22px"></i>
                                             </b>
                                             <span class="custom-control-indicator"></span>
                                         </label>
@@ -354,7 +354,7 @@ $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel =
                         <div class="col-lg-12">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="card-title"><i class="mdi mdi-book-multiple" style="color:#20c997"></i> <?php echo $lang['add-title13'] ?></h4>
+                                    <h4 class="card-title"><i class="mdi mdi-book-multiple"></i> <?php echo $lang['add-title13'] ?></h4>
                                     <br>
 
                                     <div class="row">
@@ -432,7 +432,7 @@ $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel =
                                             <label for="inputcontact" class="control-label col-form-label"><?php echo $lang['add-title15'] ?></i></label>
                                             <div class="input-group">
                                                 <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
-                                                    <div class="input-group-text"><i style="color:#ff0000" class="fa fa-calendar"></i></div>
+                                                    <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                                                 </div>
                                                 <input type='text' class="form-control" name="order_date" id="order_date" placeholder="--<?php echo $lang['left206'] ?>--" data-toggle="tooltip" data-placement="bottom" title="<?php echo $lang['add-title16'] ?>" readonly value="<?php echo date('Y-m-d'); ?>" />
                                             </div>
@@ -526,7 +526,7 @@ $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel =
                                     <div class="row">
                                         <div class="col-md-12">
                                             <h4 class="card-title">
-                                                <i class="fas fas fa-boxes" style="color:#20c997"></i>
+                                                <i class="fas fas fa-boxes"></i>
                                                 <?php echo $lang['left212'] ?>
                                             </h4>
                                         </div>
@@ -590,7 +590,7 @@ $agency_default_id = (isset($userData->userlevel) && (int)$userData->userlevel =
                                             <div  class="" id="row">
                                                 <div class="col-md-6">
                                                     <h4 class="card-title">
-                                                        <i class="ti-briefcase" style="color:#20c997"></i>
+                                                        <i class="ti-briefcase"></i>
                                                         <?php echo $lang['messageerrorform30'] ?>
                                                     </h4>
                                                 </div>

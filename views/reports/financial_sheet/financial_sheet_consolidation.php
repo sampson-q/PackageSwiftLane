@@ -134,7 +134,7 @@ $fs_dg_color = ($fs_dg_style && !empty($fs_dg_style->color)) ? $fs_dg_style->col
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-12 col-xl-12 col-md-12">
-                        <div class="card card-outline" style="border-top: 3px solid #bbb">
+                        <div class="card card-outline">
                             <h4 class="card-title ml-4 mt-3">
                                 <i class="fas fa-file-invoice-dollar"></i> Financial Sheet
                                 <a href="financial_sheet.php" class="btn btn-sm btn-outline-secondary ml-3">

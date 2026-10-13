@@ -126,7 +126,7 @@ $userData = $user->cdp_getUserData();
 											<div class="col-md-6">
 												<div class="form-group">
 													<label for="firstName1">
-														<i class="fas fa-percent" style="color:#ff0000"></i>
+														<i class="fas fa-percent"></i>
 														<?php echo $lang['tools-config46'] ?></label>
 													<input type="text" class="form-control required" name="tax" name="id" value="<?php echo $core->tax; ?>" placeholder="<?php echo $lang['tools-config46'] ?>">
 												</div>
@@ -149,7 +149,7 @@ $userData = $user->cdp_getUserData();
 											<div class="col-md-6">
 												<div class="form-group">
 													<label for="firstName1">
-														<i class="fas fa-percent" style="color:#ff0000"></i>
+														<i class="fas fa-percent"></i>
 														<?php echo $lang['tools-config78'] ?>
 													</label>
 													<input type="text" class="form-control required" name="declared_tax" id="declared_tax" value="<?php echo $core->declared_tax; ?>" placeholder="<?php echo $lang['tools-config78'] ?>">
@@ -162,7 +162,7 @@ $userData = $user->cdp_getUserData();
 
 											<div class="col-md-6">
 												<div class="form-group">
-													<label for="lastName1"><i class="fas fa-percent" style="color:#ff0000"></i> <?php echo $lang['tools-config47'] ?></label>
+													<label for="lastName1"><i class="fas fa-percent"></i> <?php echo $lang['tools-config47'] ?></label>
 													<input type="text" class="form-control required" name="insurance" id="insurance" value="<?php echo $core->insurance; ?>" placeholder="<?php echo $lang['tools-config48'] ?>">
 												</div>
 											</div>
@@ -170,7 +170,7 @@ $userData = $user->cdp_getUserData();
 
 											<div class="col-md-6">
 												<div class="form-group">
-													<label for="firstName1"><i class="fas fa-percent" style="color:#ff0000"></i> <?php echo $lang['langs_081'] ?></label>
+													<label for="firstName1"><i class="fas fa-percent"></i> <?php echo $lang['langs_081'] ?></label>
 													<input type="text" class="form-control required" name="c_tariffs" id="c_tariffs" value="<?php echo $core->c_tariffs; ?>" placeholder="<?php echo $lang['langs_081'] ?>">
 												</div>
 											</div>
@@ -180,7 +180,7 @@ $userData = $user->cdp_getUserData();
 										<div class="row">
 											<div class="col-md-3">
 												<div class="form-group">
-													<label for="firstName1"><i class="ti-package" style="color:#ff0000"></i> <?php echo $lang['tools-config50'] ?> <b> / <?php echo $core->meter; ?></b></label>
+													<label for="firstName1"><i class="ti-package"></i> <?php echo $lang['tools-config50'] ?> <b> / <?php echo $core->meter; ?></b></label>
 													<input type="text" class="form-control required" name="meter" id="meter" value="<?php echo $core->meter; ?>" placeholder="<?php echo $lang['tools-config50'] ?> / <?php echo $core->meter; ?>">
 												</div>
 											</div>

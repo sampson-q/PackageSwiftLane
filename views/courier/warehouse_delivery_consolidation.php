@@ -89,7 +89,7 @@ $wd_progCls = ($wd_delivered >= $wd_total && $wd_total > 0) ? 'badge-success' : 
                     </a>
 
                     <div id="loader" style="display:none;" class="text-center my-3">
-                        <i class="fa fa-spinner fa-spin fa-2x" style="color:#1b8a5a;"></i>
+                        <i class="fa fa-spinner fa-spin fa-2x"></i>
                     </div>
 
                     <div class="card mb-2 wd-consol-card">

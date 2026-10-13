@@ -159,7 +159,7 @@ $numrows     = $db->cdp_rowCount();
                                         <label class="control-label col-form-label"><?php echo $lang['left201'] ?></label>
                                         <div class="input-group mb-3">
                                             <?php if ($agency_default_id > 0) { ?><input type="hidden" name="agency" id="agency" value="<?php echo $agency_default_id; ?>"><?php } ?>
-                                            <select class="custom-select col-12" id="<?php echo ($agency_default_id > 0) ? 'agency_select' : 'agency'; ?>" name="<?php echo ($agency_default_id > 0) ? '' : 'agency'; ?>" required <?php echo ($agency_default_id > 0) ? 'disabled style="pointer-events:none;background:#e9ecef;"' : ''; ?>>
+                                            <select class="custom-select col-12" id="<?php echo ($agency_default_id > 0) ? 'agency_select' : 'agency'; ?>" name="<?php echo ($agency_default_id > 0) ? '' : 'agency'; ?>" required <?php echo ($agency_default_id > 0) ? 'disabled style="pointer-events:none;"' : ''; ?>>
                                                 <option value="0">--<?php echo $lang['left202'] ?>--</option>
                                                 <?php foreach ($agencyrow as $row): ?>
                                                     <option value="<?php echo (int)$row->id; ?>"
@@ -193,13 +193,13 @@ $numrows     = $db->cdp_rowCount();
                     <div class="row">
                         <div class="col-lg-12">
                             <div class="card"><div class="card-body">
-                                <h4 class="card-title"><i class="mdi mdi-truck-fast" style="color:#20c997"></i> 1) <?php echo 'Sender / Recipient Information'; ?></h4>
+                                <h4 class="card-title"><i class="mdi mdi-truck-fast"></i> 1) <?php echo 'Sender / Recipient Information'; ?></h4>
                                 <hr>
 
                                 <?php if ($core->active_whatsapp == 1): ?>
                                     <label class="custom-control custom-checkbox" style="font-size:18px;padding-left:0px">
                                         <input type="checkbox" class="custom-control-input" name="notify_whatsapp_sender" id="notify_whatsapp_sender" value="1" checked>
-                                        <b><?php echo $lang['leftorder14443']; ?> <i class="mdi mdi-whatsapp" style="font-size:22px;color:#07bc4c;"></i></b>
+                                        <b><?php echo $lang['leftorder14443']; ?> <i class="mdi mdi-whatsapp" style="font-size:22px"></i></b>
                                         <span class="custom-control-indicator"></span>
                                     </label>
                                 <?php endif; ?>
@@ -279,7 +279,7 @@ $numrows     = $db->cdp_rowCount();
                                     <div class="row">
                                         <div class="col-md-5">
                                             <h4 class="card-title mb-3">
-                                                <i class="mdi mdi-cube-scan" style="color:#20c997"></i>
+                                                <i class="mdi mdi-cube-scan"></i>
                                                 2) <?php echo $lang['left212'] ?>
                                             </h4>
                                         </div>
@@ -388,7 +388,7 @@ $numrows     = $db->cdp_rowCount();
                                             <?php endif; ?>
 
                                             <div class="form-group col-md-3">
-                                                <label class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i style="color:#ff0000" class="fas fa-shipping-fast"></i></label>
+                                                <label class="control-label col-form-label"><?php echo $lang['add-title19'] ?> <i class="fas fa-shipping-fast"></i></label>
                                                 <div class="input-group mb-3">
                                                     <select class="custom-select col-12" id="status_courier" name="status_courier" required>
                                                         <option value="0">--<?php echo $lang['left210'] ?>--</option>
@@ -407,7 +407,7 @@ $numrows     = $db->cdp_rowCount();
                                                 <label class="control-label col-form-label"><?php echo $lang['add-title15'] ?></label>
                                                 <div class="input-group">
                                                     <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
-                                                        <div class="input-group-text"><i style="color:#ff0000" class="fa fa-calendar"></i></div>
+                                                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                                                     </div>
                                                     <input type='text' class="form-control" name="order_date" id="order_date"
                                                            value="<?php echo date('Y-m-d', strtotime($row_order->order_datetime)); ?>" readonly />
@@ -591,7 +591,7 @@ $numrows     = $db->cdp_rowCount();
                                                 <div class="row">
                                                     <div class="col-md-12 mb-3 mt-2">
                                                         <p class="text-justify">
-                                                            <a style="color:#7460ee;" target="_blank" href="<?php echo $file->url; ?>"><?php echo $file->name; ?></a>
+                                                            <a target="_blank" href="<?php echo $file->url; ?>"><?php echo $file->name; ?></a>
                                                         </p>
                                                     </div>
                                                 </div>
@@ -616,14 +616,14 @@ $numrows     = $db->cdp_rowCount();
                             <div class="card">
                                 <div class="card-body">
                                     <h4 class="card-title mb-3">
-                                        <i class="mdi mdi-clipboard-check-outline" style="color:#20c997"></i>
+                                        <i class="mdi mdi-clipboard-check-outline"></i>
                                         3) <?php echo 'Rate and Taxes'; ?>
                                     </h4>
 
                                     <div class="row mt-4">
                                         <div class="col-12">
                                             <h5 class="mb-2">
-                                                <i class="mdi mdi-cash-multiple" style="color:#20c997"></i>
+                                                <i class="mdi mdi-cash-multiple"></i>
                                                 <?php echo $lang['messageerrorform30']; ?>
                                             </h5>
 

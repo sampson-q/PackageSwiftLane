@@ -64,7 +64,7 @@ $userData = $user->cdp_getUserData();
                     <div class="wd-dim mb-2">Filters apply as you type.</div>
 
                     <div id="loader" style="display:none;" class="text-center my-3">
-                        <i class="fa fa-spinner fa-spin fa-2x" style="color:#1b8a5a;"></i>
+                        <i class="fa fa-spinner fa-spin fa-2x"></i>
                     </div>
 
                     <div class="outer_div"></div>
