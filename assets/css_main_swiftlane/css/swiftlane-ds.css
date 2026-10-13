@@ -1704,3 +1704,21 @@ td .swl-awbref, .table .swl-awbref { white-space: normal; }
 .card-body > .table > thead, .card-body > .table > tbody, .card-body > .table > tfoot,
 .card-body > form > .table > thead, .card-body > form > .table > tbody, .card-body > form > .table > tfoot,
 .modal-body > .table > thead, .modal-body > .table > tbody, .modal-body > .table > tfoot { display: table; width: 100%; }
+
+/* ── 18. List toolbars: the search field takes the room ─────────────────────
+   The filter row above a list gave the "Create" button a third of the width
+   and the search field a sixth, so its placeholder was cut off at 1280px.
+   The button is as wide as its label; the search field grows. */
+.card-body > .row:has(.swl-search) > [class*="col-"]:has(.swl-search) { flex: 1 1 240px; max-width: none; }
+.card-body > .row:has(.swl-search) > [class*="col-"]:has(> .form-group > a > .btn):not(:has(.form-control)),
+.card-body > .row:has(.swl-search) > [class*="col-"]:has(> .form-group > .btn):not(:has(.form-control)),
+.card-body > .row:has(.swl-search) > [class*="col-"]:has(> a > .btn):not(:has(.form-control)),
+.card-body > .row:has(.swl-search) > [class*="col-"]:has(> .btn):not(:has(.form-control)) { flex: 0 0 auto; width: auto; max-width: none; }
+.card-body > .row:has(.swl-search) > [class*="col-"]:has(> .input-group > .custom-select):not(:has(.swl-search)),
+.card-body > .row:has(.swl-search) > [class*="col-"]:has(> .input-group > select):not(:has(.swl-search)),
+.card-body > .row:has(.swl-search) > [class*="col-"]:has(> .form-group > .custom-select):not(:has(.swl-search)),
+.card-body > .row:has(.swl-search) > [class*="col-"]:has(> .custom-select):not(:has(.swl-search)) { flex: 1 1 160px; max-width: none; }
+.card-body > .row:has(.swl-search) > [class*="col-"] > .form-group { margin-bottom: 0; }
+.card-body > .row:has(.swl-search) > [class*="col-"] { margin-bottom: 12px !important; }
+/* The hidden search button beside a field leaves a blank gap in the row */
+.input-group > .input-group-append:not(:has(> *)) { display: none; }
