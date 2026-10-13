@@ -176,11 +176,11 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
                             </div>
                             <div><hr></div>
                             <div class="card-body row text-center">
-                                <div class="col-6 border-right">
+                                <div class="col-md-6 border-right">
                                     <h6><?php echo $h($row->created); ?></h6>
                                     <span><?php echo $lang['user-account18'] ?></span>
                                 </div>
-                                <div class="col-6">
+                                <div class="col-md-6">
                                     <h6><?php echo $h($row->lastlogin); ?></h6>
                                     <span><?php echo $lang['user-account19'] ?></span>
                                 </div>

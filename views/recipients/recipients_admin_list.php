@@ -96,7 +96,7 @@ if (($userData->userlevel ?? 0) != 6 && !$user->cdp_hasPermission('view_recipien
 
             <div class="page-breadcrumb">
                 <div class="row">
-                    <div class="col-5 align-self-center">
+                    <div class="col-md-5 align-self-center">
                         <h4 class="page-title"> <?php echo $lang['recipient_management']; ?></h4>
 
                     </div>

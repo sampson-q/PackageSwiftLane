@@ -97,11 +97,11 @@ $row_order = $data['data'];
                                     <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                     <section>
                                         <div class="row form-group">
-                                            <label class="col-1 text-center"><?php echo $lang['push_notifications_type'] . ':' ?></label>
+                                            <label class="col-md-1 text-center"><?php echo $lang['push_notifications_type'] . ':' ?></label>
 
-                                            <div class="col-11 row">
+                                            <div class="col-md-11 row">
                                                 <!-- Broadcast (users in consolidation) -->
-                                                <div class="col-6 custom-control custom-radio">
+                                                <div class="col-md-6 custom-control custom-radio">
                                                     <input type="radio" id="broadcast" name="notification_type" class="custom-control-input" value="broadcast" checked>
                                                     <label class="custom-control-label" for="broadcast"><?php echo $lang['push_notifications_type_broadcast']; ?></label>
                                                     <div class="small text-muted mt-1">
@@ -110,7 +110,7 @@ $row_order = $data['data'];
                                                 </div>
 
                                                 <!-- Select users (multi-select, restricted to consolidation) -->
-                                                <div class="col-6 custom-control custom-radio">
+                                                <div class="col-md-6 custom-control custom-radio">
                                                     <input type="radio" id="selected_users" name="notification_type" class="custom-control-input" value="selected_users">
                                                     <label class="custom-control-label" for="selected_users"><?php echo $lang['push_notifications_type_users']; ?></label>
                                                     <div class="small text-muted mt-1">
@@ -120,7 +120,7 @@ $row_order = $data['data'];
 
                                                 <input type="hidden" id="consolidation_id" name="consolidation_id" value="<?php echo (int) ($_GET['id'] ?? 0); ?>" />
                                                 <!-- user multi-select (hidden until 'selected_users' chosen) -->
-                                                <div class="col-11 custom-control mt-3" id="user-container">
+                                                <div class="col-md-11 custom-control mt-3" id="user-container">
                                                     <label class="small mb-1"><?php echo $lang['select_users_label']; ?></label>
                                                     <select class="select2 form-control custom-select" style="width: 100%;" id="user_id" name="sender_ids[]" multiple="multiple"></select>
                                                 </div>
@@ -130,17 +130,17 @@ $row_order = $data['data'];
 
                                         <!-- delivery channel: WhatsApp, e-mail or both -->
                                         <div class="row form-group" id="channels-row">
-                                            <label class="col-1 text-center">Send By:</label>
-                                            <div class="col-11 row">
-                                                <div class="col-3 custom-control custom-radio">
+                                            <label class="col-md-1 text-center">Send By:</label>
+                                            <div class="col-md-11 row">
+                                                <div class="col-md-3 custom-control custom-radio">
                                                     <input type="radio" id="channels_both" name="channels" class="custom-control-input" value="both" checked>
                                                     <label class="custom-control-label" for="channels_both">WhatsApp + E-mail</label>
                                                 </div>
-                                                <div class="col-3 custom-control custom-radio">
+                                                <div class="col-md-3 custom-control custom-radio">
                                                     <input type="radio" id="channels_whatsapp" name="channels" class="custom-control-input" value="whatsapp">
                                                     <label class="custom-control-label" for="channels_whatsapp">WhatsApp Only</label>
                                                 </div>
-                                                <div class="col-3 custom-control custom-radio">
+                                                <div class="col-md-3 custom-control custom-radio">
                                                     <input type="radio" id="channels_email" name="channels" class="custom-control-input" value="email">
                                                     <label class="custom-control-label" for="channels_email">E-mail Only</label>
                                                 </div>

@@ -328,15 +328,15 @@ if ($row_order->status_invoice == 1) {
 
                                 <!-- <hr> -->
                                 <div class="row">
-                                    <div class="col-4">
+                                    <div class="col-md-4">
                                         <h5> &nbsp;<b><?php echo $lang['tools-branchOffice4'] ?></b></h5>
                                         <p class="text-muted m-l-5"><?php echo $branchoffices->name_branch; ?></p>
                                     </div>
-                                    <div class="col-4">
+                                    <div class="col-md-4">
                                         <h5> &nbsp;<b><?php echo $lang['tools-office1'] ?></b></h5>
                                         <p class="text-muted m-l-5"><?php echo $offices->name_off; ?></p>
                                     </div>
-                                    <div class="col-4">
+                                    <div class="col-md-4">
                                         <h5> &nbsp;<b><?php echo 'Estimated Time of Arrival' ?></b></h5>
                                         <p class="text-muted m-l-5"><?php echo $estimated_eta; ?></p>
                                     </div>
@@ -895,10 +895,10 @@ if ($row_order->status_invoice == 1) {
                         <div class="card">
                             <div class="card-body">
                                 <div class="row d-md-flex align-items-center">
-                                    <div class="col-4">
+                                    <div class="col-md-4">
                                         <h3 class="card-title"><span><?php echo $lang['left533020009'] ?></span></h3>
                                     </div>
-                                    <div class="col-4">
+                                    <div class="col-md-4">
                                         <select onchange="cdp_filterByRows();" class="form-control custom-select" id="filter_rows" name="filter_rows">
                                             <option value="0"><?php echo 'Filter By Rows'?></option>
                                             <option value="10"><?php echo 10 ?></option>
@@ -909,7 +909,7 @@ if ($row_order->status_invoice == 1) {
                                             <option value="show_all"><?php echo 'Show All' ?></option>
                                         </select>
                                     </div>
-                                    <div class="col-4 text-right">
+                                    <div class="col-md-4 text-right">
                                         <button id="export-order-btn" class="btn btn-success btn-sm">Export this Order</button>
                                     </div>
                                 </div>

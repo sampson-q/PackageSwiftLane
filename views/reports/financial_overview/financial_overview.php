@@ -27,10 +27,10 @@ $userData = $user->cdp_getUserData();
         <div class="page-wrapper">
             <div class="page-breadcrumb">
                 <div class="row">
-                    <div class="col-7 align-self-center">
+                    <div class="col-md-7 align-self-center">
                         <h4 class="page-title">Financial Overview</h4>
                     </div>
-                    <div class="col-5 align-self-center text-right">
+                    <div class="col-md-5 align-self-center text-right">
                         <div class="btn-group btn-group-sm" role="group" aria-label="Display currency">
                             <button type="button" id="fo_cur_ghs" class="btn btn-dark" onclick="cdpFoSetCurrency('ghs');">&#8373;</button>
                             <button type="button" id="fo_cur_usd" class="btn btn-outline-dark" onclick="cdpFoSetCurrency('usd');">$</button>

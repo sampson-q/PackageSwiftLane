@@ -94,7 +94,7 @@ $ship_mode_label = $ship_mode === 'air' ? 'Air Consolidations' : ($ship_mode ===
 
             <div class="page-breadcrumb">
                 <div class="row">
-                    <div class="col-5 align-self-center">
+                    <div class="col-md-5 align-self-center">
                         <h4 class="page-title">
                             <?php if ($ship_mode === 'air'): ?><iconify-icon icon="mdi:airplane-takeoff"></iconify-icon>
                             <?php elseif ($ship_mode === 'sea'): ?><iconify-icon icon="mingcute:ship-fill"></iconify-icon><?php endif; ?>

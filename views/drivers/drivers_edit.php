@@ -167,11 +167,11 @@ $row = $data['data'];
                                 <h6> <?php echo $row->phone; ?></h6>
                             </div>
                             <div class="card-body row text-center">
-                                <div class="col-6 border-right">
+                                <div class="col-md-6 border-right">
                                     <h6><?php echo $row->created; ?></h6>
                                     <span><?php echo $lang['user-account18'] ?></span>
                                 </div>
-                                <div class="col-6">
+                                <div class="col-md-6">
                                     <h6><?php echo $row->lastlogin; ?></h6>
                                     <span><?php echo $lang['user-account19'] ?></span>
                                 </div>

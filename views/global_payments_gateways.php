@@ -99,7 +99,7 @@ if (!$user->cdp_is_Admin())
 
             <div class="page-breadcrumb">
                 <div class="row">
-                    <div class="col-5 align-self-center">
+                    <div class="col-md-5 align-self-center">
                         <h4 class="page-title"> <i class="fas fa-cubes"></i> <?php echo $lang['payment_text1'] ?> | <?php echo $lang['leftorder141'] ?></h4>
                     </div>
                 </div>

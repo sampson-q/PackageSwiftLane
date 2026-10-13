@@ -40,10 +40,10 @@ $statusrow = $core->cdp_getStatusMultiple(1, 4, 8, 15, 16, 23, 32, 33);
 
             <div class="page-breadcrumb">
                 <div class="row">
-                    <div class="col-5 align-self-center">
+                    <div class="col-md-5 align-self-center">
                         <h4 class="page-title"><?php echo 'Warehouse'; ?></h4>
                     </div>
-                    <div class="col-7 align-self-center text-right">
+                    <div class="col-md-7 align-self-center text-right">
                         <button type="button" class="btn btn-outline-danger" onclick="cdp_exportPrint();">
                             <i class="fa fa-print"></i>&nbsp;<?php echo $lang['report-text5'] ?? 'Export PDF'; ?>
                         </button>

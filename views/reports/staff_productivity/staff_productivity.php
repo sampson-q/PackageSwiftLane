@@ -344,12 +344,12 @@ $defaultTo   = date('Y-m-d');
                     </div>
 
                     <div class="form-row">
-                        <div class="form-group col-6">
+                        <div class="form-group col-md-6">
                             <label for="sps_idle" class="sp-k">Idle After (Minutes)</label>
                             <input type="number" class="form-control" id="sps_idle" min="1" max="120" step="1">
                             <small class="text-muted">With presence data: a pause longer than this, with no keyboard, mouse or screen input, is idle in full. Shorter pauses count as active.</small>
                         </div>
-                        <div class="form-group col-6">
+                        <div class="form-group col-md-6">
                             <label for="sps_gap" class="sp-k">Legacy Gap (Minutes)</label>
                             <input type="number" class="form-control" id="sps_gap" min="1" max="240" step="1">
                             <small class="text-muted">Days without presence data: a gap between two recorded actions longer than this ends a working stretch.</small>
@@ -357,12 +357,12 @@ $defaultTo   = date('Y-m-d');
                     </div>
 
                     <div class="form-row align-items-end">
-                        <div class="form-group col-6">
+                        <div class="form-group col-md-6">
                             <label for="sps_ping" class="sp-k">Presence Report Interval (Seconds)</label>
                             <input type="number" class="form-control" id="sps_ping" min="15" max="600" step="5">
                             <small class="text-muted">How often a staff member's browser reports which minutes had input. 60 is plenty.</small>
                         </div>
-                        <div class="form-group col-6">
+                        <div class="form-group col-md-6">
                             <div class="custom-control custom-switch mb-2">
                                 <input type="checkbox" class="custom-control-input" id="sps_beacon">
                                 <label class="custom-control-label" for="sps_beacon"><b>Presence Tracking</b></label>

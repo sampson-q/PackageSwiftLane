@@ -94,7 +94,7 @@ $payrow = $core->cdp_getPayment();
 
             <div class="page-breadcrumb">
                 <div class="row">
-                    <div class="col-5 align-self-center">
+                    <div class="col-md-5 align-self-center">
                         <h4 class="page-title"> <?php echo $lang['left1022']; ?></h4>
 
                     </div>

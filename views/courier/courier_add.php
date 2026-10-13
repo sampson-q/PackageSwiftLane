@@ -386,7 +386,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                             <div class="card">
                                 <div class="card-body">
                                     <div class="row">
-                                        <div class="col-5">
+                                        <div class="col-md-5">
                                             <h4 class="card-title mb-3">
                                                 <i class="mdi mdi-cube-scan" style="color:#20c997"></i>
                                                 2) <?php echo $lang['left212'] ?>
@@ -395,7 +395,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                         <div class="col-auto text-right text-muted pr-0">
                                             <h5 class="text-nowrap">Notes:</h5>
                                         </div>
-                                        <div class="col-6">
+                                        <div class="col-md-6">
                                             <input class="form-control" type="text" id="courier_notes" name="courier_notes" placeholder=". . . . . . . . . . . . . . . . . . . . . . . ." value="<?php echo $row_order->courier_notes ;?>" />
                                         </div>
                                     </div>
@@ -577,13 +577,13 @@ $categories   = $core->cdp_getCategoriesById(27);
 
                                     <!-- Tabla de paquetes -->
                                     <div class="row">
-                                        <div class="col-2">
+                                        <div class="col-md-2">
                                             <small class="text-muted d-block">Original Total Weight</small>
                                             <div class="text-md-left">
                                                 <input type="text" class="form-control form-control-sm" id="package_total_weight" name="package_total_weight" value="" placeholder="Total weight of this package" onkeypress="return isNumberKey(event,this)">
                                             </div>
                                         </div>
-                                        <div class="col-10">
+                                        <div class="col-md-10">
                                             <div class="text-right">
                                                 <button type="button" onclick="addPackage()" name="add_rows" id="add_rows" class="btn btn-outline-dark">
                                                     <span class="fa fa-plus"></span> <?php echo $lang['left231'] ?>

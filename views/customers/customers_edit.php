@@ -161,10 +161,10 @@ $history = $db->cdp_registros();
                             <div class="card">
                                 <div class="card-body">
                                     <div class="row">
-                                        <div class="col-6">
+                                        <div class="col-md-6">
                                             <h3 class="card-title swl-promoted"><span><?php echo $lang['filter4']; ?></span></h3>
                                         </div>
-                                        <div class="col-6 justify-content-end d-flex">
+                                        <div class="col-md-6 justify-content-end d-flex">
                                             <form method="POST" id="changeUserStatus">
                                                 <div class="btn-group">
                                                     <?php if ($user->cdp_hasPermission('approve_client')) { ?>
@@ -283,11 +283,11 @@ $history = $db->cdp_registros();
                                     <h6> <?php echo $row->phone; ?></h6>
                                 </div>
                                 <div class="card-body row text-center">
-                                    <div class="col-6 border-right">
+                                    <div class="col-md-6 border-right">
                                         <h6><?php echo $row->created; ?></h6>
                                         <span><?php echo $lang['user-account18'] ?></span>
                                     </div>
-                                    <div class="col-6">
+                                    <div class="col-md-6">
                                         <h6><?php echo $row->lastlogin; ?></h6>
                                         <span><?php echo $lang['user-account19'] ?></span>
                                     </div>

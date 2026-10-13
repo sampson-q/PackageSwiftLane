@@ -54,33 +54,33 @@ $userData = $user->cdp_getUserData();
                                     <section>
                                         <!-- radio to select notification type (broadcast/single/consolidation/invoice) -->
                                         <div class="row form-group">
-                                            <label class="col-1 text-center"><?php echo $lang['push_notifications_type'] . ':' ?></label>
-                                            <div class="col-11 row">
-                                                <div class="col-3 custom-control custom-radio">
+                                            <label class="col-md-1 text-center"><?php echo $lang['push_notifications_type'] . ':' ?></label>
+                                            <div class="col-md-11 row">
+                                                <div class="col-md-3 custom-control custom-radio">
                                                     <input type="radio" id="broadcast" name="notification_type" class="custom-control-input" value="broadcast" checked>
                                                     <label class="custom-control-label" for="broadcast"><?php echo $lang['push_notifications_type0'] ?></label>
                                                 </div>
 
-                                                <div class="col-3 custom-control custom-radio">
+                                                <div class="col-md-3 custom-control custom-radio">
                                                     <input type="radio" id="single_user" name="notification_type" class="custom-control-input" value="single_user">
                                                     <label class="custom-control-label" for="single_user"><?php echo $lang['push_notifications_type1'] ?></label>
                                                 </div>
 
-                                                <div class="col-3 custom-control custom-radio">
+                                                <div class="col-md-3 custom-control custom-radio">
                                                     <input type="radio" id="consolidation" name="notification_type" class="custom-control-input" value="consolidation">
                                                     <label class="custom-control-label" for="consolidation"><?php echo isset($lang['push_notifications_type2']) ? $lang['push_notifications_type2'] : 'Consolidation' ?></label>
                                                 </div>
 
-                                                <div class="col-3 custom-control custom-radio">
+                                                <div class="col-md-3 custom-control custom-radio">
                                                     <input type="radio" id="invoice_radio_top" name="notification_type" class="custom-control-input" value="invoice">
                                                     <label class="custom-control-label" for="invoice_radio_top">Invoice</label>
                                                 </div>
 
-                                                <div class="col-11 custom-control" id="single-user-container">
+                                                <div class="col-md-11 custom-control" id="single-user-container">
                                                     <select class="select2 form-control custom-select" id="user_id" name="user_id"></select>
                                                 </div>
 
-                                                <div class="col-11 custom-control" id="consolidation-container">
+                                                <div class="col-md-11 custom-control" id="consolidation-container">
                                                     <select class="select2 form-control custom-select" id="consolidation_id" name="consolidation_id"></select>
                                                 </div>
                                             </div>
@@ -88,17 +88,17 @@ $userData = $user->cdp_getUserData();
 
                                         <!-- delivery channel: WhatsApp, e-mail or both -->
                                         <div class="row form-group" id="channels-row">
-                                            <label class="col-1 text-center">Send By:</label>
-                                            <div class="col-11 row">
-                                                <div class="col-3 custom-control custom-radio">
+                                            <label class="col-md-1 text-center">Send By:</label>
+                                            <div class="col-md-11 row">
+                                                <div class="col-md-3 custom-control custom-radio">
                                                     <input type="radio" id="channels_both" name="channels" class="custom-control-input" value="both" checked>
                                                     <label class="custom-control-label" for="channels_both">WhatsApp + E-mail</label>
                                                 </div>
-                                                <div class="col-3 custom-control custom-radio">
+                                                <div class="col-md-3 custom-control custom-radio">
                                                     <input type="radio" id="channels_whatsapp" name="channels" class="custom-control-input" value="whatsapp">
                                                     <label class="custom-control-label" for="channels_whatsapp">WhatsApp Only</label>
                                                 </div>
-                                                <div class="col-3 custom-control custom-radio">
+                                                <div class="col-md-3 custom-control custom-radio">
                                                     <input type="radio" id="channels_email" name="channels" class="custom-control-input" value="email">
                                                     <label class="custom-control-label" for="channels_email">E-mail Only</label>
                                                 </div>

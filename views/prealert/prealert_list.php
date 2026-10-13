@@ -100,7 +100,7 @@ if (isset($_GET['id_notification'])) {
 
             <div class="page-breadcrumb">
                 <div class="row">
-                    <div class="col-5 align-self-center">
+                    <div class="col-md-5 align-self-center">
                         <h4 class="page-title"> <?php echo $lang['left-menu-sidebar-7'] ?></h4>
                         <br>
                     </div>
