@@ -1553,3 +1553,135 @@ td .swl-awbref, .table .swl-awbref { white-space: normal; }
 .input-group-sm > .form-control, .input-group-sm > .custom-select { height: 36px !important; min-height: 36px; padding: 0 10px !important; }
 .input-group-sm > .input-group-append > .btn, .input-group-sm > .input-group-append > .input-group-text,
 .input-group-sm > .input-group-prepend > .input-group-text { height: 36px; padding: 0 10px; }
+
+/* ── 16. Settings pages: side menu + content pane (.email-app) ──────────────
+   Tools, notification templates, incoterms, shipping lines, backup: a menu
+   on the left (views/inc/left_part_menu.php) and the form on the right. The
+   template positioned the menu absolutely and, on phones, hid it off-canvas
+   behind a dark floating button half outside the screen. Here the two are a
+   flex row of two cards; on phones the menu becomes a horizontal strip of
+   pills above the content and the floating button is gone. */
+.page-wrapper > .email-app {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 8px 24px 24px;
+  margin-top: 0 !important;
+}
+.page-wrapper > .email-app > .left-part {
+  position: static !important;
+  flex: 0 0 264px;
+  width: 264px !important;
+  height: auto !important;
+  padding: 12px;
+  border: 0 !important;
+  border-radius: var(--radius-24);
+  background: var(--surface-card) !important;
+}
+.page-wrapper > .email-app > .right-part {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  border-radius: var(--radius-24) !important;
+  box-shadow: none !important;
+  background: var(--surface-card) !important;
+}
+.email-app .show-left-part { display: none !important; }
+.email-app .left-part .scroll-sidebar { padding-bottom: 0; overflow: visible !important; }
+.email-app .left-part .p-15 { padding: 4px 4px 12px !important; }
+.email-app .left-part .divider { display: none; }
+.email-app .left-part .sidebar-nav .list-group { display: flex; flex-direction: column; gap: 2px; }
+.email-app .left-part .list-group-item { padding: 0 !important; border: 0 !important; background: transparent !important; }
+.email-app .left-part .list-group-item > small:empty { display: none; }
+.email-app .left-part .list-group-item hr { margin: 8px 4px; }
+/* The main sidebar rules reach these links too (same .sidebar-nav /
+   .sidebar-link classes): give them the menu's own light-surface look. */
+#main-wrapper .email-app .left-part .list-group-item-action,
+#main-wrapper .email-app .left-part .sidebar-nav ul .sidebar-item .sidebar-link,
+#main-wrapper .email-app .left-part .sidebar-nav ul .sidebar-item .first-level .sidebar-item .sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  border-radius: var(--radius-8);
+  background: transparent !important;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: var(--track-normal);
+  color: var(--ink-800) !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background var(--motion-fast) var(--ease-standard);
+}
+#main-wrapper .email-app .left-part .list-group-item-action:hover,
+#main-wrapper .email-app .left-part .sidebar-nav ul .sidebar-item .sidebar-link:hover { background: var(--page-050) !important; color: var(--ink-800) !important; }
+#main-wrapper .email-app .left-part .list-group-item-action.active,
+#main-wrapper .email-app .left-part .list-group-item-action[aria-expanded="true"],
+#main-wrapper .email-app .left-part .sidebar-nav ul .sidebar-item .sidebar-link.active { background: var(--amber-surface) !important; font-weight: 700; }
+#main-wrapper .email-app .left-part .sidebar-nav ul .sidebar-item .sidebar-link.active::before,
+#main-wrapper .email-app .left-part .sidebar-nav ul .sidebar-item.selected > .sidebar-link::before { display: none; }
+.email-app .left-part .list-group-item-action iconify-icon,
+.email-app .left-part .list-group-item-action i,
+.email-app .left-part .sidebar-link iconify-icon,
+.email-app .left-part .sidebar-link i { font-size: 18px !important; width: 18px; min-width: 18px; margin: 0 !important; color: var(--slate-400) !important; display: inline-flex; justify-content: center; }
+.email-app .left-part .menutext { color: inherit; overflow: hidden; text-overflow: ellipsis; }
+.email-app .left-part .has-arrow::after { border-color: var(--slate-400) !important; right: 12px !important; }
+.email-app .left-part .sidebar-nav ul .sidebar-item .first-level { padding: 2px 0 4px 10px !important; }
+#main-wrapper .email-app .left-part .sidebar-nav ul .sidebar-item .first-level .sidebar-item .sidebar-link { height: 36px; font-size: 12.5px; }
+.email-app .left-part .first-level .sidebar-link .hide-menu::before,
+.email-app .left-part .first-level .sidebar-link .menutext::before { content: none; }
+.email-app .left-part .first-level .sidebar-link iconify-icon { display: inline-flex; color: var(--slate-400) !important; }
+/* The "compose" button at the top of the menu is the page's main action */
+.email-app .left-part #compose_mail,
+.email-app .left-part .p-15 > .btn { width: 100%; }
+
+/* Below the desktop width (the sidebar is already a rail there) the menu and
+   the form do not fit side by side; the menu becomes the strip of pills. */
+@media (max-width: 1169.98px) {
+  .page-wrapper > .email-app { display: block; padding: 0 16px 16px; }
+  .page-wrapper > .email-app > .left-part {
+    width: 100% !important;
+    left: auto !important;
+    right: auto !important;
+    padding: 0 0 12px;
+    background: transparent !important;
+    border-radius: 0;
+    z-index: auto;
+  }
+  .email-app .left-part .scroll-sidebar { display: flex; align-items: center; gap: 8px; overflow-x: auto !important; overflow-y: hidden !important; padding: 2px 0 6px; scrollbar-width: none; }
+  .email-app .left-part .scroll-sidebar::-webkit-scrollbar { display: none; }
+  .email-app .left-part .p-15 { padding: 0 !important; flex: 0 0 auto; }
+  .email-app .left-part #compose_mail, .email-app .left-part .p-15 > .btn { width: auto; height: var(--control-sm) !important; padding: 0 16px !important; font-size: 13px; }
+  .email-app .left-part .sidebar-nav { flex: 0 0 auto; }
+  .email-app .left-part .sidebar-nav .list-group { flex-direction: row; align-items: center; gap: 8px; }
+  .email-app .left-part .list-group-item { flex: 0 0 auto; }
+  .email-app .left-part .list-group-item hr, .email-app .left-part .list-group-item > small { display: none; }
+  /* Groups open flat: the group toggle goes, its pages become pills */
+  .email-app .left-part .sidebar-item:has(> .first-level) { display: contents; }
+  .email-app .left-part .sidebar-item:has(> .first-level) > .has-arrow { display: none !important; }
+  .email-app .left-part .sidebar-nav ul .sidebar-item .first-level { display: contents !important; padding: 0 !important; }
+  #main-wrapper .email-app .left-part .list-group-item-action,
+  #main-wrapper .email-app .left-part .sidebar-nav ul .sidebar-item .sidebar-link,
+  #main-wrapper .email-app .left-part .sidebar-nav ul .sidebar-item .first-level .sidebar-item .sidebar-link {
+    height: var(--control-sm);
+    padding: 0 16px !important;
+    border-radius: var(--radius-pill);
+    background: var(--white) !important;
+    box-shadow: var(--ring-default);
+    font-weight: 700;
+    font-size: 13px;
+    overflow: visible;
+  }
+  #main-wrapper .email-app .left-part .list-group-item-action.active,
+  #main-wrapper .email-app .left-part .sidebar-nav ul .sidebar-item .sidebar-link.active { background: var(--accent) !important; box-shadow: none; }
+  .email-app .left-part .list-group-item-action iconify-icon, .email-app .left-part .sidebar-link iconify-icon { color: var(--ink-800) !important; }
+  .page-wrapper > .email-app > .right-part { border-radius: var(--radius-16) !important; }
+}
