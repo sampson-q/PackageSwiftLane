@@ -81,7 +81,6 @@ $driverrow = $user->cdp_userAllDriver();
 
     <link href="assets/template/assets/libs/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css" rel="stylesheet">
     <link href="assets/template/dist/css/custom_swicth.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
 
     <style type="text/css">
         .canvas-bordered {
@@ -338,7 +337,6 @@ $driverrow = $user->cdp_userAllDriver();
     <script src="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
     <script src="assets/template/dist/js/app-style-switcher.js"></script>
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
-    <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="<?= cdp_asset('dataJs/courier_delivered.js') ?>"></script>
 </body>
 

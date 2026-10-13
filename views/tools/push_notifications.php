@@ -22,7 +22,6 @@ $userData = $user->cdp_getUserData();
 
     <!-- existing CSS -->
     <link rel="stylesheet" href="assets/template/assets/libs/intlTelInput/intlTelInput.css">
-    <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <link rel="stylesheet" type="text/css" href="assets/template/assets/libs/select2/dist/css/select2.min.css">
     <link rel="stylesheet" href="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css">
     <link rel="stylesheet" href="assets/template/assets/libs/daterangepicker/daterangepicker.css">
@@ -210,7 +209,6 @@ $userData = $user->cdp_getUserData();
     <!-- required scripts -->
     <script src="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
 
     <!-- daterange libs -->

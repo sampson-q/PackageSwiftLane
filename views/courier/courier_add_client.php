@@ -100,7 +100,6 @@ $order_prefix = $settings->prefix;
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
     <title><?php echo $lang['add-courier'] ?> | <?php echo $core->site_name ?></title>
     <link rel="stylesheet" href="assets/template/assets/libs/intlTelInput/intlTelInput.css">
-    <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <link rel="stylesheet" href="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css">
     <link rel="stylesheet" type="text/css" href="assets/template/assets/libs/select2/dist/css/select2.min.css">
 
@@ -783,7 +782,6 @@ $order_prefix = $settings->prefix;
 
     <script src="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
     <script src="<?= cdp_asset('dataJs/courier_add_client.js') ?>"></script>
 

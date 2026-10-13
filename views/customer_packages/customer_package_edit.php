@@ -121,7 +121,6 @@ if (!empty($files_order)) {
     <title><?php echo $lang['leftorder73'] ?> | <?php echo $core->site_name ?></title>
 
     <link rel="stylesheet" href="assets/template/assets/libs/intlTelInput/intlTelInput.css">
-    <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <link rel="stylesheet" href="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css">
     <link rel="stylesheet" type="text/css" href="assets/template/assets/libs/select2/dist/css/select2.min.css">
     <link href="assets/template/dist/css/custom_swicth.css" rel="stylesheet">
@@ -851,7 +850,6 @@ if (!empty($files_order)) {
 
     <script src="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
-    <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="assets/template/assets/libs/intlTelInput/intlTelInput.js"></script>
     <script src="assets/template/dist/js/app-style-switcher.js"></script>
     <script src="assets/template/assets/libs/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>

@@ -52,7 +52,6 @@ $ship_mode_label = $ship_mode === 'air' ? 'Air Consolidations' : ($ship_mode ===
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
     <title><?php echo $lang['count12'] ?> | <?php echo $core->site_name ?></title>
-    <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <?php include 'views/inc/head_scripts.php'; ?>
 
 </head>
@@ -205,7 +204,6 @@ $ship_mode_label = $ship_mode === 'air' ? 'Air Consolidations' : ($ship_mode ===
 
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
     <script>window.CDP_SHIP_MODE = <?php echo json_encode($ship_mode); ?>;</script>
     <script src="<?= cdp_asset('dataJs/consolidate_list.js') ?>"></script>

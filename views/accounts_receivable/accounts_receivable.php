@@ -55,7 +55,6 @@ $paymethodrow = $core->cdp_getPaymentMethod();
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/<?php echo $core->favicon ?>">
     <title><?php echo $lang['payment_text3'] ?> </title>
-    <link rel="stylesheet" href="assets/template/assets/libs/sweetalert2/sweetalert2.min.css">
     <?php include 'views/inc/head_scripts.php'; ?>
 
     <link rel="stylesheet" href="assets/template/assets/libs/daterangepicker/daterangepicker.css">
@@ -208,7 +207,6 @@ $paymethodrow = $core->cdp_getPaymentMethod();
 
     <?php include('helpers/languages/translate_to_js.php'); ?>
 
-    <script src="assets/template/assets/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="assets/template/assets/libs/moment/moment.min.js"></script>
     <script src="assets/template/assets/libs/daterangepicker/daterangepicker.js"></script>
     <script src="assets/template/assets/libs/select2/dist/js/select2.full.min.js"></script>
