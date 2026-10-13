@@ -1731,3 +1731,83 @@ td .swl-awbref, .table .swl-awbref { white-space: normal; }
 .dg-toggle-bar .dg-icon, .dg-toggle-bar.is-dangerous .dg-state { color: var(--amber-500); }
 .dg-toggle-bar .dg-title { color: var(--ink-800); font-weight: 700; }
 .dg-toggle-bar .dg-state { color: var(--slate-400); }
+
+/* ── 21. Rows of fields line up, buttons wrap, nothing runs past its box ───── */
+/* Field rows: when every column in a row is a field (form-group / input-group /
+   a bare control) the columns align at the bottom, so a label that wraps onto
+   two lines in a narrow column does not push its control out of line with the
+   neighbours. Rows with help text under a field keep the normal alignment. */
+.row:has(> [class*="col-"] > .form-group:first-child, > [class*="col-"] > .input-group:first-child, > [class*="col-"] > label:first-child):not(:has(> [class*="col-"] > :first-child:not(.form-group):not(.input-group):not(label):not(.form-control):not(.custom-select):not(.select2-container):not([type=hidden]))):not(:has(> [class*="col-"] > .form-group > .form-text)):not(:has(> [class*="col-"] > .form-group > .help-block)):not(:has(> [class*="col-"] > .form-group > small)):not(:has(> [class*="col-"] > .form-group > .invalid-feedback)) { align-items: flex-end; }
+/* A link around a button is the button's size, so the tap target is the whole pill */
+a:has(> .btn:only-child) { display: inline-flex; max-width: 100%; }
+/* An icon-only button beside a field ("+" add sender / recipient, in a col-md-2
+   next to a col-md-10 select) takes just its own width; the field column gets
+   the rest. dataJs/swiftlane_ui.js tags the button .swl-icon-only. */
+.card-body :is(.row, .form-row) > [class*="col-"]:has(> .btn.swl-icon-only:only-child),
+.card-body :is(.row, .form-row) > [class*="col-"]:has(> a > .btn.swl-icon-only:only-child) { flex: 0 0 auto; width: auto; max-width: none; }
+.card-body :is(.row, .form-row):has(> [class*="col-"] > .btn.swl-icon-only:only-child) > [class*="col-"]:not(:has(> .btn)):not(:has(> a > .btn)),
+.card-body :is(.row, .form-row):has(> [class*="col-"] > a > .btn.swl-icon-only:only-child) > [class*="col-"]:not(:has(> .btn)):not(:has(> a > .btn)) { flex: 1 1 0; max-width: none; min-width: 0; }
+/* A column whose content is a button (with its label) - the Upload / Capture /
+   Record buttons in three col-md-2, "Update Avatar" - is as wide as the button
+   instead of folding its label over three lines in a 100px column */
+.card-body :is(.row, .form-row) > [class*="col-"]:has(> .btn):not(:has(.form-control, .custom-select, .select2-container, table, .card, textarea, input:not([type=hidden]):not(.custom-file-input))) { flex: 0 0 auto; width: auto; max-width: 100%; }
+/* A card body that is also a row leaked its gutters past the card */
+.card-body.row { margin-left: 0 !important; margin-right: 0 !important; }
+/* A field group gives the spacing; an extra mb-3 on the field inside it pushed
+   that field 16px above its neighbours in the same row */
+.form-group > .input-group.mb-3:last-child, .form-group > .form-control.mb-3:last-child, .form-group > .select2-container.mb-3:last-child { margin-bottom: 0 !important; }
+/* A column holding only a button group (the $ / GHS currency toggle in a
+   col-md-1) is as wide as the group, never narrower */
+.card-body :is(.row, .form-row) > [class*="col-"]:has(> .btn-group:only-child) { flex: 0 0 auto; width: auto; max-width: none; }
+.btn.swl-icon-only:not(.dropdown-toggle) { width: var(--control-md); padding: 0; flex: none; }
+.btn.btn-sm.swl-icon-only:not(.dropdown-toggle) { width: var(--control-sm); }
+.table .btn.swl-icon-only:not(.dropdown-toggle) { width: 32px; height: 32px; }
+/* Below the desktop breakpoint a worded button that does not fit its column
+   wraps its label instead of running past the card (the 2-up / 3-up form rows
+   on tablets, every column on phones). Toggles, icon buttons and button groups
+   keep one line. */
+@media (max-width: 1199.98px) {
+  .card-body .btn:not(.dropdown-toggle):not(.swl-icon-only):not(.btn-circle):not(.btn-icon):not(.swal2-styled),
+  .modal-body .btn:not(.dropdown-toggle):not(.swl-icon-only):not(.btn-circle):not(.btn-icon),
+  .modal-footer .btn:not(.dropdown-toggle) {
+    display: inline-block; max-width: 100%; white-space: normal; height: auto; min-height: var(--control-md); padding-top: 12px; padding-bottom: 12px; text-align: center; vertical-align: middle;
+  }
+  .card-body .btn-sm:not(.dropdown-toggle), .modal-body .btn-sm:not(.dropdown-toggle) { min-height: var(--control-sm); padding-top: 10px; padding-bottom: 10px; }
+  .card-body .btn > i:first-child:not(:only-child), .modal-body .btn > i:first-child:not(:only-child), .modal-footer .btn > i:first-child:not(:only-child) { margin-right: 6px; }
+  .card-body .btn-group > .btn, .card-body .input-group .btn, .card-body .table .btn, .modal-body .btn-group > .btn, .modal-body .input-group .btn { white-space: nowrap; height: var(--control-md); min-height: 0; padding-top: 0; padding-bottom: 0; display: inline-flex; }
+  .card-body .table .btn { height: 32px; }
+  .card-body .input-group .btn, .modal-body .input-group .btn { height: var(--control-md); }
+  .card-body .input-group-sm .btn, .card-body .table .input-group .btn { height: 36px; }
+}
+/* Phones: side-by-side flex rows (toolbar: "Add" button + search; action rows)
+   wrap instead of running past the screen, and a flex column never forces its
+   row wider than the screen (a chart or a long reference inside). */
+@media (max-width: 575.98px) {
+  .card-body .d-flex:not(.flex-nowrap):not(.swl-keep), .card-body .d-sm-flex, .card-body .d-md-flex, .modal-body .d-flex:not(.flex-nowrap) { flex-wrap: wrap; row-gap: 8px; }
+  .card-body .d-flex > .mr-auto, .card-body .d-flex > .ml-auto { margin: 0 !important; flex: 1 1 100%; }
+  .page-wrapper :is(.row, .form-row) > [class*="col-"] { min-width: 0; }
+  .sw-chart, .sw-chart > div, .apexcharts-canvas, .apexcharts-canvas svg { max-width: 100% !important; }
+  .swl-awbref, td .swl-awbref { white-space: normal; }
+  .card-body [align="right"], .card-body .text-right:not(td):not(th) { text-align: left !important; }
+  .card-body .text-right > .btn, .card-body [align="right"] > .btn, .card-body [align="left"] > .btn, .card-body .text-center > .btn { width: 100%; }
+  .nav-fill .nav-item, .nav-justified .nav-item { flex: 1 1 100%; }
+  .nav-pills .nav-link, .nav-tabs .nav-link { max-width: 100%; white-space: normal; height: auto; min-height: var(--control-sm); padding-top: 8px; padding-bottom: 8px; }
+  .nav-pills .nav-link img, .nav-tabs .nav-link img { max-width: 100%; height: auto; }
+  .input-group-prepend .input-group-text, .input-group-append .input-group-text { white-space: normal; }
+}
+/* A column that is also a row ("col-md-11 row") pulled its gutters over the
+   label beside it; a column keeps its place and only its children get gutters */
+.row > [class*="col-"].row { margin-left: 0; margin-right: 0; }
+/* Permission module boxes (roles / permissions forms): tokens, and the module
+   name + "Select All" header wraps instead of running out of the box */
+.role-group { border: 0 !important; border-radius: var(--radius-16) !important; background: var(--page-050) !important; padding: 16px !important; }
+.role-group h5 { flex-wrap: wrap; gap: 4px 12px; color: var(--ink-800) !important; font-size: 14px !important; }
+.role-group h5 .select-all { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; color: var(--slate-400); white-space: nowrap; }
+/* Small text never goes under 11px (10px table notes, 8.5px reference tags) */
+.table small, .table .small, small.text-muted { font-size: 11px; }
+.swl-awbref__tag { font-size: max(.68em, 10px); }
+/* Settings pane: a .row dropped straight into the pane leaks its gutters */
+.page-wrapper > .email-app > .right-part > .row { margin-left: 0; margin-right: 0; }
+.page-wrapper > .email-app > .right-part > .bg-light { background: transparent !important; }
+.page-wrapper > .email-app > .right-part > .p-15.b-b { border-bottom: 1px solid var(--border-default); padding: 20px 24px !important; }
+.page-wrapper > .email-app > .right-part > .p-15.b-b h4, .page-wrapper > .email-app > .right-part > .p-15.b-b h5 { margin: 0; font-size: var(--text-lg-size); font-weight: 700; }

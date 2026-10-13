@@ -60,6 +60,16 @@
         }
     }
 
+    // Any button that is an icon alone (the "+" beside a search field, a
+    // trash can on a row) is tagged too: the stylesheet lets its grid column
+    // shrink to the button so the field next to it keeps the room.
+    function upgradeIconButtons(root) {
+        var btns = root.querySelectorAll('.btn:not([data-swl-icon])');
+        for (var i = 0; i < btns.length; i++) {
+            var b = btns[i];
+            b.setAttribute('data-swl-icon', '1');
+            if ((b.textContent || '').trim() === '' && b.querySelector('i, svg, iconify-icon, img')) b.classList.add('swl-icon-only');
+        }
     }
 
     // Table cells with short content (a date, an amount, a reference, a status)
@@ -100,6 +110,7 @@
         upgradeStatusLabels(root);
         upgradeSearchFields(root);
         upgradeRowActions(root);
+        upgradeIconButtons(root);
         upgradeTableCells(root);
         upgradeScrollers(root);
     }
