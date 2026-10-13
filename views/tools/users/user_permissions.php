@@ -70,33 +70,33 @@ if ($target_name === '') { $target_name = $target->username; }
         .perm-search-bar { margin-bottom:14px; }
         .perm-search-bar .form-control { height:36px; font-size:13px; }
         .perm-mod-card { margin-bottom: 18px; }
-        .perm-card-head { display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #f0f0f0; padding-bottom:6px; margin-bottom:6px; gap:8px; }
+        .perm-card-head { display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid var(--fill-100); padding-bottom:6px; margin-bottom:6px; gap:8px; }
         .perm-card-head h5 { margin:0; font-size:15px; }
-        .perm-card-selall { font-size:11px; color:#9aa0ac; cursor:pointer; white-space:nowrap; margin:0; }
+        .perm-card-selall { font-size:11px; color:var(--slate-400); cursor:pointer; white-space:nowrap; margin:0; }
         .perm-card-selall input { vertical-align:middle; }
         /* Per-card bulk bar — shows only when rows in THIS card are selected. */
-        .perm-card-bulk { display:none; align-items:center; gap:6px; background:#eef2fb; border:1px solid #cdd8f3; border-radius:6px; padding:5px 8px; margin-bottom:8px; font-size:12px; }
+        .perm-card-bulk { display:none; align-items:center; gap:6px; background:var(--page-050); border:1px solid var(--sky-surface); border-radius:6px; padding:5px 8px; margin-bottom:8px; font-size:12px; }
         .perm-card-bulk.show { display:flex; }
         .perm-card-bulk .btn { padding:2px 8px; font-size:11px; }
         /* Fixed card height: list scrolls internally when actions overflow. */
         .perm-card-actions { max-height:300px; overflow-y:auto; padding-right:4px; }
-        .perm-row { display:flex; align-items:center; justify-content:space-between; padding:6px 4px; border-bottom:1px solid #f0f0f0; gap:8px; }
+        .perm-row { display:flex; align-items:center; justify-content:space-between; padding:6px 4px; border-bottom:1px solid var(--fill-100); gap:8px; }
         .perm-row:last-child { border-bottom:none; }
         .perm-row.hidden { display:none; }
         .perm-row .row-check { flex:0 0 auto; margin:0 2px 0 0; }
-        .perm-label { font-size:13px; color:#333; flex:1 1 auto; min-width:0; }
-        .perm-label small { color:#9aa0ac; display:block; word-break:break-all; }
+        .perm-label { font-size:13px; color:var(--ink-800); flex:1 1 auto; min-width:0; }
+        .perm-label small { color:var(--slate-400); display:block; word-break:break-all; }
         .perm-choice { display:flex; gap:4px; flex:0 0 auto; }
-        .perm-choice label { font-size:11px; margin:0; padding:3px 8px; border:1px solid #d9d9d9; border-radius:4px; cursor:pointer; background:#fff; }
+        .perm-choice label { font-size:11px; margin:0; padding:3px 8px; border:1px solid var(--line-200); border-radius:4px; cursor:pointer; background:var(--white); }
         .perm-choice input { display:none; }
         .perm-choice input:checked + span { font-weight:600; }
-        .perm-choice label.inh input:checked ~ span { color:#5b6b8c; }
-        .perm-choice label.allow input:checked ~ span { color:#1a8a3a; }
-        .perm-choice label.deny input:checked ~ span { color:#c0392b; }
-        .perm-choice label:has(input:checked) { background:#eef2fb; border-color:#336aea; }
+        .perm-choice label.inh input:checked ~ span { color:var(--ink-700); }
+        .perm-choice label.allow input:checked ~ span { color:var(--green-500); }
+        .perm-choice label.deny input:checked ~ span { color:var(--red-500); }
+        .perm-choice label:has(input:checked) { background:var(--page-050); border-color:var(--sky-500); }
         .perm-badge { font-size:10px; padding:1px 6px; border-radius:8px; margin-left:6px; }
-        .perm-badge.on { background:#e5f6ea; color:#1a8a3a; }
-        .perm-badge.off { background:#fbeaea; color:#c0392b; }
+        .perm-badge.on { background:var(--fill-100); color:var(--green-500); }
+        .perm-badge.off { background:var(--page-050); color:var(--red-500); }
         .perm-row.saving { opacity:.55; }
         /* Kill the SweetAlert backdrop entirely — the toast must never cover or
            block the page. Container is click-through; only the toast catches clicks. */
@@ -132,7 +132,7 @@ if ($target_name === '') { $target_name = $target->username; }
                                         <div class="col-md-7">
                                             <input type="text" id="perm_search" class="form-control" placeholder="Filter permissions by name, description or module…" autocomplete="off">
                                         </div>
-                                        <div class="col-md-5 text-right" style="font-size:12px;color:#9aa0ac;">
+                                        <div class="col-md-5 text-right" style="font-size:12px;color:var(--slate-400);">
                                             <span id="perm_visible_count">0</span> shown &middot; changes save instantly
                                         </div>
                                     </div>
@@ -187,7 +187,7 @@ if ($target_name === '') { $target_name = $target->username; }
                                         </div>
                                     <?php endforeach; ?>
                                     </div>
-                                    <div id="perm_no_results" style="display:none;padding:20px;text-align:center;color:#9aa0ac;">No permissions match your filter.</div>
+                                    <div id="perm_no_results" style="display:none;padding:20px;text-align:center;color:var(--slate-400);">No permissions match your filter.</div>
                                 </div>
                             </div>
                         </div>

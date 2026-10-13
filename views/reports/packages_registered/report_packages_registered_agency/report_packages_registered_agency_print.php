@@ -166,7 +166,7 @@ $fecha = str_replace('-', '/', $fecha);
             white-space: nowrap;
             text-decoration: none !important;
 
-            color: #fff;
+            color: var(--white);
             border: 0 none;
             border-radius: 4px;
             font-size: 14px;
@@ -202,29 +202,29 @@ $fecha = str_replace('-', '/', $fecha);
         }
 
         .button:focus {
-            outline: 1px dotted #959595;
+            outline: 1px dotted var(--slate-400);
             outline-offset: -4px;
         }
 
         .button.-regular {
-            color: #202129;
-            background-color: #edeeee;
+            color: var(--ink-900);
+            background-color: var(--fill-100);
         }
 
         .button.-regular:hover {
-            color: #202129;
-            background-color: #e1e2e2;
+            color: var(--ink-900);
+            background-color: var(--line-200);
             opacity: 1;
         }
 
         .button.-regular:active {
-            background-color: #d5d6d6;
+            background-color: var(--line-200);
             opacity: 1;
         }
 
         .button.-dark {
-            color: #FFFFFF;
-            background: #333030;
+            color: var(--white);
+            background: var(--ink-800);
         }
 
         .button.-dark:focus {

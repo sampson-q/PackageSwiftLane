@@ -300,7 +300,7 @@ if (isset($_POST['person_receives'])) {
     <link href="assets/template/dist/css/custom_swicth.css" rel="stylesheet">
     <style type="text/css">
         .canvas-bordered {
-          border: 1px solid #e9ecef;
+          border: 1px solid var(--fill-100);
         }
     </style>
 

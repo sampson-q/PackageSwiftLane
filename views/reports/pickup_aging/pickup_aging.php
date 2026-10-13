@@ -39,13 +39,13 @@ $readyDays = (int) CDP_PA_READY_DAYS;
     <title>Pickup Aging | <?php echo $core->site_name ?></title>
     <?php include 'views/inc/head_scripts.php'; ?>
     <style type="text/css">
-        .pa-badge { color:#fff; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700; }
+        .pa-badge { color:var(--white); padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700; }
         .pa-stage { font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; }
-        .pa-stage-pending { background:#fff3cd; color:#7a5b00; }
-        .pa-stage-notified { background:#cfe2ff; color:#084298; }
-        .pa-stage-notpicked { background:#f8d7da; color:#842029; }
-        .pa-stage-auction { background:#7a1f1f; color:#fff; }
-        .pa-stage-waiting { background:#e2e3e5; color:#41464b; }
+        .pa-stage-pending { background:var(--amber-surface); color:var(--amber-500); }
+        .pa-stage-notified { background:var(--sky-surface); color:var(--sky-500); }
+        .pa-stage-notpicked { background:var(--fill-100); color:var(--red-500); }
+        .pa-stage-auction { background:var(--red-500); color:var(--white); }
+        .pa-stage-waiting { background:var(--line-200); color:var(--ink-800); }
     </style>
 </head>
 
@@ -60,7 +60,7 @@ $readyDays = (int) CDP_PA_READY_DAYS;
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-12">
-                        <div class="card card-outline" style="border-top:3px solid #7a1f1f;">
+                        <div class="card card-outline" style="border-top:3px solid var(--red-500);">
                             <h4 class="card-title swl-promoted ml-4 mt-3"><i class="mdi mdi-clock-alert-outline"></i> Pickup Aging</h4>
                             <div class="card-body">
                                 <p class="text-muted">
@@ -79,7 +79,7 @@ $readyDays = (int) CDP_PA_READY_DAYS;
                                 <div class="table-responsive">
                                     <table class="table table-sm table-hover">
                                         <thead>
-                                            <tr style="background:#f1f3f5;">
+                                            <tr style="background:var(--page-050);">
                                                 <th style="width:30px;"></th>
                                                 <th>Shipment</th>
                                                 <th>Sender</th>
@@ -109,7 +109,7 @@ $readyDays = (int) CDP_PA_READY_DAYS;
                                                 </td>
                                                 <td><b><?php echo htmlspecialchars($r->order_track); ?></b></td>
                                                 <td><?php echo htmlspecialchars($sender ?: 'N/A'); ?></td>
-                                                <td><span class="pa-badge" style="background:<?php echo htmlspecialchars($r->color ?: '#888'); ?>;"><?php echo htmlspecialchars($r->mod_style ?: '—'); ?></span></td>
+                                                <td><span class="pa-badge" style="background:<?php echo htmlspecialchars($r->color ?: 'var(--slate-400)'); ?>;"><?php echo htmlspecialchars($r->mod_style ?: '—'); ?></span></td>
                                                 <td><?php echo htmlspecialchars((string) $r->ready_at); ?> <span class="text-muted">(<?php echo (int) $r->days_ready; ?>d)</span></td>
                                                 <td><?php echo $stage; ?></td>
                                             </tr>

@@ -115,7 +115,7 @@ $userData = $user->cdp_getUserData();
 											<div class="col-md-6">
 												<div class="form-group">
 													<label for="lastName1">
-														<b style="color:#ff0000"><?php echo $core->currency; ?></b>
+														<b style="color:var(--red-500)"><?php echo $core->currency; ?></b>
 														<?php echo $lang['tools-config77'] ?>
 													</label>
 													<input type="text" class="form-control required" name="min_cost_tax" id="min_cost_tax" value="<?php echo $core->min_cost_tax; ?>" placeholder="<?php echo $lang['tools-config77'] ?>">
@@ -138,7 +138,7 @@ $userData = $user->cdp_getUserData();
 											<div class="col-md-6">
 												<div class="form-group">
 													<label for="lastName1">
-														<b style="color:#ff0000"><?php echo $core->currency; ?></b>
+														<b style="color:var(--red-500)"><?php echo $core->currency; ?></b>
 														<?php echo $lang['tools-config76'] ?>
 													</label>
 													<input type="text" class="form-control required" name="min_cost_declared_tax" id="min_cost_declared_tax" value="<?php echo $core->min_cost_declared_tax; ?>" placeholder="<?php echo $lang['tools-config76'] ?>">
@@ -202,7 +202,7 @@ $userData = $user->cdp_getUserData();
 
 											<div class="col-md-3">
 												<div class="form-group">
-													<label for="lastName1"><b style="color:#ff0000"><?php echo $core->currency; ?></b> <?php echo $lang['tools-config58'] ?></label>
+													<label for="lastName1"><b style="color:var(--red-500)"><?php echo $core->currency; ?></b> <?php echo $lang['tools-config58'] ?></label>
 													<input type="text" class="form-control required" name="value_weight" id="value_weight" value="<?php echo $core->value_weight; ?>" placeholder="<?php echo $lang['tools-config58'] ?>">
 												</div>
 											</div>

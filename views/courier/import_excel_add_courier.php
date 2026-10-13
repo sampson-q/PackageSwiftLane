@@ -32,8 +32,8 @@ $userData = $user->cdp_getUserData();
     <title><?php echo $lang['asingmoduleexcell2']; ?> | <?php echo $core->site_name ?></title>
     <?php include 'views/inc/head_scripts.php'; ?>
     <style>
-        .card { border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .file-input { padding: 10px; background: #f8f9fa; border-radius: 5px; border: 2px dashed #007bff; }
+        .card { border-radius: 10px; box-shadow: 0 4px 8px color-mix(in srgb, var(--ink-900) 10%, transparent); }
+        .file-input { padding: 10px; background: var(--page-050); border-radius: 5px; border: 2px dashed var(--sky-500); }
         .file-input input[type="file"] { display: none; }
         .file-input label { display: block; padding: 15px; text-align: center; cursor: pointer; }
         #preview_section { display: none; }
@@ -42,7 +42,7 @@ $userData = $user->cdp_getUserData();
         .table-preview .cell-name { max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .table-preview .cell-select { min-width: 120px; }
         .table-preview .cell-select select { min-width: 100%; max-width: 180px; }
-        .cell-error { color: #dc3545; font-size: 0.8rem; max-width: 200px; }
+        .cell-error { color: var(--red-500); font-size: 0.8rem; max-width: 200px; }
         .cell-tarifa { font-weight: 600; }
         .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         @media (max-width: 768px) { .table-preview .form-control { min-width: 3rem; } }

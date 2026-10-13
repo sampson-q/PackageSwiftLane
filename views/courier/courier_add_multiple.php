@@ -574,7 +574,7 @@ $order_prefix = $settings->prefix;
                                                 <label for="inputname" class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
                                                 <div class="input-group mb-3">
                                                     <div class="input-group-prepend">
-                                                        <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
+                                                        <span class="input-group-text" style="color:var(--red-500)"><i class="fas fa-car"></i></span>
                                                     </div>
                                                     <input type="hidden" name="driver_id" id="driver_id" value="<?php echo $_SESSION['userid']; ?>">
 
@@ -592,7 +592,7 @@ $order_prefix = $settings->prefix;
                                                 <label for="inputname" class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
                                                 <div class="input-group mb-3">
                                                     <div class="input-group-prepend">
-                                                        <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
+                                                        <span class="input-group-text" style="color:var(--red-500)"><i class="fas fa-car"></i></span>
                                                     </div>
                                                     <select class="custom-select col-12" id="driver_id" name="driver_id">
                                                         <option value="0">--<?php echo $lang['left209'] ?>--</option>

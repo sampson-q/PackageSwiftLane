@@ -204,7 +204,7 @@ if (!empty($files_order)) {
                                             <label for="inputcom" class="control-label col-form-label"><?php echo $lang['add-title24'] ?></label>
                                             <div class="input-group mb-3">
                                                 <div class="input-group-prepend">
-                                                    <div class="input-group-text"><span style="color:#ff0000"><b><?php echo $lang['inv-shipping9'] ?></b></span></div>
+                                                    <div class="input-group-text"><span style="color:var(--red-500)"><b><?php echo $lang['inv-shipping9'] ?></b></span></div>
                                                 </div>
                                                 <input type="text" class="form-control" name="order_no" id="order_no" value="<?php echo $row_order->order_prefix . $row_order->order_no; ?>" readonly>
                                             </div>
@@ -597,8 +597,8 @@ if (!empty($files_order)) {
                                         </div>
 
                                         <div class="col-md-4">
-                                            <video id="cameraPreview" playsinline autoplay style="display:none;width:100%;max-width:320px;border:1px solid #ddd;border-radius:8px;"></video>
-                                            <video id="videoPreview" playsinline style="display:none;width:100%;max-width:320px;background:#000;border:1px solid #ddd;border-radius:8px;margin-top:.5rem;"></video>
+                                            <video id="cameraPreview" playsinline autoplay style="display:none;width:100%;max-width:320px;border:1px solid var(--line-200);border-radius:8px;"></video>
+                                            <video id="videoPreview" playsinline style="display:none;width:100%;max-width:320px;background:var(--ink-900);border:1px solid var(--line-200);border-radius:8px;margin-top:.5rem;"></video>
                                         </div>
                                     </div>
 

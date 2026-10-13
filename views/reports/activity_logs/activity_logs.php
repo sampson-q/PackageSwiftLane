@@ -61,29 +61,29 @@ $defaultTo   = date('Y-m-d');
     <?php include 'views/inc/head_scripts.php'; ?>
     <style>
         /* ── Filter panel ────────────────────────────────────────────────── */
-        .al-filters { background: #fff; border: 1px solid #e9edf3; border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
-        .al-filters label { font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: #8a94a6; margin-bottom: 4px; }
+        .al-filters { background: var(--white); border: 1px solid var(--fill-100); border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+        .al-filters label { font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: var(--slate-400); margin-bottom: 4px; }
         .al-filters .form-control, .al-filters .custom-select { font-size: .86rem; }
         .al-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
         .al-quick button {
-            border: 1px solid #e0e5ee; background: #fff; border-radius: 6px;
-            padding: 5px 12px; font-size: .78rem; font-weight: 600; color: #6b7788; cursor: pointer;
+            border: 1px solid var(--fill-100); background: var(--white); border-radius: 6px;
+            padding: 5px 12px; font-size: .78rem; font-weight: 600; color: var(--ink-700); cursor: pointer;
         }
-        .al-quick button.is-on { background: #1f2a37; border-color: #1f2a37; color: #fff; }
+        .al-quick button.is-on { background: var(--ink-900); border-color: var(--ink-900); color: var(--white); }
 
         /* ── Stat tiles ──────────────────────────────────────────────────── */
         .al-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 14px; margin-bottom: 18px; }
-        .al-kpi { background: #fff; border: 1px solid #e9edf3; border-radius: 10px; padding: 16px 18px; position: relative; overflow: hidden; }
-        .al-kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c, #d7dce5); }
-        .al-kpi__k { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: #8a94a6; }
-        .al-kpi__v { font-size: 1.7rem; font-weight: 700; letter-spacing: -.02em; color: #1f2a37; line-height: 1.15; margin-top: 5px; }
-        .al-kpi__s { font-size: .74rem; color: #99a2b1; margin-top: 2px; }
+        .al-kpi { background: var(--white); border: 1px solid var(--fill-100); border-radius: 10px; padding: 16px 18px; position: relative; overflow: hidden; }
+        .al-kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c, var(--line-200)); }
+        .al-kpi__k { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--slate-400); }
+        .al-kpi__v { font-size: 1.7rem; font-weight: 700; letter-spacing: -.02em; color: var(--ink-900); line-height: 1.15; margin-top: 5px; }
+        .al-kpi__s { font-size: .74rem; color: var(--slate-400); margin-top: 2px; }
 
         /* ── Cards ───────────────────────────────────────────────────────── */
-        .al-card { background: #fff; border: 1px solid #e9edf3; border-radius: 10px; margin-bottom: 18px; }
+        .al-card { background: var(--white); border: 1px solid var(--fill-100); border-radius: 10px; margin-bottom: 18px; }
         .al-card__h {
-            padding: 14px 18px; border-bottom: 1px solid #eef1f6;
-            font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: #8a94a6;
+            padding: 14px 18px; border-bottom: 1px solid var(--fill-100);
+            font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--slate-400);
             display: flex; align-items: center; justify-content: space-between; gap: 10px;
         }
         .al-card__b { padding: 16px 18px; }
@@ -91,48 +91,48 @@ $defaultTo   = date('Y-m-d');
         /* ── Breakdown bars ──────────────────────────────────────────────── */
         .al-bars { display: flex; flex-direction: column; gap: 10px; }
         .al-bar__top { display: flex; justify-content: space-between; font-size: .82rem; margin-bottom: 3px; }
-        .al-bar__name { font-weight: 600; color: #3b4655; }
-        .al-bar__n { color: #8a94a6; font-weight: 600; }
-        .al-bar__track { height: 6px; background: #eef1f6; border-radius: 4px; overflow: hidden; }
-        .al-bar__fill { height: 100%; border-radius: 4px; background: var(--c, #336aea); }
-        .al-empty { color: #99a2b1; font-size: .85rem; padding: 18px 0; text-align: center; }
+        .al-bar__name { font-weight: 600; color: var(--ink-800); }
+        .al-bar__n { color: var(--slate-400); font-weight: 600; }
+        .al-bar__track { height: 6px; background: var(--fill-100); border-radius: 4px; overflow: hidden; }
+        .al-bar__fill { height: 100%; border-radius: 4px; background: var(--c, var(--sky-500)); }
+        .al-empty { color: var(--slate-400); font-size: .85rem; padding: 18px 0; text-align: center; }
 
         /* ── Table ───────────────────────────────────────────────────────── */
         .al-table { font-size: .84rem; }
         .al-table thead th {
             font-size: .68rem; text-transform: uppercase; letter-spacing: .07em;
-            font-weight: 700; color: #99a2b1; border-top: 0; white-space: nowrap;
+            font-weight: 700; color: var(--slate-400); border-top: 0; white-space: nowrap;
         }
         .al-row { cursor: pointer; }
-        .al-row:hover { background: #f7f9fc; }
-        .al-row--denied { background: #fff7f8; }
-        .al-row--failure { background: #fffaf2; }
-        .al-actor { font-weight: 600; color: #1f2a37; }
+        .al-row:hover { background: var(--page-050); }
+        .al-row--denied { background: var(--page-050); }
+        .al-row--failure { background: var(--page-050); }
+        .al-actor { font-weight: 600; color: var(--ink-900); }
         .al-verb {
             display: inline-block; padding: .15rem .5rem; border-radius: 5px;
-            font-size: .7rem; font-weight: 700; color: #fff; background: var(--c, #6b7788);
+            font-size: .7rem; font-weight: 700; color: var(--white); background: var(--c, var(--ink-700));
         }
         .al-status {
             display: inline-block; padding: .13rem .5rem; border-radius: 1rem;
-            font-size: .7rem; font-weight: 700; background: #eef2ff; color: #4258c9;
+            font-size: .7rem; font-weight: 700; background: var(--page-050); color: var(--sky-500);
         }
         .al-pill { display: inline-block; padding: .1rem .45rem; border-radius: 1rem; font-size: .66rem; font-weight: 700; margin-left: 4px; }
-        .al-pill--success { background: #e8f8f5; color: #0aa699; }
-        .al-pill--denied  { background: #fdeaec; color: #f62d51; }
-        .al-pill--failure { background: #fdf3e0; color: #b4770d; }
-        .al-pill--imp     { background: #f3ecff; color: #7d4bd1; }
+        .al-pill--success { background: var(--fill-100); color: var(--green-500); }
+        .al-pill--denied  { background: var(--page-050); color: var(--red-500); }
+        .al-pill--failure { background: var(--fill-100); color: var(--amber-500); }
+        .al-pill--imp     { background: var(--page-050); color: var(--purple-500); }
 
         /* ── Detail drawer ───────────────────────────────────────────────── */
         .al-detail__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px 20px; margin-bottom: 18px; }
         .al-detail__wide { grid-column: 1 / -1; }
         .al-detail__grid > div { display: flex; flex-direction: column; }
-        .al-k { font-size: .66rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: #99a2b1; }
-        .al-v { font-size: .88rem; color: #1f2a37; word-break: break-word; }
-        .al-detail__h { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: #8a94a6; font-weight: 700; margin: 18px 0 8px; }
+        .al-k { font-size: .66rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--slate-400); }
+        .al-v { font-size: .88rem; color: var(--ink-900); word-break: break-word; }
+        .al-detail__h { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--slate-400); font-weight: 700; margin: 18px 0 8px; }
         .al-changes { font-size: .84rem; }
-        .al-changes__f { font-weight: 600; color: #3b4655; }
-        .al-changes__from { color: #b4491f; text-decoration: line-through; }
-        .al-changes__to { color: #0aa699; font-weight: 600; }
+        .al-changes__f { font-weight: 600; color: var(--ink-800); }
+        .al-changes__from { color: var(--red-500); text-decoration: line-through; }
+        .al-changes__to { color: var(--green-500); font-weight: 600; }
     </style>
 </head>
 
@@ -265,7 +265,7 @@ $defaultTo   = date('Y-m-d');
                         <div class="d-flex align-items-center" style="gap:16px;">
                             <div class="custom-control custom-checkbox">
                                 <input type="checkbox" class="custom-control-input" id="al_views">
-                                <label class="custom-control-label" for="al_views" style="text-transform:none;letter-spacing:0;font-size:.84rem;color:#3b4655;">
+                                <label class="custom-control-label" for="al_views" style="text-transform:none;letter-spacing:0;font-size:.84rem;color:var(--ink-800);">
                                     Include page views
                                 </label>
                             </div>

@@ -31,27 +31,27 @@ $userData = $user->cdp_getUserData();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <?php include 'views/inc/head_scripts.php'; ?>
     <style>
-        .dept-card { border:1px solid #e6e6e6; border-radius:8px; padding:14px 16px; margin-bottom:14px; }
+        .dept-card { border:1px solid var(--fill-100); border-radius:8px; padding:14px 16px; margin-bottom:14px; }
         .dept-card h5 { margin:0 0 2px; }
-        .dept-meta { font-size:12px; color:#9aa0ac; }
-        .dept-pill { font-size:11px; padding:2px 8px; border-radius:10px; background:#eef2fb; color:#336aea; margin-right:6px; }
+        .dept-meta { font-size:12px; color:var(--slate-400); }
+        .dept-pill { font-size:11px; padding:2px 8px; border-radius:10px; background:var(--page-050); color:var(--sky-500); margin-right:6px; }
         .dept-actions .btn { font-size:12px; }
         /* tri-state grid (reused for dept permission set + member list) */
         .d-modal-scroll { max-height:60vh; overflow-y:auto; }
-        .perm-row { display:flex; align-items:center; justify-content:space-between; padding:6px 4px; border-bottom:1px solid #f0f0f0; gap:8px; }
+        .perm-row { display:flex; align-items:center; justify-content:space-between; padding:6px 4px; border-bottom:1px solid var(--fill-100); gap:8px; }
         .perm-row:last-child { border-bottom:none; }
         .perm-row.hidden { display:none; }
         .perm-label { font-size:13px; flex:1 1 auto; min-width:0; }
-        .perm-label small { color:#9aa0ac; display:block; word-break:break-all; }
+        .perm-label small { color:var(--slate-400); display:block; word-break:break-all; }
         .perm-choice { display:flex; gap:4px; flex:0 0 auto; }
-        .perm-choice label { font-size:11px; margin:0; padding:3px 8px; border:1px solid #d9d9d9; border-radius:4px; cursor:pointer; background:#fff; }
+        .perm-choice label { font-size:11px; margin:0; padding:3px 8px; border:1px solid var(--line-200); border-radius:4px; cursor:pointer; background:var(--white); }
         .perm-choice input { display:none; }
-        .perm-choice label:has(input:checked) { background:#eef2fb; border-color:#336aea; font-weight:600; }
-        .perm-choice label.allow:has(input:checked) { color:#1a8a3a; }
-        .perm-choice label.deny:has(input:checked) { color:#c0392b; }
-        .mem-row { display:flex; align-items:center; gap:10px; padding:6px 4px; border-bottom:1px solid #f0f0f0; }
+        .perm-choice label:has(input:checked) { background:var(--page-050); border-color:var(--sky-500); font-weight:600; }
+        .perm-choice label.allow:has(input:checked) { color:var(--green-500); }
+        .perm-choice label.deny:has(input:checked) { color:var(--red-500); }
+        .mem-row { display:flex; align-items:center; gap:10px; padding:6px 4px; border-bottom:1px solid var(--fill-100); }
         .mem-row.hidden { display:none; }
-        .mem-row small { color:#9aa0ac; }
+        .mem-row small { color:var(--slate-400); }
         .swal2-container { background:transparent !important; pointer-events:none !important; }
         .swal2-container .swal2-toast { pointer-events:auto !important; }
     </style>
@@ -121,8 +121,8 @@ $userData = $user->cdp_getUserData();
                                                     </div>
                                                     <div class="mt-2">
                                                         <span class="dept-pill"><span class="dept-member-count"><?php echo (int)$d->member_count; ?></span> Members</span>
-                                                        <span class="dept-pill" style="background:#e5f6ea;color:#1a8a3a;"><span class="dept-allow-count"><?php echo (int)$d->allow_count; ?></span> Allow</span>
-                                                        <span class="dept-pill dept-deny-pill" style="background:#fbeaea;color:#c0392b;<?php echo (int)$d->deny_count ? '' : 'display:none;'; ?>"><span class="dept-deny-count"><?php echo (int)$d->deny_count; ?></span> Deny</span>
+                                                        <span class="dept-pill" style="background:var(--fill-100);color:var(--green-500);"><span class="dept-allow-count"><?php echo (int)$d->allow_count; ?></span> Allow</span>
+                                                        <span class="dept-pill dept-deny-pill" style="background:var(--page-050);color:var(--red-500);<?php echo (int)$d->deny_count ? '' : 'display:none;'; ?>"><span class="dept-deny-count"><?php echo (int)$d->deny_count; ?></span> Deny</span>
                                                     </div>
                                                 </div>
                                                 <div class="dept-actions text-right">

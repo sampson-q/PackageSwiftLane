@@ -807,7 +807,7 @@ if ($row_order->status_invoice == 1) {
                                             <div class=" col-sm-12 col-md-3 mb-2">
 
                                                 <?php if ($is_video) { ?>
-                                                    <video style="width: 180px; height: 180px; background:#000;" class="img-thumbnail" controls preload="metadata" src="<?php echo $file->url; ?>"></video>
+                                                    <video style="width: 180px; height: 180px; background:var(--ink-900);" class="img-thumbnail" controls preload="metadata" src="<?php echo $file->url; ?>"></video>
                                                 <?php } else { ?>
                                                     <img style="width: 180px; height: 180px;" class="img-thumbnail" src="<?php echo $src; ?>">
                                                 <?php } ?>

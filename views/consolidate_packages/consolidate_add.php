@@ -646,11 +646,11 @@ if (isset($_POST["create_invoice"])) {
         th, td {
             padding: 8px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid var(--line-200);
         }
 
         tfoot tr {
-            background-color: #f2f2f2;
+            background-color: var(--fill-100);
              margin-top: 20px; /* Agregar margen superior */
         }
 
@@ -661,11 +661,11 @@ if (isset($_POST["create_invoice"])) {
         }
 
         .selected-row {
-          background-color: rgba(255, 0, 0, 0.1); /* Color rojo suave con opacidad */
+          background-color: color-mix(in srgb, var(--red-500) 10%, transparent); /* Color rojo suave con opacidad */
         }
 
         .marked-row {
-          background-color: rgba(255, 0, 0, 0.1); /* Color rojo suave con opacidad */
+          background-color: color-mix(in srgb, var(--red-500) 10%, transparent); /* Color rojo suave con opacidad */
         }
 
 
@@ -923,7 +923,7 @@ if (isset($_POST["create_invoice"])) {
                                             <label for="inputname" class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
                                             <div class="input-group mb-3">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
+                                                    <span class="input-group-text" style="color:var(--red-500)"><i class="fas fa-car"></i></span>
                                                 </div>
                                                 <select class="custom-select col-12" id="driver_id" name="driver_id">
                                                     <option value="0">--<?php echo $lang['left209'] ?>--</option>

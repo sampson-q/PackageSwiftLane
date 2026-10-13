@@ -113,16 +113,16 @@ $h = function ($v) { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); 
         .select2-selection__arrow { height: 34px !important; }
         .profile-photo { width: 150px; height: 150px; object-fit: cover; cursor: pointer; transition: opacity .2s; }
         .profile-photo:hover { opacity: .75; }
-        .profile-doc { max-width: 100%; height: 140px; object-fit: cover; border-radius: 12px; cursor: pointer; border: 1px solid #e5e5e5; transition: opacity .2s; }
+        .profile-doc { max-width: 100%; height: 140px; object-fit: cover; border-radius: 12px; cursor: pointer; border: 1px solid var(--line-200); transition: opacity .2s; }
         .profile-doc:hover { opacity: .75; }
-        .required-mark { color: #dc3545; }
+        .required-mark { color: var(--red-500); }
         .field-error-message { display: block; font-size: .875rem; margin-top: 5px; }
-        .form-group.has-error .form-control, .form-group.has-error .select2-selection { border-color: #dc3545 !important; }
+        .form-group.has-error .form-control, .form-group.has-error .select2-selection { border-color: var(--red-500) !important; }
         .profile-phone-status { font-size: .75rem; vertical-align: middle; }
         .profile-phone-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .profile-phone-row .form-control { flex: 1 1 220px; min-width: 0; }
         .profile-phone-row .btn { flex: 0 0 auto; white-space: nowrap; }
-        .address-block { border: 1px dashed #dcdcdc; border-radius: 10px; padding: 14px 14px 0; margin-bottom: 14px; }
+        .address-block { border: 1px dashed var(--line-200); border-radius: 10px; padding: 14px 14px 0; margin-bottom: 14px; }
     </style>
 </head>
 

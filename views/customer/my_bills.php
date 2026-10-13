@@ -29,8 +29,8 @@ $userData = $user->cdp_getUserData();
             margin-bottom: 20px;
         }
         .mb-kpi {
-            background: #fff;
-            border: 1px solid #e9edf3;
+            background: var(--white);
+            border: 1px solid var(--fill-100);
             border-radius: 10px;
             padding: 18px 20px;
             position: relative;
@@ -41,28 +41,28 @@ $userData = $user->cdp_getUserData();
             position: absolute;
             left: 0; top: 0; bottom: 0;
             width: 4px;
-            background: var(--mb-accent, #d7dce5);
+            background: var(--mb-accent, var(--line-200));
         }
-        .mb-kpi--owed   { --mb-accent: #f62d51; }
-        .mb-kpi--billed { --mb-accent: #336aea; }
-        .mb-kpi--paid   { --mb-accent: #0aa699; }
-        .mb-kpi--count  { --mb-accent: #9b6ef3; }
+        .mb-kpi--owed   { --mb-accent: var(--red-500); }
+        .mb-kpi--billed { --mb-accent: var(--sky-500); }
+        .mb-kpi--paid   { --mb-accent: var(--green-500); }
+        .mb-kpi--count  { --mb-accent: var(--purple-500); }
         .mb-kpi__k {
             font-size: .7rem;
             text-transform: uppercase;
             letter-spacing: .08em;
             font-weight: 700;
-            color: #8a94a6;
+            color: var(--slate-400);
         }
         .mb-kpi__v {
             font-size: 1.6rem;
             font-weight: 700;
             letter-spacing: -.02em;
-            color: #1f2a37;
+            color: var(--ink-900);
             margin-top: 6px;
             line-height: 1.15;
         }
-        .mb-kpi__s { font-size: .76rem; color: #8a94a6; margin-top: 2px; }
+        .mb-kpi__s { font-size: .76rem; color: var(--slate-400); margin-top: 2px; }
 
         /* ── Toolbar ─────────────────────────────────────────────────────── */
         .mb-toolbar {
@@ -73,29 +73,29 @@ $userData = $user->cdp_getUserData();
             justify-content: space-between;
             margin-bottom: 16px;
         }
-        .mb-seg { display: inline-flex; border: 1px solid #e0e5ee; border-radius: 8px; overflow: hidden; }
+        .mb-seg { display: inline-flex; border: 1px solid var(--fill-100); border-radius: 8px; overflow: hidden; }
         .mb-seg button {
             border: 0;
-            background: #fff;
+            background: var(--white);
             padding: 8px 16px;
             font-size: .82rem;
             font-weight: 600;
-            color: #6b7788;
+            color: var(--ink-700);
             cursor: pointer;
         }
-        .mb-seg button + button { border-left: 1px solid #e0e5ee; }
-        .mb-seg button.is-on { background: #1f2a37; color: #fff; }
+        .mb-seg button + button { border-left: 1px solid var(--fill-100); }
+        .mb-seg button.is-on { background: var(--ink-900); color: var(--white); }
 
         /* ── Bill rows ───────────────────────────────────────────────────── */
         .mb-bill {
-            background: #fff;
-            border: 1px solid #e9edf3;
+            background: var(--white);
+            border: 1px solid var(--fill-100);
             border-radius: 10px;
             margin-bottom: 12px;
             overflow: hidden;
             transition: box-shadow .15s ease;
         }
-        .mb-bill.is-open { box-shadow: 0 6px 22px -12px rgba(31, 42, 55, .35); }
+        .mb-bill.is-open { box-shadow: 0 6px 22px -12px color-mix(in srgb, var(--ink-900) 35%, transparent); }
         .mb-bill__head {
             display: grid;
             grid-template-columns: 1fr auto auto;
@@ -104,22 +104,22 @@ $userData = $user->cdp_getUserData();
             padding: 16px 20px;
             cursor: pointer;
         }
-        .mb-bill__head:hover { background: #fafbfd; }
-        .mb-bill__no { font-weight: 700; font-size: 1rem; color: #1f2a37; }
-        .mb-bill__meta { font-size: .78rem; color: #8a94a6; margin-top: 3px; }
+        .mb-bill__head:hover { background: var(--white); }
+        .mb-bill__no { font-weight: 700; font-size: 1rem; color: var(--ink-900); }
+        .mb-bill__meta { font-size: .78rem; color: var(--slate-400); margin-top: 3px; }
         .mb-bill__figs { display: flex; gap: 26px; text-align: right; }
         .mb-fig__k {
             font-size: .68rem;
             text-transform: uppercase;
             letter-spacing: .07em;
-            color: #99a2b1;
+            color: var(--slate-400);
             font-weight: 700;
         }
-        .mb-fig__v { font-weight: 700; font-size: .95rem; color: #3b4655; }
+        .mb-fig__v { font-weight: 700; font-size: .95rem; color: var(--ink-800); }
         .mb-fig--balance .mb-fig__v { font-size: 1.2rem; }
-        .mb-owed { color: #f62d51; }
-        .mb-settled { color: #0aa699; }
-        .mb-caret { color: #b3bbc7; transition: transform .18s ease; font-size: 1.3rem; }
+        .mb-owed { color: var(--red-500); }
+        .mb-settled { color: var(--green-500); }
+        .mb-caret { color: var(--slate-400); transition: transform .18s ease; font-size: 1.3rem; }
         .mb-bill.is-open .mb-caret { transform: rotate(180deg); }
 
         .mb-chip {
@@ -130,23 +130,23 @@ $userData = $user->cdp_getUserData();
             font-weight: 700;
             letter-spacing: .02em;
         }
-        .mb-chip-paid { background: #e8f8f5; color: #0aa699; }
-        .mb-chip-due { background: #fdeaec; color: #f62d51; }
+        .mb-chip-paid { background: var(--fill-100); color: var(--green-500); }
+        .mb-chip-due { background: var(--page-050); color: var(--red-500); }
 
         /* ── Expanded body ───────────────────────────────────────────────── */
-        .mb-bill__body { border-top: 1px solid #eef1f6; background: #fbfcfe; }
+        .mb-bill__body { border-top: 1px solid var(--fill-100); background: var(--white); }
         .mb-pkg-table { width: 100%; font-size: .87rem; margin-bottom: 0; }
         .mb-pkg-table th {
             font-size: .68rem;
             text-transform: uppercase;
             letter-spacing: .07em;
-            color: #99a2b1;
+            color: var(--slate-400);
             font-weight: 700;
             border-top: 0;
             padding: 10px 20px;
         }
-        .mb-pkg-table td { padding: 11px 20px; vertical-align: middle; border-top: 1px solid #eef1f6; }
-        .mb-pkg-table tr.is-cleared td { color: #a2abb8; }
+        .mb-pkg-table td { padding: 11px 20px; vertical-align: middle; border-top: 1px solid var(--fill-100); }
+        .mb-pkg-table tr.is-cleared td { color: var(--slate-400); }
         .mb-paybar {
             display: flex;
             flex-wrap: wrap;
@@ -154,23 +154,23 @@ $userData = $user->cdp_getUserData();
             align-items: center;
             justify-content: space-between;
             padding: 16px 20px;
-            border-top: 1px solid #eef1f6;
-            background: #fff;
+            border-top: 1px solid var(--fill-100);
+            background: var(--white);
         }
-        .mb-paybar__amt { font-size: 1.5rem; font-weight: 700; color: #1f2a37; letter-spacing: -.02em; }
-        .mb-momo-note { font-size: .78rem; color: #8a94a6; }
+        .mb-paybar__amt { font-size: 1.5rem; font-weight: 700; color: var(--ink-900); letter-spacing: -.02em; }
+        .mb-momo-note { font-size: .78rem; color: var(--slate-400); }
 
         /* ── Empty state ─────────────────────────────────────────────────── */
         .mb-empty {
-            background: #fff;
-            border: 1px dashed #dde3ec;
+            background: var(--white);
+            border: 1px dashed var(--line-200);
             border-radius: 10px;
             padding: 54px 24px;
             text-align: center;
-            color: #8a94a6;
+            color: var(--slate-400);
         }
-        .mb-empty iconify-icon { font-size: 2.6rem; color: #c6cede; }
-        .mb-empty h5 { color: #4a5566; font-weight: 700; margin: 12px 0 4px; }
+        .mb-empty iconify-icon { font-size: 2.6rem; color: var(--line-200); }
+        .mb-empty h5 { color: var(--ink-700); font-weight: 700; margin: 12px 0 4px; }
 
         @media (max-width: 767px) {
             .mb-bill__head { grid-template-columns: 1fr auto; }

@@ -6,13 +6,13 @@
        shrink as you go deeper) and indentation (each level steps right). */
 
     .fs-toolbar .input-group-text {
-        background: #f4f6fb;
-        color: #5a6b7b;
+        background: var(--page-050);
+        color: var(--ink-700);
     }
 
     .fs-hint {
         font-size: 12px;
-        color: #8a97a5;
+        color: var(--slate-400);
     }
 
     /* Flex headers keep every accordion row tidy and aligned. */
@@ -52,9 +52,9 @@
     }
 
     .fs-chip-pkg {
-        background: #eceff3;
-        color: #5b6b7c;
-        border: 1px solid #d4dce5;
+        background: var(--fill-100);
+        color: var(--ink-700);
+        border: 1px solid var(--line-200);
     }
 
     /* ---- Level 1 — consolidation: native card, primary-purple accent ----
@@ -63,16 +63,16 @@
     /* overflow must stay visible: the customer tier's Actions dropdown lives
        inside this card and gets clipped at the card boundary otherwise. */
     .fs-consol-card {
-        border: 1px solid #e3e7ef;
-        border-left: 5px solid #7460ee;
+        border: 1px solid var(--fill-100);
+        border-left: 5px solid var(--sky-500);
         border-radius: 6px;
         overflow: visible;
-        box-shadow: 0 1px 3px rgba(60, 70, 100, .08);
+        box-shadow: 0 1px 3px color-mix(in srgb, var(--ink-700) 8%, transparent);
     }
 
     .fs-consol-card>.fs-consol-header {
-        background: #fff !important;
-        color: #2c3652 !important;
+        background: var(--white) !important;
+        color: var(--ink-800) !important;
         font-size: 14.5px;
         padding: 11px 14px;
     }
@@ -80,61 +80,61 @@
     /* Untouched (collapsed) consolidation: the number reads like the rest
        of the meta line (same colour as the date and the total weight). */
     .fs-consol-card>.fs-consol-header b {
-        color: #6c7a89 !important;
+        color: var(--ink-700) !important;
         font-size: 14.5px;
         font-weight: 600;
         letter-spacing: .4px;
     }
 
     .fs-consol-card>.fs-consol-header .fs-dim {
-        color: #6c7a89 !important;
+        color: var(--ink-700) !important;
         opacity: 1;
     }
 
     .fs-consol-card>.fs-consol-header .fs-caret,
     .fs-consol-card>.fs-consol-header>i {
-        color: #6c7a89;
+        color: var(--ink-700);
     }
 
     .fs-consol-card>.fs-consol-header .fs-money {
-        background: #e5f6ec;
-        color: #1b8a4b !important;
+        background: var(--fill-100);
+        color: var(--green-500) !important;
         padding: 2px 10px;
         border-radius: 12px;
     }
 
     /* Active/opened consolidation: the left accent bar turns charcoal
-       (#343a40) over a light header, with the number darkened for emphasis. */
+       (var(--ink-800)) over a light header, with the number darkened for emphasis. */
     .fs-consol-card.fs-active {
-        border-color: #343a40;
-        border-left-color: #343a40;
-        box-shadow: 0 2px 8px rgba(52, 58, 64, .25);
+        border-color: var(--ink-800);
+        border-left-color: var(--ink-800);
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--ink-800) 25%, transparent);
     }
 
     .fs-consol-card.fs-active>.fs-consol-header {
-        background: #f1f3f5 !important;
+        background: var(--page-050) !important;
     }
 
     .fs-consol-card.fs-active>.fs-consol-header b {
-        color: #343a40 !important;
+        color: var(--ink-800) !important;
         font-size: 16px;
     }
 
     .fs-consol-card.fs-active>.fs-consol-header .fs-caret,
     .fs-consol-card.fs-active>.fs-consol-header>i {
-        color: #343a40;
+        color: var(--ink-800);
     }
 
     /* The consolidation body is a tinted canvas its customers sit on. */
     .fs-consol-body {
-        background: #f4f5f7;
-        border-top: 1px solid #e0e3e7;
+        background: var(--page-050);
+        border-top: 1px solid var(--line-200);
     }
 
     /* Paid / discount chips (stage-2 billing) */
     .fs-chip-paid {
-        background: #e3f2fd;
-        color: #1565c0;
+        background: var(--fill-100);
+        color: var(--sky-500);
         font-weight: 700;
         font-size: 12px;
         padding: 2px 10px;
@@ -143,8 +143,8 @@
     }
 
     .fs-chip-discount {
-        background: #fff3e0;
-        color: #b26a00;
+        background: var(--fill-100);
+        color: var(--amber-500);
         font-weight: 700;
         font-size: 12px;
         padding: 2px 10px;
@@ -153,8 +153,8 @@
     }
 
     .fs-chip-balance {
-        background: #fdecea;
-        color: #c62828;
+        background: var(--page-050);
+        color: var(--red-500);
         font-weight: 700;
         font-size: 12px;
         padding: 2px 10px;
@@ -163,8 +163,8 @@
     }
 
     .fs-chip-settled {
-        background: #e8f5e9;
-        color: #2e7d32;
+        background: var(--fill-100);
+        color: var(--green-500);
         font-weight: 700;
         font-size: 12px;
         padding: 2px 10px;
@@ -173,8 +173,8 @@
     }
 
     .fs-chip-owed {
-        background: #b71c1c;
-        color: #fff;
+        background: var(--red-500);
+        color: var(--white);
         font-weight: 700;
         font-size: 12px;
         padding: 2px 10px;
@@ -185,8 +185,8 @@
     /* Exchange-rate anchor shown on each billing-log entry (audit). */
     .fs-rate-chip {
         display: inline-block;
-        background: #eef2fb;
-        color: #3f5aa8;
+        background: var(--page-050);
+        color: var(--sky-500);
         font-size: 11px;
         font-weight: 700;
         padding: 0 7px;
@@ -199,18 +199,18 @@
        overflow must stay visible or the Actions dropdown gets clipped
        inside the collapsed card. */
     .fs-cust-card {
-        border: 1px solid #cfe0dd;
-        border-left: 5px solid #00897b;
+        border: 1px solid var(--line-200);
+        border-left: 5px solid var(--green-500);
         border-radius: 6px;
         margin-left: 16px;
-        background: #fff;
+        background: var(--white);
         overflow: visible;
-        box-shadow: 0 1px 2px rgba(0, 60, 50, .06);
+        box-shadow: 0 1px 2px color-mix(in srgb, var(--green-500) 6%, transparent);
     }
 
     .fs-cust-header {
-        background: #fff;
-        color: #1d3833;
+        background: var(--white);
+        color: var(--ink-900);
         font-size: 13.5px;
     }
 
@@ -224,8 +224,8 @@
         height: 30px;
         min-width: 30px;
         border-radius: 50%;
-        background: #00897b;
-        color: #fff;
+        background: var(--green-500);
+        color: var(--white);
         font-weight: 700;
         font-size: 12px;
         display: inline-flex;
@@ -241,45 +241,45 @@
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background: #28a745;
-        color: #fff;
+        background: var(--green-500);
+        color: var(--white);
         font-size: 10px;
         line-height: 1;
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 2px solid #fff;
+        border: 2px solid var(--white);
     }
 
     .fs-cust-card.fs-active {
-        border-color: #00897b;
-        box-shadow: 0 0 0 2px rgba(0, 137, 123, .3);
+        border-color: var(--green-500);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--green-500) 30%, transparent);
     }
 
     .fs-cust-card.fs-active>.fs-cust-header {
-        background: #e4f3f1;
+        background: var(--fill-100);
     }
 
     /* Customer body: its own tint, one shade lighter than the teal spine. */
     .fs-cust-body {
-        background: #f0f7f6;
-        border-top: 1px dashed #bcd8d4;
+        background: var(--page-050);
+        border-top: 1px dashed var(--slate-400);
     }
 
     /* ---- Level 3 — package: compact slate row, deeper indent ---- */
     .fs-pkg-card {
-        border: 1px solid #dde3ea;
-        border-left: 4px solid #78909c;
+        border: 1px solid var(--line-200);
+        border-left: 4px solid var(--slate-400);
         border-radius: 5px;
         margin-left: 26px;
-        background: #fff;
+        background: var(--white);
         /* visible so the Package Actions dropdown isn't clipped by the card */
         overflow: visible;
     }
 
     .fs-pkg-header {
-        background: #fbfcfe;
-        color: #26333f;
+        background: var(--white);
+        color: var(--ink-800);
         font-size: 12.5px;
         padding: 6px 10px !important;
     }
@@ -290,17 +290,17 @@
     }
 
     .fs-pkg-card.fs-active {
-        background: #fff7e6;
-        box-shadow: inset 0 0 0 2px #e0a800;
+        background: var(--page-050);
+        box-shadow: inset 0 0 0 2px var(--amber-500);
     }
 
     .fs-pkg-card.fs-active>.fs-pkg-header {
-        background: #ffeec6;
+        background: var(--amber-surface);
     }
 
     /* ---- Level 4 — items ---- */
     .fs-items-table {
-        background: #fff;
+        background: var(--white);
     }
 
     .fs-items-table td {
@@ -332,7 +332,7 @@
     /* Money */
     .fs-money {
         font-weight: 700;
-        color: #1b8a4b;
+        color: var(--green-500);
         white-space: nowrap;
     }
 
@@ -341,20 +341,20 @@
     .fs-history.fs-billing-log {
         margin: 8px 4px 4px 26px;
         padding: 6px 10px;
-        background: #eef7f0;
-        border: 1px solid #cbe5d2;
+        background: var(--page-050);
+        border: 1px solid var(--line-200);
         border-radius: 5px;
     }
 
     .fs-history.fs-billing-log .fs-history-title {
-        color: #2e7d32;
+        color: var(--green-500);
     }
 
     /* Grouped-items card */
     .fs-group-card {
-        border: 1px dashed #17a2b8;
+        border: 1px dashed var(--green-500);
         border-radius: 5px;
-        background: #f2fbfd;
+        background: var(--page-050);
         padding: 8px 10px;
     }
 
@@ -369,7 +369,7 @@
         margin: 0 0 4px 0;
         padding-left: 22px;
         font-size: 12.5px;
-        color: #44535f;
+        color: var(--ink-700);
     }
 
     .fs-group-ctl {
@@ -390,7 +390,7 @@
         width: 20px;
         height: 20px;
         border-radius: 50%;
-        color: #fff;
+        color: var(--white);
         font-size: 11px;
         vertical-align: middle;
     }
@@ -399,13 +399,13 @@
     .fs-history {
         margin-top: 10px;
         padding-top: 6px;
-        border-top: 1px solid #e3e6ea;
+        border-top: 1px solid var(--fill-100);
         font-size: 12px;
     }
 
     .fs-history-title {
         font-weight: 700;
-        color: #5a6b7b;
+        color: var(--ink-700);
         margin-bottom: 3px;
     }
 

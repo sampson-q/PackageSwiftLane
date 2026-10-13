@@ -85,7 +85,7 @@ $shipments = $db->cdp_registros();
 <head>
     <meta charset="UTF-8">
     <title><?= $lang["report-text88"] ?> – Air Shipping</title>
-    <style>body, table { font-family: Arial, sans-serif; border-collapse: collapse; } th, td { border: 1px solid #ccc; padding: 4px; }</style>
+    <style>body, table { font-family: Arial, sans-serif; border-collapse: collapse; } th, td { border: 1px solid var(--slate-400); padding: 4px; }</style>
 </head>
 <body>
     <h2>

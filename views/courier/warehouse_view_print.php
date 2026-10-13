@@ -83,13 +83,13 @@ cdp_prefetchConsolidations(array_map(function ($r) { return $r->order_no; }, $da
             border-collapse: collapse;
         }
         th, td {
-            border: 1px solid #000;
+            border: 1px solid var(--ink-900);
             padding: 6px 8px;
             font-size: 12px;
             word-wrap: break-word;
         }
         thead th {
-            background: #f1f1f1;
+            background: var(--fill-100);
         }
         h2 {
             text-align: center;

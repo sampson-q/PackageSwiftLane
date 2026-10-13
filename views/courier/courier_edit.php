@@ -92,16 +92,16 @@ $numrows     = $db->cdp_rowCount();
     <link rel="stylesheet" href="assets/template/dist/css/custom_swicth.css">
     <?php include 'views/inc/head_scripts.php'; ?>
     <style>
-        .row-shadow {background:#fff;border-radius:.5rem;box-shadow:0 .35rem 1rem rgba(15,23,42,.08);padding:1rem;margin:.5rem 0}
+        .row-shadow {background:var(--white);border-radius:.5rem;box-shadow:0 .35rem 1rem color-mix(in srgb, var(--ink-900) 8%, transparent);padding:1rem;margin:.5rem 0}
         .green-bold {font-weight:700}
         .d-none {display:none!important}
-        .rate-box {background:#f8f9fa;border-radius:.5rem;padding:0.75rem 1rem;border:1px solid #e3e6ea;}
-        .table-packages thead th {background:#212529;color:#fff;border-color:#343a40;font-weight:500;font-size:0.85rem;text-transform:uppercase;}
+        .rate-box {background:var(--page-050);border-radius:.5rem;padding:0.75rem 1rem;border:1px solid var(--fill-100);}
+        .table-packages thead th {background:var(--ink-900);color:var(--white);border-color:var(--ink-800);font-weight:500;font-size:0.85rem;text-transform:uppercase;}
         .table-packages tbody td {vertical-align:middle;}
-        .weight-summary {background:#f8f9fa;border-radius:.5rem;padding:.75rem 1rem;border:1px dashed #d1d5db;}
+        .weight-summary {background:var(--page-050);border-radius:.5rem;padding:.75rem 1rem;border:1px dashed var(--line-200);}
         .pricing-mode-toggle {width:100%;}
         .pricing-mode-toggle .btn {padding:.2rem .4rem;font-size:.78rem;font-weight:600;}
-        td.pkg-disabled-cell {background:#f3f4f6;}
+        td.pkg-disabled-cell {background:var(--page-050);}
     </style>
 </head>
 <body>
@@ -140,7 +140,7 @@ $numrows     = $db->cdp_rowCount();
                                         <div class="input-group mb-3">
                                             <div class="input-group-prepend">
                                                 <div class="input-group-text">
-                                                    <span style="color:#ff0000"><b><?php echo $lang['inv-shipping9'] ?></b></span>
+                                                    <span style="color:var(--red-500)"><b><?php echo $lang['inv-shipping9'] ?></b></span>
                                                 </div>
                                             </div>
                                             <input type="text" class="form-control" name="order_no" id="order_no"
@@ -358,7 +358,7 @@ $numrows     = $db->cdp_rowCount();
                                                     <label class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
                                                     <div class="input-group mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
+                                                            <span class="input-group-text" style="color:var(--red-500)"><i class="fas fa-car"></i></span>
                                                         </div>
                                                         <input type="hidden" name="driver_id" id="driver_id" value="<?php echo $_SESSION['userid']; ?>">
                                                         <select class="custom-select col-12" id="driver_name" name="driver_name">
@@ -371,7 +371,7 @@ $numrows     = $db->cdp_rowCount();
                                                     <label class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
                                                     <div class="input-group mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
+                                                            <span class="input-group-text" style="color:var(--red-500)"><i class="fas fa-car"></i></span>
                                                         </div>
                                                         <select class="custom-select col-12" id="driver_id" name="driver_id">
                                                             <option value="0">--<?php echo $lang['left209'] ?>--</option>
@@ -522,7 +522,7 @@ $numrows     = $db->cdp_rowCount();
                                             </button>
 
                                             <div class="mt-2 d-flex align-items-start" style="gap:.5rem;">
-                                                <video id="cameraPreview" autoplay playsinline style="width:220px;height:165px;background:#000;display:none;border-radius:6px;object-fit:cover;"></video>
+                                                <video id="cameraPreview" autoplay playsinline style="width:220px;height:165px;background:var(--ink-900);display:none;border-radius:6px;object-fit:cover;"></video>
                                                 <div style="flex:1;">
                                                     <div style="margin-bottom:.5rem;">
                                                         <button type="button" id="takeCameraPhoto" class="btn btn-success btn-sm" style="display:none;"><?php echo $lang['left1105']; ?></button>
@@ -544,7 +544,7 @@ $numrows     = $db->cdp_rowCount();
                                             </button>
 
                                             <div class="mt-2 d-flex align-items-start" style="gap:.5rem;">
-                                                <video id="videoPreview" playsinline style="width:220px;height:165px;background:#000;display:none;border-radius:6px;object-fit:cover;"></video>
+                                                <video id="videoPreview" playsinline style="width:220px;height:165px;background:var(--ink-900);display:none;border-radius:6px;object-fit:cover;"></video>
                                             </div>
                                             <small id="videoRecStatus" class="d-block mt-1 text-muted"></small>
                                             <input class="custom-file-input" id="filesVideo" name="filesVideo[]" multiple="multiple" type="file" accept="video/*" capture="environment" style="display:none;" />

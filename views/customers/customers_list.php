@@ -104,46 +104,46 @@ $pct_unapprove = $stats_total > 0 ? round(($stats_unapprove / $stats_total) * 10
     <?php include 'views/inc/head_scripts.php'; ?>
     <style>
         /* Mini dashboard estilo referencia: tarjetas blancas, icono Solar en módulo arriba-derecha */
-        .customers-stats-card { background: #fff; border-radius: 0.5rem; border: 1px solid rgba(0,0,0,.06); box-shadow: 0 2px 6px rgba(0,0,0,.06); transition: box-shadow .2s; overflow: hidden; }
-        .customers-stats-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+        .customers-stats-card { background: var(--white); border-radius: 0.5rem; border: 1px solid color-mix(in srgb, var(--ink-900) 6%, transparent); box-shadow: 0 2px 6px color-mix(in srgb, var(--ink-900) 6%, transparent); transition: box-shadow .2s; overflow: hidden; }
+        .customers-stats-card:hover { box-shadow: 0 4px 14px color-mix(in srgb, var(--ink-900) 8%, transparent); }
         .customers-stats-card .card-body { padding: 1.25rem 1.25rem 1rem; position: relative; }
         .customers-stats-card .stat-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.75rem; }
-        .customers-stats-card .stat-title { font-size: 0.875rem; font-weight: 500; color: #566a7f; margin: 0; line-height: 1.3; }
+        .customers-stats-card .stat-title { font-size: 0.875rem; font-weight: 500; color: var(--ink-700); margin: 0; line-height: 1.3; }
         .customers-stats-card .stat-icon-module { width: 48px; height: 48px; border-radius: 0.5rem; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .customers-stats-card .stat-icon-module iconify-icon { font-size: 1.75rem !important; }
-        .customers-stats-card .stat-icon-module.bg-label-primary { background: rgba(115,103,240,.14); color: #7367f0; }
-        .customers-stats-card .stat-icon-module.bg-label-success { background: rgba(40,199,111,.14); color: #28c76f; }
-        .customers-stats-card .stat-icon-module.bg-label-secondary { background: rgba(105,108,117,.12); color: #5e5873; }
-        .customers-stats-card .stat-icon-module.bg-label-warning { background: rgba(255,159,67,.14); color: #ff9f43; }
-        .customers-stats-card .stat-value { font-size: 1.75rem; font-weight: 700; line-height: 1.2; color: #2d3748; margin: 0 0 0.15rem 0; letter-spacing: -0.02em; }
+        .customers-stats-card .stat-icon-module.bg-label-primary { background: color-mix(in srgb, var(--sky-500) 14%, transparent); color: var(--sky-500); }
+        .customers-stats-card .stat-icon-module.bg-label-success { background: color-mix(in srgb, var(--green-500) 14%, transparent); color: var(--green-500); }
+        .customers-stats-card .stat-icon-module.bg-label-secondary { background: color-mix(in srgb, var(--ink-700) 12%, transparent); color: var(--ink-700); }
+        .customers-stats-card .stat-icon-module.bg-label-warning { background: color-mix(in srgb, var(--amber-500) 14%, transparent); color: var(--amber-500); }
+        .customers-stats-card .stat-value { font-size: 1.75rem; font-weight: 700; line-height: 1.2; color: var(--ink-800); margin: 0 0 0.15rem 0; letter-spacing: -0.02em; }
         .customers-stats-card .stat-badge { font-size: 0.8125rem; font-weight: 600; margin-right: 0.25rem; }
-        .customers-stats-card .stat-label { font-size: 0.8125rem; color: #a1acb8; margin: 0; line-height: 1.4; }
+        .customers-stats-card .stat-label { font-size: 0.8125rem; color: var(--slate-400); margin: 0; line-height: 1.4; }
         /* Clickable stat cards */
         .stat-card-clickable { cursor: pointer; transition: box-shadow .2s, border .2s; border: 2px solid transparent !important; }
-        .stat-card-clickable:hover { box-shadow: 0 4px 16px rgba(0,0,0,.10) !important; }
-        .stat-card-hint { font-size: 0.72rem; color: #c0c9d4; margin: 0.35rem 0 0; display: block; }
+        .stat-card-clickable:hover { box-shadow: 0 4px 16px color-mix(in srgb, var(--ink-900) 10%, transparent) !important; }
+        .stat-card-hint { font-size: 0.72rem; color: var(--slate-400); margin: 0.35rem 0 0; display: block; }
 
         /* Active states per card color */
-        #card-active-users.filter-active   { border: 2px solid #28c76f !important; box-shadow: 0 0 0 3px rgba(40,199,111,.15) !important; }
-        #card-inactive-users.filter-active { border: 2px solid #a0a0a0 !important; box-shadow: 0 0 0 3px rgba(105,108,117,.15) !important; }
-        #card-approved-users.filter-active { border: 2px solid #7367f0 !important; box-shadow: 0 0 0 3px rgba(115,103,240,.15) !important; }
-        #card-unapproved-users.filter-active { border: 2px solid #ea5455 !important; box-shadow: 0 0 0 3px rgba(234,84,85,.15) !important; }
-        #card-new-users.filter-active      { border: 2px solid #ff9f43 !important; box-shadow: 0 0 0 3px rgba(255,159,67,.18) !important; }
+        #card-active-users.filter-active   { border: 2px solid var(--green-500) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--green-500) 15%, transparent) !important; }
+        #card-inactive-users.filter-active { border: 2px solid var(--slate-400) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink-700) 15%, transparent) !important; }
+        #card-approved-users.filter-active { border: 2px solid var(--sky-500) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--sky-500) 15%, transparent) !important; }
+        #card-unapproved-users.filter-active { border: 2px solid var(--red-500) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--red-500) 15%, transparent) !important; }
+        #card-new-users.filter-active      { border: 2px solid var(--amber-500) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber-500) 18%, transparent) !important; }
 
-        #card-active-users.filter-active .stat-icon-module     { background: rgba(40,199,111,.30) !important; }
-        #card-inactive-users.filter-active .stat-icon-module   { background: rgba(105,108,117,.28) !important; }
-        #card-approved-users.filter-active .stat-icon-module   { background: rgba(115,103,240,.28) !important; }
-        #card-unapproved-users.filter-active .stat-icon-module { background: rgba(234,84,85,.28) !important; }
-        #card-new-users.filter-active .stat-icon-module        { background: rgba(255,159,67,.35) !important; }
+        #card-active-users.filter-active .stat-icon-module     { background: color-mix(in srgb, var(--green-500) 30%, transparent) !important; }
+        #card-inactive-users.filter-active .stat-icon-module   { background: color-mix(in srgb, var(--ink-700) 28%, transparent) !important; }
+        #card-approved-users.filter-active .stat-icon-module   { background: color-mix(in srgb, var(--sky-500) 28%, transparent) !important; }
+        #card-unapproved-users.filter-active .stat-icon-module { background: color-mix(in srgb, var(--red-500) 28%, transparent) !important; }
+        #card-new-users.filter-active .stat-icon-module        { background: color-mix(in srgb, var(--amber-500) 35%, transparent) !important; }
 
         /* Disabled dimming when new-users filter is active */
         .stat-card-clickable.filter-locked { opacity: .42; pointer-events: none; }
         #card-new-users.filter-active {
-            border: 2px solid #ff9f43 !important;
-            box-shadow: 0 0 0 3px rgba(255,159,67,.18) !important;
+            border: 2px solid var(--amber-500) !important;
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber-500) 18%, transparent) !important;
         }
         #card-new-users.filter-active .stat-icon-module {
-            background: rgba(255,159,67,.35) !important;
+            background: color-mix(in srgb, var(--amber-500) 35%, transparent) !important;
         }
     </style>
 

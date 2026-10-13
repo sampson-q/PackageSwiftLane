@@ -116,7 +116,7 @@ $categories   = $core->cdp_getCategoriesById(27);
     <link rel="stylesheet" href="assets/template/dist/css/custom_swicth.css">
     <?php include 'views/inc/head_scripts.php'; ?>
     <style>
-        .row-shadow {background:#fff;border-radius:.5rem;box-shadow:0 .35rem 1rem rgba(15,23,42,.08);padding:1rem;margin:.5rem 0}
+        .row-shadow {background:var(--white);border-radius:.5rem;box-shadow:0 .35rem 1rem color-mix(in srgb, var(--ink-900) 8%, transparent);padding:1rem;margin:.5rem 0}
         .green-bold {font-weight:700}
         .d-none {display:none!important}
     </style>
@@ -124,17 +124,17 @@ $categories   = $core->cdp_getCategoriesById(27);
     <style>
     /* Bloque proveedor/millas */
     .rate-box {
-        background: #f8f9fa;
+        background: var(--page-050);
         border-radius: .5rem;
         padding: 0.75rem 1rem;
-        border: 1px solid #e3e6ea;
+        border: 1px solid var(--fill-100);
     }
 
     /* Tabla de paquetes */
     .table-packages thead th {
-        background: #212529;
-        color: #fff;
-        border-color: #343a40;
+        background: var(--ink-900);
+        color: var(--white);
+        border-color: var(--ink-800);
         font-weight: 500;
         font-size: 0.85rem;
         text-transform: uppercase;
@@ -146,10 +146,10 @@ $categories   = $core->cdp_getCategoriesById(27);
 
     /* Totales de peso */
     .weight-summary {
-        background: #f8f9fa;
+        background: var(--page-050);
         border-radius: .5rem;
         padding: .75rem 1rem;
-        border: 1px dashed #d1d5db;
+        border: 1px dashed var(--line-200);
     }
 </style>
 
@@ -422,7 +422,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                     <label class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
                                                     <div class="input-group mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
+                                                            <span class="input-group-text" style="color:var(--red-500)"><i class="fas fa-car"></i></span>
                                                         </div>
                                                         <input type="hidden" name="driver_id" id="driver_id" value="<?php echo $_SESSION['userid']; ?>">
                                                         <select class="custom-select col-12" id="driver_name" name="driver_name">
@@ -435,7 +435,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                                     <label class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
                                                     <div class="input-group mb-3">
                                                         <div class="input-group-prepend">
-                                                            <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
+                                                            <span class="input-group-text" style="color:var(--red-500)"><i class="fas fa-car"></i></span>
                                                         </div>
                                                         <select class="custom-select col-12" id="driver_id" name="driver_id">
                                                             <option value="0">--<?php echo $lang['left209'] ?>--</option>
@@ -568,7 +568,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                             </button>
 
                                             <div class="mt-2 d-flex align-items-start" style="gap:.5rem;">
-                                                <video id="cameraPreview" autoplay playsinline style="width:220px; height:165px; background:#000; display:none; border-radius:6px; object-fit:cover;"></video>
+                                                <video id="cameraPreview" autoplay playsinline style="width:220px; height:165px; background:var(--ink-900); display:none; border-radius:6px; object-fit:cover;"></video>
 
                                                 <div style="flex:1;">
                                                     <div style="margin-bottom:.5rem;">
@@ -593,7 +593,7 @@ $categories   = $core->cdp_getCategoriesById(27);
                                             </button>
 
                                             <div class="mt-2 d-flex align-items-start" style="gap:.5rem;">
-                                                <video id="videoPreview" playsinline style="width:220px; height:165px; background:#000; display:none; border-radius:6px; object-fit:cover;"></video>
+                                                <video id="videoPreview" playsinline style="width:220px; height:165px; background:var(--ink-900); display:none; border-radius:6px; object-fit:cover;"></video>
                                             </div>
                                             <small id="videoRecStatus" class="d-block mt-1 text-muted"></small>
                                             <input class="custom-file-input" id="filesVideo" name="filesVideo[]" multiple="multiple" type="file" accept="video/*" capture="environment" style="display:none;" />

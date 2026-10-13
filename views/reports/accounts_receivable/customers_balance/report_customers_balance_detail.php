@@ -106,7 +106,7 @@ $fecha_fin = str_replace('-', '/', $fecha_fin);
         }
 
         .card-outline {
-            border-top: 3px solid #bbb;
+            border-top: 3px solid var(--slate-400);
         }
     </style>
 

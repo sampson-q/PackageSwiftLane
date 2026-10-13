@@ -520,7 +520,7 @@ if (isset($_POST["total_item"])) {
                                             <label for="inputcom" class="control-label col-form-label"><?php echo $lang['langs_020'] ?></label>
                                             <div class="input-group mb-3">
                                                 <div class="input-group-prepend">
-                                                    <div class="input-group-text"><span style="color:#ff0000"><b><?php echo $lang['langs_020'] ?></b></span></div>
+                                                    <div class="input-group-text"><span style="color:var(--red-500)"><b><?php echo $lang['langs_020'] ?></b></span></div>
                                                 </div>
                                                 <input type="text" class="form-control" name="order_no" id="order_no" value="<?php echo $row_order->c_prefix . $row_order->c_no; ?>" readonly>
                                             </div>
@@ -593,7 +593,7 @@ if (isset($_POST["total_item"])) {
                                             <label for="inputname" class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
                                             <div class="input-group mb-3">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
+                                                    <span class="input-group-text" style="color:var(--red-500)"><i class="fas fa-car"></i></span>
                                                 </div>
                                                 <select class="custom-select col-12" id="driver_id" name="driver_id">
                                                     <option value="0">--<?php echo $lang['left209'] ?>--</option>

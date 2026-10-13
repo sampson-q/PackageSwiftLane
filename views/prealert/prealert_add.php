@@ -55,22 +55,22 @@ $userData = $user->cdp_getUserData();
     <link rel="stylesheet" href="assets/template/assets/libs/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css">
     <style type="text/css">
         .custom-file-input.is-invalid {
-            border-color: #dc3545;
+            border-color: var(--red-500);
         }
         /* Attachment drop area — same visual language as the other upload
            controls in the system (dashed outline, muted body, single action). */
         .pa-drop {
-            border: 2px dashed #d7dce5;
+            border: 2px dashed var(--line-200);
             border-radius: .5rem;
             padding: 26px 18px;
             text-align: center;
-            background: #fbfcfe;
+            background: var(--white);
             transition: border-color .15s ease, background .15s ease;
         }
-        .pa-drop:hover { border-color: #f62d51; background: #fff; }
-        .pa-drop__ico { font-size: 34px; color: #a7b0c0; line-height: 1; }
-        .pa-drop__hint { font-size: .78rem; color: #8a94a6; margin-top: 6px; }
-        .pa-required { color: #f62d51; }
+        .pa-drop:hover { border-color: var(--red-500); background: var(--white); }
+        .pa-drop__ico { font-size: 34px; color: var(--slate-400); line-height: 1; }
+        .pa-drop__hint { font-size: .78rem; color: var(--slate-400); margin-top: 6px; }
+        .pa-required { color: var(--red-500); }
     </style>
 </head>
 

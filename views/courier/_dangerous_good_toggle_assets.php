@@ -8,22 +8,22 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        border: 1px dashed #ff6d00;
+        border: 1px dashed var(--amber-500);
         border-radius: 8px;
         padding: 12px 16px;
-        background: #fff8f1;
+        background: var(--page-050);
         transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
     }
     .dg-toggle-bar.is-dangerous {
-        background: #fff1e6;
+        background: var(--page-050);
         border-style: solid;
-        border-color: #ff6d00;
-        box-shadow: 0 0 0 3px rgba(255, 109, 0, .12);
+        border-color: var(--amber-500);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber-500) 12%, transparent);
     }
-    .dg-toggle-bar .dg-icon { color: #ff6d00; margin-right: 6px; }
-    .dg-toggle-bar .dg-title { font-weight: 600; color: #8a3b00; }
-    .dg-toggle-bar .dg-state { font-weight: 600; color: #8a8a8a; }
-    .dg-toggle-bar.is-dangerous .dg-state { color: #ff6d00; }
+    .dg-toggle-bar .dg-icon { color: var(--amber-500); margin-right: 6px; }
+    .dg-toggle-bar .dg-title { font-weight: 600; color: var(--amber-500); }
+    .dg-toggle-bar .dg-state { font-weight: 600; color: var(--slate-400); }
+    .dg-toggle-bar.is-dangerous .dg-state { color: var(--amber-500); }
     .dg-switch { cursor: pointer; white-space: nowrap; }
 </style>
 <script>

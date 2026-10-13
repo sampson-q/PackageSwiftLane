@@ -28,7 +28,7 @@
             background: var(--white);
             border-radius: var(--radius-24);
             padding: 40px;
-            box-shadow: 0 24px 64px rgba(8, 16, 28, .38);
+            box-shadow: 0 24px 64px color-mix(in srgb, var(--ink-900) 38%, transparent);
         }
         .terms-card h4 {
             font-family: var(--font-ui);

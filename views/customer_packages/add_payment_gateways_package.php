@@ -161,7 +161,7 @@ $payrow = $core->cdp_getPayment();
                     <div id="resultados_ajax"></div>
                     <div class="card ">
                       <div class="card-header">
-                        <div class="shadow-sm pt-3 pl-3 pr-3 pb-1" style="background-color: #3e5569 !important;">
+                        <div class="shadow-sm pt-3 pl-3 pr-3 pb-1" style="background-color: var(--ink-700) !important;">
 
                           <ul role="tablist" class="nav bg-light nav-pills rounded nav-fill mb-3">
 

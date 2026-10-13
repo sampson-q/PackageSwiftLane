@@ -80,7 +80,7 @@ $code_currency = $core->cdp_getCodeCountries();
         }
         /* Estilo para campos requeridos */
         .highlight {
-            border: 1px solid #ff0000; /* Borde rojo */
+            border: 1px solid var(--red-500); /* Borde rojo */
         }
 
         .image-preview {
@@ -90,7 +90,7 @@ $code_currency = $core->cdp_getCodeCountries();
         .image-preview img {
             max-width: 100px;
             max-height: 100px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--slate-400);
             border-radius: 5px;
         }
 

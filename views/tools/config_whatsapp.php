@@ -59,7 +59,7 @@ $userData = $user->cdp_getUserData();
     <style>
     /* Estilo para campos requeridos */
     .highlight {
-        border: 1px solid #ff0000; /* Borde rojo */
+        border: 1px solid var(--red-500); /* Borde rojo */
     }
 
 	</style>

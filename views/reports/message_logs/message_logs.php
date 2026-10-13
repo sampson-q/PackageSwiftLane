@@ -55,57 +55,57 @@ $defaultTo   = date('Y-m-d');
     <title>Message Logs | <?php echo $core->site_name ?></title>
     <?php include 'views/inc/head_scripts.php'; ?>
     <style>
-        .ml-filters { background: #fff; border: 1px solid #e9edf3; border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
-        .ml-filters label { font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: #8a94a6; margin-bottom: 4px; }
+        .ml-filters { background: var(--white); border: 1px solid var(--fill-100); border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+        .ml-filters label { font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: var(--slate-400); margin-bottom: 4px; }
         .ml-filters .form-control, .ml-filters .custom-select { font-size: .86rem; }
         .ml-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-        .ml-quick button { border: 1px solid #e0e5ee; background: #fff; border-radius: 6px; padding: 5px 12px; font-size: .78rem; font-weight: 600; color: #6b7788; cursor: pointer; }
-        .ml-quick button.is-on { background: #1f2a37; border-color: #1f2a37; color: #fff; }
+        .ml-quick button { border: 1px solid var(--fill-100); background: var(--white); border-radius: 6px; padding: 5px 12px; font-size: .78rem; font-weight: 600; color: var(--ink-700); cursor: pointer; }
+        .ml-quick button.is-on { background: var(--ink-900); border-color: var(--ink-900); color: var(--white); }
 
         .ml-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 18px; }
-        .ml-kpi { background: #fff; border: 1px solid #e9edf3; border-radius: 10px; padding: 16px 18px; position: relative; overflow: hidden; cursor: default; }
-        .ml-kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c, #d7dce5); }
-        .ml-kpi__k { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: #8a94a6; }
-        .ml-kpi__v { font-size: 1.7rem; font-weight: 700; letter-spacing: -.02em; color: #1f2a37; line-height: 1.15; margin-top: 5px; }
-        .ml-kpi__s { font-size: .74rem; color: #99a2b1; margin-top: 2px; }
+        .ml-kpi { background: var(--white); border: 1px solid var(--fill-100); border-radius: 10px; padding: 16px 18px; position: relative; overflow: hidden; cursor: default; }
+        .ml-kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c, var(--line-200)); }
+        .ml-kpi__k { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--slate-400); }
+        .ml-kpi__v { font-size: 1.7rem; font-weight: 700; letter-spacing: -.02em; color: var(--ink-900); line-height: 1.15; margin-top: 5px; }
+        .ml-kpi__s { font-size: .74rem; color: var(--slate-400); margin-top: 2px; }
         .ml-kpi[data-filter] { cursor: pointer; }
-        .ml-kpi[data-filter]:hover { border-color: #c9d2e0; }
+        .ml-kpi[data-filter]:hover { border-color: var(--line-200); }
 
-        .ml-card { background: #fff; border: 1px solid #e9edf3; border-radius: 10px; margin-bottom: 18px; }
-        .ml-card__h { padding: 14px 18px; border-bottom: 1px solid #eef1f6; font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: #8a94a6; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-        .ml-card__h .note { text-transform: none; letter-spacing: 0; font-weight: 400; color: #99a2b1; }
+        .ml-card { background: var(--white); border: 1px solid var(--fill-100); border-radius: 10px; margin-bottom: 18px; }
+        .ml-card__h { padding: 14px 18px; border-bottom: 1px solid var(--fill-100); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--slate-400); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .ml-card__h .note { text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--slate-400); }
         .ml-card__b { padding: 16px 18px; }
 
         .ml-bars { display: flex; flex-direction: column; gap: 10px; }
         .ml-bar { cursor: pointer; }
         .ml-bar__top { display: flex; justify-content: space-between; font-size: .82rem; margin-bottom: 3px; }
-        .ml-bar__name { font-weight: 600; color: #3b4655; }
-        .ml-bar__n { color: #8a94a6; font-weight: 600; }
-        .ml-bar__track { height: 6px; background: #eef1f6; border-radius: 4px; overflow: hidden; display: flex; }
-        .ml-bar__fill { height: 100%; background: var(--c, #336aea); }
-        .ml-empty { color: #99a2b1; font-size: .85rem; padding: 18px 0; text-align: center; }
+        .ml-bar__name { font-weight: 600; color: var(--ink-800); }
+        .ml-bar__n { color: var(--slate-400); font-weight: 600; }
+        .ml-bar__track { height: 6px; background: var(--fill-100); border-radius: 4px; overflow: hidden; display: flex; }
+        .ml-bar__fill { height: 100%; background: var(--c, var(--sky-500)); }
+        .ml-empty { color: var(--slate-400); font-size: .85rem; padding: 18px 0; text-align: center; }
 
         .ml-table { font-size: .84rem; }
-        .ml-table thead th { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: #99a2b1; border-top: 0; white-space: nowrap; }
+        .ml-table thead th { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: var(--slate-400); border-top: 0; white-space: nowrap; }
         .ml-row { cursor: pointer; }
-        .ml-row:hover { background: #f7f9fc; }
-        .ml-row--failed { background: #fff7f8; }
-        .ml-row--skipped { background: #fffaf2; }
-        .ml-name { font-weight: 600; color: #1f2a37; }
-        .ml-subject { font-weight: 600; color: #1f2a37; }
+        .ml-row:hover { background: var(--page-050); }
+        .ml-row--failed { background: var(--page-050); }
+        .ml-row--skipped { background: var(--page-050); }
+        .ml-name { font-weight: 600; color: var(--ink-900); }
+        .ml-subject { font-weight: 600; color: var(--ink-900); }
         .ml-preview { font-size: .8rem; }
-        .ml-entity { color: #4258c9; font-weight: 600; }
-        .ml-pill { display: inline-block; padding: .15rem .55rem; border-radius: 1rem; font-size: .68rem; font-weight: 700; color: var(--c, #6b7788); background: color-mix(in srgb, var(--c, #6b7788) 14%, #fff); border: 1px solid color-mix(in srgb, var(--c, #6b7788) 35%, #fff); white-space: nowrap; }
+        .ml-entity { color: var(--sky-500); font-weight: 600; }
+        .ml-pill { display: inline-block; padding: .15rem .55rem; border-radius: 1rem; font-size: .68rem; font-weight: 700; color: var(--c, var(--ink-700)); background: color-mix(in srgb, var(--c, var(--ink-700)) 14%, var(--white)); border: 1px solid color-mix(in srgb, var(--c, var(--ink-700)) 35%, var(--white)); white-space: nowrap; }
 
         .ml-detail__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 20px; margin-bottom: 18px; }
         .ml-detail__wide { grid-column: 1 / -1; }
         .ml-detail__grid > div { display: flex; flex-direction: column; }
-        .ml-k { font-size: .66rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: #99a2b1; }
-        .ml-v { font-size: .88rem; color: #1f2a37; word-break: break-word; }
-        .ml-detail__h { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: #8a94a6; font-weight: 700; margin: 18px 0 8px; }
-        .ml-body { white-space: pre-wrap; word-break: break-word; background: #f7f9fc; border: 1px solid #eef1f6; border-radius: 8px; padding: 14px; font-family: inherit; font-size: .88rem; color: #1f2a37; max-height: 420px; overflow: auto; margin: 0; }
+        .ml-k { font-size: .66rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--slate-400); }
+        .ml-v { font-size: .88rem; color: var(--ink-900); word-break: break-word; }
+        .ml-detail__h { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--slate-400); font-weight: 700; margin: 18px 0 8px; }
+        .ml-body { white-space: pre-wrap; word-break: break-word; background: var(--page-050); border: 1px solid var(--fill-100); border-radius: 8px; padding: 14px; font-family: inherit; font-size: .88rem; color: var(--ink-900); max-height: 420px; overflow: auto; margin: 0; }
         .ml-body--mono { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: .78rem; }
-        .ml-body-frame { width: 100%; height: 380px; border: 1px solid #eef1f6; border-radius: 8px; background: #fff; }
+        .ml-body-frame { width: 100%; height: 380px; border: 1px solid var(--fill-100); border-radius: 8px; background: var(--white); }
     </style>
 </head>
 

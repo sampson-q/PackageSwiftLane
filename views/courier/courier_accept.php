@@ -198,7 +198,7 @@ $address_order = $db->cdp_registro();
                                             <label for="inputcom" class="control-label col-form-label"><?php echo $lang['add-title24'] ?></label>
                                             <div class="input-group mb-3">
                                                 <div class="input-group-prepend">
-                                                    <div class="input-group-text"><span style="color:#ff0000"><b><?php echo $lang['inv-shipping9'] ?></b></span></div>
+                                                    <div class="input-group-text"><span style="color:var(--red-500)"><b><?php echo $lang['inv-shipping9'] ?></b></span></div>
                                                 </div>
                                                 <input type="text" class="form-control" name="order_no" id="order_no" value="<?php echo $row_order->order_prefix . $row_order->order_no; ?>" readonly>
                                             </div>
@@ -485,7 +485,7 @@ $address_order = $db->cdp_registro();
                                                 <label for="inputname" class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
                                                 <div class="input-group mb-3">
                                                     <div class="input-group-prepend">
-                                                        <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
+                                                        <span class="input-group-text" style="color:var(--red-500)"><i class="fas fa-car"></i></span>
                                                     </div>
                                                     <input type="hidden" name="driver_id" id="driver_id" value="<?php echo $_SESSION['userid']; ?>">
 
@@ -502,7 +502,7 @@ $address_order = $db->cdp_registro();
                                                 <label for="inputname" class="control-label col-form-label"><?php echo $lang['left208'] ?></label>
                                                 <div class="input-group mb-3">
                                                     <div class="input-group-prepend">
-                                                        <span class="input-group-text" style="color:#ff0000"><i class="fas fa-car"></i></span>
+                                                        <span class="input-group-text" style="color:var(--red-500)"><i class="fas fa-car"></i></span>
                                                     </div>
                                                     <select class="custom-select col-12 pre" id="driver_id" name="driver_id">
                                                         <option value="0">--<?php echo $lang['left209'] ?>--</option>
