@@ -105,23 +105,8 @@ $row_off = $data['data'];
         <div class="page-wrapper">
             <?php cdp_pageHeader('Wire Transfer Payment Settings'); ?>
             <!-- Button group part -->
-            <div class="p-15">
-                <div class="row justify-content-center">
-                    <div class="col-md-12">
-                        <div class="row">
-                            <div class="col-12">
-                                <!-- <div id="loader" style="display:none"></div> -->
-                                <div id="resultados_ajax"></div>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Action part -->
-
-
             <div class="container-fluid">
+                <div id="resultados_ajax"></div>
 
                 <div class="row">
                     <!-- Column -->

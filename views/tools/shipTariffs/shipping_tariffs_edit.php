@@ -140,23 +140,8 @@ if (!empty($row_data->client_id)) {
             <?php cdp_pageHeader('Edit Shipping Rate'); ?>
             <!-- Action part -->
             <!-- Button group part -->
-            <div class="bg-light">
-                <div class="row justify-content-center">
-                    <div class="col-md-12">
-                        <div class="row">
-                            <div class="col-12">
-                                <!-- <div id="loader" style="display:none"></div> -->
-                                <div id="resultados_ajax"></div>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Action part -->
-
-
             <div class="container-fluid mb-4">
+                <div id="resultados_ajax"></div>
 
                 <div class="row">
                     <div class="col-lg-12 col-xl-12 col-md-12">

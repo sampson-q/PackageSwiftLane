@@ -102,23 +102,8 @@ $row_off = $data['data'];
             <?php cdp_pageHeader('Edit Office', ['sub' => $row_off->name_off ?? '']); ?>
             <!-- Action part -->
             <!-- Button group part -->
-            <div class="bg-light">
-                <div class="row justify-content-center">
-                    <div class="col-md-12">
-                        <div class="row">
-                            <div class="col-12">
-                                <!-- <div id="loader" style="display:none"></div> -->
-                                <div id="resultados_ajax"></div>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Action part -->
-
-
             <div class="container-fluid mb-4">
+                <div id="resultados_ajax"></div>
 
                 <div class="row">
                     <!-- Column -->

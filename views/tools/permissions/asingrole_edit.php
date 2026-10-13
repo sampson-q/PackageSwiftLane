@@ -114,23 +114,8 @@ $module_actions = $db->cdp_registros();
             <?php cdp_pageHeader('Edit System Module', ['sub' => $row_off->module_name ?? '']); ?>
             <!-- Action part -->
             <!-- Button group part -->
-            <div class="bg-light">
-                <div class="row justify-content-center">
-                    <div class="col-md-12">
-                        <div class="row">
-                            <div class="col-12">
-                                <!-- <div id="loader" style="display:none"></div> -->
-                                <div id="resultados_ajax"></div>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Action part -->
-
-
             <div class="container-fluid mb-4">
+                <div id="resultados_ajax"></div>
 
                 <div class="row">
                     <!-- Column -->

@@ -106,23 +106,8 @@ $row_off = $data['data'];
 		<div class="page-wrapper">
 		    <?php cdp_pageHeader('Edit Shipping Status', ['sub' => $row_off->mod_style ?? '']); ?>
 			<!-- Button group part -->
-			<div class="bg-light">
-				<div class="row justify-content-center">
-					<div class="col-md-12">
-						<div class="row">
-							<div class="col-12">
-								<!-- <div id="loader" style="display:none"></div> -->
-								<div id="resultados_ajax"></div>
-
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<!-- Action part -->
-
-
 			<div class="container-fluid mb-4">
+				<div id="resultados_ajax"></div>
 				<div class="row">
 					<!-- Column -->
 
