@@ -1824,3 +1824,26 @@ a:has(> .btn:only-child) { display: inline-flex; max-width: 100%; }
 .d-grid { display: grid !important; }
 .gap-1 { gap: .25rem !important; } .gap-2 { gap: .5rem !important; } .gap-3 { gap: 1rem !important; } .gap-4 { gap: 1.5rem !important; }
 .rounded-3 { border-radius: var(--radius-16) !important; }
+
+/* ── 23. Phones: every grid column stacks ───────────────────────────────────
+   About a hundred views place columns without a breakpoint (col-5, col-6,
+   col-2…), which Bootstrap keeps side by side at any width: a 60px "Notes"
+   field, a heading squeezed into five characters per line. Below 576px every
+   column takes the full width; only col-auto (a button beside a title) and
+   a column marked .swl-keep stay inline. Last in the sheet so it wins over
+   the toolbar rules above. */
+@media (max-width: 575.98px) {
+  .page-wrapper :is(.row, .form-row) > [class*="col-"]:not(.col-auto):not(.swl-keep),
+  .modal :is(.row, .form-row) > [class*="col-"]:not(.col-auto):not(.swl-keep) { flex: 0 0 100%; max-width: 100%; }
+  .page-wrapper :is(.row, .form-row) > .col-auto, .modal :is(.row, .form-row) > .col-auto { flex: 0 0 auto; max-width: 100%; }
+  /* an offset column has nothing to be offset from once everything stacks */
+  .page-wrapper :is(.row, .form-row) > [class*="offset-"], .modal :is(.row, .form-row) > [class*="offset-"] { margin-left: 0; }
+  .page-breadcrumb .row > [class*="col-"]:first-child { flex: 1 1 auto; max-width: 100%; }
+  /* right-floated action groups sit under their heading, full width */
+  .card-body .pull-right:has(> .btn-group), .card-body .float-right:has(> .btn-group) { float: none !important; display: flex; }
+  .card-body .pull-right > .btn-group, .card-body .float-right > .btn-group { width: 100%; }
+  .card-body .pull-right > .btn-group > .btn, .card-body .float-right > .btn-group > .btn { flex: 1 1 auto; }
+  /* text-right alignment helpers lose their meaning on a single column */
+  .card-body .row > [class*="col-"].text-right, .card-body .row > [class*="col-"] > .text-right { text-align: left !important; }
+  .card-body .row > [class*="col-"] > .text-right > .btn, .card-body .row > [class*="col-"].text-right > .btn { width: 100%; }
+}
