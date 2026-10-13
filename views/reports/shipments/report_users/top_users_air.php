@@ -108,20 +108,9 @@ $paymethodrow = $core->cdp_getPaymentMethod();
 
             <!-- Action part -->
             <!-- Button group part -->
-            <div class="bg-light">
-                <div class="row justify-content-center">
-                    <div class="col-md-12">
-                        <div class="row">
-                            <div class="col-12">
-                                <!-- <div id="loader" style="display:none"></div> -->
-                                <div id="resultados_ajax"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Action part -->
-            <div class="row">
+            <div class="container-fluid">
+                <div id="resultados_ajax"></div>
+                <div class="row">
                 <div class="col-sm-6">
                     <div class="row">
                         <!-- Column -->
@@ -203,6 +192,7 @@ $paymethodrow = $core->cdp_getPaymentMethod();
                         <!-- Column -->
                     </div>
                 </div>
+            </div>
             </div>
             <?php include 'views/inc/footer.php'; ?>
 

@@ -898,7 +898,7 @@ if ($row_order->status_invoice == 1) {
                                     <div class="col-4">
                                         <h3 class="card-title"><span><?php echo $lang['left533020009'] ?></span></h3>
                                     </div>
-                                    <div class="col-4 row">
+                                    <div class="col-4">
                                         <select onchange="cdp_filterByRows();" class="form-control custom-select" id="filter_rows" name="filter_rows">
                                             <option value="0"><?php echo 'Filter By Rows'?></option>
                                             <option value="10"><?php echo 10 ?></option>

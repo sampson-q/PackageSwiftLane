@@ -795,14 +795,14 @@ if (isset($_POST["create_invoice"])) {
             <form method="post" id="invoice_form" name="invoice_form" enctype="multipart/form-data">
                 <!-- Shipping mode is fixed for this dedicated consolidation page (Air vs Sea). -->
                 <input type="hidden" name="ship_mode" value="<?php echo htmlspecialchars($ship_mode); ?>">
-                <div class="mb-2">
-                    <span class="badge <?php echo $ship_mode === 'sea' ? 'badge-info' : 'badge-primary'; ?>">
-                        <?php echo $ship_mode === 'sea' ? '&#128674;' : '&#9992;'; ?> <?php echo htmlspecialchars($ship_mode_label); ?> Consolidation
-                    </span>
-                </div>
                 <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
                 <div class="container-fluid">
+                    <div class="mb-2">
+                        <span class="badge <?php echo $ship_mode === 'sea' ? 'badge-info' : 'badge-primary'; ?>">
+                            <?php echo $ship_mode === 'sea' ? '&#128674;' : '&#9992;'; ?> <?php echo htmlspecialchars($ship_mode_label); ?> Consolidation
+                        </span>
+                    </div>
                     <div class="row">
                         <div class="col-lg-12">
                             <div class="card">

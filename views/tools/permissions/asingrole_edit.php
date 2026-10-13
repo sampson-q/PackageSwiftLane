@@ -156,6 +156,7 @@ $module_actions = $db->cdp_registros();
 
                                         <div class="row">
                                             <div class="col-md-12">
+                                                <div class="table-responsive">
                                                 <table id="zero_config" class="table table-condensed table-hover table-striped custom-table-checkbox">
                                                     <thead>
                                                         <tr>
@@ -183,6 +184,7 @@ $module_actions = $db->cdp_registros();
                                                         <?php endforeach; ?>
                                                     </tbody>
                                                 </table>
+                                                </div>
                                             </div>
                                         </div>
                                     </section>
