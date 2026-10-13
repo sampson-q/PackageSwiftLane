@@ -1811,3 +1811,16 @@ a:has(> .btn:only-child) { display: inline-flex; max-width: 100%; }
 .page-wrapper > .email-app > .right-part > .bg-light { background: transparent !important; }
 .page-wrapper > .email-app > .right-part > .p-15.b-b { border-bottom: 1px solid var(--border-default); padding: 20px 24px !important; }
 .page-wrapper > .email-app > .right-part > .p-15.b-b h4, .page-wrapper > .email-app > .right-part > .p-15.b-b h5 { margin: 0; font-size: var(--text-lg-size); font-weight: 700; }
+
+/* ── 22. Bootstrap 5 utility names used by newer pages (the shell is BS4) ──── */
+.fs-1 { font-size: 2.5rem !important; } .fs-2 { font-size: 2rem !important; } .fs-3 { font-size: 1.75rem !important; }
+.fs-4 { font-size: 1.5rem !important; } .fs-5 { font-size: 1.25rem !important; } .fs-6 { font-size: 1rem !important; }
+.me-1 { margin-right: .25rem !important; } .me-2 { margin-right: .5rem !important; } .me-3 { margin-right: 1rem !important; }
+.ms-1 { margin-left: .25rem !important; } .ms-2 { margin-left: .5rem !important; } .ms-3 { margin-left: 1rem !important; }
+.ps-5 { padding-left: 3rem !important; } .pe-5 { padding-right: 3rem !important; }
+.mb-6 { margin-bottom: 4rem !important; }
+.fw-bold { font-weight: 700 !important; } .fw-semibold { font-weight: 600 !important; } .fw-normal { font-weight: 400 !important; }
+.text-end { text-align: right !important; } .text-start { text-align: left !important; }
+.d-grid { display: grid !important; }
+.gap-1 { gap: .25rem !important; } .gap-2 { gap: .5rem !important; } .gap-3 { gap: 1rem !important; } .gap-4 { gap: 1.5rem !important; }
+.rounded-3 { border-radius: var(--radius-16) !important; }
