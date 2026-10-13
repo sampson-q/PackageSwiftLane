@@ -60,10 +60,48 @@
         }
     }
 
+    }
+
+    // Table cells with short content (a date, an amount, a reference, a status)
+    // stay on one line; a narrow column used to break "2026-08-06" over three
+    // lines and triple the row height. Long text keeps wrapping.
+    function upgradeTableCells(root) {
+        var cells = root.querySelectorAll('.table td:not([data-swl-cell]), .table th:not([data-swl-cell])');
+        for (var i = 0; i < cells.length; i++) {
+            var td = cells[i];
+            td.setAttribute('data-swl-cell', '1');
+            if (td.querySelector('br, p, ul, table, textarea, .form-control, .custom-select, .dropdown-menu')) continue;
+            var text = (td.textContent || '').trim().replace(/\s+/g, ' ');
+            if (text.length > 0 && text.length <= 26) td.classList.add('swl-nowrap');
+        }
+    }
+
+    // A table wider than its box scrolls sideways; the box shows a shadow on
+    // the side that has more (swiftlane-ds.css, section 17).
+    function syncScroller(box) {
+        var more = box.scrollWidth - box.clientWidth;
+        box.classList.toggle('swl-scroll-right', more > 2 && box.scrollLeft < more - 2);
+        box.classList.toggle('swl-scroll-left', more > 2 && box.scrollLeft > 2);
+    }
+    function upgradeScrollers(root) {
+        var boxes = root.querySelectorAll('.table-responsive');
+        for (var i = 0; i < boxes.length; i++) {
+            var box = boxes[i];
+            if (box.dataset.swlScroll !== '1') {
+                box.dataset.swlScroll = '1';
+                box.addEventListener('scroll', function (e) { syncScroller(e.currentTarget); }, { passive: true });
+            }
+            syncScroller(box);
+        }
+    }
+    window.addEventListener('resize', function () { upgradeScrollers(document); });
+
     function run(root) {
         upgradeStatusLabels(root);
         upgradeSearchFields(root);
         upgradeRowActions(root);
+        upgradeTableCells(root);
+        upgradeScrollers(root);
     }
 
     var pending = null;

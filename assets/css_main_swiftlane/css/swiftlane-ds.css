@@ -1685,3 +1685,22 @@ td .swl-awbref, .table .swl-awbref { white-space: normal; }
   .email-app .left-part .list-group-item-action iconify-icon, .email-app .left-part .sidebar-link iconify-icon { color: var(--ink-800) !important; }
   .page-wrapper > .email-app > .right-part { border-radius: var(--radius-16) !important; }
 }
+
+/* ── 17. Tables: one line per short cell, visible horizontal scroll ──────────
+   A date or an amount broken over three lines ("2026-", "08-", "06") made
+   every row three times taller as soon as the table got tight. Cells with
+   short content stay on one line (dataJs/swiftlane_ui.js marks them); long
+   text still wraps. When a table is wider than its box the box scrolls and
+   shows a shadow on the side that has more. */
+.table td.swl-nowrap, .table th.swl-nowrap { white-space: nowrap; }
+.table tbody td, .table tbody th { background: transparent !important; }
+.table-striped tbody tr:nth-of-type(odd) td { background: transparent !important; }
+.table-responsive { position: relative; -webkit-overflow-scrolling: touch; }
+.table-responsive.swl-scroll-right { box-shadow: var(--ring-default), inset -32px 0 24px -24px rgba(22, 37, 54, .16); }
+.table-responsive.swl-scroll-left { box-shadow: var(--ring-default), inset 32px 0 24px -24px rgba(22, 37, 54, .16); }
+.table-responsive.swl-scroll-left.swl-scroll-right { box-shadow: var(--ring-default), inset 32px 0 24px -24px rgba(22, 37, 54, .16), inset -32px 0 24px -24px rgba(22, 37, 54, .16); }
+/* A table dropped straight into a card without the scroll box still scrolls */
+.card-body > .table, .card-body > form > .table, .modal-body > .table { display: block; overflow-x: auto; max-width: 100%; }
+.card-body > .table > thead, .card-body > .table > tbody, .card-body > .table > tfoot,
+.card-body > form > .table > thead, .card-body > form > .table > tbody, .card-body > form > .table > tfoot,
+.modal-body > .table > thead, .modal-body > .table > tbody, .modal-body > .table > tfoot { display: table; width: 100%; }
