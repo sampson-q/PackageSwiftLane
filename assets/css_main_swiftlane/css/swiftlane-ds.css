@@ -1722,3 +1722,12 @@ td .swl-awbref, .table .swl-awbref { white-space: normal; }
 .card-body > .row:has(.swl-search) > [class*="col-"] { margin-bottom: 12px !important; }
 /* The hidden search button beside a field leaves a blank gap in the row */
 .input-group > .input-group-append:not(:has(> *)) { display: none; }
+
+/* ── 19. Dangerous-goods bar (shipment forms): tokens, and it wraps ───────── */
+.dg-toggle-bar { flex-wrap: wrap; border: 1.5px dashed var(--amber-500) !important; border-radius: var(--radius-16) !important; background: var(--amber-surface) !important; box-shadow: none !important; }
+.dg-toggle-bar.is-dangerous { border-style: solid !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber-500) 18%, transparent) !important; }
+.dg-toggle-bar > div { min-width: 0; flex: 1 1 240px; }
+.dg-toggle-bar .dg-switch { flex: 0 0 auto; }
+.dg-toggle-bar .dg-icon, .dg-toggle-bar.is-dangerous .dg-state { color: var(--amber-500); }
+.dg-toggle-bar .dg-title { color: var(--ink-800); font-weight: 700; }
+.dg-toggle-bar .dg-state { color: var(--slate-400); }
