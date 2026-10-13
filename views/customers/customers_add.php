@@ -421,8 +421,8 @@ if (($userData->userlevel ?? 0) != 6 && !$user->cdp_hasPermission('add_client'))
         }
 
         var input = document.getElementById("digitslockers");
-
-        input.addEventListener("keypress", function (event) {
+        // The locker field is only on the form when lockers are enabled.
+        if (input) input.addEventListener("keypress", function (event) {
           if (event.charCode < 48 || event.charCode > 57) {
             event.preventDefault();
           }
