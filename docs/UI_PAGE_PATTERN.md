@@ -89,6 +89,12 @@ never added to the baseline: it follows the pattern.
 | Modal | `.modal > .modal-dialog > .modal-content` with `.modal-header` (`.modal-title` + `.close`), `.modal-body`, `.modal-footer` (cancel left, primary right) |
 | Confirm / toast | SweetAlert2 v11 from the footer - never re-load the template's v7 bundle |
 
+## Things the sheet and the adapter take care of
+
+- A check box or radio that is itself a grid column (`col-md-3 custom-control custom-radio`) keeps its box inside the column; a set of them beside a label goes in `.swl-check-row`.
+- A row-action dropdown inside `.table-responsive` is pinned to the viewport while open, so the scroll box never clips it.
+- The side menu: 264px from 1170px up (collapsible, remembered), an 84px rail below that which the toggle opens as an overlay, off-canvas on phones with a backdrop, an X and Escape to close it.
+
 ## Screen sizes
 
 The sheet is responsive from 360px up. What changes:
