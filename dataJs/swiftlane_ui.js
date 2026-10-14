@@ -218,6 +218,9 @@
             if (window.innerWidth < MIN_WIDTH) return;
             var pref = readPref();
             if (pref !== 'mini' && pref !== 'full') return;
+            // Below 1170px the full menu is a passing overlay, never the state a
+            // page should open in: a remembered "full" is left to the rail there.
+            if (pref === 'full' && window.innerWidth < 1170) return;
             var mini = pref === 'mini', type = mini ? 'mini-sidebar' : 'full';
             if (wrap.classList.contains('mini-sidebar') !== mini) wrap.classList.toggle('mini-sidebar', mini);
             if (wrap.getAttribute('data-sidebartype') !== type) wrap.setAttribute('data-sidebartype', type);
@@ -233,7 +236,8 @@
             if (!t || window.innerWidth < MIN_WIDTH) return;
             wrap.classList.toggle('mini-sidebar', isMini());
             var next = isMini() ? 'full' : 'mini';
-            savePref(next);
+            // On a tablet the opened menu is an overlay for this page only.
+            if (next === 'mini' || window.innerWidth >= 1170) savePref(next);
             t.setAttribute('aria-expanded', next === 'full' ? 'true' : 'false');
             // The toggle sits inside the sidebar, so the pointer is still on it:
             // hold off the hover-expansion until it leaves (swiftlane-ds.css).
