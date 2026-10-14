@@ -1267,7 +1267,12 @@ a.swl-metric:hover { transform: translateY(-2px); color: var(--ink-800); }
   #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar:not(:hover) .sidebar-nav .hide-menu { display: block; }
   #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar:not(:hover) .swl-brand { justify-content: space-between; padding: 20px; }
   #main-wrapper[data-layout=vertical][data-sidebartype=mini-sidebar] .left-sidebar:not(:hover) .sidebar-nav ul .sidebar-item .sidebar-link { justify-content: flex-start; padding: 0 12px 0 16px !important; margin: 1px 12px; }
-  .swl-brand__toggle { display: none !important; }
+  /* The open menu covers the page: a backdrop that closes it on tap, and the
+     toggle in the brand row becomes a close button (an X drawn here; the
+     icon inside it is for the desktop collapse) */
+  #main-wrapper[data-layout=vertical].show-sidebar::before { content: ""; position: fixed; inset: 0; z-index: 59; background: rgba(22, 37, 54, .45); }
+  .swl-brand__toggle iconify-icon { display: none; }
+  .swl-brand__toggle::before { content: "✕"; font-size: 16px; font-weight: 700; line-height: 1; }
 
   #main-wrapper[data-layout=vertical] .topbar .top-navbar { padding: 0 !important; }
   #main-wrapper[data-layout=vertical] .topbar .top-navbar .navbar-header {
@@ -1321,6 +1326,16 @@ a.swl-metric:hover { transform: translateY(-2px); color: var(--ink-800); }
   .modal-body { padding: 16px !important; }
   .table thead th { padding: 0 12px !important; }
   .table tbody td { padding: 10px 12px !important; }
+}
+
+/* Tablets: the sidebar is the 84px rail. Opening it with the toggle lays the
+   full menu over the page (the page keeps its rail margin) behind a backdrop;
+   a tap outside, Escape or the toggle closes it (dataJs/swiftlane_ui.js). */
+@media (min-width: 768px) and (max-width: 1169.98px) {
+  #main-wrapper[data-layout=vertical][data-sidebartype=full] .page-wrapper,
+  #main-wrapper[data-layout=vertical][data-sidebartype=full] .topbar { margin-left: var(--swl-nav-mini) !important; }
+  #main-wrapper[data-layout=vertical][data-sidebartype=full] .left-sidebar { box-shadow: 0 24px 64px rgba(22, 37, 54, .35) !important; }
+  #main-wrapper[data-layout=vertical][data-sidebartype=full]::before { content: ""; position: fixed; inset: 0; z-index: 59; background: rgba(22, 37, 54, .45); }
 }
 
 /* ── 13. Control-panel components (helpers/dashboard_data.php renderers) ───── */

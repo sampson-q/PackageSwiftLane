@@ -197,6 +197,34 @@
         }, true);
 
         var aside = wrap.querySelector('.left-sidebar');
+
+        // Closing the opened menu on small screens. Phones: the menu slides over
+        // the page (show-sidebar); tablets (< 1170px): a "full" sidebar lays over
+        // the page beside the rail. A tap on the backdrop (anywhere outside the
+        // menu), the Escape key or the X in the brand row closes either.
+        function menuOpen() {
+            if (window.innerWidth < MIN_WIDTH) return wrap.classList.contains('show-sidebar');
+            return window.innerWidth < 1170 && !isMini();
+        }
+        function closeMenu() {
+            if (window.innerWidth < MIN_WIDTH) { wrap.classList.remove('show-sidebar'); return; }
+            savePref('mini');
+            wrap.classList.add('mini-sidebar');
+            wrap.setAttribute('data-sidebartype', 'mini-sidebar');
+        }
+        document.addEventListener('click', function (e) {
+            if (!menuOpen()) return;
+            var t = e.target;
+            if (t.closest && t.closest('.nav-toggler, .sidebartoggler')) {
+                // the brand-row X on phones closes; the header hamburger is the template's toggle
+                if (window.innerWidth < MIN_WIDTH && t.closest('.swl-brand__toggle')) { e.preventDefault(); e.stopPropagation(); closeMenu(); }
+                return;
+            }
+            if (aside.contains(t)) return;
+            e.preventDefault(); e.stopPropagation(); closeMenu();
+        }, true);
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && menuOpen()) closeMenu(); });
+
         function settled() { wrap.classList.remove('swl-nav-settling'); }
         aside.addEventListener('mouseleave', settled);
         document.addEventListener('pointermove', function (e) {
