@@ -680,9 +680,16 @@ textarea.form-control { height: auto !important; min-height: 96px; padding: 12px
 .is-invalid.form-control { box-shadow: inset 0 0 0 1.5px var(--red-500) !important; }
 .is-valid.form-control { box-shadow: inset 0 0 0 1.5px var(--green-500) !important; }
 
-/* Bootstrap custom checkbox / radio → 16px ink boxes */
-.custom-control { min-height: 16px; padding-left: 24px; }
-.custom-control-label { font-weight: 500 !important; color: var(--ink-800) !important; font-size: 13px !important; line-height: 16px; cursor: pointer; }
+/* Bootstrap custom checkbox / radio → 16px ink boxes. The label is the box
+   for its ::before / ::after: this template build leaves it static, so the
+   box was drawn from the nearest positioned ancestor - 24px left of a radio
+   that is itself a grid column, outside the column and off the card. */
+.custom-control { min-height: 16px; padding-left: 24px; position: relative; }
+.custom-control-label { position: relative; font-weight: 500 !important; color: var(--ink-800) !important; font-size: 13px !important; line-height: 16px; cursor: pointer; }
+/* A radio / check box that is also a grid column keeps the box inside its
+   own padding and wraps its label text */
+[class*="col-"].custom-control { padding-left: 39px; }
+[class*="col-"].custom-control > .custom-control-label { white-space: normal; }
 .custom-control-label::before {
   top: 0;
   left: -24px;
