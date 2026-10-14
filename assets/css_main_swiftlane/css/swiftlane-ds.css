@@ -1746,6 +1746,10 @@ td .swl-awbref, .table .swl-awbref { white-space: normal; }
 @media (min-width: 768px) and (max-width: 1199.98px) {
   .card-body :is(.row, .form-row) > [class*="col-md-"]:is(.col-md-1, .col-md-2, .col-md-3, .col-md-4, .col-md-5):has(> .form-control, > .custom-select, > .select2-container, > .input-group, > .form-group > .form-control, > .form-group > .custom-select, > .form-group > .select2-container, > .form-group > .input-group, > label + .form-control, > label + .custom-select, > label + .select2-container, > label + .input-group, > div > .form-control, > div > .custom-select, > div > .select2-container, > div > .input-group) { flex: 1 1 160px; max-width: none; }
 }
+/* A row of check boxes or radios beside a field label (push notification
+   channels): inline, wrapping, level with the label */
+.swl-check-row { display: flex; flex-wrap: wrap; gap: 8px 24px; min-height: 26px; align-items: center; padding-top: 4px; }
+.swl-check-row .custom-control { margin: 0; }
 /* A link around a button is the button's size, so the tap target is the whole pill */
 a:has(> .btn:only-child) { display: inline-flex; max-width: 100%; }
 /* An icon-only button beside a field ("+" add sender / recipient, in a col-md-2

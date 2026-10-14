@@ -30,18 +30,21 @@ require_once dirname(__DIR__) . '/ajax/notify_whatsapp/api_whatsapp_service_v2.p
  * @param string $message  plain text typed by the admin
  * @param object $settings cdp_getSettingsCourier()
  * @param array  $ctx      message-log context (source, batch_id, entity_*)
- * @param string $channels 'both' | 'whatsapp' | 'email' — the admin's choice. A
- *                         channel that was not chosen is reported as 'off' and
- *                         is neither attempted nor written to the message log.
- * @return array{whatsapp:array,email:array}
+ * @param string $channels the admin's choice: a comma list of 'whatsapp',
+ *                         'email', 'sms' (the old radio value 'both' means
+ *                         whatsapp,email). A channel that was not chosen is
+ *                         reported as 'off' and is neither attempted nor
+ *                         written to the message log.
+ * @return array{whatsapp:array,email:array,sms:array}
  *         each: ['status' => 'sent'|'failed'|'skipped'|'off', 'detail' => string]
  */
 function cdp_pushNotifyUser($user, $subject, $message, $settings, array $ctx = [], $channels = 'both')
 {
-    $channels = cdp_pushChannels($channels);
+    $chosen = cdp_pushChannelSet($channels);
     $out = [
         'whatsapp' => ['status' => 'off', 'detail' => ''],
         'email'    => ['status' => 'off', 'detail' => ''],
+        'sms'      => ['status' => 'off', 'detail' => ''],
     ];
     $app_url = (string) ($settings->site_url ?? '');
     $name    = trim((string) ($user->fname ?? '') . ' ' . (string) ($user->lname ?? ''));
@@ -53,7 +56,7 @@ function cdp_pushNotifyUser($user, $subject, $message, $settings, array $ctx = [
     ], $ctx));
 
     // ── WhatsApp (template 12 "Push Notifications") ─────────────────────────
-    if ($channels !== 'email') {
+    if (in_array('whatsapp', $chosen, true)) {
         try {
             $tpl = getTemplateWhatsApp(12);
             if ($tpl) {
@@ -85,7 +88,7 @@ function cdp_pushNotifyUser($user, $subject, $message, $settings, array $ctx = [
 
     // ── E-mail (template 29) ────────────────────────────────────────────────
     $to = trim((string) ($user->email ?? ''));
-    if ($channels === 'whatsapp') {
+    if (!in_array('email', $chosen, true)) {
         // Not chosen for this push.
     } elseif ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
         $out['email'] = ['status' => 'skipped', 'detail' => 'No valid e-mail address.'];
@@ -139,22 +142,73 @@ function cdp_pushNotifyUser($user, $subject, $message, $settings, array $ctx = [
         }
     }
 
+    // ── SMS (Hubtel / mNotify through cdp_sendSms, set up under Tools > SMS) ─
+    // The text is the subject and the message as typed; the provider helper
+    // strips markup, normalises the number and writes the message-log row.
+    if (in_array('sms', $chosen, true)) {
+        $phone = trim((string) ($user->phone ?? ''));
+        if ($phone === '') {
+            $out['sms'] = ['status' => 'skipped', 'detail' => 'No phone number.'];
+            cdp_msgLog(['channel' => 'sms', 'status' => 'skipped', 'status_detail' => 'No phone number.',
+                'recipient_to' => '', 'body' => $message]);
+        } elseif (!function_exists('cdp_smsToRecipient')) {
+            $out['sms'] = ['status' => 'failed', 'detail' => 'SMS helper not loaded.'];
+        } else {
+            try {
+                $smsBody = trim((string) $subject) !== '' ? trim((string) $subject) . "\n" . $message : $message;
+                $r = cdp_smsToRecipient($user, $smsBody);
+                $out['sms'] = !empty($r['success'])
+                    ? ['status' => 'sent', 'detail' => '']
+                    : ['status' => 'failed', 'detail' => (string) ($r['message'] ?? 'SMS not sent.')];
+            } catch (Throwable $e) {
+                $out['sms'] = ['status' => 'failed', 'detail' => $e->getMessage()];
+                cdp_msgLog(['channel' => 'sms', 'status' => 'failed', 'status_detail' => $e->getMessage(),
+                    'recipient_to' => $phone, 'body' => $message]);
+            }
+        }
+    }
+
     cdp_msgClearContext(['subject', 'recipient_user_id', 'recipient_name']);
     return $out;
 }
 
-/** Normalise the channel choice posted by the push pages. */
+/**
+ * The channel choice posted by the push pages, as a list of 'whatsapp',
+ * 'email', 'sms'. The pages post a comma list from their check boxes; the
+ * old radio values 'both' / 'whatsapp' / 'email' still mean what they meant.
+ * Nothing valid chosen = WhatsApp + E-mail, as before.
+ *
+ * @return string[]
+ */
+function cdp_pushChannelSet($channels)
+{
+    $raw = strtolower(trim((string) $channels));
+    if ($raw === '' || $raw === 'both') {
+        return ['whatsapp', 'email'];
+    }
+    $posted = array_map('trim', explode(',', $raw));
+    $set = [];
+    foreach (['whatsapp', 'email', 'sms'] as $ch) {
+        if (in_array($ch, $posted, true)) {
+            $set[] = $ch;
+        }
+    }
+    return $set ?: ['whatsapp', 'email'];
+}
+
+/** Normalise the channel choice posted by the push pages (canonical comma list). */
 function cdp_pushChannels($channels)
 {
-    $channels = strtolower(trim((string) $channels));
-    return in_array($channels, ['whatsapp', 'email'], true) ? $channels : 'both';
+    return implode(',', cdp_pushChannelSet($channels));
 }
 
 /** Human label of a channel choice, for summaries and the activity log. */
 function cdp_pushChannelsLabel($channels)
 {
-    $map = ['both' => 'WhatsApp + E-mail', 'whatsapp' => 'WhatsApp Only', 'email' => 'E-mail Only'];
-    return $map[cdp_pushChannels($channels)];
+    $names = ['whatsapp' => 'WhatsApp', 'email' => 'E-mail', 'sms' => 'SMS'];
+    $set   = cdp_pushChannelSet($channels);
+    $label = implode(' + ', array_map(function ($c) use ($names) { return $names[$c]; }, $set));
+    return count($set) === 1 ? $label . ' Only' : $label;
 }
 
 /**
@@ -282,7 +336,7 @@ function cdp_pushConsolidationOwnerIds($consolidate_id, $module = 'consolidate')
 /**
  * Send to a list of users and summarise.
  *
- * @return array{recipients:int,whatsapp:array,email:array,lines:array,batch_id:string}
+ * @return array{recipients:int,whatsapp:array,email:array,sms:array,lines:array,batch_id:string}
  */
 function cdp_pushNotifyUsers(array $users, $subject, $message, $settings, array $ctx = [], $channels = 'both')
 {
@@ -293,6 +347,7 @@ function cdp_pushNotifyUsers(array $users, $subject, $message, $settings, array 
         'recipients' => 0,
         'whatsapp'   => ['sent' => 0, 'failed' => 0, 'skipped' => 0, 'off' => 0],
         'email'      => ['sent' => 0, 'failed' => 0, 'skipped' => 0, 'off' => 0],
+        'sms'        => ['sent' => 0, 'failed' => 0, 'skipped' => 0, 'off' => 0],
         'lines'      => [],
         'batch_id'   => $batch,
     ];
@@ -308,10 +363,11 @@ function cdp_pushNotifyUsers(array $users, $subject, $message, $settings, array 
         $r = cdp_pushNotifyUser($u, $subject, $message, $settings, $ctx, $channels);
         $sum['whatsapp'][$r['whatsapp']['status']]++;
         $sum['email'][$r['email']['status']]++;
+        $sum['sms'][$r['sms']['status']]++;
 
         $name = trim((string) ($u->fname ?? '') . ' ' . (string) ($u->lname ?? ''));
         $parts = [];
-        foreach (['whatsapp' => 'WhatsApp', 'email' => 'E-mail'] as $ch => $chLabel) {
+        foreach (['whatsapp' => 'WhatsApp', 'email' => 'E-mail', 'sms' => 'SMS'] as $ch => $chLabel) {
             if ($r[$ch]['status'] === 'off') {
                 continue;   // channel not chosen for this push
             }

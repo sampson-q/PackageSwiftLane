@@ -127,22 +127,25 @@ $row_order = $data['data'];
                                             </div>
                                         </div>
 
-                                        <!-- delivery channel: WhatsApp, e-mail or both -->
+                                        <!-- delivery channels: any of WhatsApp, e-mail, SMS (at least one) -->
                                         <div class="row form-group" id="channels-row">
                                             <label class="col-md-1 text-center">Send By:</label>
-                                            <div class="col-md-11 row">
-                                                <div class="col-md-3 custom-control custom-radio">
-                                                    <input type="radio" id="channels_both" name="channels" class="custom-control-input" value="both" checked>
-                                                    <label class="custom-control-label" for="channels_both">WhatsApp + E-mail</label>
+                                            <div class="col-md-11">
+                                                <div class="swl-check-row">
+                                                    <div class="custom-control custom-checkbox">
+                                                        <input type="checkbox" id="channels_whatsapp" name="channels[]" class="custom-control-input" value="whatsapp" checked>
+                                                        <label class="custom-control-label" for="channels_whatsapp">WhatsApp</label>
+                                                    </div>
+                                                    <div class="custom-control custom-checkbox">
+                                                        <input type="checkbox" id="channels_email" name="channels[]" class="custom-control-input" value="email" checked>
+                                                        <label class="custom-control-label" for="channels_email">E-mail</label>
+                                                    </div>
+                                                    <div class="custom-control custom-checkbox">
+                                                        <input type="checkbox" id="channels_sms" name="channels[]" class="custom-control-input" value="sms">
+                                                        <label class="custom-control-label" for="channels_sms">SMS</label>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-3 custom-control custom-radio">
-                                                    <input type="radio" id="channels_whatsapp" name="channels" class="custom-control-input" value="whatsapp">
-                                                    <label class="custom-control-label" for="channels_whatsapp">WhatsApp Only</label>
-                                                </div>
-                                                <div class="col-md-3 custom-control custom-radio">
-                                                    <input type="radio" id="channels_email" name="channels" class="custom-control-input" value="email">
-                                                    <label class="custom-control-label" for="channels_email">E-mail Only</label>
-                                                </div>
+                                                <small class="form-text text-muted">SMS is sent through the provider set up under Tools &gt; SMS.</small>
                                             </div>
                                         </div>
 

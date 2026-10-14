@@ -90,7 +90,12 @@ $("#push_notification_form").on("submit", function (event) {
         return;
     }
 
-    var channels = $('input[name="channels"]:checked').val() || 'both';
+    // Channels: the ticked boxes, posted as a comma list (whatsapp,email,sms).
+    var channels = $('input[name="channels[]"]:checked').map(function () { return this.value; }).get().join(',');
+    if (!channels) {
+        Swal.fire({ title: message_error || 'Error', html: 'Tick at least one channel to send by (WhatsApp, E-mail or SMS).', icon: "error", confirmButtonText: "OK" });
+        return;
+    }
     var selectedUsers = [];
 
     if (notifType === 'selected_users') {
