@@ -106,6 +106,50 @@
     }
     window.addEventListener('resize', function () { upgradeScrollers(document); });
 
+    // A row-action menu opened inside a scrolling table box is clipped by the
+    // box (the last rows' menus open into the box's own scrollbar, a menu at
+    // the right edge is cut). When such a menu opens it is pinned to the
+    // viewport at the toggle's position instead; it closes if the box or the
+    // page scrolls, so it never drifts from its button.
+    function pinMenus($) {
+        $(document).on('shown.bs.dropdown', function (e) {
+            var toggle = e.target.querySelector ? e.target.querySelector('[data-toggle="dropdown"]') : null;
+            var menu = e.target.querySelector ? e.target.querySelector('.dropdown-menu') : null;
+            var box = e.target.closest ? e.target.closest('.table-responsive') : null;
+            if (!toggle || !menu || !box) return;
+            var dd = $(toggle).data('bs.dropdown');
+            if (dd && dd._popper) { dd._popper.destroy(); dd._popper = null; }
+            menu.dataset.swlCss = menu.getAttribute('style') || '';
+            var t = toggle.getBoundingClientRect();
+            menu.style.position = 'fixed';
+            menu.style.transform = 'none';
+            menu.style.willChange = 'auto';
+            menu.style.margin = '0';
+            var w = menu.offsetWidth, h = menu.offsetHeight;
+            var left = Math.max(8, Math.min(t.right - w, window.innerWidth - w - 8));
+            var top = t.bottom + 4;
+            if (top + h > window.innerHeight - 8 && t.top - h - 4 > 8) top = t.top - h - 4;
+            menu.style.left = Math.round(left) + 'px';
+            menu.style.top = Math.round(top) + 'px';
+            menu.style.right = 'auto';
+            menu.style.bottom = 'auto';
+            var close = function () { $(toggle).dropdown('hide'); };
+            box.addEventListener('scroll', close, { once: true, passive: true });
+            window.addEventListener('scroll', close, { once: true, passive: true });
+            menu.swlUnpin = function () {
+                box.removeEventListener('scroll', close);
+                window.removeEventListener('scroll', close);
+            };
+        }).on('hidden.bs.dropdown', function (e) {
+            var menu = e.target.querySelector ? e.target.querySelector('.dropdown-menu') : null;
+            if (!menu || menu.dataset.swlCss === undefined) return;
+            if (menu.swlUnpin) { menu.swlUnpin(); menu.swlUnpin = null; }
+            menu.setAttribute('style', menu.dataset.swlCss);
+            delete menu.dataset.swlCss;
+        });
+    }
+    if (window.jQuery) pinMenus(window.jQuery);
+
     function run(root) {
         upgradeStatusLabels(root);
         upgradeSearchFields(root);
