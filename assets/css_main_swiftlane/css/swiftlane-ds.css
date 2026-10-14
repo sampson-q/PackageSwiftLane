@@ -1790,6 +1790,16 @@ a:has(> .btn:only-child) { display: inline-flex; max-width: 100%; }
 /* A field group gives the spacing; an extra mb-3 on the field inside it pushed
    that field 16px above its neighbours in the same row */
 .form-group > .input-group.mb-3:last-child, .form-group > .form-control.mb-3:last-child, .form-group > .select2-container.mb-3:last-child { margin-bottom: 0 !important; }
+/* An inline SVG icon in a button sits on the text line like an icon font
+   (a 24px svg made the "Add New Client" pill 53px tall) */
+.btn > svg { width: 20px; height: 20px; vertical-align: -5px; flex: none; }
+/* A column that carries its own mb-3 beside columns that do not (country /
+   state / city on the customer forms) sat 16px higher in a bottom-aligned
+   field row; the form-group inside already provides the spacing */
+:is(.row, .form-row) > [class*="col-"].mb-3:has(> .form-group:only-child), :is(.row, .form-row) > [class*="col-"].mb-2:has(> .form-group:only-child) { margin-bottom: 0 !important; }
+/* A button group never runs past its box: its buttons wrap when the column
+   is narrower than the group (Print + Export Excel in a col-md-3 at 600px) */
+.card-body .btn-group, .modal-body .btn-group { flex-wrap: wrap; max-width: 100%; row-gap: 4px; }
 /* A column holding only a button group (the $ / GHS currency toggle in a
    col-md-1) is as wide as the group, never narrower */
 .card-body :is(.row, .form-row) > [class*="col-"]:has(> .btn-group:only-child) { flex: 0 0 auto; width: auto; max-width: none; }
