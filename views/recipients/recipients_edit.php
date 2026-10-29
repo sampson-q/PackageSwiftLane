@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../helpers/object_access.php';
+cdp_requireObjectAccess('recipient', (int) ($_GET['recipient'] ?? 0));
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -31,7 +33,7 @@ if (!isset($_GET['recipient']) or $data['rowCount'] != 1) {
 
 $row_recipient = $data['data'];
 
-$db->cdp_query("SELECT * FROM cdb_recipients_addresses WHERE recipient_id='" . $_GET['recipient'] . "'");
+$db->cdp_query("SELECT * FROM cdb_recipients_addresses WHERE recipient_id='" . (int) $_GET['recipient'] . "'");
 $recipient_addreses = $db->cdp_registros();
 
 

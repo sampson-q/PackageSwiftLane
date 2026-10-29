@@ -23,6 +23,9 @@
 
 
 require_once("../loader.php");
+require_once __DIR__ . '/../helpers/ajax_guard.php';
+require_login();
+
 require_once(__DIR__ . "/../helpers/unique_ids.php");
 
 // Answers "is this number already taken?" for the add forms. Delegates to the

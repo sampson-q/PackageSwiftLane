@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../helpers/security.php';
 // Message log (cdb_message_log) — loaded here so every send primitive and every
 // PHPMailer hook can write to it without each page having to require it.
 require_once __DIR__ . '/message_log.php';
@@ -377,14 +378,14 @@ function cdp_sendTemplateEmail($templateId, $toEmail, array $replacements = [], 
             $mail->Subject = $subject;
             $mail->Body    = "<html><body>{$body}</body></html>";
             $mail->SMTPOptions = ['ssl' => [
-                'verify_peer'       => false,
-                'verify_peer_name'  => false,
-                'allow_self_signed' => true,
+                'verify_peer'       => true,
+                'verify_peer_name'  => true,
+                'allow_self_signed' => false,
             ]];
             $mail->send();
             return ['ok' => true];
         } catch (\Exception $e) {
-            return ['ok' => false, 'error' => 'SMTP send error: ' . $mail->ErrorInfo];
+            return ['ok' => false, 'error' => 'Mail delivery failed. Please contact support.'];
         }
     }
 
@@ -1608,13 +1609,14 @@ function cdp_getAgencyContext()
     if ($aid !== null && $aid <= 0) {
         $aid = null;
     }
-    if ($ul === 9) {
+    require_once __DIR__ . '/rbac.php';
+    if (cdp_roleHasFlag($ul, 'is_superadmin')) {
         return $out;
     }
-    if ($ul === 6) {
+    if (cdp_roleHasFlag($ul, 'is_agency')) {
         return ['is_restricted' => true, 'agency_id' => $aid];
     }
-    if (in_array($ul, [2, 4], true) && $aid !== null) {
+    if ((cdp_roleHasFlag($ul, 'is_staff') || cdp_roleHasFlag($ul, 'is_admin')) && $aid !== null) {
         return ['is_restricted' => true, 'agency_id' => $aid];
     }
     return $out;
@@ -4455,7 +4457,7 @@ function cdp_saveShipmentVideos($filesVideo, $order_id, $order_track, $isCustome
         $video_name = $order_track . date('Y-m-d') . '_' . uniqid('vid_') . '_' . $safeBase;
         $target_fs  = $target_dir . $video_name;
 
-        if (@move_uploaded_file($tmp, $target_fs)) {
+        if (@cdp_moveUploadedFile($tmp, $target_fs)) {
             if ($isCustomerPackage) {
                 cdp_insertCustomerPackagesFiles($order_id, 'order_files/' . $video_name, $video_name, date('Y-m-d H:i:s'), $ext);
             } else {

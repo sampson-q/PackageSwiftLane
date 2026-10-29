@@ -243,12 +243,6 @@ function cdp_activityNow()
 /** The caller's IP, honouring the usual proxy headers. */
 function cdp_activityIp()
 {
-    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-        return (string) $_SERVER['HTTP_CLIENT_IP'];
-    }
-    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        return trim(explode(',', (string) $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
-    }
     return (string) ($_SERVER['REMOTE_ADDR'] ?? '');
 }
 

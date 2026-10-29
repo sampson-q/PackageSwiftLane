@@ -24,6 +24,7 @@
 require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
+require_post();
 require_login();
 require_permission('delete_user');
 require_once(__DIR__ . '/../../helpers/rbac.php');
@@ -37,7 +38,7 @@ $errors = array();
 if ($id == 1) {
     $errors['admin'] = $lang['validate_field_ajax116'];
 } else {
-    $db->cdp_query('SELECT userlevel FROM cdb_users WHERE id = :id LIMIT 1');
+    $db->cdp_query('SELECT id, userlevel, agency_id FROM cdb_users WHERE id = :id LIMIT 1');
     $db->bind(':id', $id);
     $db->cdp_execute();
     $row = $db->cdp_registro();
@@ -45,7 +46,7 @@ if ($id == 1) {
         $errors['admin'] = isset($lang['super_admin_no_delete']) ? $lang['super_admin_no_delete'] : 'You cannot delete a Super Admin user.';
     } elseif ($id === (int)$user->uid) {
         $errors['admin'] = 'You cannot delete your own account.';
-    } elseif ($row && !cdp_canManageUser($user, (int)$row->userlevel)) {
+    } elseif ($row && !cdp_canManageTarget($user, $row, cdp_getAgencyContext())) {
         $errors['admin'] = 'No permission to delete this user.';
     }
 }

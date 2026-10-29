@@ -52,7 +52,7 @@ $sql = "
     ON 
         r.role_id = p.role_id
     WHERE 
-        r.role_name LIKE '%" . $search . "%'
+        r.role_name LIKE :cdp_search
     GROUP BY 
         r.role_id, r.role_name, r.description, r.rol_active
     ORDER BY 
@@ -62,11 +62,13 @@ $sql = "
 
 // Ejecuta la consulta
 $db->cdp_query($sql);
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $data = $db->cdp_registros();
 
 // Calcula el total de registros para la paginación
-$query_count = "SELECT COUNT(*) FROM cdb_user_roles WHERE role_name LIKE '%" . $search . "%'";
+$query_count = "SELECT COUNT(*) FROM cdb_user_roles WHERE role_name LIKE :cdp_search";
 $db->cdp_query($query_count);
+if (strpos($query_count, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 
 $total_pages = ceil($numrows / $per_page);
 

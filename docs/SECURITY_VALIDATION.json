@@ -1,0 +1,103 @@
+{
+  "review_date": "2026-10-29",
+  "branch": "secureswift",
+  "baseline_commit": "0d1eb1f6d89eda5100aadb9ac318892c46ebc860",
+  "production_signoff": "withheld",
+  "production_deployment_performed": false,
+  "branch_pushed": false,
+  "runtime": {
+    "php": "8.4.27",
+    "phpunit": "11.5.19",
+    "node": "24.19.0",
+    "apache": "2.4.69"
+  },
+  "security_regressions": {
+    "authorization_sessions_uploads_mail_pdf": {
+      "status": "passed",
+      "checks": 91,
+      "database": "isolated SQLite"
+    },
+    "otp_lifecycle": {
+      "status": "passed",
+      "checks": 23,
+      "limitation": "FOR UPDATE recorded then removed for SQLite; actual MySQL concurrency is not validated"
+    },
+    "frontend_prefilter_artifacts": {
+      "status": "passed",
+      "checks": 9
+    },
+    "http_boundaries": {
+      "status": "passed",
+      "checks": 26,
+      "target": "test-only router, not the application"
+    },
+    "apache_rules": {
+      "status": "passed",
+      "checks": 19,
+      "target": "temporary static document root"
+    },
+    "total_passed_checks": 168
+  },
+  "php_lint_and_security_patterns": {
+    "status": "passed",
+    "files": 1106,
+    "coverage": "first-party/test syntax plus selected prohibited configurations, not complete taint analysis"
+  },
+  "changed_javascript_syntax": {
+    "status": "passed",
+    "files": 18,
+    "additional_test_script": "frontend_checks.js also executed successfully"
+  },
+  "existing_api_unit_suite": {
+    "exit_code": 2,
+    "tests": 59,
+    "assertions": 97,
+    "passed": 56,
+    "errors": 3,
+    "baseline_unchanged": true,
+    "error": "Undefined cdp_getEffectiveStatus in test bootstrap",
+    "test_methods": [
+      "ShipmentsHandlerTest::testFormatRowMapsBasicFields",
+      "ShipmentsHandlerTest::testFormatRowComputesTrackingNumber",
+      "ShipmentsHandlerTest::testFormatRowCastsNumericFields"
+    ],
+    "phpunit_deprecations": 3,
+    "integration_tests": "excluded by existing configuration; not run"
+  },
+  "composer_install_repeat": {
+    "status": "passed",
+    "package_changes_on_repeat": 0
+  },
+  "composer_validate": {
+    "status": "passed"
+  },
+  "composer_platform_requirements": {
+    "status": "passed"
+  },
+  "ui_page_pattern_check": {
+    "status": "passed"
+  },
+  "dependency_advisories": {
+    "live_audit": "blocked by network policy",
+    "snapshot_matches_before": 17,
+    "snapshot_matches_after": 0,
+    "evidence": "SECURITY_DEPENDENCY_EVIDENCE.json"
+  },
+  "compatibility_deprecations": [
+    "ClickSend nullable parameters under PHP 8.4",
+    "mNotify nullable parameter under PHP 8.4",
+    "legacy PHPUnit configuration and doc-comment metadata"
+  ],
+  "not_verified": [
+    "complete application startup and workflows",
+    "production role/grant/tenant matrix",
+    "MySQL schema and row-lock concurrency",
+    "live payment, SMTP, SMS and WhatsApp integrations",
+    "token-revocation migration on application database",
+    "private-upload delivery authorization",
+    "full legacy frontend compatibility and vulnerability closure",
+    "protected/ionCube source semantics",
+    "remote CI execution",
+    "production infrastructure and compliance operating effectiveness"
+  ]
+}

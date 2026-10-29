@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/security.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -86,7 +87,7 @@ if (empty($_POST['phone']))
 if (!empty($_FILES['avatar']['name'])) {
 
     $target_dir = "../../assets/uploads/";
-    $image_name = time() . "_" . basename($_FILES["avatar"]["name"]);
+    $image_name = bin2hex(random_bytes(16)) . '_' . basename($_FILES["avatar"]["name"]);
     $target_file = $target_dir . $image_name;
     $imageFileType = pathinfo($target_file, PATHINFO_EXTENSION);
     $imageFileZise = $_FILES["avatar"]["size"];
@@ -138,7 +139,7 @@ if (empty($errors)) {
 
     if (!empty($_FILES['avatar']['name'])) {
 
-        move_uploaded_file($_FILES["avatar"]["tmp_name"], $target_file);
+        cdp_moveUploadedFile($_FILES["avatar"]["tmp_name"], $target_file);
         $imagen = basename($_FILES["avatar"]["name"]);
         $data['avatar'] = 'uploads/' . $image_name;
     }
@@ -236,9 +237,9 @@ if (empty($errors)) {
 
             $mail->SMTPOptions = array(
                 'ssl' => array(
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'allow_self_signed' => true
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                    'allow_self_signed' => false
                 )
             );
 

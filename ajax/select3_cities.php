@@ -24,12 +24,13 @@
 
 require_once("../loader.php");
 
+
 $db = new Conexion; 
 
 $where = '';
 if (isset($_REQUEST['q'])) {
     $search = cdp_sanitize($_REQUEST['q']);
-    $where = "WHERE  name LIKE '%" . $search . "%'";
+    $where = "WHERE  name LIKE :cdp_search";
 }
 $list = array();
 $data = [];
@@ -38,6 +39,7 @@ $data = [];
 $sql = "SELECT * FROM cdb_cities $where";
 
 $db->cdp_query($sql);
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $db->cdp_execute();
 
 $datas = $db->cdp_registros();

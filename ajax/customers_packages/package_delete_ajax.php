@@ -24,7 +24,10 @@
 require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
+require_post();
 require_login();
+require_once __DIR__ . '/../../helpers/object_access.php';
+cdp_requireObjectAccess('package', (int) ($_POST['id_delete'] ?? 0));
 require_permission('view_client_list');
 
 $db = new Conexion;
@@ -43,7 +46,7 @@ if (empty($_POST['id_delete']))
 
 if (empty($errors)) {
 
-    $db->cdp_query("SELECT * FROM cdb_customers_packages where order_id=" . $_POST['id_delete'] . "");
+    $db->cdp_query("SELECT * FROM cdb_customers_packages where order_id=" . (int) $_POST['id_delete'] . "");
     $trackings_order = $db->cdp_registro();
 
 

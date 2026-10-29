@@ -30,7 +30,7 @@ if (empty($userData) && isset($user) && is_object($user) && method_exists($user,
 				You are viewing the system as <b><?php echo htmlspecialchars($imp_viewing, ENT_QUOTES, 'UTF-8'); ?></b><?php if ($imp_real !== ''): ?>
 				&nbsp;&middot;&nbsp; signed in as <b><?php echo htmlspecialchars($imp_real, ENT_QUOTES, 'UTF-8'); ?></b><?php endif; ?>
 			</span>
-			<a href="view_as.php?stop=1" style="background:#fff;color:#b45309;font-weight:600;padding:4px 14px;border-radius:4px;text-decoration:none;">
+			<a data-cdp-post="1" href="view_as.php?stop=1" style="background:#fff;color:#b45309;font-weight:600;padding:4px 14px;border-radius:4px;text-decoration:none;">
 				Exit View
 			</a>
 		</div>
@@ -193,7 +193,7 @@ if (empty($userData) && isset($user) && is_object($user) && method_exists($user,
 							}
 							?>
 
-							<a class="dropdown-item" href="logout.php"><iconify-icon icon="solar:login-2-outline" class="m-r-5 m-l-5"></iconify-icon>
+							<a class="dropdown-item" data-cdp-post="1" href="logout.php"><iconify-icon icon="solar:login-2-outline" class="m-r-5 m-l-5"></iconify-icon>
 								<?php echo $lang['logoouts'] ?></a>
 						</div>
 					</li>

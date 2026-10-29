@@ -139,7 +139,7 @@ if ($numrows > 0) { ?>
 						<?php endif; ?>
 
 						<?php if (cdp_canViewAs((int)$user->userlevel, $row_level) && (int)$row_user->id !== $viewer_uid) : ?>
-							<a href="view_as.php?id=<?php echo $row_user->id; ?>" data-toggle="tooltip" data-placement="top" title="View as this user (support mode)">
+							<a data-cdp-post="1" href="view_as.php?id=<?php echo $row_user->id; ?>" data-toggle="tooltip" data-placement="top" title="View as this user (support mode)">
 								<iconify-icon icon="solar:login-3-bold" style="color:#b45309;vertical-align:-2px;"></iconify-icon></a>
 						<?php endif; ?>
 

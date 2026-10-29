@@ -21,15 +21,22 @@
 
 
 
-if (!isset($_GET['file']) || empty($_GET['file'])) {
+require_once __DIR__ . '/loader.php';
+$user = new User();
+if (!$user->cdp_loginCheck() || !$user->cdp_is_Admin()) {
+    http_response_code(403);
+    exit;
+}
+
+if (!isset($_GET['file']) || !is_string($_GET['file']) || empty($_GET['file'])) {
  exit();
 }
-$root = "backups/";
+require_once __DIR__ . '/helpers/security.php';
 $file = basename($_GET['file']);
-$path = $root.$file;
+$path = cdp_securityConfinedFile(__DIR__ . '/backups', $_GET['file']);
 $type = '';
 
-if (is_file($path)) {
+if ($path !== null) {
  $size = filesize($path);
  if (function_exists('mime_content_type')) {
  $type = mime_content_type($path);
@@ -58,7 +65,9 @@ if (is_file($path)) {
 
  // Definir headers
  header("Content-Type: $type");
- header("Content-Disposition: attachment; filename=$file");
+ header('Cache-Control: no-store, private');
+ header('X-Content-Type-Options: nosniff');
+ header('Content-Disposition: attachment; filename="' . addcslashes($file, '"\\') . '"');
  header("Content-Transfer-Encoding: binary");
  header("Content-Length: " . $size);
  // Descargar archivo

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/security.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -45,7 +46,7 @@ if (empty($_FILES['file_invoice']['name']))
 if (!empty($_FILES['file_invoice']['name'])) {
 
     $target_dir = "../../assets/payment_packages/";
-    $image_name = time() . "_" . basename($_FILES["file_invoice"]["name"]);
+    $image_name = bin2hex(random_bytes(16)) . '_' . basename($_FILES["file_invoice"]["name"]);
     $target_file = $target_dir . $image_name;
     $imageFileType = pathinfo($target_file, PATHINFO_EXTENSION);
     $imageFileZise = $_FILES["file_invoice"]["size"];
@@ -72,7 +73,7 @@ if (empty($errors)) {
 
     if (!empty($_FILES['file_invoice']['name'])) {
 
-        move_uploaded_file($_FILES["file_invoice"]["tmp_name"], $target_file);
+        cdp_moveUploadedFile($_FILES["file_invoice"]["tmp_name"], $target_file);
         $imagen = basename($_FILES["file_invoice"]["name"]);
         $data['file_invoice'] = 'payment_packages/' . $image_name;
     }

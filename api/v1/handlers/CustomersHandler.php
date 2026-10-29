@@ -27,13 +27,7 @@ class CustomersHandler
         $params = [];
         $where  = "WHERE userlevel = '1'";
 
-        // Agency scoping (integer ID – safe to inline after cast)
-        if ((int)$authUser->userlevel === 6) {
-            $ctx = cdp_getAgencyContext();
-            if ($ctx['agency_id']) {
-                $where .= ' AND agency_id = ' . (int)$ctx['agency_id'];
-            }
-        }
+        $where .= ApiAccess::scope($authUser, 'customer');
 
         // String search – parameterized
         if ($search !== '') {
@@ -63,7 +57,7 @@ class CustomersHandler
 
     public function create(): void
     {
-        ApiAuth::requirePermission('add_client');
+        $authUser = ApiAuth::requirePermission('add_client');
         $data = ApiResponse::getRequestData();
 
         $errors = ApiValidator::validate($data, [
@@ -112,6 +106,11 @@ class CustomersHandler
             'created'         => date('Y-m-d H:i:s'),
         ];
 
+        $ctx = cdp_getAgencyContext();
+        if (!empty($ctx['is_restricted'])) {
+            if (empty($ctx['agency_id'])) ApiResponse::forbidden();
+            $data['agency_id'] = (int) $ctx['agency_id'];
+        }
         if (!empty($data['agency_id'])) {
             $customerData['agency_id'] = (int)$data['agency_id'];
         }
@@ -135,6 +134,7 @@ class CustomersHandler
     public function show(int $id): void
     {
         $authUser = ApiAuth::requirePermission('view_client_list');
+        ApiAccess::requireObject($authUser, 'customer', $id);
 
         // Customers may only view their own profile
         if ((int)$authUser->userlevel === 1 && (int)$authUser->id !== $id) {
@@ -158,7 +158,11 @@ class CustomersHandler
 
     public function update(int $id): void
     {
-        $authUser = ApiAuth::requirePermission(['edit_client', 'view_client_list']);
+        $authUser = ApiAuth::requireAuth();
+        if (!ApiAccess::client($authUser) || (int) $authUser->id !== $id) {
+            $authUser = ApiAuth::requirePermission('edit_client');
+        }
+        ApiAccess::requireObject($authUser, 'customer', $id);
         $data     = ApiResponse::getRequestData();
 
         // Customers may only edit themselves
@@ -182,6 +186,7 @@ class CustomersHandler
             'phone'      => 'nullable|string|max:30',
             'gender'     => 'nullable|in:M,F,O',
             'active'     => 'nullable|integer|in:0,1',
+            'password' => 'nullable|string|min:8|max:255',
         ]);
         if (!empty($errors)) {
             ApiResponse::validationError($errors);
@@ -191,6 +196,10 @@ class CustomersHandler
         $newEmail = cdp_sanitize($data['email'] ?? $existing->email);
         if ($newEmail !== $existing->email && $user->cdp_emailExists($newEmail, $id)) {
             ApiResponse::conflict('Email already in use by another account.');
+        }
+
+        if (ApiAccess::client($authUser) && isset($data['active'])) {
+            ApiResponse::forbidden('Account activation requires an administrator.');
         }
 
         $newPw = !empty($data['password'])
@@ -205,6 +214,7 @@ class CustomersHandler
             'phone'           => cdp_sanitize($data['phone']      ?? $existing->phone),
             'gender'          => cdp_sanitize($data['gender']     ?? $existing->gender),
             'notes'           => cdp_sanitize($data['notes']      ?? $existing->notes),
+            'company'         => cdp_sanitize($data['company'] ?? $existing->company ?? ''),
             'newsletter'      => (int)($data['newsletter']        ?? $existing->newsletter),
             'active'          => isset($data['active'])  ? (int)$data['active']  : (int)$existing->active,
             'document_type'   => cdp_sanitize($data['document_type']   ?? $existing->document_type),
@@ -212,7 +222,12 @@ class CustomersHandler
             'password'        => $newPw,
         ];
 
-        cdp_updateCustomers($updateData);
+        if (!cdp_updateCustomers($updateData)) ApiResponse::serverError('Unable to update customer.');
+        if (!empty($data['password'])) {
+            (new ApiAuth())->revokeAllForUser($id);
+            require_once dirname(__DIR__, 3) . '/lib/OtpService.php';
+            (new OtpService())->revokeAllTrustedDevices($id);
+        }
 
         $db->cdp_query('SELECT * FROM cdb_users WHERE id = :id LIMIT 1');
         $db->bind(':id', $id);
@@ -225,6 +240,7 @@ class CustomersHandler
     public function addresses(int $id): void
     {
         $authUser = ApiAuth::requirePermission('view_client_list');
+        ApiAccess::requireObject($authUser, 'customer', $id);
 
         if ((int)$authUser->userlevel === 1 && (int)$authUser->id !== $id) {
             ApiResponse::forbidden();

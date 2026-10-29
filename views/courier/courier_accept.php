@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../helpers/object_access.php';
+cdp_requireObjectAccess('shipment', (int) ($_GET['id'] ?? 0));
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -50,7 +52,7 @@ if (isset($userData->userlevel) && (int)$userData->userlevel === 6) {
 $row_order = $data['data'];
 
 
-$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . $_GET['id'] . "'");
+$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . (int) $_GET['id'] . "'");
 $order_items = $db->cdp_registros();
 
 $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->sender_id . "'");
@@ -561,7 +563,7 @@ $address_order = $db->cdp_registro();
 
                     <?php
 
-                    $db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . $_GET['id'] . "' ORDER BY date_file");
+                    $db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . (int) $_GET['id'] . "' ORDER BY date_file");
                     $files_order = $db->cdp_registros();
                     $numrows = $db->cdp_rowCount();
 

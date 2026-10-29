@@ -72,5 +72,5 @@ try {
   echo json_encode($output);
 } catch (Error $e) {
   http_response_code(500);
-  echo json_encode(['error' => $e->getMessage()]);
+  echo json_encode(['error' => 'Payment could not be completed. Please verify your details or contact support.']);
 }

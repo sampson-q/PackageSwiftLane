@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../helpers/object_access.php';
+cdp_requireObjectAccess('package', (int) ($_GET['id'] ?? 0));
 // *************************************************************************
 // * Customer-package receipt — print_inv_ship.php design.                 *
 // *************************************************************************

@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/../../helpers/csrf.php';
+cdp_csrf_ensure_session();
 require_once("lib/OtpService.php");
 
 $core = new Core();
@@ -14,6 +15,7 @@ if (empty($_SESSION['forgot_reset_token'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!cdp_csrf_validate_request()) { http_response_code(403); exit('Invalid request.'); }
     $pass  = isset($_POST['password'])         ? $_POST['password']         : '';
     $pass2 = isset($_POST['password_confirm']) ? $_POST['password_confirm'] : '';
 
@@ -33,6 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             unset($_SESSION['forgot_reset_token']);
             $otp->revokeAllTrustedDevices($userId);
+            require_once __DIR__ . '/../../api/v1/ApiAuth.php';
+            (new ApiAuth())->revokeAllForUser((int) $userId);
             
             $message = 'Password updated successfully. You can now log in.';
         }
@@ -113,6 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <?php if (!$message): ?>
                 <form class="login-form mt-4" method="post">
+<input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="row">
                         <div class="col-12">
                             <div class="mb-3">

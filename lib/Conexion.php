@@ -46,9 +46,10 @@ class Conexion
             $this->dbh = self::$sharedDbh;
             return;
         }
-        $dsn = 'mysql:host=' . $this->db_host . ';dbname=' . $this->db_name;
+        $dsn = 'mysql:host=' . $this->db_host . ';dbname=' . $this->db_name . ';charset=utf8mb4';
         $options = array(
             PDO::ATTR_PERSISTENT => true,
+            PDO::MYSQL_ATTR_MULTI_STATEMENTS => false,
             PDO::ATTR_ERRMODE => PDO::ERRMODE_SILENT
         );
 
@@ -61,7 +62,8 @@ class Conexion
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
             // Puedes considerar registrar el error en lugar de mostrarlo
-            echo $this->error;
+            error_log('[database] Connection failed; SQLSTATE=' . $e->getCode());
+            throw new RuntimeException('Database service unavailable.');
         }
     }
 
@@ -102,7 +104,7 @@ class Conexion
             $this->executed = (bool) $ok;
             return $ok;
         } catch (PDOException $e) {
-            echo 'Error: ' . $e->getMessage();
+            error_log('[database] Statement failed; SQLSTATE=' . $e->getCode());
             return false;
         }
     }

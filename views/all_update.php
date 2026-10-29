@@ -186,6 +186,7 @@ $userData = $user->cdp_getUserData();
                                   );
                                 } else { ?>
                                   <form action="verify_update.php" method="POST">
+<input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                                     <input type="hidden" class="form-control" value="<?php echo $update_data['update_id']; ?>" name="update_id">
                                     <input type="hidden" class="form-control" value="<?php echo $update_data['has_sql']; ?>" name="has_sql">
                                     <input type="hidden" class="form-control" value="<?php echo $update_data['version']; ?>" name="version">

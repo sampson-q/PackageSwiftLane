@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__DIR__, 3) . '/helpers/security.php';
 /**
  * TrackingHandler – public shipment / package tracking (no auth required).
  *
@@ -11,6 +12,10 @@ class TrackingHandler
 {
     public function show(string $orderNo): void
     {
+        if (!cdp_securityRateLimit('tracking:' . ($_SERVER['REMOTE_ADDR'] ?? 'cli'), 120, 60)) {
+            header('Retry-After: 60');
+            ApiResponse::error('rate_limited', 'Please try again later.', 429);
+        }
         $orderNo = strtoupper(cdp_sanitize($orderNo));
 
         if (empty($orderNo)) {

@@ -22,6 +22,7 @@
 
 
 require_once __DIR__ . '/../helpers/otp_settings.php';
+require_once __DIR__ . '/../helpers/security.php';
 require_once __DIR__ . '/../helpers/finance_switch.php';
 
 class User
@@ -61,8 +62,9 @@ class User
      */
     private function cdp_startSession()
     {
-        if (strlen(session_id()) < 1)
-            session_start();
+        if ((!defined('CDP_API_BEARER_CONTEXT') || !CDP_API_BEARER_CONTEXT) && session_status() !== PHP_SESSION_ACTIVE) {
+            cdp_securityStartSession();
+        }
 
         $this->logged_in = $this->cdp_loginCheck();
 
@@ -95,6 +97,16 @@ class User
     {
         if (isset($_SESSION['username']) && $_SESSION['username'] != "Guest") {
             $row = $this->cdp_getUserInfo($_SESSION['username']);
+            if (!$row || (int) $row->active !== 1) {
+                unset($_SESSION['username'], $_SESSION['userid'], $_SESSION['userlevel']);
+                return false;
+            }
+            if ((!defined('CDP_API_BEARER_CONTEXT') || !CDP_API_BEARER_CONTEXT)
+                && (!isset($_SESSION['auth_credential_version'])
+                    || !hash_equals(hash('sha256', (string) $row->password), (string) $_SESSION['auth_credential_version']))) {
+                unset($_SESSION['username'], $_SESSION['userid'], $_SESSION['userlevel']);
+                return false;
+            }
             $this->uid = $row->id;
             $this->username = $row->username;
             $this->locker = $row->locker;
@@ -189,13 +201,18 @@ class User
         $this->db->cdp_query('SELECT * FROM cdb_users WHERE id=:id LIMIT 1');
         $this->db->bind(':id', (int)$userId);
         $user = $this->db->cdp_registro();
-        if (!$user) {
+        if (!$user || (int) $user->active !== 1) {
             return false;
         }
         return $this->cdp_finalizeLogin($user);
     }
 
     private function cdp_finalizeLogin($user) {
+        if (!$user || (int) $user->active !== 1 || !session_regenerate_id(true)) {
+            return false;
+        }
+        $_SESSION = [];
+        $_SESSION['auth_credential_version'] = hash('sha256', (string) $user->password);
         $_SESSION['userid'] = $user->id;
         $_SESSION['username'] = $user->username;
         $_SESSION['email'] = $user->email;
@@ -214,7 +231,7 @@ class User
 
         $this->db->cdp_query('UPDATE cdb_users SET lastlogin=:lastlogin, lastip=:lastip WHERE username=:user');
         $this->db->bind(':lastlogin', date("Y-m-d H:i:s"));
-        $this->db->bind(':lastip', trim($_SERVER['REMOTE_ADDR']));
+        $this->db->bind(':lastip', trim($_SERVER['REMOTE_ADDR'] ?? ''));
         $this->db->bind(':user', $user->username);
         $this->db->cdp_execute();
 
@@ -227,6 +244,12 @@ class User
      */
     public function cdp_checkStatus($username, $password)
     {
+        if (!is_string($username) || !is_string($password) || strlen($username) > 254 || strlen($password) > 4096) {
+            return 0;
+        }
+        if (!cdp_securityRateLimit('password:' . ($_SERVER['REMOTE_ADDR'] ?? 'cli'), 60, 900)) {
+            return 0;
+        }
         $username = trim($username);
         $password = trim($password);
 
@@ -672,13 +695,6 @@ class User
     }
 
     public function cdp_getUserIP() {
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            return $_SERVER['HTTP_CLIENT_IP'];
-        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            // In case of multiple IPs, take the first one
-            return explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0];
-        } else {
-            return $_SERVER['REMOTE_ADDR'];
-        }
+        return (string) ($_SERVER['REMOTE_ADDR'] ?? '');
     }
 }

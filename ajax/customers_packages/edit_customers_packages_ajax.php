@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/security.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -309,7 +310,7 @@ if (empty($errors)) {
                     $target_file   = $target_dir . $image_name;
                     $imageFileType = pathinfo($target_file, PATHINFO_EXTENSION);
                     if ($_FILES["filesMultiple"]["size"][$key] > 0) {
-                        move_uploaded_file($_FILES["filesMultiple"]["tmp_name"][$key], $target_file);
+                        cdp_moveUploadedFile($_FILES["filesMultiple"]["tmp_name"][$key], $target_file);
                     }
                     $target_file_db = "order_files/" . $image_name;
                     cdp_insertCustomerPackagesFiles($shipment_id, $target_file_db, $image_name, date("Y-m-d H:i:s"), $imageFileType);
@@ -324,7 +325,7 @@ if (empty($errors)) {
                     $target_file   = $target_dir . $image_name;
                     $imageFileType = pathinfo($target_file, PATHINFO_EXTENSION);
                     if ($_FILES["filesCapture"]["size"][$key] > 0) {
-                        move_uploaded_file($_FILES["filesCapture"]["tmp_name"][$key], $target_file);
+                        cdp_moveUploadedFile($_FILES["filesCapture"]["tmp_name"][$key], $target_file);
                     }
                     $target_file_db = "order_files/" . $image_name;
                     cdp_insertCustomerPackagesFiles($shipment_id, $target_file_db, $image_name, date("Y-m-d H:i:s"), $imageFileType);
@@ -608,9 +609,9 @@ if (empty($errors)) {
 
                 $mail->SMTPOptions = array(
                     'ssl' => array(
-                        'verify_peer'       => false,
-                        'verify_peer_name'  => false,
-                        'allow_self_signed' => true
+                        'verify_peer'       => true,
+                        'verify_peer_name'  => true,
+                        'allow_self_signed' => false
                     )
                 );
 

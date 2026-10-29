@@ -22,6 +22,14 @@
 
 
 require_once("loader.php");
+require_once __DIR__ . '/helpers/ajax_guard.php';
+require_once __DIR__ . '/helpers/object_access.php';
+require_post();
+require_login();
+$recordId = (int) ($_POST['id'] ?? 0);
+cdp_requireObjectAccess('package', $recordId);
+if (!ApiAccess::client(cdp_requestActor())) require_permission('view_package_details');
+
 require_once("helpers/querys.php");
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -33,7 +41,7 @@ require 'helpers/phpmailer/PHPMailer/src/SMTP.php';
 
 
 
-session_start();
+cdp_csrf_ensure_session();
 // get the HTML
 ob_start();
 if (!isset($_SESSION['userid'])) {
@@ -42,8 +50,8 @@ if (!isset($_SESSION['userid'])) {
 	exit;
 }
 
-if (isset($_GET['id'])) {
-	$data = cdp_getCustomerPackagePrint($_GET['id']);
+if ($recordId > 0) {
+	$data = cdp_getCustomerPackagePrint($recordId);
 }
 
 
@@ -90,7 +98,7 @@ $db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row-
 $address_order = $db->cdp_registro();
 
 
-$db->cdp_query("SELECT * FROM cdb_customers_packages_detail WHERE order_id='" . $_GET['id'] . "'");
+$db->cdp_query("SELECT * FROM cdb_customers_packages_detail WHERE order_id='" . $recordId . "'");
 $order_items = $db->cdp_registros();
 
 $dias_ = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
@@ -151,7 +159,7 @@ if ($core->mailer == 'PHP') {
 			echo "<div class='alert alert-warning'>Mensaje no enviado!!!</div>";
 		}
 	} catch (Throwable $e) {
-		echo $e->getMessage();
+		echo 'Unable to prepare or send the document.';
 		exit;
 	}
 } elseif ($core->mailer == 'SMTP') {
@@ -202,13 +210,13 @@ if ($core->mailer == 'PHP') {
 			echo "<div class='alert alert-success'>Message has been sent successfully!</div>";
 		} catch (Exception $e) {
 
-			echo 'Message could not be sent. Mailer Error: ', $mail->ErrorInfo;
+			echo 'Message could not be sent. Please contact support.';
 		}
 		// send the PDF
 
 
 	} catch (Throwable $e) {
-		echo $e->getMessage();
+		echo 'Unable to prepare or send the document.';
 		exit;
 	}
 }

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../helpers/security.php';
 /**
  * Shared helpers for profile self-service (avatar, ID document, WhatsApp
  * number) used by the customer profile page, the employee profile page and the
@@ -80,8 +81,8 @@ if (!function_exists('cdp_profileHistoryLog')) {
             return ['ok' => false, 'error' => 'Upload folder is not writable.'];
         }
 
-        $name = $namePrefix . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $allowed[$mime];
-        if (!move_uploaded_file($file['tmp_name'], $dir . $name)) {
+        $name = $namePrefix . '_' . bin2hex(random_bytes(16)) . '_' . bin2hex(random_bytes(4)) . '.' . $allowed[$mime];
+        if (!cdp_moveUploadedFile($file['tmp_name'], $dir . $name)) {
             return ['ok' => false, 'error' => 'Could not save the uploaded file.'];
         }
 

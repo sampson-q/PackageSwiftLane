@@ -1,0 +1,164 @@
+{
+  "review_date": "2026-10-29",
+  "source": "https://github.com/FriendsOfPHP/security-advisories",
+  "source_commit": "64403e9edb1344e646bf35cebde20e0f18632441",
+  "method": "Version ranges evaluated with Composer Semver against the pinned advisory snapshot. Range matches do not prove exploitability.",
+  "live_audit_status": "Packagist advisory endpoint blocked by environment network policy; live composer audit was not completed.",
+  "current_lock_sha256": "355b02cca866c4c0f70e71518403ec2ba5df60ab75a5f8cf45a7b66dd2cb7071",
+  "before_matches": [
+    {
+      "stage": "before",
+      "package": "guzzlehttp/guzzle",
+      "version": "6.5.8",
+      "cve": "CVE-2026-55568",
+      "title": "Silent HTTPS proxy downgrade to cleartext",
+      "link": "https://github.com/guzzle/guzzle/security/advisories/GHSA-wpwq-4j6v-78m3",
+      "constraint": "<7.12.1"
+    },
+    {
+      "stage": "before",
+      "package": "guzzlehttp/guzzle",
+      "version": "6.5.8",
+      "cve": "CVE-2026-55767",
+      "title": "Dot-only cookie domains match all hosts",
+      "link": "https://github.com/guzzle/guzzle/security/advisories/GHSA-cwxw-98qj-8qjx",
+      "constraint": "<7.12.1"
+    },
+    {
+      "stage": "before",
+      "package": "guzzlehttp/psr7",
+      "version": "1.9.1",
+      "cve": "CVE-2026-49214",
+      "title": "CRLF injection via URI host component",
+      "link": "https://github.com/guzzle/psr7/security/advisories/GHSA-hq7v-mx3g-29hw",
+      "constraint": "<2.10.2"
+    },
+    {
+      "stage": "before",
+      "package": "guzzlehttp/psr7",
+      "version": "1.9.1",
+      "cve": "CVE-2026-55766",
+      "title": "CRLF injection in HTTP start-line serialization",
+      "link": "https://github.com/guzzle/psr7/security/advisories/GHSA-vm85-hxw5-5432",
+      "constraint": "<2.12.1"
+    },
+    {
+      "stage": "before",
+      "package": "guzzlehttp/psr7",
+      "version": "1.9.1",
+      "cve": "CVE-2026-48998",
+      "title": "Host confusion via authority reinterpretation",
+      "link": "https://github.com/guzzle/psr7/security/advisories/GHSA-34xg-wgjx-8xph",
+      "constraint": "<2.10.2"
+    },
+    {
+      "stage": "before",
+      "package": "symfony/polyfill-intl-idn",
+      "version": "v1.29.0",
+      "cve": "CVE-2026-46644",
+      "title": "CVE-2026-46644: symfony/polyfill-intl-idn accepts xn-- labels whose Punycode payload decodes to ASCII-only: insecure equivalence",
+      "link": "https://symfony.com/cve-2026-46644",
+      "constraint": ">=1.17.1,<1.38.1"
+    },
+    {
+      "stage": "before",
+      "package": "phpmailer/phpmailer",
+      "version": "5.2.17",
+      "cve": "CVE-2021-34551",
+      "title": "RCE affecting Windows hosts via UNC paths to translation files",
+      "link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v6.5.0",
+      "constraint": "<6.5.0"
+    },
+    {
+      "stage": "before",
+      "package": "phpmailer/phpmailer",
+      "version": "5.2.17",
+      "cve": "CVE-2018-19296",
+      "title": "Object injection",
+      "link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v6.0.6",
+      "constraint": ">=5.0.0,<5.2.27"
+    },
+    {
+      "stage": "before",
+      "package": "phpmailer/phpmailer",
+      "version": "5.2.17",
+      "cve": "CVE-2016-10045",
+      "title": "Remote Code Execution",
+      "link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v5.2.20",
+      "constraint": ">=5.0.0,<5.2.20"
+    },
+    {
+      "stage": "before",
+      "package": "phpmailer/phpmailer",
+      "version": "5.2.17",
+      "cve": "CVE-2021-3603",
+      "title": "Untrusted code may be run from an overridden address validator",
+      "link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v6.5.0",
+      "constraint": "<6.5.0"
+    },
+    {
+      "stage": "before",
+      "package": "phpmailer/phpmailer",
+      "version": "5.2.17",
+      "cve": "CVE-2017-5223",
+      "title": "Local File Disclosure",
+      "link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v5.2.22",
+      "constraint": ">=5.0.0,<5.2.22"
+    },
+    {
+      "stage": "before",
+      "package": "phpmailer/phpmailer",
+      "version": "5.2.17",
+      "cve": "CVE-2016-10033",
+      "title": "Remote Code Execution",
+      "link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v5.2.18",
+      "constraint": ">=5.0.0,<5.2.18"
+    },
+    {
+      "stage": "before",
+      "package": "phpmailer/phpmailer",
+      "version": "5.2.17",
+      "cve": "CVE-2017-11503",
+      "title": "XSS vulnerability in code example",
+      "link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v5.2.24",
+      "constraint": ">=5.0.0,<5.2.24"
+    },
+    {
+      "stage": "before",
+      "package": "phpmailer/phpmailer",
+      "version": "6.0.0",
+      "cve": "CVE-2021-34551",
+      "title": "RCE affecting Windows hosts via UNC paths to translation files",
+      "link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v6.5.0",
+      "constraint": "<6.5.0"
+    },
+    {
+      "stage": "before",
+      "package": "phpmailer/phpmailer",
+      "version": "6.0.0",
+      "cve": "CVE-2018-19296",
+      "title": "Object injection",
+      "link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v6.0.6",
+      "constraint": ">=6.0.0,<6.0.6"
+    },
+    {
+      "stage": "before",
+      "package": "phpmailer/phpmailer",
+      "version": "6.0.0",
+      "cve": "CVE-2021-3603",
+      "title": "Untrusted code may be run from an overridden address validator",
+      "link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v6.5.0",
+      "constraint": "<6.5.0"
+    },
+    {
+      "stage": "before",
+      "package": "tecnickcom/tcpdf",
+      "version": "5.0.002",
+      "cve": "CVE-2018-17057",
+      "title": "Attackers can trigger deserialization of arbitrary data via the phar:// wrapper.",
+      "link": "https://github.com/tecnickcom/TCPDF/commit/1861e33fe05f653b67d070f7c106463e7a5c26ed",
+      "constraint": "<6.2.22"
+    }
+  ],
+  "after_matches": []
+}

@@ -171,7 +171,7 @@ if ($numrows > 0) { ?>
                             </a>
                             <?php if (cdp_canViewAs($cdpViewerLevel, (int) $user->userlevel)) : ?>
                                 <span class="mx-1">|</span>
-                                <a href="view_as.php?id=<?php echo $user->id; ?>" data-toggle="tooltip" data-placement="top" title="View as this customer (support mode)">
+                                <a data-cdp-post="1" href="view_as.php?id=<?php echo $user->id; ?>" data-toggle="tooltip" data-placement="top" title="View as this customer (support mode)">
                                     <iconify-icon icon="solar:login-3-bold" style="color:#b45309;font-size:18px;vertical-align:-3px;"></iconify-icon>
                                 </a>
                             <?php endif; ?>

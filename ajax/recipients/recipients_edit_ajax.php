@@ -26,6 +26,13 @@ require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_login();
 require_permission('view_recipients');
+require_once __DIR__ . '/../../helpers/object_access.php';
+$recipientOwner = (int) ($_POST['recipient_id'] ?? 0);
+cdp_requireObjectAccess('recipient', $recipientOwner);
+foreach ((array) ($_POST['address_id'] ?? []) as $addressId) {
+    if ((int) $addressId > 0) cdp_requireAddressAccess('recipient', (int) $addressId, $recipientOwner);
+}
+
 $user = new User;
 $core = new Core;
 $errors = array();

@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../helpers/object_access.php';
+cdp_requireObjectAccess('shipment', (int) ($_GET['id'] ?? 0));
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -121,7 +123,7 @@ $db->cdp_query("SELECT * FROM cdb_met_payment where id= '" . $row_order->order_p
 $met_payment = $db->cdp_registro();
 
 
-$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . $_GET['id'] . "'");
+$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . (int) $_GET['id'] . "'");
 $order_items = $db->cdp_registros();
 
 // Inside a consolidation the shipment reports the CONSOLIDATION's status and
@@ -708,7 +710,7 @@ if ($row_order->status_invoice == 1) {
 
                 <?php
 
-                $db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . $_GET['id'] . "' ORDER BY date_file");
+                $db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . (int) $_GET['id'] . "' ORDER BY date_file");
                 $files_order = $db->cdp_registros();
                 $numrows = $db->cdp_rowCount();
 
@@ -766,7 +768,7 @@ if ($row_order->status_invoice == 1) {
 
                 <?php
 
-                $db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . $_GET['id'] . "' ORDER BY date_file");
+                $db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . (int) $_GET['id'] . "' ORDER BY date_file");
                 $files_order = $db->cdp_registros();
                 $numrows = $db->cdp_rowCount();
 

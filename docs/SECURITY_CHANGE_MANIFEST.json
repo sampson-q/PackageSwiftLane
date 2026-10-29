@@ -1,0 +1,3826 @@
+{
+  "branch": "secureswift",
+  "baseline_commit": "0d1eb1f6d89eda5100aadb9ac318892c46ebc860",
+  "change_count": 762,
+  "status_counts": {
+    "A": 18,
+    "M": 264,
+    "D": 480
+  },
+  "notes": [
+    "Most deleted files are obsolete bundled dependency implementations, not application features.",
+    "Full action descriptions and open risks are in SECURITY_REVIEW.md."
+  ],
+  "files": [
+    {
+      "status": "A",
+      "path": ".github/workflows/security.yml",
+      "category": "security CI and dependency monitoring"
+    },
+    {
+      "status": "M",
+      "path": ".gitignore",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": ".htaccess",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "A",
+      "path": ".user.ini",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "README.md",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/accounts_receivable/charge_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/check_email_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/check_tracking.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/check_user_update_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate/add_payment_stripe_method_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate/consolidate_add_payment_doc_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate/consolidate_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate/consolidate_files_uploads_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate/consolidate_item_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate/consolidate_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate/courier_list_add_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate/payments_gateways_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate_packages/add_payment_stripe_method_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate_packages/consolidate_add_payment_doc_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate_packages/consolidate_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate_packages/consolidate_files_uploads_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate_packages/consolidate_item_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate_packages/consolidate_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate_packages/courier_list_add_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/consolidate_packages/payments_gateways_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/courier/accept_courier_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/courier/add_courier_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/courier/add_courier_client_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/courier/add_courier_delivered_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/courier/add_courier_multiple_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/courier/add_courier_tracking.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/courier/add_payment_stripe_method_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/courier/courier_add_payment_doc_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/courier/courier_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/courier/courier_files_uploads_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/courier/edit_courier_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/courier/payments_gateways_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers/customer_view_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers/customers_delete_address_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers/customers_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers/customers_document_edit_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers/customers_edit_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers/customers_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers/customers_status_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_packages/add_customers_packages_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_packages/add_customers_packages_delivered_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_packages/add_customers_packages_from_prealert_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_packages/add_customers_packages_multiple_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_packages/add_customers_packages_tracking.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_packages/add_payment_stripe_method_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_packages/customer_packages_files_uploads_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_packages/customers_package_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_packages/customers_packages_add_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_packages/customers_packages_update_multiple_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_packages/edit_customers_packages_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_packages/package_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_packages/payments_gateways_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/customers_select2.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/dashboard/account_receivable/load_graphics_account_receivable_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/dashboard/consolidated/load_consolidated_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/dashboard/consolidated_package/load_consolidated_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/dashboard/pickup/load_graphics_pickup_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/dashboard/pickup/load_pickup_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/drivers/drivers_add_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/drivers/drivers_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/drivers/drivers_edit_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/drivers/drivers_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/forgot-password-ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/getUserCustomers.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/locations/cities/cities_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/locations/cities/cities_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/locations/countries/countries_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/locations/countries/countries_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/locations/states/states_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/locations/states/states_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/notify_whatsapp/api_whatsapp_service.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/notify_whatsapp/api_whatsapp_service_v2.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/pickup/accept_pickup_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/pickup/add_pickup_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/pickup/add_pickup_client_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/pickup/pickup_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/pickup/pickup_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/pickup_client_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/pre_alerts/prealert_add_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/pre_alerts/prealert_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/recipients/recipients_admin_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/recipients/recipients_check_email_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/recipients/recipients_check_email_exist_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/recipients/recipients_delete_address_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/recipients/recipients_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/recipients/recipients_edit_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/recipients/recipients_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/reports/report_driver_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/reports/report_employees_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/reports/report_pickup_driver_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/reports/report_pickup_employees.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_cities.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_clients.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_consolidation.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_countries.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_recipient.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_recipient_addresses.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_sender.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_sender_addresses.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_shipmode.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_shipping_mode.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_states.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_templates_whatsapp.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_user.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_user_consolidation.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select2_user_orders.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select3_cities.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select3_states.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/select_categories_item.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/sign_up_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/backup/backup_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/branchoffices/branchoffices_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/branchoffices/branchoffices_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/category/category_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/category/category_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/config_logo_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/courier_company/courier_company_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/courier_company/courier_company_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/delivery_time/delivery_time_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/delivery_time/delivery_time_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/incoterms/incoterms_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/incoterms/incoterms_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/offices/offices_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/offices/offices_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/packaging/packaging_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/packaging/packaging_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/payment_gateways/setting_method_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/payment_method/payment_method_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/payment_method/payment_method_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/payment_mode/payment_mode_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/payment_mode/payment_mode_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/permissions/asingrole_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/permissions/departments_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/permissions/permission_action_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/permissions/permissions_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/permissions/permissions_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/ship_tariffs/ship_tariffs_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/shipline/shipline_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/shipline/shipline_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/shipping_mode/shipping_mode_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/shipping_mode/shipping_mode_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/status_courier/status_courier_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/status_courier/status_courier_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/templates_email/templates_email_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/templates_sms/templates_sms_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/templates_whatsapp/templates_whatsapp_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/tools/templates_whatsapp/templates_whatsapp_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/users/users_add_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/users/users_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/users/users_edit_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/users/users_files_uploads_delete_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/users/users_list_ajax.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/validate_locker_virtual.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/validate_track_number_consolidate.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/validate_track_number_courier.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "ajax/validate_track_number_customer_package.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "A",
+      "path": "api/v1/ApiAccess.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "api/v1/ApiAuth.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "api/v1/ApiResponse.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "api/v1/ApiValidator.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "api/v1/bootstrap.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "api/v1/handlers/AuthHandler.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "api/v1/handlers/CustomersHandler.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "api/v1/handlers/PreAlertsHandler.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "api/v1/handlers/RecipientsHandler.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "api/v1/handlers/ShipmentsHandler.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "api/v1/handlers/TrackingHandler.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "api/v1/index.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "A",
+      "path": "api/v1/migrations/002_security_token_revocation.sql",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "assets/css_main_swiftlane/main_swiftlane/js/jquery.min.js",
+      "category": "verified jQuery patch"
+    },
+    {
+      "status": "M",
+      "path": "assets/custom_dependencies/jquery-3.6.0.min.js",
+      "category": "verified jQuery patch"
+    },
+    {
+      "status": "M",
+      "path": "assets/custom_dependencies/js/jquery-3.6.1.min.js",
+      "category": "verified jQuery patch"
+    },
+    {
+      "status": "M",
+      "path": "assets/js/jquery.min.js",
+      "category": "verified jQuery patch"
+    },
+    {
+      "status": "M",
+      "path": "assets/template/assets/libs/jquery/dist/jquery.min.js",
+      "category": "verified jQuery patch"
+    },
+    {
+      "status": "M",
+      "path": "assets/vendor/jquery/jquery-3.2.1.min.js",
+      "category": "verified jQuery patch"
+    },
+    {
+      "status": "M",
+      "path": "auth-otp.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "backup.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "composer.json",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "composer.lock",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "cron/cleanup_tmp_uploads.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "cron/pickup_aging.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "dataJs/consolidate_list.js",
+      "category": "CSRF-protected mail submission"
+    },
+    {
+      "status": "M",
+      "path": "dataJs/consolidate_package_list.js",
+      "category": "CSRF-protected mail submission"
+    },
+    {
+      "status": "M",
+      "path": "dataJs/consolidate_view.js",
+      "category": "CSRF-protected mail submission"
+    },
+    {
+      "status": "M",
+      "path": "dataJs/consolidate_view_packages.js",
+      "category": "CSRF-protected mail submission"
+    },
+    {
+      "status": "M",
+      "path": "dataJs/courier.js",
+      "category": "CSRF-protected mail submission"
+    },
+    {
+      "status": "M",
+      "path": "dataJs/courier_view.js",
+      "category": "CSRF-protected mail submission"
+    },
+    {
+      "status": "M",
+      "path": "dataJs/customer_view.js",
+      "category": "CSRF-protected mail submission"
+    },
+    {
+      "status": "M",
+      "path": "dataJs/customers_packages.js",
+      "category": "CSRF-protected mail submission"
+    },
+    {
+      "status": "M",
+      "path": "dataJs/customers_packages_view.js",
+      "category": "CSRF-protected mail submission"
+    },
+    {
+      "status": "M",
+      "path": "dataJs/locker.js",
+      "category": "CSRF-protected mail submission"
+    },
+    {
+      "status": "M",
+      "path": "dataJs/pickup.js",
+      "category": "CSRF-protected mail submission"
+    },
+    {
+      "status": "M",
+      "path": "dataJs/pickup_client.js",
+      "category": "CSRF-protected mail submission"
+    },
+    {
+      "status": "A",
+      "path": "docs/SECURITY_ASSET_PROVENANCE.json",
+      "category": "audit register and evidence"
+    },
+    {
+      "status": "A",
+      "path": "docs/SECURITY_CHANGE_MANIFEST.json",
+      "category": "audit register and evidence"
+    },
+    {
+      "status": "A",
+      "path": "docs/SECURITY_DEPENDENCY_EVIDENCE.json",
+      "category": "audit register and evidence"
+    },
+    {
+      "status": "A",
+      "path": "docs/SECURITY_REVIEW.md",
+      "category": "audit register and evidence"
+    },
+    {
+      "status": "A",
+      "path": "docs/SECURITY_VALIDATION.json",
+      "category": "audit register and evidence"
+    },
+    {
+      "status": "M",
+      "path": "download.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "helpers/activity_log.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "helpers/ajax_guard.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "helpers/autoload_lang.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "D",
+      "path": "helpers/composer.lock",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "helpers/csrf.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "helpers/message_log.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "A",
+      "path": "helpers/object_access.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "D",
+      "path": "helpers/phpmailer/PHPMailer/composer.json",
+      "category": "patched mail dependency compatibility"
+    },
+    {
+      "status": "D",
+      "path": "helpers/phpmailer/PHPMailer/composer.lock",
+      "category": "patched mail dependency compatibility"
+    },
+    {
+      "status": "M",
+      "path": "helpers/phpmailer/PHPMailer/src/Exception.php",
+      "category": "patched mail dependency compatibility"
+    },
+    {
+      "status": "M",
+      "path": "helpers/phpmailer/PHPMailer/src/OAuth.php",
+      "category": "patched mail dependency compatibility"
+    },
+    {
+      "status": "M",
+      "path": "helpers/phpmailer/PHPMailer/src/PHPMailer.php",
+      "category": "patched mail dependency compatibility"
+    },
+    {
+      "status": "M",
+      "path": "helpers/phpmailer/PHPMailer/src/POP3.php",
+      "category": "patched mail dependency compatibility"
+    },
+    {
+      "status": "M",
+      "path": "helpers/phpmailer/PHPMailer/src/SMTP.php",
+      "category": "patched mail dependency compatibility"
+    },
+    {
+      "status": "M",
+      "path": "helpers/phpmailer/class.phpmailer.php",
+      "category": "patched mail dependency compatibility"
+    },
+    {
+      "status": "M",
+      "path": "helpers/phpmailer/class.smtp.php",
+      "category": "patched mail dependency compatibility"
+    },
+    {
+      "status": "M",
+      "path": "helpers/profile.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "helpers/push_notify.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "helpers/querys.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "helpers/rbac.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "A",
+      "path": "helpers/security.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "helpers/vendor/autoload.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/.php_cs",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/.travis.yml",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/README.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/composer.json",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/AccountApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/AccountRechargeApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/ContactApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/ContactListApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/CountriesApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/DeliveryIssuesApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/DetectAddressApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/EmailDeliveryReceiptRulesApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/EmailMarketingApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/EmailToSmsApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/FAXApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/FAXDeliveryReceiptRulesApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/GlobalSendingApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/InboundFAXRulesApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/InboundSMSRulesApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/MMSApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/MasterEmailTemplatesApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/MmsCampaignApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/NumberApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/PostLetterApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/PostPostcardApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/PostReturnAddressApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/ReferralAccountApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/ResellerAccountApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/SMSApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/SMSDeliveryReceiptRulesApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/SearchApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/SmsCampaignApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/StatisticsApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/SubaccountApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/TimezonesApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/TransactionalEmailApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/TransferCreditApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/UploadApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/UserEmailTemplatesApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/VoiceApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Api/VoiceDeliveryReceiptRulesApi.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/Account.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/AccountForgotPasswordVerify.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/AccountVerify.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/Address.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/Attachment.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/Contact.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/ContactList.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/ContactListImport.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/CountryListIds.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/CreditCard.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/DateBefore.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/DeliveryIssue.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/DeliveryReceiptRule.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/Email.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/EmailAddress.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/EmailCampaign.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/EmailFrom.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/EmailRecipient.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/EmailSMSAddress.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/EmailTemplateNew.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/EmailTemplateUpdate.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/FaxMessage.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/FaxMessageCollection.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/Fields.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/FieldsFields.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/ForgotPassword.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/ForgotUsername.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/InboundFaxRule.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/InboundSMSRule.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/MmsCampaign.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/MmsMessage.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/MmsMessageCollection.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/PostLetter.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/PostPostcard.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/PostRecipient.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/ResellerAccount.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/ResellerAccountTransferCredit.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/SmsCampaign.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/SmsMessage.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/SmsMessageCollection.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/SmsTemplate.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/StrippedString.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/Subaccount.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/UploadFile.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/Url.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/VoiceMessage.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/docs/Model/VoiceMessageCollection.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/AccountApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/AccountRechargeApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/ContactApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/ContactListApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/CountriesApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/DeliveryIssuesApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/DetectAddressApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/EmailDeliveryReceiptRulesApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/EmailMarketingApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/EmailToSmsApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/FAXApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/FAXDeliveryReceiptRulesApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/GlobalSendingApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/InboundFAXRulesApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/InboundSMSRulesApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/MMSApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/MasterEmailTemplatesApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/MmsCampaignApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/NumberApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/PostLetterApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/PostPostcardApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/PostReturnAddressApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/ReferralAccountApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/ResellerAccountApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/SMSApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/SMSDeliveryReceiptRulesApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/SearchApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/SmsCampaignApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/StatisticsApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/SubaccountApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/TimezonesApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/TransactionalEmailApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/TransferCreditApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/UploadApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/UserEmailTemplatesApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/VoiceApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Api/VoiceDeliveryReceiptRulesApi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/ApiException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Configuration.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/HeaderSelector.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/Account.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/AccountForgotPasswordVerify.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/AccountVerify.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/Address.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/Attachment.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/Contact.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/ContactList.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/ContactListImport.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/CountryListIds.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/CreditCard.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/DateBefore.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/DeliveryIssue.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/DeliveryReceiptRule.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/Email.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/EmailAddress.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/EmailCampaign.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/EmailFrom.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/EmailRecipient.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/EmailSMSAddress.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/EmailTemplateNew.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/EmailTemplateUpdate.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/FaxMessage.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/FaxMessageCollection.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/Fields.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/FieldsFields.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/ForgotPassword.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/ForgotUsername.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/InboundFaxRule.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/InboundSMSRule.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/MmsCampaign.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/MmsMessage.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/MmsMessageCollection.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/ModelInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/PostLetter.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/PostPostcard.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/PostRecipient.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/ResellerAccount.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/ResellerAccountTransferCredit.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/SmsCampaign.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/SmsMessage.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/SmsMessageCollection.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/SmsTemplate.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/StrippedString.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/Subaccount.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/UploadFile.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/Url.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/VoiceMessage.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/Model/VoiceMessageCollection.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/lib/ObjectSerializer.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/phpunit.xml.dist",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/AccountApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/AccountRechargeApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/ContactApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/ContactListApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/CountriesApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/DeliveryIssuesApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/DetectAddressApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/EmailDeliveryReceiptRulesApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/EmailMarketingApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/EmailToSmsApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/FAXApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/FAXDeliveryReceiptRulesApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/GlobalSendingApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/InboundFAXRulesApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/InboundSMSRulesApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/MMSApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/MasterEmailTemplatesApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/MmsCampaignApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/NumberApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/PostLetterApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/PostPostcardApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/PostReturnAddressApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/ReferralAccountApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/ResellerAccountApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/SMSApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/SMSDeliveryReceiptRulesApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/SearchApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/SmsCampaignApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/StatisticsApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/SubaccountApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/TimezonesApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/TransactionalEmailApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/TransferCreditApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/UploadApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/UserEmailTemplatesApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/VoiceApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Api/VoiceDeliveryReceiptRulesApiTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/AccountForgotPasswordVerifyTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/AccountTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/AccountVerifyTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/AddressTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/AttachmentTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/ContactListImportTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/ContactListTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/ContactTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/CountryListIdsTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/CreditCardTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/DateBeforeTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/DeliveryIssueTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/DeliveryReceiptRuleTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/EmailAddressTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/EmailCampaignTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/EmailFromTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/EmailRecipientTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/EmailSMSAddressTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/EmailTemplateNewTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/EmailTemplateUpdateTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/EmailTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/FaxMessageCollectionTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/FaxMessageTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/FieldsFieldsTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/FieldsTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/ForgotPasswordTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/ForgotUsernameTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/InboundFaxRuleTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/InboundSMSRuleTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/MmsCampaignTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/MmsMessageCollectionTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/MmsMessageTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/PostLetterTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/PostPostcardTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/PostRecipientTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/ResellerAccountTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/ResellerAccountTransferCreditTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/SmsCampaignTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/SmsMessageCollectionTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/SmsMessageTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/SmsTemplateTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/StrippedStringTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/SubaccountTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/UploadFileTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/UrlTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/VoiceMessageCollectionTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/clicksend/clicksend-php/test/Model/VoiceMessageTest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/composer/ClassLoader.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/composer/InstalledVersions.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/composer/LICENSE",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/composer/autoload_classmap.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/composer/autoload_files.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/composer/autoload_namespaces.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/composer/autoload_psr4.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/composer/autoload_real.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/composer/autoload_static.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/composer/installed.json",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/composer/installed.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/composer/platform_check.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/.php_cs",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/CHANGELOG.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/Dockerfile",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/LICENSE",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/README.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/UPGRADING.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/composer.json",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Client.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/ClientInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Cookie/CookieJar.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Cookie/CookieJarInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Cookie/FileCookieJar.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Cookie/SessionCookieJar.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Cookie/SetCookie.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Exception/BadResponseException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Exception/ClientException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Exception/ConnectException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Exception/GuzzleException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Exception/InvalidArgumentException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Exception/RequestException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Exception/SeekException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Exception/ServerException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Exception/TooManyRedirectsException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Exception/TransferException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Handler/CurlFactory.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Handler/CurlFactoryInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Handler/CurlHandler.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Handler/CurlMultiHandler.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Handler/EasyHandle.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Handler/MockHandler.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Handler/Proxy.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Handler/StreamHandler.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/HandlerStack.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/MessageFormatter.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Middleware.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Pool.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/PrepareBodyMiddleware.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/RedirectMiddleware.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/RequestOptions.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/RetryMiddleware.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/TransferStats.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/UriTemplate.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/Utils.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/functions.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/guzzle/src/functions_include.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/CHANGELOG.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/LICENSE",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/README.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/composer.json",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/AggregateException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/CancellationException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/Coroutine.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/Create.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/Each.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/EachPromise.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/FulfilledPromise.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/Is.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/Promise.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/PromiseInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/PromisorInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/RejectedPromise.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/RejectionException.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/TaskQueue.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/TaskQueueInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/Utils.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/functions.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/promises/src/functions_include.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/.github/FUNDING.yml",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/.github/stale.yml",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/.github/workflows/ci.yml",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/.github/workflows/integration.yml",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/.github/workflows/static.yml",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/.php_cs.dist",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/CHANGELOG.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/LICENSE",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/README.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/composer.json",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/AppendStream.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/BufferStream.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/CachingStream.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/DroppingStream.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/FnStream.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/Header.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/InflateStream.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/LazyOpenStream.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/LimitStream.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/Message.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/MessageTrait.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/MimeType.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/MultipartStream.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/NoSeekStream.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/PumpStream.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/Query.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/Request.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/Response.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/Rfc7230.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/ServerRequest.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/Stream.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/StreamDecoratorTrait.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/StreamWrapper.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/UploadedFile.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/Uri.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/UriComparator.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/UriNormalizer.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/UriResolver.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/Utils.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/functions.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/guzzlehttp/psr7/src/functions_include.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/psr/http-message/CHANGELOG.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/psr/http-message/LICENSE",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/psr/http-message/README.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/psr/http-message/composer.json",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/psr/http-message/src/MessageInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/psr/http-message/src/RequestInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/psr/http-message/src/ResponseInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/psr/http-message/src/ServerRequestInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/psr/http-message/src/StreamInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/psr/http-message/src/UploadedFileInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/psr/http-message/src/UriInterface.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/ralouphie/getallheaders/LICENSE",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/ralouphie/getallheaders/README.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/ralouphie/getallheaders/composer.json",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/ralouphie/getallheaders/src/getallheaders.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/Idn.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/Info.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/LICENSE",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/README.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/Resources/unidata/DisallowedRanges.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/Resources/unidata/Regex.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/Resources/unidata/deviation.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/Resources/unidata/disallowed.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/Resources/unidata/disallowed_STD3_mapped.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/Resources/unidata/disallowed_STD3_valid.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/Resources/unidata/ignored.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/Resources/unidata/mapped.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/Resources/unidata/virama.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/bootstrap.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/bootstrap80.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-idn/composer.json",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-normalizer/LICENSE",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-normalizer/Normalizer.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-normalizer/README.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-normalizer/Resources/unidata/canonicalComposition.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-normalizer/Resources/unidata/canonicalDecomposition.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-normalizer/Resources/unidata/combiningClass.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-normalizer/Resources/unidata/compatibilityDecomposition.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-normalizer/bootstrap.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-normalizer/bootstrap80.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-intl-normalizer/composer.json",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-php72/LICENSE",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-php72/Php72.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-php72/README.md",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-php72/bootstrap.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "helpers/vendor/symfony/polyfill-php72/composer.json",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "M",
+      "path": "helpers/whatsapp.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "lib/Conexion.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "lib/OtpService.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "lib/User.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "login.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "logout.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_class/exception.class.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_class/locale.class.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_class/myPdf.class.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_class/parsingCss.class.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_class/parsingHtml.class.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_class/tcpdfConfig.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/2dbarcodes.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/CHANGELOG.TXT",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/LICENSE.TXT",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/README.TXT",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/barcodes.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/cache/chapter_demo_1.txt",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/cache/chapter_demo_2.txt",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/cache/table_data_demo.txt",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/cache/utf8test.txt",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/config/lang/bra.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/config/lang/eng.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/config/lang/ger.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/config/lang/ita.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/config/tcpdf_config.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/config/tcpdf_config_alt.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/doc/read_me.txt",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/examples/read_me.txt",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/fonts/courier.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/fonts/helvetica.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/fonts/helveticab.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/fonts/helveticabi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/fonts/helveticai.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/fonts/times.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/fonts/timesbi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/fonts/timesi.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/htmlcolors.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/images/read_me.txt",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/qrcode.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/tcpdf.crt",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/tcpdf.fdf",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "M",
+      "path": "pdf/_tcpdf_5.0.002/tcpdf.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/_tcpdf_5.0.002/unicode_data.php",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "M",
+      "path": "pdf/html2pdf.class.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "D",
+      "path": "pdf/locale/ca.csv",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/locale/cs.csv",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/locale/da.csv",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/locale/de.csv",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/locale/en.csv",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/locale/es.csv",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/locale/fr.csv",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/locale/it.csv",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/locale/nl.csv",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/locale/pt.csv",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "D",
+      "path": "pdf/locale/tr.csv",
+      "category": "legacy dependency removal or compatibility entrypoint"
+    },
+    {
+      "status": "A",
+      "path": "scripts/security_checks.py",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "send_email_pdf.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "send_email_pdf_consolidate.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "send_email_pdf_consolidate_packages.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "send_email_pdf_packages.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "testExecel.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "A",
+      "path": "tests/security/apache_checks.py",
+      "category": "security regression tests"
+    },
+    {
+      "status": "A",
+      "path": "tests/security/frontend_checks.js",
+      "category": "security regression tests"
+    },
+    {
+      "status": "A",
+      "path": "tests/security/http_checks.py",
+      "category": "security regression tests"
+    },
+    {
+      "status": "A",
+      "path": "tests/security/http_fixture.php",
+      "category": "security regression tests"
+    },
+    {
+      "status": "A",
+      "path": "tests/security/otp_checks.php",
+      "category": "security regression tests"
+    },
+    {
+      "status": "A",
+      "path": "tests/security/run.php",
+      "category": "security regression tests"
+    },
+    {
+      "status": "M",
+      "path": "unzipper.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "verify_update.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "view_as.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/all_update.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/auth/forgot-password.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/auth/forgot-reset.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/auth/sign-up.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/consolidate/consolidate_add.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/consolidate/consolidate_deliver_shipment.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/consolidate/consolidate_edit.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/consolidate/consolidate_shipment_tracking.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/consolidate/consolidate_view.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/consolidate_packages/consolidate_add.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/consolidate_packages/consolidate_deliver_shipment.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/consolidate_packages/consolidate_edit.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/consolidate_packages/consolidate_shipment_tracking.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/consolidate_packages/consolidate_view.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/courier/courier_accept.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/courier/courier_deliver_shipment.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/courier/courier_edit.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/courier/courier_shipment_tracking.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/courier/courier_view.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/courier/warehouse_delivery_consolidation.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/customer_packages/customer_package_deliver.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/customer_packages/customer_package_edit.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/customer_packages/customer_package_tracking.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/customer_packages/customer_packages_view.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/customer_packages/print_invoice_package.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/customer_packages/print_label_package.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/customers/customer_view.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/customers/customers_edit.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/inc/footer.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/inc/left_sidebar.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/inc/topbar.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/pickup/pickup_accept.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/print/print_inv_ship.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/print/print_label_ship.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/recipients/recipients_edit.php",
+      "category": "application hardening or security prerequisites"
+    },
+    {
+      "status": "M",
+      "path": "views/tools/backup/backup.php",
+      "category": "application hardening or security prerequisites"
+    }
+  ]
+}

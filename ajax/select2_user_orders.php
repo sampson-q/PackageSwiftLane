@@ -1,6 +1,10 @@
 <?php
 // ajax/select2_user_orders.php
 require_once("../loader.php");
+require_once __DIR__ . '/../helpers/object_access.php';
+require_once __DIR__ . '/../helpers/ajax_guard.php';
+require_login();
+
 
 $db = new Conexion();
 
@@ -8,6 +12,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 // expects GET params: sender_id (int), optional exclude (CSV order_ids), optional ship_from, ship_to (YYYY-MM-DD)
 $sender_id = isset($_GET['sender_id']) ? intval($_GET['sender_id']) : 0;
+cdp_requireObjectAccess('customer', $sender_id);
 $exclude = isset($_GET['exclude']) ? trim($_GET['exclude']) : '';
 $ship_from = isset($_GET['ship_from']) ? trim($_GET['ship_from']) : '';
 $ship_to   = isset($_GET['ship_to']) ? trim($_GET['ship_to']) : '';

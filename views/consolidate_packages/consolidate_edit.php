@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../../helpers/object_access.php';
+cdp_requireObjectAccess('consolidated_package', (int) ($_GET['id'] ?? 0));
+require_once __DIR__ . '/../../helpers/security.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -52,7 +55,7 @@ if (isset($userData->userlevel) && (int)$userData->userlevel === 6) {
 $row_order = $data['data'];
 
 
-$db->cdp_query("SELECT * FROM cdb_consolidate_packages_detail WHERE consolidate_id='" . $_GET['id'] . "'");
+$db->cdp_query("SELECT * FROM cdb_consolidate_packages_detail WHERE consolidate_id='" . (int) $_GET['id'] . "'");
 $order_items = $db->cdp_registros();
 
 $db->cdp_query("SELECT * FROM cdb_users where id= '" . $row_order->sender_id . "'");
@@ -277,7 +280,7 @@ if (isset($_POST["total_item"])) {
     $db->bind(':date_history',  trim($date));
     $db->cdp_execute();
 
-    $db->cdp_query("SELECT * FROM cdb_senders_addresses where id_addresses= '" . $_POST["sender_address_id"] . "'");
+    $db->cdp_query("SELECT * FROM cdb_senders_addresses where id_addresses= '" . (int) $_POST["sender_address_id"] . "'");
 
     $sender_address_data = $db->cdp_registro();
 
@@ -297,7 +300,7 @@ if (isset($_POST["total_item"])) {
     $final_sender_city = $sender_city['data'];
 
 
-    $db->cdp_query("SELECT * FROM cdb_recipients_addresses where id_addresses= '" . $_POST["recipient_address_id"] . "'");
+    $db->cdp_query("SELECT * FROM cdb_recipients_addresses where id_addresses= '" . (int) $_POST["recipient_address_id"] . "'");
 
     $recipient_address_data = $db->cdp_registro();
 
@@ -377,12 +380,12 @@ if (isset($_POST["total_item"])) {
 
         foreach ($_FILES["filesMultiple"]["tmp_name"] as $key => $tmp_name) {
             if (!in_array($key, $deleted_file_ids)) {
-                $image_name = time() . "_" . basename($_FILES["filesMultiple"]["name"][$key]);
+                $image_name = bin2hex(random_bytes(16)) . '_' . basename($_FILES["filesMultiple"]["name"][$key]);
                 $target_file = $target_dir . $image_name;
                 $imageFileType = pathinfo($target_file, PATHINFO_EXTENSION);
                 $imageFileZise = $_FILES["filesMultiple"]["size"][$key];
 
-                if ($imageFileZise > 0 && move_uploaded_file($_FILES["filesMultiple"]["tmp_name"][$key], $target_file)) {
+                if ($imageFileZise > 0 && cdp_moveUploadedFile($_FILES["filesMultiple"]["tmp_name"][$key], $target_file)) {
                     $imagen = basename($_FILES["filesMultiple"]["name"][$key]);
                     $file = "image_path='img/usuarios/$image_name' ";
                     cdp_insertOrdersFiles($order_id, $target_file, $image_name, date("Y-m-d H:i:s"), '1', $imageFileType);
@@ -655,7 +658,7 @@ if (isset($_POST["total_item"])) {
 
                     <?php
 
-                    $db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . $_GET['id'] . "' and is_consolidate='1' ORDER BY date_file");
+                    $db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . (int) $_GET['id'] . "' and is_consolidate='1' ORDER BY date_file");
                     $files_order = $db->cdp_registros();
                     $numrows = $db->cdp_rowCount();
 

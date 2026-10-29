@@ -23,11 +23,16 @@
  
 
 require_once("../loader.php");
+require_once __DIR__ . '/../helpers/object_access.php';
+require_once __DIR__ . '/../helpers/ajax_guard.php';
+require_login();
+
 require_once(__DIR__ . '/../helpers/querys.php');
 
 $db = new Conexion;
 
 $sender_id = (int)($_REQUEST['id'] ?? 0);
+cdp_requireObjectAccess('customer', $sender_id);
 $search = isset($_REQUEST['q']) ? cdp_sanitize($_REQUEST['q']) : '';
 
 $data = [];

@@ -3,6 +3,17 @@
     "description": "Courier & Logistics Management System",
     "license": "proprietary",
     "require": {
-        "spipu/html2pdf": "^5.2"
+        "spipu/html2pdf": "^5.3",
+        "tecnickcom/tcpdf": "^6.11.4",
+        "phpmailer/phpmailer": "^6.12",
+        "clicksend/clicksend-php": "^5.0.79",
+        "guzzlehttp/guzzle": "^7.12.1",
+        "guzzlehttp/psr7": "^2.12.1",
+        "php": "^8.2",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-fileinfo": "*",
+        "ext-openssl": "*",
+        "ext-session": "*"
     }
 }

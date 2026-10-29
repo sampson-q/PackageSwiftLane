@@ -13,7 +13,9 @@ $db    = new Conexion;
 $core  = new Core;
 
 // Get and sanitize the locker id from the request
-$locker = cdp_sanitize($_REQUEST['search']);
+$locker = (int) ($_REQUEST['search'] ?? 0);
+require_once __DIR__ . '/../../helpers/object_access.php';
+cdp_requireObjectAccess('customer', $locker);
 
 if (empty($locker) || !is_numeric($locker)) {
     echo '<div class="alert alert-info">Please enter a locker ID.</div>';

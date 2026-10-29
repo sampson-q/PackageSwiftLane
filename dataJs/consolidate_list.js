@@ -176,7 +176,7 @@ $("#send_email").on('submit', function (event) {
 
 	var parametros = $(this).serialize();
 	$.ajax({
-		type: "GET",
+		type: "POST",
 		url: "send_email_pdf_consolidate.php",
 		data: parametros,
 		beforeSend: function (objeto) {

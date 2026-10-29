@@ -1,0 +1,38 @@
+{
+  "package": "jquery",
+  "version": "3.7.1",
+  "source": "https://registry.npmjs.org/jquery/-/jquery-3.7.1.tgz",
+  "integrity": "sha512-m4avr8yL8kmFN8psrbFFFmB/If14iN5o9nw/NgnnM+kybDJpRsAynV2BsfpTYrTRysYUdADVD7CkUUizgkpLfg==",
+  "updated_files": [
+    {
+      "path": "assets/custom_dependencies/jquery-3.6.0.min.js",
+      "previous_version": "3.6.0",
+      "sha256": "fc9a93dd241f6b045cbff0481cf4e1901becd0e12fb45166a8f17f95823f0b1a"
+    },
+    {
+      "path": "assets/js/jquery.min.js",
+      "previous_version": "3.3.1",
+      "sha256": "fc9a93dd241f6b045cbff0481cf4e1901becd0e12fb45166a8f17f95823f0b1a"
+    },
+    {
+      "path": "assets/custom_dependencies/js/jquery-3.6.1.min.js",
+      "previous_version": "3.6.1",
+      "sha256": "fc9a93dd241f6b045cbff0481cf4e1901becd0e12fb45166a8f17f95823f0b1a"
+    },
+    {
+      "path": "assets/template/assets/libs/jquery/dist/jquery.min.js",
+      "previous_version": "3.3.1",
+      "sha256": "fc9a93dd241f6b045cbff0481cf4e1901becd0e12fb45166a8f17f95823f0b1a"
+    },
+    {
+      "path": "assets/css_main_swiftlane/main_swiftlane/js/jquery.min.js",
+      "previous_version": "3.3.1",
+      "sha256": "fc9a93dd241f6b045cbff0481cf4e1901becd0e12fb45166a8f17f95823f0b1a"
+    },
+    {
+      "path": "assets/vendor/jquery/jquery-3.2.1.min.js",
+      "previous_version": "3.2.1",
+      "sha256": "fc9a93dd241f6b045cbff0481cf4e1901becd0e12fb45166a8f17f95823f0b1a"
+    }
+  ]
+}

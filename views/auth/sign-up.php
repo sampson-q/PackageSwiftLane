@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/csrf.php';
 if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; }
 
 ?>
@@ -87,6 +88,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
                     </div>
                 <?php else : ?>
                     <form class="login-form mt-3" id="new_register" name="new_register" method="post" enctype="multipart/form-data">
+<input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                         <div class="auth-form-section">
                             <div class="auth-section-title">Identity</div>
                             <div class="row">

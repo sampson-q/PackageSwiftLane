@@ -137,7 +137,7 @@ $userData = $user->cdp_getUserData();
 
 										if (CDP_APP_MODE_DEMO === false) {
 
-											if (isset($_GET['create']) && $_GET['create'] == "1") {
+											if (isset($_POST['create']) && $_POST['create'] == "1") {
 
 												doBackup();
 											}
@@ -162,7 +162,7 @@ $userData = $user->cdp_getUserData();
 											<h4 class="card-title"></h4>
 											<div class="ml-auto">
 												<div class="btn-group">
-													<a href="backup.php?do=backup&amp;create=1"><button type="button" class="btn btn-dark">
+													<a data-cdp-post="1" href="backup.php?do=backup&amp;create=1"><button type="button" class="btn btn-dark">
 															<?php echo $lang['tools-database1'] ?>
 															<span class="icon-hdd"></span></button></a>
 												</div>

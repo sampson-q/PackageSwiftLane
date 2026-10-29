@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/security.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -60,7 +61,7 @@ if (intval($_POST['driver_id']) <= 0)
 if (!empty($_FILES['miarchivo']['name'])) {
 
     $target_dir = "../../files/";
-    $image_name = time() . "_" . basename($_FILES["miarchivo"]["name"]);
+    $image_name = bin2hex(random_bytes(16)) . '_' . basename($_FILES["miarchivo"]["name"]);
     $target_file = $target_dir . $image_name;
     $imageFileType = pathinfo($target_file, PATHINFO_EXTENSION);
     $imageFileZise = $_FILES["miarchivo"]["size"];
@@ -135,9 +136,9 @@ if (empty($errors)) {
 
 
         if (!empty($_FILES['miarchivo']['name'])) {
-            $image_name = time() . "_" . basename($_FILES["miarchivo"]["name"]);
+            $image_name = bin2hex(random_bytes(16)) . '_' . basename($_FILES["miarchivo"]["name"]);
             $target_file = $target_dir . $image_name;
-            move_uploaded_file($_FILES["miarchivo"]["tmp_name"], $target_file);
+            cdp_moveUploadedFile($_FILES["miarchivo"]["tmp_name"], $target_file);
             // $imagen=basename($_FILES["favicon"]["name"]);
             $photo_delivered = 'files/' . $image_name;
             $dataUpdate['photo_delivered'] = $photo_delivered;
@@ -263,9 +264,9 @@ if (empty($errors)) {
 
             $mail->SMTPOptions = array(
                 'ssl' => array(
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'allow_self_signed' => true
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                    'allow_self_signed' => false
                 )
             );
 

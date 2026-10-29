@@ -24,7 +24,10 @@
 require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
+require_post();
 require_login();
+require_once __DIR__ . '/../../helpers/object_access.php';
+cdp_requireObjectAccess('shipment', (int) ($_POST['id'] ?? 0));
 require_permission('view_shipment_list');
 
 $errors = array();

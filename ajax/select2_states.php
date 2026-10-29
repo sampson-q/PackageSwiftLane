@@ -24,9 +24,10 @@
 
 require_once("../loader.php");
 
+
 $db = new Conexion;
 
-$country = cdp_sanitize($_REQUEST['id']);
+$country = (int)($_REQUEST['id'] ?? 0);
 
 $search = '';
 if (isset($_REQUEST['q'])) {
@@ -37,9 +38,10 @@ $list = array();
 $data = [];
 
 
-$sql = "SELECT * FROM cdb_states WHERE  name LIKE '%" . $search . "%' and country_id='" . $country . "'";
+$sql = "SELECT * FROM cdb_states WHERE  name LIKE :cdp_search and country_id='" . $country . "'";
 
 $db->cdp_query($sql);
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $db->cdp_execute();
 
 $datas = $db->cdp_registros();

@@ -14,6 +14,11 @@
 // *************************************************************************
 
 require_once("loader.php");
+require_once __DIR__ . '/helpers/csrf.php';
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || !cdp_csrf_validate_request()) {
+    http_response_code(403); exit('Invalid request.');
+}
+
 require_once("helpers/rbac.php");
 require_once("helpers/activity_log.php");
 
@@ -27,6 +32,9 @@ if ($user->cdp_loginCheck() !== true) {
 
 // Set every identity session key the app reads, from a cdb_users row.
 function cdp_viewAsApplyIdentity($row) {
+    if (!session_regenerate_id(true)) { http_response_code(500); exit('Session unavailable.'); }
+    unset($_SESSION['csrf_token']);
+    $_SESSION['auth_credential_version'] = hash('sha256', (string) $row->password);
     $_SESSION['userid']    = $row->id;
     $_SESSION['username']  = $row->username;
     $_SESSION['email']     = $row->email;
@@ -53,7 +61,7 @@ function cdp_viewAsSafeReturn($url) {
 }
 
 // --- STOP: restore the real account -------------------------------------
-if (isset($_GET['stop'])) {
+if (isset($_POST['stop'])) {
     $return = cdp_viewAsSafeReturn($_SESSION['imp_return_url'] ?? '');
     if (!empty($_SESSION['imp_original_username'])) {
         $db = new Conexion;
@@ -71,15 +79,21 @@ if (isset($_GET['stop'])) {
             'summary'      => 'Stopped viewing the system as another user',
         ]);
 
-        if ($orig) {
+        if ($orig && (int) $orig->active === 1
+            && hash_equals(hash('sha256', (string) $orig->password), (string) ($_SESSION['imp_original_credential_version'] ?? ''))) {
             cdp_viewAsApplyIdentity($orig);
+        } else {
+            $user->cdp_logout();
+            header('Location: login.php');
+            exit;
         }
         unset(
             $_SESSION['imp_original_username'],
             $_SESSION['imp_original_userlevel'],
             $_SESSION['imp_original_name'],
             $_SESSION['imp_original_userid'],
-            $_SESSION['imp_return_url']
+            $_SESSION['imp_return_url'],
+            $_SESSION['imp_original_credential_version']
         );
     }
     // Back to the screen the operator started from (e.g. the customers/users
@@ -89,7 +103,7 @@ if (isset($_GET['stop'])) {
 }
 
 // --- START: begin viewing as the target ---------------------------------
-$targetId = (int) ($_GET['id'] ?? 0);
+$targetId = (int) ($_POST['id'] ?? 0);
 if ($targetId <= 0) {
     header("Location: index.php");
     exit;
@@ -111,6 +125,14 @@ if (!empty($_SESSION['imp_original_username'])) {
 }
 
 $db = new Conexion;
+$db->cdp_query('SELECT id, userlevel, active, password FROM cdb_users WHERE id = :id LIMIT 1');
+$db->bind(':id', $authUserid);
+$authority = $db->cdp_registro();
+if (!$authority || (int) $authority->active !== 1) { http_response_code(403); exit; }
+if (!hash_equals(hash('sha256', (string) $authority->password), (string) ($_SESSION['imp_original_credential_version'] ?? $_SESSION['auth_credential_version'] ?? ''))) {
+    http_response_code(403); exit;
+}
+$authUserlevel = (int) $authority->userlevel;
 $db->cdp_query("SELECT * FROM cdb_users WHERE id = :id LIMIT 1");
 $db->bind(':id', $targetId);
 $db->cdp_execute();
@@ -139,6 +161,7 @@ if (!cdp_canViewAs($authUserlevel, (int) $target->userlevel)) {
 // Stash the real identity once (first entry into impersonation), along with
 // the screen the operator launched from so "Exit View" returns there.
 if (empty($_SESSION['imp_original_username'])) {
+    $_SESSION['imp_original_credential_version'] = $_SESSION['auth_credential_version'];
     $_SESSION['imp_original_username']  = $authUsername;
     $_SESSION['imp_original_userlevel'] = $authUserlevel;
     $_SESSION['imp_original_name']      = $authName;

@@ -41,6 +41,10 @@ if (cdp_spBeaconWanted()) : ?>
         // own spinner beforeSend were posting WITHOUT the token (= 419).
         // Prefilters always run and cannot be overridden per-request.
         $.ajaxPrefilter(function (options, originalOptions, jqXHR) {
+            if (options.crossDomain) return;
+            try {
+                if (new URL(options.url || window.location.href, window.location.href).origin !== window.location.origin) return;
+            } catch (error) { return; }
             var method = ((options || {}).type || 'GET').toUpperCase();
             if (['POST', 'PUT', 'PATCH', 'DELETE'].indexOf(method) === -1) return;
 
@@ -222,3 +226,27 @@ if (cdp_spBeaconWanted()) : ?>
     background: rgba(0, 0, 0, 0.6) !important;
 }
 </style>
+
+<script>
+document.addEventListener('click', function (event) {
+    var link = event.target.closest('a[data-cdp-post]');
+    if (!link) return;
+    event.preventDefault();
+    var url = new URL(link.href, window.location.href);
+    if (url.origin !== window.location.origin) return;
+    var token = document.querySelector('meta[name="csrf-token"]');
+    if (!token || !token.content) return;
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = url.pathname;
+    function field(name, value) {
+        var input = document.createElement('input');
+        input.type = 'hidden'; input.name = name; input.value = value;
+        form.appendChild(input);
+    }
+    url.searchParams.forEach(function (value, name) { field(name, value); });
+    field('_csrf_token', token.content);
+    document.body.appendChild(form);
+    form.submit();
+});
+</script>

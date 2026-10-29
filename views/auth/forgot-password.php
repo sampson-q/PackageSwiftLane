@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/csrf.php';
 if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && !is_file($d . '/helpers/asset.php')) { $d = dirname($d); } if (is_file($d . '/helpers/asset.php')) require_once $d . '/helpers/asset.php'; } ?><!DOCTYPE html>
 <html dir="<?php echo $direction_layout; ?>" lang="en">
 
@@ -60,6 +61,7 @@ if (!function_exists('cdp_asset')) { $d = __DIR__; while ($d !== dirname($d) && 
                 <div id="resultados_ajax"></div>
                 <div id="loader" style="display:none"></div>
                 <form class="login-form mt-4" name="forgotPassword" id="forgotPassword" method="post">
+<input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="row">
                         <div class="col-12">
                             <p class="text-muted"><?php echo $lang['message_title_forgot1'] ?></p>

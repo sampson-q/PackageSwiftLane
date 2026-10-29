@@ -38,22 +38,8 @@ class ShipmentsHandler
         $params = [];
         $where  = 'WHERE a.status_courier != 14';   // exclude cancelled/deleted
 
-        // Role-based scoping (integer IDs – safe to inline after (int) cast)
-        $ulevel = (int)$authUser->userlevel;
-        if ($ulevel === 1) {
-            $where .= ' AND a.sender_id = ' . (int)$authUser->id;
-        } elseif ($ulevel === 3) {
-            $where .= ' AND a.driver_id = ' . (int)$authUser->id;
-        } elseif ($ulevel === 6) {
-            $agBranch = (int)cdp_getAgencyBranchIdForUser($authUser->name_off ?? '');
-            if ($agBranch > 0) {
-                $where .= ' AND a.agency = ' . $agBranch;
-            }
-        } else {
-            if ($agencyId > 0) {
-                $where .= ' AND a.agency = ' . $agencyId;
-            }
-        }
+        $where .= ApiAccess::scope($authUser, 'shipment', 'a');
+        if ($agencyId > 0) $where .= ' AND a.agency = ' . $agencyId;
 
         // Filter on the status the API REPORTS (a consolidated shipment reports
         // its consolidation's status), so ?status= agrees with what comes back.
@@ -141,6 +127,27 @@ class ShipmentsHandler
         if (!empty($errors)) {
             ApiResponse::validationError($errors);
         }
+
+        ApiAccess::requireObject($authUser, 'customer', (int) $data['sender_id']);
+        $recipientType = $data['recipient_type'] ?? 'recipient';
+        if (!in_array($recipientType, ['recipient', 'user', 'sender'], true)) ApiResponse::badRequest('Invalid recipient type.');
+        ApiAccess::requireObject($authUser, $recipientType === 'recipient' ? 'recipient' : 'customer', (int) $data['recipient_id']);
+        $ctx = cdp_getAgencyContext();
+        if (!empty($ctx['is_restricted'])) {
+            $branch = (int) cdp_getAgencyBranchIdForUser($authUser->name_off ?? '');
+            if ($branch <= 0 || (int) $data['agency'] !== $branch) ApiResponse::forbidden();
+        }
+        $addressDb = new Conexion();
+        $addressDb->cdp_query('SELECT id_addresses FROM cdb_senders_addresses WHERE id_addresses = :id AND user_id = :owner LIMIT 1');
+        $addressDb->bind(':id', (int) $data['sender_address_id']);
+        $addressDb->bind(':owner', (int) $data['sender_id']);
+        if (!$addressDb->cdp_registro()) ApiResponse::badRequest('Invalid sender address.');
+        $addressTable = $recipientType === 'recipient' ? 'cdb_recipients_addresses' : 'cdb_senders_addresses';
+        $ownerColumn = $recipientType === 'recipient' ? 'recipient_id' : 'user_id';
+        $addressDb->cdp_query('SELECT id_addresses FROM ' . $addressTable . ' WHERE id_addresses = :id AND ' . $ownerColumn . ' = :owner LIMIT 1');
+        $addressDb->bind(':id', (int) $data['recipient_address_id']);
+        $addressDb->bind(':owner', (int) $data['recipient_id']);
+        if (!$addressDb->cdp_registro()) ApiResponse::badRequest('Invalid recipient address.');
 
         $core       = new Core();
         require_once dirname(__DIR__, 3) . '/helpers/unique_ids.php';
@@ -244,6 +251,7 @@ class ShipmentsHandler
     public function show(int $id): void
     {
         $authUser = ApiAuth::requirePermission('view_shipment_list');
+        ApiAccess::requireObject($authUser, 'shipment', $id);
 
         $db = new Conexion();
         $db->cdp_query("
@@ -300,6 +308,7 @@ class ShipmentsHandler
     public function updateStatus(int $id): void
     {
         $authUser = ApiAuth::requirePermission(['edit_shipment', 'select_change_status_courier']);
+        ApiAccess::requireObject($authUser, 'shipment', $id);
         $data     = ApiResponse::getRequestData();
 
         $errors = ApiValidator::validate($data, [
@@ -357,7 +366,8 @@ class ShipmentsHandler
 
     public function delete(int $id): void
     {
-        ApiAuth::requirePermission('delete_shipment');
+        $authUser = ApiAuth::requirePermission('delete_shipment');
+        ApiAccess::requireObject($authUser, 'shipment', $id);
 
         $db = new Conexion();
         $db->cdp_query('SELECT order_id FROM cdb_add_order WHERE order_id = :id LIMIT 1');

@@ -67,6 +67,7 @@ function require_permission($permission) {
     if (empty($user->logged_in)) {
         _ajax_guard_send(401, ['success' => false, 'error' => 'Unauthorized', 'message' => 'Session Required']);
     }
+    _ajax_guard_require_csrf();
     $perms = is_array($permission) ? $permission : [$permission];
     // Always reload permissions fresh from DB — loader.php may have created $user
     // before session was fully initialised, leaving $this->permissions empty or stale.
@@ -81,43 +82,7 @@ function require_permission($permission) {
         return;
     }
 
-    // Denied. Behaviour depends on CDP_RBAC_MODE (set in config/config.php):
-    //   'off'     -> allow silently (legacy behaviour while the check was commented out)
-    //   'audit'   -> allow, but log RBAC_DENY so perm names can be reconciled without lockouts
-    //   'enforce' -> GRADUATED: 403 for staff-and-up (staff/admin/superadmin), but only
-    //                audit-log for customer/driver/agency. Rationale: the whole granular
-    //                RBAC is about STAFF capabilities, and staff endpoints are fully
-    //                reconciled. Many customer/driver/agency-facing handlers are still
-    //                gated with staff permission names (historical), so hard-enforcing
-    //                them would false-403 real customer flows (4800+ users viewing their
-    //                own packages). They stay audit-only until reconciled via the logs.
-    // Default is 'audit': config.php is gitignored, so an env without the constant
-    // must never fail closed.
-    $mode = defined('CDP_RBAC_MODE') ? strtolower((string)CDP_RBAC_MODE) : 'audit';
-    if ($mode === 'off') {
-        return;
-    }
-
-    // Rank: staff-and-up = enforce; below = audit. cdp_roleRankById lives in
-    // helpers/rbac.php (rank 2+ = staff/admin/superadmin).
-    if (!function_exists('cdp_roleRankById')) {
-        require_once __DIR__ . '/rbac.php';
-    }
-    $isStaffUp = cdp_roleRankById((int)$user->userlevel) >= 2;
-    $shouldEnforce = ($mode === 'enforce') && $isStaffUp;
-
-    if (!$shouldEnforce) {
-        error_log(sprintf(
-            'RBAC_DENY mode=%s enforced=0 uid=%s role=%s need=[%s] script=%s uri=%s',
-            $mode,
-            $user->uid ?? '?',
-            $user->userlevel ?? '?',
-            implode(',', $perms),
-            basename($_SERVER['SCRIPT_NAME'] ?? ''),
-            $_SERVER['REQUEST_URI'] ?? ''
-        ));
-        return;
-    }
+    // Authorization is mandatory for every role; configuration cannot bypass it.
 
     // A hard denial is a security event: record it, then answer 403.
     $denied = cdp_activityClassify(cdp_activityEndpoint());
@@ -144,6 +109,7 @@ function require_permission($permission) {
  * @param array $body
  */
 function _ajax_guard_send($httpCode, array $body) {
+    http_response_code($httpCode);
     if ($httpCode === 401) {
         header('HTTP/1.1 401 Unauthorized');
     } elseif ($httpCode === 403) {
@@ -164,5 +130,12 @@ function _ajax_guard_require_csrf() {
 
     if (!cdp_csrf_validate_request()) {
         _ajax_guard_send(419, ['success' => false, 'error' => 'Invalid CSRF token', 'message' => 'CSRF token missing or invalid']);
+    }
+}
+
+function require_post() {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        header('Allow: POST');
+        _ajax_guard_send(405, ['success' => false, 'error' => 'Method not allowed']);
     }
 }

@@ -22,12 +22,15 @@
 
 
 require_once("../../loader.php");
+require_once __DIR__ . '/../../helpers/object_access.php';
 require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
+require_post();
 require_login();
 require_permission('view_client_list');
 
-$id = $_REQUEST['id'];
+$id = (int)($_REQUEST['id'] ?? 0);
+cdp_requireAddressAccess('customer', $id);
 
 $errors = array();
 

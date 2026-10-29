@@ -23,6 +23,9 @@
 
 
 require_once("../loader.php");
+require_once __DIR__ . '/../helpers/ajax_guard.php';
+require_login();
+
 require_once(__DIR__ . '/../helpers/querys.php');
 
 $user = new User();
@@ -46,14 +49,17 @@ if ($ctx['is_restricted']) {
 $sql = "SELECT CONCAT(fname, ' ', lname) as label, id, fname, lname, email, phone
  FROM cdb_users
   WHERE 
- (fname LIKE '%" . $search . "%'
-  or lname LIKE '%" . $search . "%'  
-  or email LIKE '%" . $search . "%'
-  or phone LIKE '%" . $search . "%'
-  or locker LIKE '%" . $search . "%')
+ (fname LIKE :cdp_search
+  or lname LIKE :cdp_search
+  or email LIKE :cdp_search
+  or phone LIKE :cdp_search
+  or locker LIKE :cdp_search)
    and userlevel='1'" . $extraWhere;
 
+require_once __DIR__ . '/../helpers/object_access.php';
+$sql .= ApiAccess::scope(cdp_requestActor(), 'customer');
 $db->cdp_query($sql);
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $db->cdp_execute();
 
 $datas = $db->cdp_registros();

@@ -61,16 +61,18 @@ $offset = ($page - 1) * $per_page;
 
 
 
-$sql = "SELECT * FROM cdb_payments_gateway  where type_transaccition_courier= 'packages_locker' and payment_transaction LIKE '%" . $search . "%' $sWhere  order by id desc 
+$sql = "SELECT * FROM cdb_payments_gateway  where type_transaccition_courier= 'packages_locker' and payment_transaction LIKE :cdp_search $sWhere  order by id desc
 			 ";
 
 
 $db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $cdp_cnt_row = $db->cdp_registro();
 $numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);

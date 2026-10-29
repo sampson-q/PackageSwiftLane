@@ -39,6 +39,10 @@ $cur = cdp_getUserEdit4bozo((int) ($_POST['id'] ?? 0));
 if ($cur && $cur['rowCount'] == 1) {
     $currentRow = $cur['data'];
 }
+require_once __DIR__ . '/../../helpers/rbac.php';
+if ($currentRow && !cdp_canManageTarget($user, $currentRow, cdp_getAgencyContext(), 'is_driver')) {
+    http_response_code(403); exit;
+}
 if (!$currentRow) {
     $errors[] = 'Driver not found.';
 } else {

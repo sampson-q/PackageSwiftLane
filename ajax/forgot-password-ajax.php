@@ -1,4 +1,17 @@
 <?php
+require_once __DIR__ . '/../helpers/csrf.php';
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || !cdp_csrf_validate_request()) {
+    http_response_code(403);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['success' => false, 'errors' => 'Invalid request.']);
+    exit;
+}
+if (!cdp_securityRateLimit('registration-reset:' . ($_SERVER['REMOTE_ADDR'] ?? 'cli'), 30, 900)) {
+    http_response_code(429);
+    echo json_encode(['success' => false, 'errors' => 'Please try again later.']);
+    exit;
+}
+
     ini_set('display_errors', 0);
 
     require_once("../loader.php");

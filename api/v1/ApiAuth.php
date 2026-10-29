@@ -1,8 +1,9 @@
 <?php
+require_once __DIR__ . '/ApiAccess.php';
 /**
  * ApiAuth – stateless Bearer-token authentication for the REST API.
  *
- * Tokens are 64-byte hex strings. Only the SHA-256 hash is stored in the DB
+ * Tokens contain 32 random bytes encoded as 64 hexadecimal characters. Only the SHA-256 hash is stored in the DB
  * so a compromised DB dump reveals nothing useful.
  *
  * Table: cdb_api_tokens (created automatically on first use)
@@ -74,7 +75,9 @@ class ApiAuth
         $this->db->bind(':name',       $name ?: null);
         $this->db->bind(':expires_at', $expiresAt);
         $this->db->bind(':created_at', $now);
-        $this->db->cdp_execute();
+        if (!$this->db->cdp_execute()) {
+            throw new RuntimeException('Unable to issue API token.');
+        }
 
         return ['token' => $rawToken, 'expires_at' => $expiresAt];
     }
@@ -89,7 +92,7 @@ class ApiAuth
      */
     public function validateToken(string $rawToken): ?object
     {
-        if (empty($rawToken)) {
+        if (!preg_match('/\A[a-f0-9]{64}\z/', $rawToken)) {
             return null;
         }
 
@@ -188,8 +191,8 @@ class ApiAuth
     public static function requireAuth(): object
     {
         $rawToken = self::extractBearerToken();
-        if (empty($rawToken)) {
-            ApiResponse::unauthorized('No API token provided. Use Authorization: Bearer <token>');
+        if (!preg_match('/\A[a-f0-9]{64}\z/', $rawToken)) {
+            ApiResponse::unauthorized('A valid API Bearer token is required.');
         }
 
         $auth = new self();
@@ -199,18 +202,21 @@ class ApiAuth
             ApiResponse::unauthorized('Invalid or expired API token.');
         }
 
-        // Populate session so existing helper functions (cdp_getAgencyContext, etc.) work.
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            @session_start();
+        // Helpers need request-local identity, never a cookie-authenticated browser session.
+        // Persisting a Bearer identity here would turn an API call into a browser login.
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_abort();
         }
+        if (!defined('CDP_API_BEARER_CONTEXT')) {
+            define('CDP_API_BEARER_CONTEXT', true);
+        }
+        $_SESSION = [];
         $_SESSION['userid']    = (int)$user->id;
         $_SESSION['username']  = $user->username;
         $_SESSION['email']     = $user->email;
         $_SESSION['userlevel'] = $user->userlevel;
         $_SESSION['name_off']  = $user->name_off ?? '';
-
-        // Minimise session-file locking for API requests.
-        session_write_close();
+        $_SESSION['agency_id'] = $user->agency_id ?? null;
 
         return $user;
     }
@@ -225,43 +231,14 @@ class ApiAuth
     {
         $user = self::requireAuth();
 
-        // Superadmin (level 9) always passes
-        if ((int)$user->userlevel === 9) {
-            return $user;
+        // Use the same inherited-role and finance policy as the browser application.
+        $actor = new User();
+        $actor->cdp_getUserPermissions();
+        if (!$actor->cdp_hasPermission((array) $permission)) {
+            ApiResponse::forbidden('No permission for this action.');
         }
-
-        $db = new Conexion();
-        $perms = (array)$permission;
-
-        // Build placeholders
-        $placeholders = [];
-        foreach ($perms as $i => $_p) {
-            $placeholders[] = ':p' . $i;
-        }
-        $inList = implode(', ', $placeholders);
-
-        $db->cdp_query("
-            SELECT COUNT(*) AS cnt
-            FROM cdb_user_role_permissions rp
-            JOIN cdb_user_roles r ON rp.role_id = r.role_id
-            JOIN cdb_user_module_actions ma ON rp.module_action_id = ma.id
-            WHERE rp.role_id = :role_id
-              AND rp.permitted = 1
-              AND r.rol_active = 1
-              AND ma.action_name IN ($inList)
-        ");
-        $db->bind(':role_id', (int)$user->userlevel);
-        foreach ($perms as $i => $p) {
-            $db->bind(':p' . $i, $p);
-        }
-        $db->cdp_execute();
-        $row = $db->cdp_registro();
-
-        if (!$row || (int)$row->cnt === 0) {
-            ApiResponse::forbidden("Permission required: " . implode(' or ', $perms));
-        }
-
         return $user;
+
     }
 
     // ── Internal maintenance ──────────────────────────────────────────────────

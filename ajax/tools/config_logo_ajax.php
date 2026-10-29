@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/security.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -104,7 +105,7 @@ if (empty($errors)) {
         // Verifica si se envió un archivo
         if (isset($_FILES[$fileInputName]) && $_FILES[$fileInputName]['error'] == UPLOAD_ERR_OK) {
             // Obtiene la información del archivo
-            $file_name = $_FILES[$fileInputName]['name'];
+            $file_name = basename($_FILES[$fileInputName]['name']);
             $file_tmp = $_FILES[$fileInputName]['tmp_name'];
             $file_type = $_FILES[$fileInputName]['type'];
 
@@ -117,20 +118,20 @@ if (empty($errors)) {
 
             // Genera un nombre único para el archivo
             $user_id = intval($_POST['id']);
-            $file_name = $user_id . '_' . time() . '_' . $file_name;
+            $file_name = $user_id . '_' . bin2hex(random_bytes(16)) . '_' . $file_name;
 
             // Ruta completa donde se guardará el archivo
             $upload_path = $uploadDir . $file_name;
 
             // Mueve el archivo al directorio de carga
-            if (move_uploaded_file($file_tmp, $upload_path)) {
+            if (cdp_moveUploadedFile($file_tmp, $upload_path)) {
                 // Devuelve la ruta relativa del archivo
                 return 'uploads/' . $file_name;
             } else {
                 // Error al mover el archivo
                 $error = error_get_last();
                 if ($error && $error['type'] === E_WARNING) {
-                    $response['message'] = 'Error uploading file. ' . $error['message'];
+                    $response['message'] = 'Error uploading file.';
                 } else {
                     $response['message'] = 'Error uploading file.';
                 }

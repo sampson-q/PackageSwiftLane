@@ -1,4 +1,8 @@
 <?php
+require_once __DIR__ . '/../helpers/security.php';
+if (!cdp_securityRateLimit('public-lookup:' . ($_SERVER['REMOTE_ADDR'] ?? 'cli'), 120, 60)) {
+    http_response_code(429); exit;
+}
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *

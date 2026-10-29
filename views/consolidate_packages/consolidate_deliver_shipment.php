@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../../helpers/object_access.php';
+cdp_requireObjectAccess('consolidated_package', (int) ($_GET['id'] ?? 0));
+require_once __DIR__ . '/../../helpers/security.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -102,7 +105,7 @@ if (isset($_POST['person_receives'])) {
     if (!empty($_FILES['miarchivo']['name'])) {
 
         $target_dir = "files/";
-        $image_name = time() . "_" . basename($_FILES["miarchivo"]["name"]);
+        $image_name = bin2hex(random_bytes(16)) . '_' . basename($_FILES["miarchivo"]["name"]);
         $target_file = $target_dir . $image_name;
         $imageFileType = pathinfo($target_file, PATHINFO_EXTENSION);
         $imageFileZise = $_FILES["miarchivo"]["size"];
@@ -113,7 +116,7 @@ if (isset($_POST['person_receives'])) {
             $errors['miarchivo'] = $lang['validate_field_ajax62'];
         } else {
 
-            move_uploaded_file($_FILES["miarchivo"]["tmp_name"], $target_file);
+            cdp_moveUploadedFile($_FILES["miarchivo"]["tmp_name"], $target_file);
             $photo_delivered = 'files/' . $image_name;
         }
     }

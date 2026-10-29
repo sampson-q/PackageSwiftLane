@@ -214,26 +214,28 @@ function cdp_customerPayableGhs($usd_total, $apply_handling_fee, $rate = null)
 
 function cdp_redirect_to($location)
 {
-	if (!headers_sent()) {
-		header('Location: ' . $location);
-		exit;
-	} else
-		echo '<script type="text/javascript">';
-	echo 'window.location.href="' . $location . '";';
-	echo '</script>';
-	echo '<noscript>';
-	echo '<meta http-equiv="refresh" content="0;url=' . $location . '" />';
-	echo '</noscript>';
+    $location = (string) $location;
+    if ($location === '' || preg_match('/[\x00-\x20\\\\]/', $location)
+        || preg_match('/^[a-z][a-z0-9+.-]*:/i', $location) || strpos($location, '//') === 0) {
+        $location = 'index.php';
+    }
+    if (!headers_sent()) {
+        header('Location: ' . $location);
+        exit;
+    }
+    echo '<script>window.location.href=' . json_encode($location, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';</script>';
+    echo '<noscript><meta http-equiv="refresh" content="0;url=' . htmlspecialchars($location, ENT_QUOTES, 'UTF-8') . '"></noscript>';
+    exit;
 }
 
 
 function cdp_sanitize($string, $trim = false, $int = false, $str = false)
 {
+	$string = str_replace(array('‘', '’', '“', '”'), array("'", "'", '"', '"'), $string);
 	$string = htmlspecialchars($string, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 	$string = trim($string);
 	$string = stripslashes($string);
 	$string = strip_tags($string);
-	$string = str_replace(array('‘', '’', '“', '”'), array("'", "'", '"', '"'), $string);
 
 	if ($trim)
 		$string = substr($string, 0, $trim);

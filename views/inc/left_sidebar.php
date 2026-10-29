@@ -1723,7 +1723,7 @@ if (empty($userData) && isset($user) && is_object($user) && method_exists($user,
 
 
 					<li class="sidebar-item">
-						<a class="sidebar-link waves-effect waves-dark sidebar-link" href="logout.php" aria-expanded="false">
+						<a class="sidebar-link waves-effect waves-dark sidebar-link" data-cdp-post="1" href="logout.php" aria-expanded="false">
 							<iconify-icon icon="solar:login-2-outline" class="m-r-5 m-l-5"></iconify-icon>
 							<span class="hide-menu"><?php echo $lang['wout'] ?></span>
 						</a>

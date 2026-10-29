@@ -27,17 +27,8 @@ class RecipientsHandler
         $params = [];
         $where  = 'WHERE 1=1';
 
-        // Agency / role-based scoping (integer IDs – safe to inline)
         $ulevel = (int)$authUser->userlevel;
-        if ($ulevel === 6) {
-            $ctx = cdp_getAgencyContext();
-            if ($ctx['agency_id']) {
-                $where .= ' AND r.agency_id = ' . (int)$ctx['agency_id'];
-            }
-        } elseif ($ulevel === 1) {
-            // Customers only see their own recipients
-            $where .= ' AND r.sender_id = ' . (int)$authUser->id;
-        }
+        $where .= ApiAccess::scope($authUser, 'recipient', 'r');
 
         // Optional sender_id filter (admin/staff only; customers are already scoped above)
         if ($senderId > 0 && $ulevel !== 1) {
@@ -80,6 +71,8 @@ class RecipientsHandler
         if (!empty($errors)) {
             ApiResponse::validationError($errors);
         }
+
+        ApiAccess::requireObject($authUser, 'customer', (int) $data['sender_id']);
 
         $user = new User();
         if ($user->cdp_emailExistsRecipients(cdp_sanitize($data['email']))) {
@@ -131,6 +124,7 @@ class RecipientsHandler
     public function show(int $id): void
     {
         $authUser = ApiAuth::requirePermission('view_recipients');
+        ApiAccess::requireObject($authUser, 'recipient', $id);
 
         $db = new Conexion();
         $db->cdp_query('SELECT * FROM cdb_recipients WHERE id = :id LIMIT 1');
@@ -155,6 +149,7 @@ class RecipientsHandler
     public function update(int $id): void
     {
         $authUser = ApiAuth::requirePermission('view_recipients');
+        ApiAccess::requireObject($authUser, 'recipient', $id);
         $data     = ApiResponse::getRequestData();
 
         $db = new Conexion();
@@ -201,6 +196,7 @@ class RecipientsHandler
     public function addresses(int $id): void
     {
         $authUser = ApiAuth::requirePermission('view_recipients');
+        ApiAccess::requireObject($authUser, 'recipient', $id);
 
         $db = new Conexion();
         $db->cdp_query('SELECT * FROM cdb_recipients WHERE id = :id LIMIT 1');

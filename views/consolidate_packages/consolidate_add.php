@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/security.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -344,14 +345,14 @@ if (isset($_POST["create_invoice"])) {
 
             if (!in_array($key, $deleted_file_ids)) {
 
-                $image_name = time() . "_" . basename($_FILES["filesMultiple"]["name"][$key]);
+                $image_name = bin2hex(random_bytes(16)) . '_' . basename($_FILES["filesMultiple"]["name"][$key]);
                 $target_file = $target_dir . $image_name;
                 $imageFileType = pathinfo($target_file, PATHINFO_EXTENSION);
                 $imageFileZise = $_FILES["filesMultiple"]["size"][$key];
 
                 if ($imageFileZise > 0) {
 
-                    move_uploaded_file($_FILES["filesMultiple"]["tmp_name"][$key], $target_file);
+                    cdp_moveUploadedFile($_FILES["filesMultiple"]["tmp_name"][$key], $target_file);
                     $imagen = basename($_FILES["filesMultiple"]["name"][$key]);
                     $file = "image_path='img/usuarios/$image_name' ";
                 }

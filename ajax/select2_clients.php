@@ -20,6 +20,9 @@
 // *************************************************************************
 
 require_once("../loader.php");
+require_once __DIR__ . '/../helpers/ajax_guard.php';
+require_login();
+
 
 $db = new Conexion;
 
@@ -27,9 +30,12 @@ $search = cdp_sanitize($_REQUEST['q']);
 
 $data = [];
 
-$sql = "SELECT id, fname, lname FROM cdb_users WHERE userlevel='1' AND (fname LIKE '%" . $search . "%' or lname LIKE '%" . $search . "%' or email LIKE '%" . $search . "%' or username LIKE '%" . $search . "%')";
+$sql = "SELECT id, fname, lname FROM cdb_users WHERE userlevel='1' AND (fname LIKE :cdp_search or lname LIKE :cdp_search or email LIKE :cdp_search or username LIKE :cdp_search)";
 
+require_once __DIR__ . '/../helpers/object_access.php';
+$sql .= ApiAccess::scope(cdp_requestActor(), 'customer');
 $db->cdp_query($sql);
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $db->cdp_execute();
 
 $datas = $db->cdp_registros();

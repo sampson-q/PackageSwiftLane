@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../helpers/object_access.php';
+cdp_requireObjectAccess('shipment', (int) ($_GET['id'] ?? 0));
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -34,7 +36,7 @@ if (!isset($_GET['id']) || !isset($data) || $data['rowCount'] != 1) {
 $row = $data['data'];
 
 // Order items
-$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . $_GET['id'] . "'");
+$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . (int) $_GET['id'] . "'");
 $order_items = $db->cdp_registros();
 
 // Shipping mode

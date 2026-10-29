@@ -22,6 +22,10 @@
 
 
 require_once("../../../loader.php");
+require_once __DIR__ . '/../../../helpers/ajax_guard.php';
+require_login();
+require_permission('edit_email_templates');
+
 
 $db = new Conexion;
 
@@ -31,7 +35,7 @@ $search = cdp_sanitize($_REQUEST['search']);
 $tables = "cdb_email_templates";
 $fields = "*";
 
-$sWhere = "name LIKE '%" . $search . "%'";
+$sWhere = "name LIKE :cdp_search";
 
 
 // // pagination variables
@@ -42,11 +46,13 @@ $offset = ($page - 1) * $per_page;
 
 $sql = "SELECT $fields FROM  $tables WHERE $sWhere ORDER BY name ASC";
 $db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $cdp_cnt_row = $db->cdp_registro();
 $numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);

@@ -177,7 +177,16 @@ class OtpService {
     }
 
     public function verifyChallenge($challengeId, $code, $purpose) {
-        $this->db->cdp_query("SELECT * FROM cdb_auth_otp_challenges WHERE id=:id AND purpose=:purpose");
+        if (!is_string($code) || !preg_match('/\A[0-9]{6}\z/', trim($code))) {
+            return ['ok' => false, 'error' => 'Invalid one-time code.'];
+        }
+        return $this->atomic(function () use ($challengeId, $code, $purpose) {
+            return $this->verifyChallengeLocked($challengeId, $code, $purpose);
+        });
+    }
+
+    private function verifyChallengeLocked($challengeId, $code, $purpose) {
+        $this->db->cdp_query("SELECT * FROM cdb_auth_otp_challenges WHERE id=:id AND purpose=:purpose FOR UPDATE");
         $this->db->bind(':id',      (int) $challengeId);
         $this->db->bind(':purpose', $purpose);
         $row = $this->db->cdp_registro();
@@ -219,7 +228,9 @@ class OtpService {
             ];
         }
 
-        $this->setChallengeStatus($row->id, 'verified');
+        if (!$this->setChallengeStatus($row->id, 'verified')) {
+            return ['ok' => false, 'error' => 'Unable to consume one-time code.'];
+        }
         return [
             'ok'       => true,
             'user_id'  => (int) $row->user_id,
@@ -229,11 +240,11 @@ class OtpService {
 
     private function setChallengeStatus($id, $status) {
         $this->db->cdp_query("UPDATE cdb_auth_otp_challenges
-            SET status=:status, updated_at=:updated_at WHERE id=:id");
+            SET status=:status, updated_at=:updated_at WHERE id=:id AND status='pending'");
         $this->db->bind(':status',     $status);
         $this->db->bind(':updated_at', date('Y-m-d H:i:s'));
         $this->db->bind(':id',         (int) $id);
-        $this->db->cdp_execute();
+        return $this->db->cdp_execute() && $this->db->cdp_rowCount() === 1;
     }
 
     /**
@@ -242,7 +253,7 @@ class OtpService {
      */
     public function getChallengeInfo($challengeId) {
         if ($challengeId <= 0) return null;
-        $this->db->cdp_query("SELECT id, status, created_at FROM cdb_auth_otp_challenges
+        $this->db->cdp_query("SELECT id, user_id, purpose, status, created_at FROM cdb_auth_otp_challenges
             WHERE id = :id LIMIT 1");
         $this->db->bind(':id', (int) $challengeId);
         return $this->db->cdp_registro();
@@ -329,14 +340,14 @@ class OtpService {
                     $mail->Body    = "<html><body>{$emailBody}</body></html>";
                     $mail->SMTPOptions = [
                         'ssl' => [
-                            'verify_peer'       => false,
-                            'verify_peer_name'  => false,
-                            'allow_self_signed' => true,
+                            'verify_peer'       => true,
+                            'verify_peer_name'  => true,
+                            'allow_self_signed' => false,
                         ],
                     ];
                     $mail->send();
                 } catch (\Exception $e) {
-                    return ['ok' => false, 'error' => 'SMTP send error: ' . $mail->ErrorInfo];
+                    return ['ok' => false, 'error' => 'Mail delivery failed. Please contact support.'];
                 }
             } else {
                 return ['ok' => false, 'error' => 'Unknown mailer configured.'];
@@ -466,25 +477,56 @@ class OtpService {
     }
 
     public function consumeResetSession($token) {
+        return $this->atomic(function () use ($token) {
+            return $this->consumeResetSessionLocked($token);
+        });
+    }
+
+    private function consumeResetSessionLocked($token) {
         $hash = hash('sha256', $token . '|' . $this->secret());
 
         $this->db->cdp_query("SELECT * FROM cdb_password_reset_sessions
-            WHERE token_hash=:token_hash AND consumed_at IS NULL ORDER BY id DESC LIMIT 1");
+            WHERE token_hash=:token_hash AND consumed_at IS NULL ORDER BY id DESC LIMIT 1 FOR UPDATE");
         $this->db->bind(':token_hash', $hash);
         $row = $this->db->cdp_registro();
 
         if (!$row || strtotime($row->expires_at) < time()) return false;
 
         $this->db->cdp_query("UPDATE cdb_password_reset_sessions
-            SET consumed_at=:consumed_at WHERE id=:id");
+            SET consumed_at=:consumed_at WHERE id=:id AND consumed_at IS NULL");
         $this->db->bind(':consumed_at', date('Y-m-d H:i:s'));
         $this->db->bind(':id',          (int) $row->id);
-        $this->db->cdp_execute();
+        if (!$this->db->cdp_execute() || $this->db->cdp_rowCount() !== 1) {
+            return false;
+        }
 
         return (int) $row->user_id;
     }
 
+    private function atomic(callable $operation) {
+        $pdo = $this->db->dbh;
+        $ownTransaction = !$pdo->inTransaction();
+        if ($ownTransaction) $pdo->beginTransaction();
+        try {
+            $result = $operation();
+            if ($ownTransaction) $pdo->commit();
+            return $result;
+        } catch (Throwable $e) {
+            if ($ownTransaction && $pdo->inTransaction()) $pdo->rollBack();
+            throw $e;
+        }
+    }
+
     private function secret() {
-        return hash('sha256', CDP_DB_NAME . '|' . CDP_DB_USER . '|otp');
+        // The old DB-name/user derivation was public information, not a secret.
+        $secret = defined('CDP_AUTH_SECRET') ? CDP_AUTH_SECRET : getenv('CDP_AUTH_SECRET');
+        if (!is_string($secret) || strlen($secret) < 32) {
+            // Existing installations retain a confidential fallback without requiring a migration.
+            if (!defined('CDP_DB_PASS') || strlen((string) CDP_DB_PASS) < 12) {
+                throw new RuntimeException('Configure CDP_AUTH_SECRET with at least 32 random characters.');
+            }
+            $secret = CDP_DB_PASS;
+        }
+        return hash_hmac('sha256', CDP_DB_NAME . '|' . CDP_DB_USER . '|otp', $secret);
     }
 }

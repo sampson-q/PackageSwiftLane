@@ -60,7 +60,7 @@ if (isset($_REQUEST['search'])) {
 
 	if ($search != null) {
 
-		$swhere .= " and  CONCAT(a.order_prefix,a.order_no) LIKE '%" . $search . "%'";
+		$swhere .= " and  CONCAT(a.order_prefix,a.order_no) LIKE :cdp_search";
 	}
 }
 
@@ -74,11 +74,13 @@ $sql = "SELECT  a.status_invoice, a.recipient_type, a.is_pickup, a.total_order, 
 			 ";
 
 $db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $cdp_cnt_row = $db->cdp_registro();
 $numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $data = $db->cdp_registros();
 
 // Consolidation membership for the whole page in one query.

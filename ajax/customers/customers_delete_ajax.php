@@ -22,15 +22,18 @@
 
 
 require_once("../../loader.php");
+require_once __DIR__ . '/../../helpers/object_access.php';
 require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
 require_once(__DIR__ . '/../../helpers/rbac.php');
+require_post();
 require_login();
 require_permission('delete_client');
 
 $db = new Conexion;
 
-$id = $_REQUEST['id'];
+$id = (int)($_REQUEST['id'] ?? 0);
+cdp_requireObjectAccess('customer', $id);
 
 // Only ever delete CLIENT accounts here — never staff.
 $tdb = new Conexion;

@@ -24,12 +24,19 @@
 require_once("../../loader.php");
 require_once("../../helpers/querys.php");
 require_once(__DIR__ . '/../../helpers/ajax_guard.php');
+require_post();
 require_login();
 require_permission('view_dashboard');
 
 $db = new Conexion;
 
-$id = $_REQUEST['id'];
+$id = (int) ($_REQUEST['id'] ?? 0);
+require_once __DIR__ . '/../../helpers/rbac.php';
+$driverRow = cdp_getUserEdit4bozo($id);
+if (!$driverRow || empty($driverRow['data']) || $id === (int) $user->uid
+    || !cdp_canManageTarget($user, $driverRow['data'], cdp_getAgencyContext(), 'is_driver')) {
+    http_response_code(403); exit;
+}
 
 $errors = array();
 

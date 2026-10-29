@@ -23,11 +23,17 @@
 
 
 require_once("../loader.php");
+require_once __DIR__ . '/../helpers/object_access.php';
+require_once __DIR__ . '/../helpers/ajax_guard.php';
+require_login();
+
 
 $db = new Conexion;
 
 $id   = cdp_sanitize($_REQUEST['id']);
 $type = $_REQUEST['type'] ?? 'recipient';
+$id = (int) $id;
+cdp_requireObjectAccess($type === 'user' ? 'customer' : 'recipient', $id);
 
 $data = [];
 

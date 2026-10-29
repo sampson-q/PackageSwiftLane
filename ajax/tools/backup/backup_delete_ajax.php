@@ -21,21 +21,12 @@
 
 require_once(__DIR__ . '/../../../loader.php');
 require_once(__DIR__ . '/../../../helpers/ajax_guard.php');
+require_post();
 require_login();
 require_permission('view_tools');
 
-  /* == Delete SQL Backup == */
-  if (isset($_POST['deleteBackup'])):
-      $action = @unlink('../../../backups/' . trim($_POST['deleteBackup']));
-
-      ?>
-
-	<div class="alert alert-info" id="success-alert">
-        <p><span class="icon-info-sign"></span><i class="close icon-remove-circle"></i>
-            Backup deleted successfully!
-       </p>
-    </div>
-    <?php
-
-      
-  endif;
+if (!$user->cdp_is_Admin()) { http_response_code(403); exit; }
+$path = cdp_securityConfinedFile(__DIR__ . '/../../../backups', $_POST['deleteBackup'] ?? null);
+if ($path === null) { http_response_code(404); exit('Backup not found.'); }
+if (!unlink($path)) { http_response_code(500); exit('Unable to delete backup.'); }
+echo '<div class="alert alert-info">Backup deleted successfully!</div>';

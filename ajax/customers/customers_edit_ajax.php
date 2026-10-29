@@ -25,6 +25,7 @@
 ini_set('display_errors', 0);
 
 require_once("../../loader.php");
+require_once __DIR__ . '/../../helpers/object_access.php';
 require_once("../../helpers/querys.php");
 require_once("../../helpers/ajax_guard.php");
 require_once("../../helpers/rbac.php");
@@ -40,6 +41,7 @@ $errors = array();
 // The client editor must never touch a STAFF account (driver/admin/agency/
 // employee). Verify the target is a client before doing anything.
 $targetId = (int) ($_POST['id'] ?? 0);
+cdp_requireObjectAccess('customer', $targetId);
 if ($targetId > 0) {
     $tdb = new Conexion;
     $tdb->cdp_query("SELECT userlevel FROM cdb_users WHERE id = :id LIMIT 1");

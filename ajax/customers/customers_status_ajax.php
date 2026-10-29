@@ -1,5 +1,6 @@
 <?php
     require_once("../../loader.php");
+require_once __DIR__ . '/../../helpers/object_access.php';
     require_once("../../helpers/querys.php");
     require_once("../../helpers/phpmailer/class.phpmailer.php");
     require_once("../../helpers/phpmailer/class.smtp.php");
@@ -13,7 +14,8 @@
         $response = array();
 
         if (isset($_POST['id'])) {
-            $userId  = cdp_sanitize($_POST['id']);
+            $userId = (int) $_POST['id'];
+            cdp_requireObjectAccess('customer', $userId);
             $stat    = isset($_POST['stat']) ? cdp_sanitize($_POST['stat']) : null;
             $approve = isset($_POST['approve']) ? cdp_sanitize($_POST['approve']) : null;
 

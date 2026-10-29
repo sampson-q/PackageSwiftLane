@@ -1,4 +1,18 @@
 <?php
+require_once __DIR__ . '/../helpers/csrf.php';
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || !cdp_csrf_validate_request()) {
+    http_response_code(403);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['success' => false, 'errors' => 'Invalid request.']);
+    exit;
+}
+if (!cdp_securityRateLimit('registration-reset:' . ($_SERVER['REMOTE_ADDR'] ?? 'cli'), 30, 900)) {
+    http_response_code(429);
+    echo json_encode(['success' => false, 'errors' => 'Please try again later.']);
+    exit;
+}
+
+require_once __DIR__ . '/../helpers/security.php';
 
 ini_set('display_errors', 0);
 
@@ -91,7 +105,7 @@ if (empty($error)) {
             exit;
         }
         $finalName = 'avatar_' . uniqid() . '.' . $ext;
-        move_uploaded_file($_FILES['avatar']['tmp_name'], $uploadDir . $finalName);
+        cdp_moveUploadedFile($_FILES['avatar']['tmp_name'], $uploadDir . $finalName);
         $avatarPath = '../assets/uploads/users/' . $finalName;
     }
 
@@ -108,14 +122,14 @@ if (empty($error)) {
             exit;
         }
         $finalName = 'docphoto_' . uniqid() . '.' . $ext;
-        move_uploaded_file($_FILES['document_photo']['tmp_name'], $uploadDir . $finalName);
+        cdp_moveUploadedFile($_FILES['document_photo']['tmp_name'], $uploadDir . $finalName);
         $documentPhotoPath = '../assets/uploads/users/' . $finalName;
     }
 
     // Resume an existing not-yet-usable account (same email/username/document)
     // instead of erroring — it just means "needs (another) OTP". Usable accounts
     // (active/approved) were already rejected above.
-    $db->cdp_query("SELECT id FROM cdb_users
+    $db->cdp_query("SELECT id, password, email, username, document_number FROM cdb_users
                     WHERE active = 0 AND approve = 0
                       AND (email = :e OR username = :u OR document_number = :d)
                     ORDER BY id DESC LIMIT 1");
@@ -124,6 +138,14 @@ if (empty($error)) {
     $db->bind(':d', cdp_sanitize($_POST['document_number']));
     $resume = $db->cdp_registro();
 
+    if ($resume && (!password_verify($_POST['pass'], $resume->password)
+        || strtolower((string) $resume->email) !== strtolower(cdp_sanitize($_POST['email']))
+        || (string) $resume->username !== cdp_sanitize($_POST['username'])
+        || (string) $resume->document_number !== cdp_sanitize($_POST['document_number']))) {
+        http_response_code(409);
+        echo json_encode(['success' => false, 'errors' => 'Registration is pending. Use password recovery for your account.']);
+        exit;
+    }
     if ($resume) {
         // ── Resume: refresh the editable fields on the existing incomplete row ──
         $userId = (int) $resume->id;

@@ -131,7 +131,7 @@ function cdp_pushNotifyUser($user, $subject, $message, $settings, array $ctx = [
                 $mail->CharSet = 'UTF-8';
                 $mail->Subject = $subject;
                 $mail->Body    = "<html><body><p>{$newbody}</p></body></html>";
-                $mail->SMTPOptions = ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true]];
+                $mail->SMTPOptions = ['ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'allow_self_signed' => false]];
                 $mail->send();
                 $out['email'] = ['status' => 'sent', 'detail' => ''];
             }

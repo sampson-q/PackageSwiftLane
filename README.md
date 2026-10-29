@@ -34,3 +34,7 @@ Copyright (c) iSolveAfrica Ltd. All rights reserved.
 
 Proprietary and confidential software developed specifically for Swiftlane.
 See [LICENSE](LICENSE) for the full notice.
+
+## Security review
+
+The `secureswift` hardening actions, test evidence, rollout requirements and unresolved release blockers are recorded in [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md). This is not a production security or compliance certification.

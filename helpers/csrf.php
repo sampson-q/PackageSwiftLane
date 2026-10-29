@@ -1,11 +1,12 @@
 <?php
+require_once __DIR__ . '/security.php';
 
 if (!function_exists('cdp_csrf_ensure_session')) {
     function cdp_csrf_ensure_session()
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             if (!headers_sent()) {
-                session_start();
+                cdp_securityStartSession();
             }
         }
     }
@@ -49,10 +50,6 @@ if (!function_exists('cdp_csrf_validate_request')) {
 
         if ($provided === '' && isset($_POST[cdp_csrf_param()]) && is_string($_POST[cdp_csrf_param()])) {
             $provided = trim($_POST[cdp_csrf_param()]);
-        }
-
-        if ($provided === '' && isset($_REQUEST[cdp_csrf_param()]) && is_string($_REQUEST[cdp_csrf_param()])) {
-            $provided = trim($_REQUEST[cdp_csrf_param()]);
         }
 
         return $provided !== '' && hash_equals($expected, $provided);

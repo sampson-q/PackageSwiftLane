@@ -49,7 +49,7 @@ if ((int)$userData->userlevel === 1) {
 }
 
 if ($search != null) {
-    $sWhere .= " AND (r.fname LIKE '%" . $search . "%' OR r.lname LIKE '%" . $search . "%' OR u.fname LIKE '%" . $search . "%' OR u.lname LIKE '%" . $search . "%')";
+    $sWhere .= " AND (r.fname LIKE :cdp_search OR r.lname LIKE :cdp_search OR u.fname LIKE :cdp_search OR u.lname LIKE :cdp_search)";
 }
 
 // // pagination variables
@@ -60,10 +60,12 @@ $offset = ($page - 1) * $per_page;
 
 $sql = "SELECT $fields FROM  $tables WHERE $sWhere ORDER BY u.fname, r.fname"; // Ordena por nombre del remitente y destinatario
 $db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $cdp_cnt_row = $db->cdp_registro();
 $numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 $db->cdp_query($sql . " LIMIT $offset, $per_page");
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);

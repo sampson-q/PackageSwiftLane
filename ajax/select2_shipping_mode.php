@@ -1,5 +1,8 @@
 <?php
 require_once("../loader.php");
+require_once __DIR__ . '/../helpers/ajax_guard.php';
+require_login();
+
 
 $db = new Conexion;
 

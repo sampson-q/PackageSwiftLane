@@ -1,5 +1,6 @@
 #!/usr/bin/env php
 <?php
+if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 /**
  * cron/pickup_aging.php
  *

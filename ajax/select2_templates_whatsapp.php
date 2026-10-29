@@ -23,12 +23,15 @@
 
 
 require_once("../loader.php");
+require_once __DIR__ . '/../helpers/ajax_guard.php';
+require_login();
+
 
 $db = new Conexion;
 $where = '';
 if (isset($_REQUEST['q'])) {
     $search = trim($_REQUEST['q']);
-    $where = "WHERE title LIKE '%" . $search . "%'";
+    $where = "WHERE title LIKE :cdp_search";
 }
 
 $list = array();
@@ -38,6 +41,7 @@ $data = [];
 $sql = "SELECT * FROM whatsapp_templates $where";
 
 $db->cdp_query($sql);
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $db->cdp_execute();
 
 $datas = $db->cdp_registros();

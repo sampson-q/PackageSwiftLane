@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../helpers/object_access.php';
+cdp_requireObjectAccess('consolidation', (int) ($_GET['id'] ?? 0));
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -496,7 +498,7 @@ if ($row_order->status_invoice == 1) {
 
                 <?php
 
-                $db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . $_GET['id'] . "'and is_consolidate='1' ORDER BY date_file");
+                $db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . (int) $_GET['id'] . "'and is_consolidate='1' ORDER BY date_file");
                 $files_order = $db->cdp_registros();
                 $numrows = $db->cdp_rowCount();
 
@@ -561,7 +563,7 @@ if ($row_order->status_invoice == 1) {
 
                 <?php
 
-                $db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . $_GET['id'] . "' and is_consolidate='1'  ORDER BY date_file");
+                $db->cdp_query("SELECT * FROM cdb_order_files where order_id='" . (int) $_GET['id'] . "' and is_consolidate='1'  ORDER BY date_file");
                 $files_order = $db->cdp_registros();
                 $numrows = $db->cdp_rowCount();
 

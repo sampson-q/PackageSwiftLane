@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/security.php';
 ini_set('display_errors', 0);
 
 require_once("../../loader.php");
@@ -440,7 +441,7 @@ if (empty($errors)) {
                     $imageFileType = pathinfo($target_file, PATHINFO_EXTENSION);
                     $imageFileZise = $_FILES["filesMultiple"]["size"][$key];
                     if ($imageFileZise > 0) {
-                        move_uploaded_file($_FILES["filesMultiple"]["tmp_name"][$key], $target_file);
+                        cdp_moveUploadedFile($_FILES["filesMultiple"]["tmp_name"][$key], $target_file);
                     }
                     cdp_insertOrdersFiles($shipment_id, "order_files/" . $image_name, $image_name, date("Y-m-d H:i:s"), '0', $imageFileType);
                 }
@@ -720,7 +721,7 @@ if (empty($errors)) {
                 $mail->CharSet = 'UTF-8';
                 $mail->Subject = $subject;
                 $mail->Body    = "<html><body><p>{$newbody}</p></body></html><br />";
-                $mail->SMTPOptions = ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true]];
+                $mail->SMTPOptions = ['ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'allow_self_signed' => false]];
                 try { $mail->Send(); } catch (Exception $e) {}
             }
         };

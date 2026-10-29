@@ -49,19 +49,21 @@ if (!function_exists('cdp_sumardias')) {
 
 // ── HTTP response headers ─────────────────────────────────────────────────────
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store, private');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
 $allowedOrigins = defined('CDP_API_ALLOWED_ORIGINS')
-    ? explode(',', CDP_API_ALLOWED_ORIGINS)
+    ? array_map('trim', explode(',', CDP_API_ALLOWED_ORIGINS))
     : ['*'];
 
 $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if ($allowedOrigins === ['*'] || in_array($requestOrigin, $allowedOrigins, true)) {
     $originHeader = ($allowedOrigins === ['*']) ? '*' : $requestOrigin;
     header("Access-Control-Allow-Origin: {$originHeader}");
-    header('Access-Control-Allow-Credentials: true');
+    // Bearer authentication never needs a cross-origin browser session cookie.
+    header('Vary: Origin', false);
 }
 
 header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');

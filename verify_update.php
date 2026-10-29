@@ -21,6 +21,11 @@
 
      
     require_once("loader.php");
+require_once __DIR__ . '/helpers/csrf.php';
+$updateActor = new User();
+if (!$updateActor->logged_in || !$updateActor->cdp_is_Admin()) { http_response_code(403); exit; }
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && !cdp_csrf_validate_request()) { http_response_code(403); exit; }
+
 
     $user = new User();
     $core = new Core();

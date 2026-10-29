@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/security.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -282,7 +283,7 @@ if (empty($errors)) {
                     $imageFileZise = $_FILES["filesMultiple"]["size"][$key];
 
                     if ($imageFileZise > 0) {
-                        move_uploaded_file($_FILES["filesMultiple"]["tmp_name"][$key], $target_file);
+                        cdp_moveUploadedFile($_FILES["filesMultiple"]["tmp_name"][$key], $target_file);
                         $imagen = basename($_FILES["filesMultiple"]["name"][$key]);
                     }
 

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/security.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -53,9 +54,9 @@ if (!isset($response['status'])) {
     } else {
         // Mover el archivo al directorio de destino
         $target_dir = "../../pre_alert_files/";
-        $image_name = time() . "_" . basename($_FILES["file_invoice"]["name"]);
+        $image_name = bin2hex(random_bytes(16)) . '_' . basename($_FILES["file_invoice"]["name"]);
         $target_file = $target_dir . $image_name;
-        if (!move_uploaded_file($_FILES["file_invoice"]["tmp_name"], $target_file)) {
+        if (!cdp_moveUploadedFile($_FILES["file_invoice"]["tmp_name"], $target_file)) {
             $response['status'] = 'error';
             $response['message'] = 'Error moving the file to the destination directory.';
         } else {

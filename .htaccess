@@ -1,3 +1,24 @@
+# Security boundary for Apache 2.4+. Mirror these rules in nginx/IIS deployments.
+Options -Indexes
+
+    RewriteEngine On
+    RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
+    RewriteRule ^(?:config|lib|helpers|tests|views|cron|backups|logs|sql|install\.done|vendor)(?:/|$) - [F,L,NC]
+    RewriteRule ^pdf/(?:documentos|_class|_tcpdf_5\.0\.002|locale)(?:/|$) - [F,L,NC]
+    RewriteRule ^api/v1/(?:storage|migrations)(?:/|$) - [F,L,NC]
+    RewriteRule ^(?:assets/(?:uploads|payment_packages)|order_files|pre_alert_files|driver_files|doc_signs|files)/.*\.(?:php[0-9]*|phtml|pht|phar|cgi|pl|py|sh|shtml|html?|js|svg)(?:\.|$) - [F,L,NC]
+    RewriteRule ^(?:unzipper|check_permissions_debug|testExecel)\.php$ - [F,L,NC]
+
+
+<FilesMatch "(?i)(?:^(?:composer\.(?:json|lock)|phpunit\.xml|LICENSE|README\.md)$|\.(?:sql|sqlite3?|log|bak|old|orig|save|ini|env|pem|key|crt)$)">
+    Require all denied
+</FilesMatch>
+
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+
 # ---------------------------------------------------------------------------
 # Static assets: compress them and let browsers keep them.
 #

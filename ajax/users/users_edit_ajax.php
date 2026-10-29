@@ -74,6 +74,10 @@ require_once(__DIR__ . '/../../helpers/rbac.php');
     }
 
     $currentUser = $userDataEdit['data'];
+    if (!cdp_canManageTarget($user, $currentUser, cdp_getAgencyContext())) {
+        http_response_code(403); exit;
+    }
+
 
     // ============================================================
     // STEP 3: PERMISSION CHECK
@@ -127,6 +131,10 @@ require_once(__DIR__ . '/../../helpers/rbac.php');
     if ($isSelf && !cdp_canManageUser($user, (int)$currentUser->userlevel)) {
         $newData['userlevel'] = (int)$currentUser->userlevel;
         $newData['active']    = (int)$currentUser->active;
+    }
+
+    if (!cdp_roleHasFlag((int) $user->userlevel, 'is_superadmin')) {
+        $newData['branch_office'] = (string) $currentUser->name_off;
     }
 
     // Role changes only downward from the editor's own rank (superadmin: any).
@@ -286,7 +294,7 @@ require_once(__DIR__ . '/../../helpers/rbac.php');
     http_response_code(500);
     echo json_encode([
         'status' => 'error',
-        'message' => 'Server error: ' . $e->getMessage()
+        'message' => 'Unable to save the account. Please contact support.'
     ]);
 }
 

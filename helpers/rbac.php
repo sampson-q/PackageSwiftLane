@@ -1,5 +1,17 @@
 <?php
 require_once __DIR__ . '/finance_switch.php';
+
+/** Target identity and tenant checks supplement a role's management permission. */
+function cdp_canManageTarget($viewer, object $target, array $context, string $requiredType = ''): bool
+{
+    if (!($viewer instanceof User) || empty($viewer->logged_in)) return false;
+    if ($requiredType !== '' && !cdp_roleHasFlag((int) $target->userlevel, $requiredType)) return false;
+    if ((int) $target->id === (int) $viewer->uid) return true;
+    if (!cdp_canManageUser($viewer, (int) $target->userlevel)) return false;
+    if (!empty($context['is_restricted']) && (empty($context['agency_id'])
+        || (int) ($target->agency_id ?? 0) !== (int) $context['agency_id'])) return false;
+    return true;
+}
 /**
  * Account-management rank rules: who may manage/assign which accounts.
  *

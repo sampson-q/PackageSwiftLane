@@ -20,6 +20,11 @@
 // *************************************************************************
   
   require_once("loader.php");
+require_once __DIR__ . '/helpers/csrf.php';
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || !cdp_csrf_validate_request()) {
+    http_response_code(403); exit('Invalid request.');
+}
+
   $user= new User;
 ?>
 <?php

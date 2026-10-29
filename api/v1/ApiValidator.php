@@ -67,6 +67,11 @@ class ApiValidator
                 continue;
             }
 
+            if (!is_scalar($value)) {
+                $errors[$field] = "The {$field} must be a scalar value.";
+                continue;
+            }
+
             foreach ($ruleParts as $rule) {
                 if ($rule === 'required' || $rule === 'nullable') {
                     continue;
@@ -80,7 +85,7 @@ class ApiValidator
                     $param    = null;
                 }
 
-                $error = self::applyRule($field, $value, $ruleName, $param);
+                $error = self::applyRule($field, $value, $ruleName, $param, in_array('string', $ruleParts, true));
                 if ($error !== null) {
                     $errors[$field] = $error;
                     break; // stop on first error per field
@@ -96,7 +101,7 @@ class ApiValidator
      *
      * @return string|null Error message or null if valid
      */
-    private static function applyRule(string $field, $value, string $rule, ?string $param): ?string
+    private static function applyRule(string $field, $value, string $rule, ?string $param, bool $stringValue = false): ?string
     {
         switch ($rule) {
             case 'string':
@@ -147,7 +152,7 @@ class ApiValidator
                     break;
                 }
                 $n = (float)$param;
-                if (is_numeric($value)) {
+                if (!$stringValue && is_numeric($value)) {
                     if ((float)$value < $n) {
                         return "The {$field} must be at least {$param}.";
                     }
@@ -163,7 +168,7 @@ class ApiValidator
                     break;
                 }
                 $n = (float)$param;
-                if (is_numeric($value)) {
+                if (!$stringValue && is_numeric($value)) {
                     if ((float)$value > $n) {
                         return "The {$field} must not exceed {$param}.";
                     }

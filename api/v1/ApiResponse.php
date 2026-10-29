@@ -24,6 +24,13 @@ class ApiResponse
      */
     public static function send(array $body, int $status = 200): void
     {
+        header('Cache-Control: no-store, private');
+        header('Content-Type: application/json; charset=utf-8');
+        if (in_array($status, [401, 403, 429], true)) {
+            error_log('[security] ' . json_encode(['event' => 'api_denied', 'status' => $status,
+                'actor' => (int) ($_SESSION['userid'] ?? 0), 'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+                'path' => substr((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), 0, 512)]));
+        }
         http_response_code($status);
         echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;

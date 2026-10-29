@@ -38,7 +38,7 @@ $fields = "*";
 $sWhere = "";
 
 
-$sWhere .= " mod_style LIKE '%" . $search . "%'";
+$sWhere .= " mod_style LIKE :cdp_search";
 
 
 $sWhere .= " order by mod_style desc";
@@ -51,11 +51,13 @@ $offset = ($page - 1) * $per_page;
 
 $sql = "SELECT $fields FROM  $tables where $sWhere";
 $db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $cdp_cnt_row = $db->cdp_registro();
 $numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);

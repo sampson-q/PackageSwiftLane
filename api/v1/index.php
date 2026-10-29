@@ -277,6 +277,6 @@ try {
     }
 } catch (Throwable $e) {
     // Log internally; never expose stack traces in production
-    error_log('[API] Uncaught: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    error_log('[API] ' . json_encode(['event' => 'unhandled_error', 'class' => get_class($e), 'code' => $e->getCode(), 'file' => $e->getFile(), 'line' => $e->getLine()]));
     ApiResponse::serverError('An unexpected server error occurred.');
 }

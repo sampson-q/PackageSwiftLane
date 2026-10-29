@@ -1,4 +1,9 @@
 <?php
+// Deployment utility: never expose arbitrary archive extraction over HTTP.
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
 /**
  * The Unzipper extracts .zip or .rar archives and .gz files on webservers.
  * It's handy if you do not have shell access. E.g. if you want to upload a lot

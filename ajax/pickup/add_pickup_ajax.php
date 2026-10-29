@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/security.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -311,7 +312,7 @@ if (empty($errors)) {
                     $imageFileZise = $_FILES["filesMultiple"]["size"][$key];
 
                     if ($imageFileZise > 0) {
-                        move_uploaded_file($_FILES["filesMultiple"]["tmp_name"][$key], $target_file);
+                        cdp_moveUploadedFile($_FILES["filesMultiple"]["tmp_name"][$key], $target_file);
                         $imagen = basename($_FILES["filesMultiple"]["name"][$key]);
                     }
 
@@ -431,9 +432,9 @@ if (empty($errors)) {
 
             $mail->SMTPOptions = array(
                 'ssl' => array(
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'allow_self_signed' => true
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                    'allow_self_signed' => false
                 )
             );
 

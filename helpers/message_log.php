@@ -228,6 +228,12 @@ function cdp_msgStatuses()
 function cdp_msgRedact($body, $source, $templateId = null)
 {
     $body = (string) $body;
+    if ((string) $source === 'user_account' || preg_match('/\b(password|passwd|contrase(?:ñ|n)a|mot de passe)\b/i', $body)) {
+        return '[Credential message content withheld]';
+    }
+    $body = preg_replace('/(Bearer\s+)[^\s"<>]+/i', '$1[redacted]', $body);
+    $body = preg_replace('/([?&](?:key|token|api_key|secret|password)=)[^&\s"<>]+/i', '$1[redacted]', $body);
+    $body = preg_replace('/("(?:token|access_token|refresh_token|api_key|secret|authorization)"\s*:\s*")[^"]*(")/i', '$1[redacted]$2', $body);
     $sensitive = in_array((string) $source, ['otp', 'signup', 'pickup_code'], true)
         || in_array((int) $templateId, [9, 10], true)
         || preg_match('/\b(one[- ]time|otp|verification code|reset code|pickup code)\b/i', $body);
@@ -384,6 +390,8 @@ function cdp_msgLog(array $o)
         if ($resp !== null && !is_string($resp)) {
             $resp = json_encode($resp, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
+
+        if ($resp !== null) $resp = cdp_msgRedact($resp, $source, $templateId);
 
         $db = new Conexion;
         $db->cdp_query("INSERT INTO cdb_message_log

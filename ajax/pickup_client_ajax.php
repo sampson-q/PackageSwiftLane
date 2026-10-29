@@ -24,7 +24,7 @@ if (empty($search)) {
 $sWhere = "";
 
 // Add search criteria to query
-$sWhere .= " AND (CONCAT(a.order_prefix, a.order_no) LIKE '%" . $search . "%' OR c.tracking_number LIKE '%" . $search . "%')";
+$sWhere .= " AND (CONCAT(a.order_prefix, a.order_no) LIKE :cdp_search OR c.tracking_number LIKE :cdp_search)";
 
 if ($status_courier > 0) {
     $sWhere .= " AND a.status_courier = '" . $status_courier . "'";
@@ -56,6 +56,7 @@ $sql = "SELECT
 
 // Count results
 $db->cdp_query($sql);
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $db->cdp_execute();
 $numrows = $db->cdp_rowCount();
 
@@ -67,6 +68,7 @@ if ($numrows <= 0) {
 
 // Get records for current page
 $db->cdp_query($sql);
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $data = $db->cdp_registros();
 ?>
 

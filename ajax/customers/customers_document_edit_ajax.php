@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../helpers/security.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -87,13 +88,13 @@ if (CDP_APP_MODE_DEMO === true) {
                 // Genera un nombre único para el archivo
                 $user_id = $_POST['id']; // Ajusta según tu lógica de obtener el ID
                 $current_document = $_POST['current_document'] ?? '';
-                $file_name = $user_id . '_' . time() . '_' . $file_name;
+                $file_name = $user_id . '_' . bin2hex(random_bytes(16)) . '_' . $file_name;
 
                 // Ruta completa donde se guardará el archivo
                 $upload_path = $upload_dir . $file_name;
 
                 // Mueve el archivo al directorio de carga
-                if (move_uploaded_file($file_tmp, $upload_path)) {
+                if (cdp_moveUploadedFile($file_tmp, $upload_path)) {
                     // Actualiza directamente la base de datos con la nueva ruta del document
                     $db->cdp_query('UPDATE cdb_users SET document_photo = :document_photo WHERE id = :id');
 

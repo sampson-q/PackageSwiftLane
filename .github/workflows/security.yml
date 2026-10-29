@@ -1,0 +1,45 @@
+name: Security controls
+on:
+  pull_request:
+  push:
+    branches: [main, secureswift]
+  workflow_dispatch:
+  schedule:
+    - cron: '32 7 * * 1'
+permissions:
+  contents: read
+jobs:
+  security-controls:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # v2
+        with:
+          php-version: '8.3'
+          extensions: curl, gd, mbstring, dom, xml, zip, pdo_sqlite, pdo_mysql, fileinfo
+          tools: composer:v2, phpunit:11.5
+          coverage: none
+      - name: Install locked dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts --no-plugins
+      - name: Audit dependencies against current advisories
+        run: composer audit --locked
+      - name: Lint and check security configuration
+        run: python3 scripts/security_checks.py
+      - name: Test authorization, sessions, uploads and compatibility
+        run: php tests/security/run.php
+      - name: Test one-time credential lifecycle
+        run: php tests/security/otp_checks.php
+      - name: Test frontend CSRF and artifact integrity
+        run: node tests/security/frontend_checks.js
+      - name: Test HTTP security boundaries
+        run: python3 tests/security/http_checks.py
+      - name: Prepare Apache rule validation
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends apache2-bin
+      - name: Verify Apache access restrictions
+        run: python3 tests/security/apache_checks.py
+      - name: Run existing API unit suite (known baseline errors remain release blocking)
+        run: phpunit --do-not-cache-result

@@ -48,3 +48,8 @@ files/
 sql/
 # local UI previews (not part of the app)
 dev_preview/
+
+# Preserve the legacy autoload entrypoint; dependencies live in /vendor.
+!/helpers/vendor/
+/helpers/vendor/*
+!/helpers/vendor/autoload.php

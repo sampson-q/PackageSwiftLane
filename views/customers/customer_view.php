@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../helpers/object_access.php';
+cdp_requireObjectAccess('customer', (int) ($_GET['user'] ?? 0));
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -42,7 +44,7 @@ if (!isset($_GET['user']) or $data['rowCount'] != 1) {
 
 $row = $data['data'];
 
-$db->cdp_query("SELECT * FROM cdb_senders_addresses WHERE user_id='" . $_GET['user'] . "'");
+$db->cdp_query("SELECT * FROM cdb_senders_addresses WHERE user_id='" . (int) $_GET['user'] . "'");
 $user_addreses = $db->cdp_registros();
 
 // 1) Prepare SQL with LEFT JOIN to include updater names

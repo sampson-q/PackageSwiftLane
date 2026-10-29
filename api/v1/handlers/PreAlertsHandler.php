@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../../helpers/security.php';
 /**
  * PreAlertsHandler – CRUD for pre-alerts (cdb_pre_alert).
  *
@@ -25,11 +26,7 @@ class PreAlertsHandler
         $params = [];
         $where  = 'WHERE 1=1';
 
-        $ulevel = (int)$authUser->userlevel;
-        if ($ulevel === 1) {
-            // Customers only see their own pre-alerts (integer ID – safe to inline)
-            $where .= ' AND p.customer_id = ' . (int)$authUser->id;
-        }
+        $where .= ApiAccess::scope($authUser, 'prealert', 'p');
 
         // String search – parameterized
         if ($search !== '') {
@@ -92,7 +89,7 @@ class PreAlertsHandler
         $invoiceFile = '';
         if (!empty($_FILES['file_invoice']['name'])) {
             $uploadDir  = __DIR__ . '/../../../pre_alert_files/';
-            $imageName  = time() . '_' . basename($_FILES['file_invoice']['name']);
+            $imageName  = bin2hex(random_bytes(16)) . '_' . basename($_FILES['file_invoice']['name']);
             $targetFile = $uploadDir . $imageName;
 
             $allowed = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
@@ -106,7 +103,7 @@ class PreAlertsHandler
             if (!is_dir($uploadDir)) {
                 @mkdir($uploadDir, 0755, true);
             }
-            if (!move_uploaded_file($_FILES['file_invoice']['tmp_name'], $targetFile)) {
+            if (!cdp_moveUploadedFile($_FILES['file_invoice']['tmp_name'], $targetFile)) {
                 ApiResponse::serverError('Failed to upload invoice file.');
             }
             $invoiceFile = 'pre_alert_files/' . $imageName;
@@ -169,6 +166,7 @@ class PreAlertsHandler
     public function show(int $id): void
     {
         $authUser = ApiAuth::requirePermission('prealert_list');
+        ApiAccess::requireObject($authUser, 'prealert', $id);
 
         $db = new Conexion();
         $db->cdp_query("
@@ -198,6 +196,7 @@ class PreAlertsHandler
     public function delete(int $id): void
     {
         $authUser = ApiAuth::requirePermission('prealert_list');
+        ApiAccess::requireObject($authUser, 'prealert', $id);
 
         $db = new Conexion();
         $db->cdp_query('SELECT pre_alert_id, customer_id FROM cdb_pre_alert WHERE pre_alert_id = :id LIMIT 1');

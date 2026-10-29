@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/helpers/csrf.php';
 // *************************************************************************
 // *                                                                       *
 // * Swiftlane - Integrated Web Shipping System                            *
@@ -32,6 +33,7 @@ if ($login->cdp_loginCheck() == true) {
 }
 
 if (isset($_POST['login'])) {
+    if (!cdp_csrf_validate_request()) { http_response_code(403); exit('Invalid request.'); }
     $otpService = new OtpService();
     $result = $login->cdp_login($_POST['username'], $_POST['password'], [
         'otp_service' => $otpService,
@@ -156,6 +158,7 @@ if (isset($_POST['login'])) {
                 <div id="loader" style="display:none"></div>
 
                 <form class="login-form mt-4" method="post" name="login_form" id="login-form">
+<input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="row">
                         <div class="col-12">
                             <div class="mb-3">

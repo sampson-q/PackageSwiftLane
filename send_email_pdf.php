@@ -22,6 +22,14 @@
 
 
 require_once("loader.php");
+require_once __DIR__ . '/helpers/ajax_guard.php';
+require_once __DIR__ . '/helpers/object_access.php';
+require_post();
+require_login();
+$recordId = (int) ($_POST['id'] ?? 0);
+cdp_requireObjectAccess('shipment', $recordId);
+if (!ApiAccess::client(cdp_requestActor())) require_permission('view_shipment_details');
+
 require_once("helpers/querys.php");
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -34,12 +42,12 @@ require 'helpers/phpmailer/PHPMailer/src/SMTP.php';
 
 
 // Habilitar la visualización de errores
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
 
 
-session_start();
+cdp_csrf_ensure_session();
 // get the HTML
 ob_start();
 if (!isset($_SESSION['userid'])) {
@@ -48,8 +56,8 @@ if (!isset($_SESSION['userid'])) {
 	exit;
 }
 
-if (isset($_GET['id'])) {
-	$data = cdp_getCourierPrint($_GET['id']);
+if ($recordId > 0) {
+	$data = cdp_getCourierPrint($recordId);
 }
 
 
@@ -98,7 +106,7 @@ $db->cdp_query("SELECT * FROM cdb_address_shipments where order_track='" . $row-
 $address_order = $db->cdp_registro();
 
 
-$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . $_GET['id'] . "'");
+$db->cdp_query("SELECT * FROM cdb_add_order_item WHERE order_id='" . $recordId . "'");
 $order_items = $db->cdp_registros();
 
 $dias_ = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
@@ -173,7 +181,7 @@ if ($core->mailer == 'PHP') {
 		// send the PDF
 
 	} catch (Throwable $e) {
-		echo $e->getMessage();
+		echo 'Unable to prepare or send the document.';
 		exit;
 	}
 } elseif ($core->mailer == 'SMTP') {
@@ -224,10 +232,10 @@ if ($core->mailer == 'PHP') {
 			echo "<div class='alert alert-success'>" . $lang['message_ajax_success_send_modal_email'] . "!</div>";
 		} catch (Exception $e) {
 
-			echo "<div class='alert alert-warning'>" . $lang['message_ajax_error2'] . "</div>", $mail->ErrorInfo;
+			echo "<div class='alert alert-warning'>" . $lang['message_ajax_error2'] . "</div>";
 		}
 	} catch (Throwable $e) {
-		echo $e->getMessage();
+		echo 'Unable to prepare or send the document.';
 		exit;
 	}
 }

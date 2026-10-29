@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/helpers/csrf.php';
 require_once("loader.php");
 require_once("helpers/querys.php");
 require_once("lib/OtpService.php");
@@ -10,7 +11,8 @@ $core = new Core();
 $db   = new Conexion();
 $otp  = new OtpService();
 
-$flow = isset($_GET['flow']) ? $_GET['flow'] : 'login';
+$flow = isset($_GET['flow']) && is_string($_GET['flow']) ? $_GET['flow'] : 'login';
+if (!in_array($flow, ['login', 'signup', 'forgot'], true)) { http_response_code(400); exit('Invalid flow.'); }
 
 $message     = '';
 $error       = '';
@@ -82,6 +84,7 @@ function cdp_cleanupTempDir($tempDir) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!cdp_csrf_validate_request()) { http_response_code(403); exit('Invalid request.'); }
 
     // ── Resend ────────────────────────────────────────────────────────────────
     if (isset($_POST['resend'])) {
@@ -172,7 +175,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // ── Login flow ────────────────────────────────────────────────────
             if ($flow === 'login') {
-                $user->cdp_finalizeLoginById($verify['user_id']);
+                if (!$user->cdp_finalizeLoginById($verify['user_id'])) {
+                    http_response_code(403); exit('Unable to complete login.');
+                }
 
                 cdp_activityLogLogin(
                     true,
@@ -180,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     (int) $verify['user_id']
                 );
 
-                if (!empty($_SESSION['otp_login_remember'])) {
+                if (!empty($verify['metadata']['remember_me'])) {
                     $otp->rememberTrustedDevice($verify['user_id']);
                 }
 
@@ -445,6 +450,7 @@ if ($challengeId > 0) {
                 <div id="loader" style="display:none"></div>
 
                 <form class="login-form mt-4" method="post" id="otp-form">
+<input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cdp_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="row">
                         <div class="col-12">
                             <div class="mb-3">

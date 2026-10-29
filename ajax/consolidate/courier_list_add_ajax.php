@@ -44,7 +44,7 @@ $dg_style = cdp_getDangerousGoodsStyle();
 $sWhere = "";
 
 if ($search != null) {
-	$sWhere .= " and  CONCAT(a.order_prefix,a.order_no) LIKE '%" . $search . "%'";
+	$sWhere .= " and  CONCAT(a.order_prefix,a.order_no) LIKE :cdp_search";
 }
 
 
@@ -65,11 +65,13 @@ $sql = "SELECT a.volumetric_percentage, a.is_pickup,  a.total_order, a.order_id,
 
 
 $db->cdp_query("SELECT COUNT(*) AS cdp_total FROM (" . $sql . ") AS cdp_cnt");
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $cdp_cnt_row = $db->cdp_registro();
 $numrows = $cdp_cnt_row ? (int) $cdp_cnt_row->cdp_total : 0;
 
 
 $db->cdp_query($sql . " limit $offset, $per_page");
+if (strpos($sql, ':cdp_search') !== false) $db->bind(':cdp_search', '%' . $search . '%');
 $data = $db->cdp_registros();
 
 $total_pages = ceil($numrows / $per_page);
