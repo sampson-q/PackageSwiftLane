@@ -29,7 +29,9 @@ require_once dirname(__DIR__) . '/ajax/notify_whatsapp/api_whatsapp_service_v2.p
  * @param string $subject
  * @param string $message  plain text typed by the admin
  * @param object $settings cdp_getSettingsCourier()
- * @param array  $ctx      message-log context (source, batch_id, entity_*)
+ * @param array  $ctx      message-log context (source, batch_id, entity_*), plus
+ *                         'media' => cdp_pushMediaResolve() result: an image,
+ *                         video or document sent with the WhatsApp copy only
  * @param string $channels the admin's choice: a comma list of 'whatsapp',
  *                         'email', 'sms' (the old radio value 'both' means
  *                         whatsapp,email). A channel that was not chosen is
@@ -41,6 +43,8 @@ require_once dirname(__DIR__) . '/ajax/notify_whatsapp/api_whatsapp_service_v2.p
 function cdp_pushNotifyUser($user, $subject, $message, $settings, array $ctx = [], $channels = 'both')
 {
     $chosen = cdp_pushChannelSet($channels);
+    $media  = (isset($ctx['media']) && is_array($ctx['media'])) ? $ctx['media'] : null;
+    unset($ctx['media']);
     $out = [
         'whatsapp' => ['status' => 'off', 'detail' => ''],
         'email'    => ['status' => 'off', 'detail' => ''],
@@ -67,7 +71,11 @@ function cdp_pushNotifyUser($user, $subject, $message, $settings, array $ctx = [
                 );
                 cdp_msgSetContext(['template_id' => 12]);
                 // The sender picked the channels on the page: no SMS copy here.
-                $r = sendNotificationWhatsApp_v2($user, $body, null, ['allow_sms' => false]);
+                $waOpts = ['allow_sms' => false];
+                if ($media) {
+                    $waOpts['media'] = $media;
+                }
+                $r = sendNotificationWhatsApp_v2($user, $body, null, $waOpts);
                 cdp_msgClearContext(['template_id']);
                 if (!empty($r['success'])) {
                     $out['whatsapp'] = ['status' => 'sent', 'detail' => ''];

@@ -19,14 +19,22 @@ function cdp_pushChannelLine(label, c) {
     return '<b>' + label + ':</b> ' + c.sent + ' sent · ' + c.failed + ' failed · ' + c.skipped + ' skipped';
 }
 
+/** The channels of a push as a list (the server's comma list; 'both' = WhatsApp + e-mail). */
+function cdp_pushChannelSet(channels) {
+    var c = String(channels || 'both');
+    return c === 'both' ? ['whatsapp', 'email'] : c.split(',');
+}
+
 function cdp_pushSummaryHtml(s) {
     if (!s) return '';
     var html = '<div class="text-left" style="font-size:.9rem">';
     if (s.channels_label) html += '<div><b>Sent By:</b> ' + cdp_pushEsc(s.channels_label) + '</div>';
     html += '<div><b>Recipients:</b> ' + s.recipients + (s.total && s.total !== s.recipients ? ' of ' + s.total : '') + '</div>';
     // A channel the admin did not choose is not reported at all.
-    if (s.channels !== 'email') html += '<div>' + cdp_pushChannelLine('WhatsApp', s.whatsapp) + '</div>';
-    if (s.channels !== 'whatsapp') html += '<div>' + cdp_pushChannelLine('E-mail', s.email) + '</div>';
+    var set = cdp_pushChannelSet(s.channels);
+    if (set.indexOf('whatsapp') !== -1) html += '<div>' + cdp_pushChannelLine('WhatsApp', s.whatsapp) + '</div>';
+    if (set.indexOf('email') !== -1) html += '<div>' + cdp_pushChannelLine('E-mail', s.email) + '</div>';
+    if (set.indexOf('sms') !== -1 && s.sms) html += '<div>' + cdp_pushChannelLine('SMS', s.sms) + '</div>';
     if (s.lines && s.lines.length) {
         html += '<details class="mt-2"><summary style="cursor:pointer">Per-recipient results</summary><ul class="pl-3 mt-2" style="max-height:220px;overflow:auto">';
         s.lines.forEach(function (l) { html += '<li>' + cdp_pushEsc(l) + '</li>'; });
@@ -55,7 +63,8 @@ function cdp_pushRun(url, buildData, onFinish) {
     var total = {
         recipients: 0, total: 0, lines: [], batch_id: '', channels: 'both', channels_label: '',
         whatsapp: { sent: 0, failed: 0, skipped: 0 },
-        email: { sent: 0, failed: 0, skipped: 0 }
+        email: { sent: 0, failed: 0, skipped: 0 },
+        sms: { sent: 0, failed: 0, skipped: 0 }
     };
     var retries = 0;
 
@@ -65,7 +74,8 @@ function cdp_pushRun(url, buildData, onFinish) {
         total.batch_id = s.batch_id;
         total.channels = s.channels;
         total.channels_label = s.channels_label;
-        ['whatsapp', 'email'].forEach(function (ch) {
+        ['whatsapp', 'email', 'sms'].forEach(function (ch) {
+            if (!s[ch]) return;
             ['sent', 'failed', 'skipped'].forEach(function (k) { total[ch][k] += (s[ch][k] || 0); });
         });
         total.lines = total.lines.concat(s.lines || []);
@@ -85,7 +95,7 @@ function cdp_pushRun(url, buildData, onFinish) {
     }
 
     function finish(problem) {
-        var delivered = total.whatsapp.sent + total.email.sent;
+        var delivered = total.whatsapp.sent + total.email.sent + total.sms.sent;
         var html = '';
         if (problem) html += cdp_pushErrorsHtml([problem]);
         else if (!delivered) html += cdp_pushErrorsHtml(['Nothing was delivered. See the per-recipient results and the Message Logs page.']);

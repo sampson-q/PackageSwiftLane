@@ -1772,6 +1772,42 @@ td .swl-awbref, .table .swl-awbref { white-space: normal; }
    channels): inline, wrapping, level with the label */
 .swl-check-row { display: flex; flex-wrap: wrap; gap: 8px 24px; min-height: 26px; align-items: center; padding-top: 4px; }
 .swl-check-row .custom-control { margin: 0; }
+/* Push composer (Tools > Push Notifications): the WhatsApp attachment picker
+   and chip, the live WhatsApp / SMS previews and the cost estimate */
+.swl-attach-row { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+.swl-attach-chip { display: flex; align-items: center; gap: var(--space-8); margin-top: var(--space-8); padding: var(--space-8) var(--space-12); border: 1px solid var(--line-200); border-radius: var(--radius-8); background: var(--surface-page); max-width: 100%; }
+.swl-attach-chip[hidden] { display: none; }
+.swl-attach-name { font-weight: var(--weight-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.swl-attach-remove { margin-left: auto; }
+.swl-preview-stack { display: flex; flex-direction: column; gap: var(--space-16); }
+.swl-preview { border: 1px solid var(--line-200); border-radius: var(--radius-16); overflow: hidden; background: var(--surface-card); }
+.swl-preview-head { display: flex; align-items: center; gap: var(--space-8); padding: var(--space-8) var(--space-16); font-weight: var(--weight-semibold); border-bottom: 1px solid var(--line-200); }
+.swl-preview-head .fa-whatsapp { color: var(--green-500); }
+.swl-preview-screen { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-4); padding: var(--space-16); min-height: 120px; max-height: 420px; overflow-y: auto; background: var(--surface-track); }
+.swl-preview-screen--sms { align-items: flex-start; }
+.swl-bubble { max-width: 88%; padding: var(--space-8) var(--space-12); border-radius: var(--radius-8); line-height: 1.4; overflow-wrap: anywhere; box-shadow: var(--shadow-control); }
+.swl-bubble[hidden], .swl-bubble [hidden] { display: none; }
+.swl-bubble--wa { background: var(--green-surface); border: 1px solid var(--green-line); border-top-right-radius: 0; }
+.swl-bubble--sms { background: var(--surface-card); border: 1px solid var(--line-200); border-top-left-radius: 0; }
+.swl-bubble-text code { font-size: .9em; }
+.swl-bubble-meta { text-align: right; font-size: var(--text-xs-size); color: var(--text-muted); margin-top: var(--space-4); }
+.swl-bubble-media { margin: calc(var(--space-4) * -1) calc(var(--space-8) * -1) var(--space-8); }
+.swl-bubble-media img, .swl-bubble-media video { display: block; width: 100%; max-height: 260px; object-fit: cover; border-radius: var(--radius-4); }
+.swl-bubble-doc { display: flex; align-items: center; gap: var(--space-12); padding: var(--space-8) var(--space-12); border-radius: var(--radius-4); background: var(--surface-page); }
+.swl-bubble-doc .fa-file-alt { font-size: 1.8rem; color: var(--red-500); }
+.swl-bubble-doc-name { font-weight: var(--weight-medium); overflow-wrap: anywhere; }
+.swl-bubble-doc-meta { font-size: var(--text-sm-size); color: var(--text-muted); }
+.swl-preview-foot { padding: var(--space-8) var(--space-16); font-size: var(--text-sm-size); color: var(--text-muted); border-top: 1px solid var(--line-200); }
+.swl-preview-foot:empty { display: none; }
+.swl-cost-body { padding: var(--space-12) var(--space-16); }
+.swl-cost-body.is-loading { opacity: .5; }
+.swl-cost-audience { font-size: var(--text-sm-size); color: var(--text-muted); margin-bottom: var(--space-8); }
+.swl-cost-table { margin-bottom: var(--space-4); }
+.swl-cost-table td { white-space: normal; }
+.swl-cost-table :is(td, th).text-right { white-space: nowrap; }
+.swl-cost-rate { font-size: var(--text-sm-size); color: var(--text-muted); }
+.swl-cost-table tfoot th { border-top: 2px solid var(--line-200); }
+@media (min-width: 992px) { #composer-preview .swl-preview-stack { position: sticky; top: var(--space-16); } }
 /* A link around a button is the button's size, so the tap target is the whole pill */
 a:has(> .btn:only-child) { display: inline-flex; max-width: 100%; }
 /* An icon-only button beside a field ("+" add sender / recipient, in a col-md-2
