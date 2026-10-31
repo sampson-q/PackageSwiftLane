@@ -775,6 +775,12 @@ if (empty($userData) && isset($user) && is_object($user) && method_exists($user,
 									<span class="hide-menu"> Message Logs </span>
 								</a>
 							</li>
+							<li class="sidebar-item">
+								<a class="sidebar-link waves-effect waves-dark" href="message_costs.php" aria-expanded="false">
+									<iconify-icon icon="solar:wallet-money-linear" class="fs-5"></iconify-icon>
+									<span class="hide-menu"> Message Costs </span>
+								</a>
+							</li>
 							<?php } ?>
 
 							<?php
