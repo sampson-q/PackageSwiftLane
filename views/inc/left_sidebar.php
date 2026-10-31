@@ -80,6 +80,15 @@ if (empty($userData) && isset($user) && is_object($user) && method_exists($user,
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-2'] ?></span>
 						</a>
 					</li>
+					<?php require_once __DIR__ . '/../../helpers/ai_assistant.php'; ?>
+					<?php if (cdp_aiCanUse($user) || cdp_aiCanManage($user)) { ?>
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="ai_assistant.php" aria-expanded="false">
+							<iconify-icon icon="solar:magic-stick-3-linear" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> AI Assistant </span>
+						</a>
+					</li>
+					<?php } ?>
 					<?php if ($user->cdp_hasPermission('view_shipment_list')) { ?>
 					<li class="sidebar-item nav-divider"></li>
                     <li class="sidebar-item">
@@ -1098,6 +1107,15 @@ if (empty($userData) && isset($user) && is_object($user) && method_exists($user,
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-2'] ?> </span>
 						</a>
 					</li>
+					<?php require_once __DIR__ . '/../../helpers/ai_assistant.php'; ?>
+					<?php if (cdp_aiCanUse($user) || cdp_aiCanManage($user)) { ?>
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="ai_assistant.php" aria-expanded="false">
+							<iconify-icon icon="solar:magic-stick-3-linear" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> AI Assistant </span>
+						</a>
+					</li>
+					<?php } ?>
 
 					<?php 
 
@@ -1414,6 +1432,15 @@ if (empty($userData) && isset($user) && is_object($user) && method_exists($user,
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-2'] ?> </span>
 						</a>
 					</li>
+					<?php require_once __DIR__ . '/../../helpers/ai_assistant.php'; ?>
+					<?php if (cdp_aiCanUse($user) || cdp_aiCanManage($user)) { ?>
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="ai_assistant.php" aria-expanded="false">
+							<iconify-icon icon="solar:magic-stick-3-linear" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> AI Assistant </span>
+						</a>
+					</li>
+					<?php } ?>
 
 					<?php if ($user->cdp_hasPermission('view_package_list')) { ?>
 					<li class="sidebar-item">

@@ -73,6 +73,15 @@
 						</a>
 					</li>
 					<?php } ?>
+					<?php require_once __DIR__ . '/../../helpers/ai_assistant.php'; ?>
+					<?php if (cdp_aiCanManage($user)) { ?>
+					<li class="list-group-item  sidebar-item">
+						<a href="ai_assistant_settings.php" class="list-group-item-action">
+							<iconify-icon icon="solar:magic-stick-3-linear" class="tools-menu-icon"></iconify-icon>
+							AI Assistant
+						</a>
+					</li>
+					<?php } ?>
 					<?php require_once __DIR__ . '/../../helpers/hubtel_sms.php'; ?>
 					<?php if (cdp_smsCanManage($user)) { ?>
 					<li class="list-group-item  sidebar-item">
