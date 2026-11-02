@@ -448,6 +448,16 @@ if (empty($userData) && isset($user) && is_object($user) && method_exists($user,
 					</li>
 					<?php } ?>
 
+					<?php if ($user->cdp_hasPermission('manage_newsletter')) { ?>
+					<!-- e-mail newsletter designer -->
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="newsletter.php" aria-expanded="false">
+							<iconify-icon icon="solar:letter-linear" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> Email Newsletter</span>
+						</a>
+					</li>
+					<?php } ?>
+
                     <?php if ($user->cdp_hasPermission('financial_sheet')) { ?>
                     <li class="sidebar-item nav-divider"></li>
 					<!-- financial sheet-->
@@ -1735,6 +1745,16 @@ if (empty($userData) && isset($user) && is_object($user) && method_exists($user,
 						<a class="sidebar-link waves-effect waves-dark" href="push_notifications.php" aria-expanded="false">
 							<iconify-icon icon="mdi:message-text-fast-outline" class="fs-5"></iconify-icon>
 							<span class="hide-menu"> <?php echo $lang['left-menu-sidebar-66'] ?></span>
+						</a>
+					</li>
+					<?php } ?>
+
+					<?php if ($user->cdp_hasPermission('manage_newsletter')) { ?>
+					<!-- e-mail newsletter designer -->
+					<li class="sidebar-item">
+						<a class="sidebar-link waves-effect waves-dark" href="newsletter.php" aria-expanded="false">
+							<iconify-icon icon="solar:letter-linear" class="fs-5"></iconify-icon>
+							<span class="hide-menu"> Email Newsletter</span>
 						</a>
 					</li>
 					<?php } ?>
