@@ -28,6 +28,9 @@ require_once $projectRoot . '/helpers/hubtel_sms.php';
  * @param array      $opts                   SMS copy: ['force_sms' => true] for one-time
  *                                           codes, ['allow_sms' => false] when the caller
  *                                           texts the event itself (helpers/hubtel_sms.php).
+ *                                           Media: ['media' => ['kind' => image|video|document,
+ *                                           'url' => public URL, 'filename' => name]] sends the
+ *                                           file with the body as its caption.
  * @return array ['success' => bool, 'skipped' => bool, 'message' => string,
  *                'wa_sent' => bool, 'sms_sent' => bool]
  */
@@ -103,24 +106,97 @@ function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryH
         ]);
     }
 
-    $apiToken = $settings->api_ws_token;
-    $apiUrl   = rtrim($settings->api_ws_url, '/') . '/messages/chat';
+    // Media (helpers/push_compose.php): an image, video or document goes to
+    // its own UltraMsg endpoint with the text as the caption. A text longer
+    // than WhatsApp's caption limit follows the media as a second message.
+    $media = (isset($opts['media']) && is_array($opts['media']) && !empty($opts['media']['url'])
+        && in_array($opts['media']['kind'] ?? '', ['image', 'video', 'document'], true)) ? $opts['media'] : null;
 
-    // Build the POST payload
-    $params = [
-        'token' => $apiToken,
-        'to'    => $target['phone'],
-        'body'  => $template_whatsapp_body,
-    ];
+    $sends = [];
+    if ($media) {
+        $kind    = $media['kind'];
+        $caption = (string) $template_whatsapp_body;
+        $tail    = '';
+        if (function_exists('mb_strlen') ? mb_strlen($caption, 'UTF-8') > 1024 : strlen($caption) > 1024) {
+            $tail = $caption;
+            $caption = '';
+        }
+        $p = ['to' => $target['phone'], $kind => (string) $media['url'], 'caption' => $caption];
+        if ($kind === 'document') {
+            $p['filename'] = (string) ($media['filename'] ?? 'document');
+        }
+        $sends[] = ['endpoint' => 'messages/' . $kind, 'params' => $p,
+            'label' => ucfirst($kind) . ' ' . (string) ($media['filename'] ?? '')];
+        if ($tail !== '') {
+            $sends[] = ['endpoint' => 'messages/chat', 'params' => ['to' => $target['phone'], 'body' => $tail], 'label' => 'Text'];
+        }
+    } else {
+        $sends[] = ['endpoint' => 'messages/chat', 'params' => ['to' => $target['phone'], 'body' => $template_whatsapp_body], 'label' => ''];
+    }
 
-    // Fire off the cURL request
+    $ids = [];
+    $accepted = 0;
+    foreach ($sends as $send) {
+        $r = cdp_wa_postUltraMsg($settings, $send['endpoint'], $send['params'], $target['phone']);
+        $prefix = $send['label'] !== '' && count($sends) > 1 ? trim($send['label']) . ': ' : '';
+        if (!$r['ok']) {
+            if ($accepted > 0) {
+                // The attachment already reached the recipient: report a partial
+                // delivery, so a retry does not send the attachment twice.
+                $detail = 'Partly delivered: ' . $media['kind'] . ' accepted'
+                    . ($ids ? ' (id ' . implode(', ', $ids) . ')' : '') . ', ' . $prefix . $r['message'];
+                $log('sent', $detail, $target['phone'], $r['raw']);
+                return $finish([
+                    'success' => true,
+                    'partial' => true,
+                    'message' => 'WhatsApp attachment sent, but the follow-up text failed: ' . $r['message'],
+                ]);
+            }
+            $log('failed', $prefix . $r['message'], $target['phone'], $r['raw']);
+            return $finish(['success' => false, 'message' => $prefix . $r['message']]);
+        }
+        $accepted++;
+        if ($r['id'] !== '') {
+            $ids[] = $r['id'];
+        }
+        $lastRaw = $r['raw'];
+    }
+
+    // Explicit acceptance, or an ambiguous/unrecognised 2xx body (fail-open).
+    $detail = $ids ? 'Accepted by UltraMsg (id ' . implode(', ', $ids) . ')' : 'Accepted by UltraMsg';
+    if ($media) {
+        $detail .= ' with ' . $media['kind'] . ' ' . (string) ($media['filename'] ?? '');
+    }
+    $log('sent', $detail, $target['phone'], $lastRaw ?? null);
+    return $finish([
+        'success' => true,
+        'message' => "WhatsApp notification sent successfully",
+    ]);
+}
+
+/**
+ * One UltraMsg API call (messages/chat, messages/image, messages/video,
+ * messages/document). A 200 from cURL does NOT mean UltraMsg accepted the
+ * message: the JSON body is inspected so genuine rejects (expired instance,
+ * bad token, quota, malformed body, media URL it cannot fetch) are failures.
+ *   success:  {"sent":"true","message":"ok","id":...}
+ *   failure:  {"error":"..."} | {"sent":"false","message":"..."}
+ *
+ * @return array ['ok' => bool, 'message' => string, 'id' => string, 'raw' => string|null]
+ */
+function cdp_wa_postUltraMsg($settings, $endpoint, array $params, $phone)
+{
+    $params = array_merge(['token' => $settings->api_ws_token], $params);
+    $apiUrl = rtrim($settings->api_ws_url, '/') . '/' . ltrim($endpoint, '/');
+
     $ch = curl_init($apiUrl);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER    => true,
         CURLOPT_POST              => true,
         CURLOPT_POSTFIELDS        => http_build_query($params),
         CURLOPT_CONNECTTIMEOUT    => 5,
-        CURLOPT_TIMEOUT           => 15,
+        // Media is fetched by UltraMsg before it answers: allow it longer.
+        CURLOPT_TIMEOUT           => $endpoint === 'messages/chat' ? 15 : 30,
         CURLOPT_SSL_VERIFYHOST    => 0,
         CURLOPT_SSL_VERIFYPEER    => 0,
         CURLOPT_HTTPHEADER        => ["Content-Type: application/x-www-form-urlencoded"],
@@ -133,48 +209,29 @@ function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryH
 
     // Transport failure: the request never completed.
     if ($err || $response === false) {
-        cdp_wa_log("send transport error to {$target['phone']}: {$err}");
-        $log('failed', "cURL error: {$err}", $target['phone']);
-        return $finish([
-            'success' => false,
-            'message' => "cURL error: {$err}",
-        ]);
+        cdp_wa_log("send transport error to {$phone}: {$err}");
+        return ['ok' => false, 'message' => "cURL error: {$err}", 'id' => '', 'raw' => null];
     }
 
-    // The request completed, but a 200 from cURL does NOT mean UltraMsg accepted
-    // the message. Inspect the JSON body so genuine rejects (expired instance,
-    // bad token, quota, malformed body) are reported as failures instead of
-    // being silently masked as a successful send.
-    //   success:  {"sent":"true","message":"ok","id":...}
-    //   failure:  {"error":"..."} | {"sent":"false","message":"..."}
     $data = json_decode((string) $response, true);
-    $rawResponse = "HTTP {$http_code}: " . (string) $response;
+    $raw  = "HTTP {$http_code}: " . (string) $response;
 
     if (is_array($data)) {
         if (!empty($data['error'])) {
             $reason = is_scalar($data['error']) ? (string) $data['error'] : json_encode($data['error']);
-            cdp_wa_log("send rejected for {$target['phone']} (HTTP {$http_code}): {$reason}");
-            $log('failed', "WhatsApp API error: {$reason}", $target['phone'], $rawResponse);
-            return $finish(['success' => false, 'message' => "WhatsApp API error: {$reason}"]);
+            cdp_wa_log("send rejected for {$phone} (HTTP {$http_code}): {$reason}");
+            return ['ok' => false, 'message' => "WhatsApp API error: {$reason}", 'id' => '', 'raw' => $raw];
         }
         if (isset($data['sent']) && filter_var($data['sent'], FILTER_VALIDATE_BOOLEAN) === false) {
             $reason = isset($data['message']) ? (string) $data['message'] : 'message not sent';
-            cdp_wa_log("send not sent for {$target['phone']} (HTTP {$http_code}): {$reason}");
-            $log('failed', "WhatsApp API: {$reason}", $target['phone'], $rawResponse);
-            return $finish(['success' => false, 'message' => "WhatsApp API: {$reason}"]);
+            cdp_wa_log("send not sent for {$phone} (HTTP {$http_code}): {$reason}");
+            return ['ok' => false, 'message' => "WhatsApp API: {$reason}", 'id' => '', 'raw' => $raw];
         }
     } elseif ($http_code < 200 || $http_code >= 300) {
         // Non-JSON body on a non-2xx response is a clear failure.
-        cdp_wa_log("send failed for {$target['phone']} (HTTP {$http_code}): " . substr((string) $response, 0, 200));
-        $log('failed', "WhatsApp API HTTP {$http_code}", $target['phone'], $rawResponse);
-        return $finish(['success' => false, 'message' => "WhatsApp API HTTP {$http_code}"]);
+        cdp_wa_log("send failed for {$phone} (HTTP {$http_code}): " . substr((string) $response, 0, 200));
+        return ['ok' => false, 'message' => "WhatsApp API HTTP {$http_code}", 'id' => '', 'raw' => $raw];
     }
 
-    // Explicit acceptance, or an ambiguous/unrecognised 2xx body (fail-open).
-    $detail = (is_array($data) && isset($data['id'])) ? 'Accepted by UltraMsg (id ' . $data['id'] . ')' : 'Accepted by UltraMsg';
-    $log('sent', $detail, $target['phone'], $rawResponse);
-    return $finish([
-        'success' => true,
-        'message' => "WhatsApp notification sent successfully",
-    ]);
+    return ['ok' => true, 'message' => '', 'id' => (is_array($data) && isset($data['id'])) ? (string) $data['id'] : '', 'raw' => $raw];
 }

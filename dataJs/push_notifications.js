@@ -159,6 +159,7 @@ $("#push_notification_form").on("submit", function (event) {
 
     // Read once: the form is reset only when the whole push has finished, and
     // every chunk must carry exactly the same message.
+    var mediaFile = $('#channels_whatsapp').is(':checked') ? ($('#media_file').val() || '') : '';
     var buildData = function () {
         var data = new FormData();
         data.append('notification_type', notifType);
@@ -167,22 +168,27 @@ $("#push_notification_form").on("submit", function (event) {
         data.append('message', message);
         if (selectedUser) data.append('user_id', selectedUser);
         if (selectedCon) data.append('consolidation_id', selectedCon);
+        if (mediaFile) data.append('media_file', mediaFile);
         return data;
     };
 
-    $("#send_notification").attr("disabled", true);
-    cdp_pushRun("ajax/tools/push_notifications_ajax.php", buildData, function () {
-        $("#send_notification").attr("disabled", false);
+    // The composer (push_compose.js) shows the audience and estimated cost first.
+    var confirmSend = typeof window.cdpPushConfirm === 'function' ? window.cdpPushConfirm : function (go) { go(); };
+    confirmSend(function () {
+        $("#send_notification").attr("disabled", true);
+        cdp_pushRun("ajax/tools/push_notifications_ajax.php", buildData, function () {
+            $("#send_notification").attr("disabled", false);
 
-        $('#push_notification_form')[0].reset();
-        $('#single-user-container').hide();
-        $('#consolidation-container').hide();
+            $('#push_notification_form')[0].reset();
+            $('#single-user-container').hide();
+            $('#consolidation-container').hide();
 
-        if ($('#user_id').length) $('#user_id').val(null).trigger('change');
-        if ($('#consolidation_id').length) $('#consolidation_id').val(null).trigger('change');
+            if ($('#user_id').length) $('#user_id').val(null).trigger('change');
+            if ($('#consolidation_id').length) $('#consolidation_id').val(null).trigger('change');
 
-        $("#uid").val('');
-        $("#cid").val('');
+            $("#uid").val('');
+            $("#cid").val('');
+        });
     });
 });
 

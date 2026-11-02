@@ -23,6 +23,7 @@ require_once("../../helpers/ajax_guard.php");
 require_login();
 require_permission('push_notifications');
 require_once("../../helpers/push_notify.php");
+require_once("../../helpers/push_compose.php");
 
 $core = new Core;
 $db = new Conexion;
@@ -35,14 +36,20 @@ $uid = isset($_POST['user_id']) ? (int) $_POST['user_id'] : 0;
 $cid = isset($_POST['consolidation_id']) ? (int) $_POST['consolidation_id'] : 0;
 $channels = cdp_pushChannels($_POST['channels'] ?? 'both');
 $after_id = isset($_POST['after_id']) ? max(0, (int) $_POST['after_id']) : 0;
+// action=estimate: who the push would reach and what it would cost; nothing is sent.
+$estimate = (($_POST['action'] ?? '') === 'estimate');
+if ($estimate) {
+    // A read: keep the composer's lookups out of the activity trail.
+    $GLOBALS['cdp_activity_logged'] = true;
+}
 
 if ($notification_type === '') {
     $errors['notification_type'] = $lang['validate_notification_type'] ?? 'Notification type is required.';
 }
-if (empty($_POST['subject'])) {
+if (!$estimate && empty($_POST['subject'])) {
     $errors['subject'] = $lang['validate_subject_error'] ?? 'Subject is required.';
 }
-if (empty($_POST['message'])) {
+if (!$estimate && empty($_POST['message'])) {
     $errors['message'] = $lang['validate_message_error'] ?? 'Message is required.';
 }
 if ($notification_type === 'single_user' && $uid <= 0) {
@@ -55,13 +62,28 @@ if (!in_array($notification_type, ['broadcast', 'single_user', 'consolidation'],
     $errors['notification_type'] = 'Unknown notification type.';
 }
 
+if ($estimate && $errors) {
+    // Nothing picked yet (no user / consolidation): nobody to count.
+    echo json_encode(['success' => true, 'audience' => cdp_pushAudienceCounts([]), 'rates' => cdp_pushCostRates()]);
+    exit;
+}
 if (!empty($errors)) {
     echo json_encode(['success' => false, 'errors' => $errors]);
     exit;
 }
 
-$subject = trim((string) $_POST['subject']);
-$message = trim((string) $_POST['message']);
+$subject = trim((string) ($_POST['subject'] ?? ''));
+$message = trim((string) ($_POST['message'] ?? ''));
+
+// The attachment goes with the WhatsApp copy only.
+$media = null;
+if (!$estimate && trim((string) ($_POST['media_file'] ?? '')) !== '' && in_array('whatsapp', cdp_pushChannelSet($channels), true)) {
+    $media = cdp_pushMediaResolve($_POST['media_file'], (string) ($settings->site_url ?? ''));
+    if (!$media) {
+        echo json_encode(['success' => false, 'errors' => ['The attachment is no longer on the server. Attach it again.']]);
+        exit;
+    }
+}
 
 $recipientIds = [];
 $ctx = [
@@ -124,9 +146,22 @@ if ($notification_type === 'broadcast') {
     }
 }
 
+if ($estimate) {
+    echo json_encode([
+        'success'  => true,
+        'audience' => cdp_pushAudienceCounts($errors ? [] : $recipientIds),
+        'rates'    => cdp_pushCostRates(),
+    ]);
+    exit;
+}
+
 if (!empty($errors)) {
     echo json_encode(['success' => false, 'errors' => array_values($errors)]);
     exit;
+}
+
+if ($media) {
+    $ctx['media'] = $media;
 }
 
 $sum = cdp_pushNotifyChunk($recipientIds, $after_id, $subject, $message, $settings, $ctx, $channels);
@@ -144,7 +179,8 @@ if ($after_id === 0 && function_exists('cdp_activityLog')) {
         'entity_type'  => $ctx['entity_type'] ?? '',
         'entity_id'    => $ctx['entity_id'] ?? '',
         'entity_label' => $ctx['entity_label'] ?? '',
-        'meta'         => ['batch_id' => $sum['batch_id'], 'type' => $notification_type, 'channels' => $channels, 'recipients' => $sum['total']],
+        'meta'         => ['batch_id' => $sum['batch_id'], 'type' => $notification_type, 'channels' => $channels, 'recipients' => $sum['total'],
+                           'attachment' => $media ? ($media['kind'] . ': ' . $media['filename']) : ''],
     ]);
 }
 

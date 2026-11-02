@@ -48,3 +48,6 @@ files/
 sql/
 # local UI previews (not part of the app)
 dev_preview/
+
+# Push notification attachments (helpers/push_compose.php)
+assets/uploads/push_media/
