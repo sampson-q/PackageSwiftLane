@@ -135,13 +135,27 @@ function sendNotificationWhatsApp_v2($sender, $template_whatsapp_body, $countryH
     }
 
     $ids = [];
+    $accepted = 0;
     foreach ($sends as $send) {
         $r = cdp_wa_postUltraMsg($settings, $send['endpoint'], $send['params'], $target['phone']);
         $prefix = $send['label'] !== '' && count($sends) > 1 ? trim($send['label']) . ': ' : '';
         if (!$r['ok']) {
+            if ($accepted > 0) {
+                // The attachment already reached the recipient: report a partial
+                // delivery, so a retry does not send the attachment twice.
+                $detail = 'Partly delivered: ' . $media['kind'] . ' accepted'
+                    . ($ids ? ' (id ' . implode(', ', $ids) . ')' : '') . ', ' . $prefix . $r['message'];
+                $log('sent', $detail, $target['phone'], $r['raw']);
+                return $finish([
+                    'success' => true,
+                    'partial' => true,
+                    'message' => 'WhatsApp attachment sent, but the follow-up text failed: ' . $r['message'],
+                ]);
+            }
             $log('failed', $prefix . $r['message'], $target['phone'], $r['raw']);
             return $finish(['success' => false, 'message' => $prefix . $r['message']]);
         }
+        $accepted++;
         if ($r['id'] !== '') {
             $ids[] = $r['id'];
         }

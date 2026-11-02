@@ -28,6 +28,7 @@
     var media = null;          // { file, kind, name, size, localUrl }
     var pickKind = 'image';
     var estimate = null;       // { audience: {...}, rates: {...} }
+    var uploading = false;     // an attachment upload is in flight
     var estimateSeq = 0;
     var estimateTimer = null;
 
@@ -319,6 +320,7 @@
         }
         var data = new FormData();
         data.append('media', file);
+        uploading = true;
         $('.swl-attach-pick').prop('disabled', true);
         $('#media_chip').prop('hidden', false);
         $('#media_chip_icon').attr('class', 'fas fa-spinner fa-spin');
@@ -345,6 +347,7 @@
                 Swal.fire({ title: 'Attachment not added', html: 'The upload failed. Check the file size and try again.', icon: 'error', confirmButtonText: 'OK' });
             })
             .always(function () {
+                uploading = false;
                 $('.swl-attach-pick').prop('disabled', false);
                 $('#media_picker').val('');
             });
@@ -355,10 +358,23 @@
      * reaches and what it costs, and goes ahead only when confirmed.
      */
     window.cdpPushConfirm = function (proceed) {
+        // The send would snapshot the attachment before the upload finishes.
+        if (uploading) {
+            Swal.fire({ title: 'Attachment still uploading', html: 'Wait for the attachment to finish uploading, then send.', icon: 'info', confirmButtonText: 'OK' });
+            return;
+        }
+        if (notifType() === 'invoice') { proceed(); return; } // no estimate for invoices
         var total = $('#cost_body').data('total');
         var a = estimate && estimate.audience;
-        if (!a || !a.total) { proceed(); return; }
-        var html = 'This sends to <b>' + a.total + '</b> recipient' + (a.total === 1 ? '' : 's') + '.';
+        if (a && !a.total) { proceed(); return; }
+        var html;
+        if (!a) {
+            // Still loading or failed: never send without a confirmation.
+            html = 'The audience and estimated cost could not be loaded yet, so this push has not been reviewed.<br>Send it anyway?';
+            total = null;
+        } else {
+            html = 'This sends to <b>' + a.total + '</b> recipient' + (a.total === 1 ? '' : 's') + '.';
+        }
         if (total) html += '<br>Estimated cost: <b>' + esc(total) + '</b>';
         if (media) html += '<br>WhatsApp attachment: ' + esc(media.name);
         Swal.fire({ title: 'Send this push?', html: html, icon: 'question', showCancelButton: true,
