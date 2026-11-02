@@ -83,6 +83,10 @@ $before = cdp_mcCurrentRates();
 $errors = [];
 $changes = [];
 $bits = [];
+
+// Check every submitted price before saving any, so a bad value never leaves
+// some channels changed without an activity-log entry.
+$submitted = [];
 foreach (cdp_mcChannels() as $ch) {
     if (!array_key_exists($ch, $_POST)) {
         continue;
@@ -92,22 +96,34 @@ foreach (cdp_mcChannels() as $ch) {
         continue;
     }
     if (!is_numeric($raw) || (float) $raw < 0 || (float) $raw > 1000000) {
-        $errors[] = cdp_mlChannelLabel($ch) . ' cost must be a number of 0 or more.';
+        $errors[] = cdp_mlChannelLabel($ch) . ' cost must be a number from 0 to 1,000,000.';
         continue;
     }
+    $submitted[$ch] = (float) $raw;
+}
+if ($errors) {
+    echo json_encode(['ok' => false, 'error' => implode(' ', $errors)]);
+    exit;
+}
+
+$rates = cdp_mcRates();
+foreach ($submitted as $ch => $cost) {
     // Same price as the one in effect on that day: nothing to record.
-    $rates = cdp_mcRates();
-    if ($rates[$ch] && abs(cdp_mcRateOn($rates[$ch], $from) - (float) $raw) < 0.0000005) {
+    if ($rates[$ch] && abs(cdp_mcRateOn($rates[$ch], $from) - $cost) < 0.0000005) {
         continue;
     }
-    if (cdp_mcSaveRate($ch, (float) $raw, $from, $uid)) {
-        $changes[$ch] = ['from' => $before[$ch], 'to' => (float) $raw, 'effective_from' => $from];
-        $bits[] = cdp_mlChannelLabel($ch) . ' ' . cdp_mcMoney($before[$ch]) . ' → ' . cdp_mcMoney($raw);
+    if (cdp_mcSaveRate($ch, $cost, $from, $uid)) {
+        $changes[$ch] = ['from' => $before[$ch], 'to' => $cost, 'effective_from' => $from];
+        $bits[] = cdp_mlChannelLabel($ch) . ' ' . cdp_mcMoney($before[$ch]) . ' → ' . cdp_mcMoney($cost);
     } else {
         $errors[] = 'Could not save the ' . cdp_mlChannelLabel($ch) . ' cost.';
     }
 }
 
+// A failed write still logs what did change before reporting the error.
+if ($errors && $bits) {
+    $log('Changed message costs (from ' . $from . '): ' . implode(', ', $bits), $changes);
+}
 if ($errors) {
     echo json_encode(['ok' => false, 'error' => implode(' ', $errors)]);
     exit;
