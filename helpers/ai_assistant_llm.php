@@ -285,9 +285,6 @@ if (!function_exists('cdp_aiHttp')) {
     /** Plain text out of a Responses API reply. */
     function cdp_aiResponsesText($resp)
     {
-        if (isset($resp->output_text) && is_string($resp->output_text)) {
-            return $resp->output_text;
-        }
         $text = '';
         foreach ((array) ($resp->output ?? []) as $item) {
             if (($item->type ?? '') !== 'message') {
@@ -296,6 +293,8 @@ if (!function_exists('cdp_aiHttp')) {
             foreach ((array) ($item->content ?? []) as $c) {
                 if (($c->type ?? '') === 'output_text' && isset($c->text)) {
                     $text .= $c->text;
+                } elseif (($c->type ?? '') === 'refusal' && isset($c->refusal)) {
+                    $text .= $c->refusal; // shown as the answer, not the generic "no answer" note
                 }
             }
         }
