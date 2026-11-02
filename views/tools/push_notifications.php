@@ -11,9 +11,18 @@ if (!isset($user) || !$user->cdp_hasPermission('push_notifications')) {
 
 $userData = $user->cdp_getUserData();
 
+// getTemplateWhatsApp() lives in helpers/querys.php, which loader.php does not
+// load: without this the page died with "Call to undefined function" (HTTP 500).
+require_once __DIR__ . '/../../helpers/querys.php';
+
 // The WhatsApp copy is template 12 ("Push Notifications") with the title and
-// message filled in; the preview renders the same template.
-$pushWaTemplate = getTemplateWhatsApp(12);
+// message filled in; the preview renders the same template. A database error
+// here only costs the preview its template, never the whole page.
+try {
+    $pushWaTemplate = getTemplateWhatsApp(12);
+} catch (Throwable $e) {
+    $pushWaTemplate = null;
+}
 $pushComposeCfg = [
     'waTemplate' => $pushWaTemplate ? (string) $pushWaTemplate->body : "[SUBJECT]\n\n[MESSAGE]",
     'siteName'   => (string) ($core->site_name ?? ''),
