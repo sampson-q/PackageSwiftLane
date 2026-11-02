@@ -24,8 +24,11 @@
  *               tool calls are sent back exactly as received, thinking blocks
  *               included. On the Claude 5 family a refused request falls back
  *               to another model server-side (fallbacks: "default").
- *   OpenAI      POST https://api.openai.com/v1/chat/completions (function tools)
- *   OpenRouter  POST https://openrouter.ai/api/v1/chat/completions (same shape)
+ *   OpenAI      POST https://api.openai.com/v1/responses (function tools). The
+ *               Responses API, because newer reasoning models (gpt-5.x, gpt-6.x)
+ *               refuse function tools on /chat/completions while reasoning is
+ *               on. Tool rounds chain with previous_response_id.
+ *   OpenRouter  POST https://openrouter.ai/api/v1/chat/completions (function tools)
  */
 
 require_once __DIR__ . '/ai_assistant.php';
@@ -276,7 +279,108 @@ if (!function_exists('cdp_aiHttp')) {
     }
 
     // -----------------------------------------------------------------------
-    // OpenAI and OpenRouter (chat completions)
+    // OpenAI (Responses API)
+    // -----------------------------------------------------------------------
+
+    /** Plain text out of a Responses API reply. */
+    function cdp_aiResponsesText($resp)
+    {
+        $text = '';
+        foreach ((array) ($resp->output ?? []) as $item) {
+            if (($item->type ?? '') !== 'message') {
+                continue;
+            }
+            foreach ((array) ($item->content ?? []) as $c) {
+                if (($c->type ?? '') === 'output_text' && isset($c->text)) {
+                    $text .= $c->text;
+                } elseif (($c->type ?? '') === 'refusal' && isset($c->refusal)) {
+                    $text .= $c->refusal; // shown as the answer, not the generic "no answer" note
+                }
+            }
+        }
+        return $text;
+    }
+
+    function cdp_aiResponsesCall($key, array $body)
+    {
+        return cdp_aiHttp('POST', cdp_aiBaseUrl('openai') . '/responses', cdp_aiChatHeaders('openai', $key), $body);
+    }
+
+    function cdp_aiAskOpenAI($ctx, array $history, $question, array $opt)
+    {
+        $tools = array_map(function ($t) {
+            return ['type' => 'function', 'name' => $t['name'], 'description' => $t['description'], 'parameters' => $t['parameters']];
+        }, $opt['tools']);
+
+        $input = [];
+        foreach ($history as $h) {
+            $input[] = ['role' => $h['role'], 'content' => (string) $h['content']];
+        }
+        $input[] = ['role' => 'user', 'content' => $question];
+
+        $used = [];
+        $tin = 0;
+        $tout = 0;
+        $prev = null;
+        for ($round = 0; $round <= $opt['max_rounds']; $round++) {
+            $body = [
+                'model'             => $opt['model'],
+                'instructions'      => $opt['system'],
+                'input'             => $input,
+                'max_output_tokens' => 16000,
+            ];
+            if ($prev !== null) {
+                $body['previous_response_id'] = $prev;
+            }
+            if ($tools) {
+                $body['tools'] = $tools;
+                $body['tool_choice'] = $round === $opt['max_rounds'] ? 'none' : 'auto';
+            }
+            $r = cdp_aiResponsesCall($opt['key'], $body);
+            if ($r['status'] < 200 || $r['status'] >= 300) {
+                return ['ok' => false, 'error' => cdp_aiHttpError($r, 'openai'), 'tools' => $used];
+            }
+            $resp = json_decode($r['body']);
+            if (!is_object($resp) || !isset($resp->output)) {
+                $err = $resp->error->message ?? 'Unexpected reply from OpenAI.';
+                return ['ok' => false, 'error' => $err, 'tools' => $used];
+            }
+            if (($resp->status ?? '') === 'failed') {
+                return ['ok' => false, 'error' => 'OpenAI: ' . ($resp->error->message ?? 'the request failed.'), 'tools' => $used];
+            }
+            $tin += (int) ($resp->usage->input_tokens ?? 0);
+            $tout += (int) ($resp->usage->output_tokens ?? 0);
+
+            $calls = [];
+            foreach ((array) $resp->output as $item) {
+                if (($item->type ?? '') === 'function_call') {
+                    $calls[] = $item;
+                }
+            }
+            if (!$calls) {
+                $text = cdp_aiResponsesText($resp);
+                if (($resp->status ?? '') === 'incomplete' && ($resp->incomplete_details->reason ?? '') === 'max_output_tokens') {
+                    $text .= "\n\n_(The answer was cut off because it was too long. Ask for a narrower part.)_";
+                }
+                return ['ok' => true, 'text' => trim($text), 'tools' => $used, 'tokens_in' => $tin, 'tokens_out' => $tout, 'model' => $resp->model ?? $opt['model']];
+            }
+
+            // The next round carries on from this response; only the tool results are sent.
+            $prev = (string) $resp->id;
+            $input = [];
+            foreach ($calls as $c) {
+                $args = json_decode((string) ($c->arguments ?? '{}'), true);
+                $out = is_array($args) ? cdp_aiRunTool((string) $c->name, $args, $ctx)
+                                       : ['error' => 'The tool arguments were not valid JSON; call again.'];
+                $used[] = cdp_aiToolTrace((string) $c->name, is_array($args) ? $args : [], $out);
+                $input[] = ['type' => 'function_call_output', 'call_id' => (string) $c->call_id, 'output' => cdp_aiToolJson($out)];
+            }
+        }
+        return ['ok' => false, 'error' => 'The assistant needed too many lookups. Try a narrower question.', 'tools' => $used];
+    }
+
+    // -----------------------------------------------------------------------
+    // OpenRouter (chat completions)
     // -----------------------------------------------------------------------
 
     function cdp_aiChatEndpoint($provider)
@@ -414,9 +518,13 @@ if (!function_exists('cdp_aiHttp')) {
             return ['ok' => false, 'error' => 'No API key is set for ' . cdp_aiProviderLabel($provider) . '. A super admin adds it on Tools > AI Assistant.', 'tools' => []];
         }
         @set_time_limit(300);
-        return $provider === 'claude'
-            ? cdp_aiAskClaude($ctx, $history, $question, $opt)
-            : cdp_aiAskChat($ctx, $history, $question, $opt);
+        if ($provider === 'claude') {
+            return cdp_aiAskClaude($ctx, $history, $question, $opt);
+        }
+        if ($provider === 'openai') {
+            return cdp_aiAskOpenAI($ctx, $history, $question, $opt);
+        }
+        return cdp_aiAskChat($ctx, $history, $question, $opt);
     }
 
     /** One plain prompt, no tools (connection test, question analysis). */
@@ -448,12 +556,18 @@ if (!function_exists('cdp_aiHttp')) {
             }
             return ['ok' => true, 'text' => trim($text), 'model' => $j->model ?? $model];
         }
-        $body = ['model' => $model, 'messages' => [['role' => 'system', 'content' => $system], ['role' => 'user', 'content' => $prompt]]];
         if ($provider === 'openai') {
-            $body['max_completion_tokens'] = $maxTokens;
-        } else {
-            $body['max_tokens'] = $maxTokens;
+            $r = cdp_aiResponsesCall($key, ['model' => $model, 'instructions' => $system, 'input' => $prompt, 'max_output_tokens' => $maxTokens]);
+            if ($r['status'] < 200 || $r['status'] >= 300) {
+                return ['ok' => false, 'error' => cdp_aiHttpError($r, 'openai')];
+            }
+            $j = json_decode($r['body']);
+            if (!is_object($j)) {
+                return ['ok' => false, 'error' => 'Unexpected reply from OpenAI.'];
+            }
+            return ['ok' => true, 'text' => trim(cdp_aiResponsesText($j)), 'model' => $j->model ?? $model];
         }
+        $body = ['model' => $model, 'messages' => [['role' => 'system', 'content' => $system], ['role' => 'user', 'content' => $prompt]], 'max_tokens' => $maxTokens];
         $r = cdp_aiHttp('POST', cdp_aiChatEndpoint($provider), cdp_aiChatHeaders($provider, $key), $body);
         if ($r['status'] < 200 || $r['status'] >= 300) {
             return ['ok' => false, 'error' => cdp_aiHttpError($r, $provider)];
